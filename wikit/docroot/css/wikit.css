@@ -50,7 +50,7 @@ div.logo {
   background: url(/images/plume.png) top right no-repeat;
 }
 
-div.logo a {
+div.logo a.logo {
   color: black;
 }
 
