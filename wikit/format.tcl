@@ -508,8 +508,8 @@ namespace eval Wikit::Format {
       CODE   {^()()(======)$}
       OPTION {^()()(\+\+\+)$}
       #EVAL {^(\+eval)(\s?)(.+)$}
-      BLAME_START {^()()(>>>>>>)(\s?)(.+)$}
-      BLAME_END   {^()()(<<<<<<)$}
+      BLAME_START {^(>>>>>>)(\s?)(.+)$}
+      BLAME_END   {^(<<<<<<)$}
       CENTERED {^()()(!!!!!!)$}
     } {
       # Compat: Remove restriction to multiples of 3 spaces.
