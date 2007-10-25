@@ -121,12 +121,14 @@ namespace eval WikitWub {
 		}]
  	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
-		set _submit [<submit> save class positive disabled $disabled Save]
+		set _submit [<submit> save   class positive disabled $disabled value 1 Save]
+		set _cancel [<submit> cancel class button   disabled 0         value 1 Cancel]
+		 #<button name='cancel' value='1' type='submit'><a class='button' href='/$N'>Cancel</a></button>
 		<form> edit method post action /_save/$N {
 		      [<textarea> C rows 30 cols 72 style width:100% [list [tclarmour $C]]]
 		      [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		      [<hidden> _charset_ {}]
-		       <button><a class='button' href='/$N'>Cancel</a></button>
+		       $_cancel
 		       $_submit
 		 }]
 		<hr>
@@ -1134,7 +1136,13 @@ namespace eval WikitWub {
 	return [WikitWub do $r 2]
     }
 
-    proc /save {r N C O} {
+    proc /save {r N C O save cancel} {
+
+	if { [string is integer -strict $cancel] && $cancel } {
+	    set url http://[Url host $r]/$N
+	    return [redir $r $url [<a> href $url "Canceled page edit"]]
+	}
+
 	variable readonly
 	if {$readonly ne ""} {
 	    return [sendPage $r ro]
@@ -1616,7 +1624,7 @@ namespace eval WikitWub {
 		lappend menu [Ref /_edit/$N Edit]
 	    }
 	    lappend menu [Ref /_history/$N History]
-	    lappend menu [Ref $backRef {References}]
+	    lappend menu [Ref $backRef References]
 	}
 
 	#set Title "<h1 class='title'>$Title</h1>"
