@@ -21,7 +21,7 @@ package require stx
 package require Responder
 
 # uncomment to turn off caching for testing
-package provide Cache 2.0 ; proc Cache args {return {}}
+# package provide Cache 2.0 ; proc Cache args {return {}}
 
 package require Honeypot
 Honeypot init dir [file join $::config(docroot) captcha]
@@ -73,7 +73,7 @@ namespace eval WikitWub {
 	    <!-- standard page decoration -->
 	    [div container {
 		[div header {
-			[div logo [<a> href '' class logo wiki.tcl.tk]]
+			[div logo [<a> href http://wiki.tcl.tk class logo wiki.tcl.tk]]
 			[div title $Title]
 			[div updated $updated]
 		}]
