@@ -1107,7 +1107,7 @@ namespace eval Wikit::Format {
     set result ""  ; # Tcl result
     set iscode 0
     set piscode 0
-    set blockidd 0
+    set blockid 0
     foreach {mode text} $s {
       switch -exact -- $mode {
         Q  { 
