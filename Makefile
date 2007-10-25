@@ -7,6 +7,7 @@ SCRUB  = | egrep -v '^(building|wrote|total)' | egrep -v '^$$' || true
 .PHONY: check install
 
 check:
+	@echo "These files will be uploaded when you run 'make prod'"
 	@$(RSYNC) --dry-run $(SRC) $(DEST)
 
 prod:
