@@ -73,7 +73,7 @@ namespace eval WikitWub {
 	    <!-- standard page decoration -->
 	    [div container {
 		[div header {
-			[div logo [<a> href='/' wiki.tcl.tk]]
+			[div logo [<a> href '' class logo wiki.tcl.tk]]
 			[div title $Title]
 			[div updated $updated]
 		}]

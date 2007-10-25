@@ -52,7 +52,7 @@ foreach tuple [lsort -integer -index 0 $worklist] {
 	    set firstref [mk::select wdb.refs -count 1 to $id]
 	    if {($dbname ne $name && $dbname ne {})
 		&& ($firstref ne {} || $dbpage ne {})} {
-		set idShouldBe [LookupPage $name]
+		set idShouldBe [Wikit::LookupPage $name]
 		puts "file $file ($hdate) creates a new page $idShouldBe because $id was in use for \"$dbname\""
 	    } else {
 		puts "file $file ($hdate) overrides a previously unused page \"$dbname\""
