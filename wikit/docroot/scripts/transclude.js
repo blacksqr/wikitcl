@@ -44,6 +44,13 @@ function ajaxinittocpages(){
     ajaxtocpage('/_toc', 'wiki_toc');
     document.getElementById('wrapper').style.marginLeft = '-160px';
     document.getElementById('content').style.marginLeft = '160px';
+    document.getElementById('menu_area').style.display = 'inline';
+    document.getElementById('searchform').style.display = 'inline';
+    document.getElementById('footer').innerHTML += ' &bull; ' + 
+	    '<a href="javascript:toggleTOC();" id="toggle_toc">Hide menu</a>';
+    document.getElementById('menu').innerHTML += "<li>" +
+        '<a href="javascript:toggleTOC();" id="toggle_toc_menu">Hide menu</a>' +
+	"</li>";
 }
 
 function ajaxtocpages(){
@@ -52,7 +59,6 @@ function ajaxtocpages(){
     document.getElementById('wiki_toc').style.display='inline';
     document.getElementById('wrapper').style.marginLeft = '-160px';
     document.getElementById('content').style.marginLeft = '160px';
-    document.getElementById('toggle_toc_menu').innerHTML = "Hide menu";
     document.getElementById('toggle_toc').innerHTML = "Hide menu";
     document.getElementById('menu_area').style.display='inline';
 }
@@ -62,8 +68,8 @@ function ajaxnotocpages(){
     document.getElementById('page_toc').style.display='none';
     document.getElementById('wiki_toc').style.display='none';
     document.getElementById('wrapper').style.marginLeft = '0';
-    document.getElementById('content').style.marginLeft = '0';
-    document.getElementById('toggle_toc_menu').innerHTML = "Show menu";
+    document.getElementById('wrapper').style.marginRight = '-5px';
+    document.getElementById('content').style.marginLeft = '5px';
     document.getElementById('toggle_toc').innerHTML = "Show menu";
     document.getElementById('menu_area').style.display='none';
 }
@@ -93,7 +99,7 @@ function checkTOC()
 {
     ajaxinittocpages();
     needs_toc=getCookie('witoc')
-    if (needs_toc!=null && needs_toc=="1") {
+    if (needs_toc==null || needs_toc=="" || needs_toc=="1") {
 	ajaxtocpages();
     }
     else {

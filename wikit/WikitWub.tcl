@@ -21,7 +21,7 @@ package require stx
 package require Responder
 
 # uncomment to turn off caching for testing
-# package provide Cache 2.0 ; proc Cache args {return {}}
+package provide Cache 2.0 ; proc Cache args {return {}}
 
 package require Honeypot
 Honeypot init dir [file join $::config(docroot) captcha]
@@ -92,7 +92,7 @@ namespace eval WikitWub {
 		    }]
 		}]
 		[div footer {
-		    [<p> [variable bullet; join $menu $bullet]]
+		    [<p> id footer [variable bullet; join $menu $bullet]]
 		}]
 		[script checkTOC($N);]
 	    }]
@@ -105,7 +105,7 @@ namespace eval WikitWub {
 		[div {wrapper content} {[tclarmour $C]}]
 		<hr noshade>
 		[div footer {
-		    [<p> [variable bullet; join $menu $bullet]]
+		    [<p> id footer [variable bullet; join $menu $bullet]]
 		    [searchF]
 		}]
 	    }]
@@ -270,7 +270,7 @@ namespace eval WikitWub {
     }
 
     proc menuUL { l } {
-	set m "<ul>\n"
+	set m "<ul id='menu'>\n"
 	foreach i $l {
 	    regsub {id='toggle_toc'} $i {id='toggle_toc_menu'} i
 	    append m "<li>$i</li>"
@@ -301,7 +301,6 @@ namespace eval WikitWub {
     #<meta name='robots' content='index,nofollow' />
     variable head {
 	<style type='text/css' media='all'>@import url(/wikit.css);</style>
-	<style type='text/css' media='all'>@import url(/buttons.css);</style>
 	<style type='text/css' media='all'>@import url(/dtree.css);</style>
 	<script src='/transclude.js' type='text/javascript'></script>
 	<script src='/dtree.js' type='text/javascript'></script>
@@ -544,7 +543,7 @@ namespace eval WikitWub {
 	set N 0
 	set updated ""
 	variable menus
-	foreach m {Home "Recent changes" Help "Toggle TOC"} {
+	foreach m {Home "Recent changes" Help} {
 	    lappend menu $menus($m)
 	}
 	set C [join $results "\n"]
@@ -768,10 +767,6 @@ namespace eval WikitWub {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
-	foreach m {"Toggle TOC"} {
-	    lappend menu $menus($m)
-	}
-
 	return [sendPage $r]
     }
 
@@ -856,9 +851,6 @@ namespace eval WikitWub {
 	}
 
 	lappend menu [Ref /_history/$N History]
-	foreach m {"Toggle TOC"} {
-	    lappend menu $menus($m)
-	}
 	set updated ""
 	set T "function page_toc() {}"
 	return [sendPage $r]
@@ -973,9 +965,6 @@ namespace eval WikitWub {
 #	    append C <p> $links </p> \n
 #	}
 
-	foreach m {"Toggle TOC"} {
-	    lappend menu $menus($m)
-	}
 	set updated ""
 	set T "function page_toc() {}"
 	return [sendPage $r]
@@ -1006,7 +995,6 @@ namespace eval WikitWub {
     set menus(Home)             [<a> href "http://wiki.tcl.tk" Home]
     set "menus(Recent changes)" [Ref 4 "Recent changes"]
     set menus(Help)             [Ref 3 "Help"]
-    set "menus(Toggle TOC)"     [<a> href "javascript:toggleTOC();" id toggle_toc "Toggle TOC"]
     set menus(Search)           [Ref 2 "Search"]
 
     set redir {meta: http-equiv='refresh' content='10;url=$url'
@@ -1367,7 +1355,7 @@ namespace eval WikitWub {
 
 	variable menus
 	set menu {}
-	foreach m {Home "Recent changes" Help "Toggle TOC"} {
+	foreach m {Home "Recent changes" Help} {
 	    lappend menu $menus($m)
 	}
 
@@ -1628,10 +1616,7 @@ namespace eval WikitWub {
 		lappend menu [Ref /_edit/$N Edit]
 	    }
 	    lappend menu [Ref /_history/$N History]
-	    lappend menu [Ref $backRef {References to this page}]
-	}
-	foreach m {"Toggle TOC"} {
-	    lappend menu $menus($m)
+	    lappend menu [Ref $backRef {References}]
 	}
 
 	#set Title "<h1 class='title'>$Title</h1>"

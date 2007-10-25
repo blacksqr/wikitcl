@@ -207,10 +207,14 @@ namespace eval Wikit::Format {
           lappend irep I 0 ; render $aux
           lappend irep D 0 ; render $txt
         }
-        HD2 -
-        HD3 -
+        HD2 {
+          lappend irep $tag 0 ; render [string range $txt 2 end-2] ; lappend irep HDE 0
+        }
+        HD3 {
+          lappend irep $tag 0 ; render [string range $txt 3 end-3] ; lappend irep HDE 0
+        }
         HD4 {
-          lappend irep $tag 0 ; render $txt ; lappend irep HDE 0
+          lappend irep $tag 0 ; render [string range $txt 4 end-4] ; lappend irep HDE 0
         }
         PRE {
           # Transform a preceding 'STD {}' into an empty Q line,
@@ -500,13 +504,13 @@ namespace eval Wikit::Format {
       OL	{^(   +)(\d)\. (\S.*)$}
       DL	{^(   +)([^:]+):   (\S.*)$}
 
-      FIXED  {^(===)$}
-      CODE   {^(======)$}
-      OPTION {^(\+\+\+)$}
+      FIXED  {^()()(===)$}
+      CODE   {^()()(======)$}
+      OPTION {^()()(\+\+\+)$}
       #EVAL {^(\+eval)(\s?)(.+)$}
-      BLAME_START {^(>>>>>>)(\s?)(.+)$}
-      BLAME_END   {^(<<<<<<)$}
-      CENTERED {^(!!!!!!)$}
+      BLAME_START {^()()(>>>>>>)(\s?)(.+)$}
+      BLAME_END   {^()()(<<<<<<)$}
+      CENTERED {^()()(!!!!!!)$}
     } {
       # Compat: Remove restriction to multiples of 3 spaces.
       if {[regexp $re $line - pfx aux txt]} {
@@ -516,12 +520,12 @@ namespace eval Wikit::Format {
     }
 
     foreach {tag re} {
-      HD4    {^(\*\*\*\*)(.+)(\*\*\*\*)$}
-      HD3    {^(\*\*\*)(.+)(\*\*\*)$}
-      HD2    {^(\*\*)(.+)(\*\*)$}
+      HD4    {^(\*\*\*\*.+\*\*\*\*)$}
+      HD3    {^(\*\*\*.+\*\*\*)$}
+      HD2    {^(\*\*.+\*\*)$}
 
     } {
-      if {[regexp $re $line - prfx txt pofx]} {
+      if {[regexp $re $line - txt]} {
         return [list $tag 0 $txt]
       }
     }
@@ -1102,15 +1106,32 @@ namespace eval Wikit::Format {
   proc StreamToTcl {s {ip ""}} {
     set result ""  ; # Tcl result
     set iscode 0
+    set piscode 0
+    set blockidd 0
     foreach {mode text} $s {
       switch -exact -- $mode {
-        Q  { set iscode 2 }
-        FI { set iscode 1 }
+        Q  { 
+          if { !$piscode } { 
+            append result "### <code_block id=$blockid> ############################################################\n"
+            incr blockid
+          }
+          set iscode 2 
+        }
+        FI { 
+          append result "### <code_block id=$blockid> ############################################################\n"
+          incr blockid
+          set iscode 1 
+        }
         FE { set iscode 0 }
         default {
           if { $iscode } { 
             append result "$text\n" 
-            if { $iscode > 1 } { set iscode 0 }
+            if { $iscode > 1 } { 
+              set iscode 0
+              set piscode 1
+            }
+          } else {
+            set piscode 0
           }
         }
       }

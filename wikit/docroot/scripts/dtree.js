@@ -141,7 +141,7 @@ dTree.prototype.node = function(node, nodeId) {
 	else if ((!this.config.folderLinks || !node.url) && node._hc && node.pid != this.root.id)
 		str += '<a href="javascript: ' + this.obj + '.o(' + nodeId + ');" class="node">';
 	str += node.name;
-	if (node.url || ((!this.config.folderLinks || !node.url) && node._hc)) str += '</a>';
+	if (node.url || ((!this.config.folderLinks || !node.url) && node._hc && node.pid != this.root.id)) str += '</a>';
 	str += '</div>';
 	if (node._hc) {
 		str += '<div id="d' + this.obj + nodeId + '" class="clip" style="display:' + ((this.root.id == node.pid || node._io) ? 'block' : 'none') + ';">';

@@ -1,16 +1,16 @@
-BODY {
-  font-size: 10pt;
+body {
   font-family: sans-serif;
+  font-size: 90%;
   margin: 0; padding: 0;
 }   
 
 h1 { 
-  font-size: 16pt;
+  font-size: 160%;
   font-weight: normal;
 }
 
 h2 {
-  font-size: 12pt;
+  font-size: 120%;
 }
 
 A:link { 
@@ -24,9 +24,8 @@ A:visited, A:active {
 
 pre {
    background-color: white;
-   color: #696969;
+   color: #666;
    font-family: monospace;
-   font-size: 9pt;
 }
 
 pre.prediff {
@@ -64,7 +63,7 @@ hr {
 
 div.title {
   padding: 5px 0 3px 5px;
-  font-size: 16pt;
+  font-size: 160%;
   background: #DDD;
   text-align: left;
   font-weight: bold;
@@ -74,7 +73,7 @@ div.title {
 div.updated {
   padding: 0 0 7px 7px;
   font-size: 80%;
-  color: #696969;
+  color: #666;
 }
 
 div#menu_area {
@@ -94,13 +93,13 @@ div#menu_area ul {
 div#wrapper {
   float:right;
   width:100%;
-  margin-left:-145px;
+  margin-left: 0;
   margin-right: 5px;
   background: white;
 }
 
 div#content {
-  margin-left: 145px;
+  margin-left: 5px;
   margin-top: 5px;
   margin-bottom: 5px;
   padding: 0 5px 0 5px;
@@ -134,8 +133,12 @@ div.footer p {
 }
 
 div#wiki_menu {
-  font-size: 9pt;
+  # font-size: 90%;
   line-height: 150%;
+}
+
+div#menu_area, div#wiki_menu, div#page_toc, div#wiki_toc, form#searchform span#toggle {
+  display: none;
 }
 
 form#searchform {
@@ -192,7 +195,7 @@ table {
 	margin: 2px;
 	border: 1px solid #DDD;
 	border-collapse: collapse;
-	font-size: 9pt;
+	font-size: 95%;
 }
 
 div.centered table {
@@ -325,7 +328,7 @@ span.whitespacediff pre {
 
 span.nick {
  font-size: 90%;
- color: #696969;
+ color: #666;
  margin: 0 0 2px 2em;
 }
 
