@@ -330,10 +330,14 @@ span.whitespacediff pre {
   margin: 0;
 }
 
-span.nick {
+span.nick, span.day {
  font-size: 90%;
  color: #666;
  margin: 0 0 2px 2em;
+}
+
+span.day {
+ margin-left: 0.5em;
 }
 
 span.dots {
@@ -371,4 +375,10 @@ form#edit button {
 
 a.button {
    color: black;
+}
+
+@media print {
+    div#menu_area, div.footer {
+        display: none;
+    }
 }
