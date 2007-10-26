@@ -220,6 +220,25 @@ namespace eval WikitWub {
 	set titles($name) $title
     }
 
+    # list2table - convert list into sortable HTML table
+    proc list2table {l header {footer {}} {tag ""}} {
+	set row 0
+	return [<table> class sortable [If {$tag ne ""} { class $tag }] [subst {
+	    [<thead> [<tr> [Foreach t $header {
+		[<th> class $t [string totitle $t]]
+	    }]]]
+	    [If {$footer ne {}} {
+		[<tfoot> [<tr> [Foreach t $footer {[<th> $t]}]]]
+	    }]
+	    [<tbody> [Foreach vl $l {
+		[<tr> class [If {[incr row] % 2} even else odd] \
+		     [Foreach th $header v $vl {
+			 [<td> class $th $v]
+		     }]]
+	    }]]
+	}]]
+    }
+
     # page - format up a page using templates
     proc sendPage {r {tname page} {http {NoCache Ok}}} {
 	variable templates
@@ -1347,24 +1366,16 @@ namespace eval WikitWub {
 	set refList ""
 	foreach from [mk::select wdb.refs to $N] {
 	    set from [mk::get wdb.refs!$from from]
-	    ::Wikit::pagevars $from name
-	    lappend refList [list $name $from]
+	    ::Wikit::pagevars $from name who date
+	    lappend refList [list [::Wikit::GetTimeStamp $date] $name $who $from]
 	}
-
-	# the items are a list, if we would just sort on them, then all
-	# single-item entries come first (the rest has {}'s around it)
-	# the following sorts again on 1st word, knowing sorts are stable
-	set refList [lsort -dict -index 0 [lsort -dict $refList]]
-	set rd {}
-	foreach page $refList {
-	    lassign $page name from
-	    ::Wikit::pagevars $from who date
-	    dict set rd $page Date [::Wikit::GetTimeStamp $date]
-	    dict set rd $page Name [Ref $from {}]
-	    dict set rd $page Who $who
+	set refList [lsort -dictionary -index 1 $refList]
+	set tableList {}
+	foreach ref $refList {
+	    lassign $ref date name who from
+	    lappend tableList [list $date [Ref $from {}] $who]
 	}
-
-	set C [Html dict2table $rd {Date Name Who} {} ref]
+	set C [list2table $tableList {Date Name Who} {} ref]
 
 	# include javascripts and CSS for sortable table.
 	set r [sortable $r]
