@@ -48,9 +48,6 @@ function ajaxinittocpages(){
     document.getElementById('searchform').style.display = 'inline';
     document.getElementById('footer').innerHTML += ' &bull; ' + 
 	    '<a href="javascript:toggleTOC();" id="toggle_toc">Hide menu</a>';
-    document.getElementById('menu').innerHTML += "<li>" +
-        '<a href="javascript:toggleTOC();" id="toggle_toc_menu">Hide menu</a>' +
-	"</li>";
 }
 
 function ajaxtocpages(){
@@ -110,7 +107,7 @@ function checkTOC()
 function toggleTOC()
 {
     needs_toc=getCookie('witoc')
-    if (needs_toc!=null && needs_toc=="1") {
+    if (needs_toc==null || needs_toc=="" || needs_toc=="1") {
 	ajaxnotocpages();
 	setCookie('witoc', 0, 365);
     }
