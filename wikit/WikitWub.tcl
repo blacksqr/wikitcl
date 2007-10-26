@@ -74,7 +74,7 @@ namespace eval WikitWub {
 	    [div container {
 		[div header {
 			[div logo [<a> href http://wiki.tcl.tk class logo wiki.tcl.tk]]
-			[div title $Title]
+			[div title [tclarmour $Title]]
 			[div updated $updated]
 		}]
 		[expr {[info exists ro]?$ro:""}]
@@ -92,7 +92,7 @@ namespace eval WikitWub {
 		    }]
 		}]
 		[div footer {
-		    [<p> id footer [variable bullet; join $menu $bullet]]
+		    [<p> id footer [variable bullet; join $footer $bullet]]
 		}]
 		[script checkTOC($N);]
 	    }]
@@ -105,7 +105,7 @@ namespace eval WikitWub {
 		[div {wrapper content} {[tclarmour $C]}]
 		<hr noshade>
 		[div footer {
-		    [<p> id footer [variable bullet; join $menu $bullet]]
+		    [<p> id footer [variable bullet; join $footer $bullet]]
 		    [searchF]
 		}]
 	    }]
@@ -469,7 +469,7 @@ namespace eval WikitWub {
 		    lappend results </ul>
 		}
 		set lastDay $day
-		lappend results [<p> [<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]]]
+		lappend results [<p> "[<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]] [<span> class day [clock format $date -gmt 1 -format %A]]"]
 		lappend results <ul>
 	    }
 
@@ -548,6 +548,8 @@ namespace eval WikitWub {
 	foreach m {Home "Recent changes" Help} {
 	    lappend menu $menus($m)
 	}
+	set footer $menu
+	lappend footer $menus(Search)
 	set C [join $results "\n"]
 	
 	return [sendPage $r]
@@ -769,6 +771,8 @@ namespace eval WikitWub {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
+	set footer $menu
+	lappend footer $menus(Search)
 	return [sendPage $r]
     }
 
@@ -850,6 +854,8 @@ namespace eval WikitWub {
 		    }
 		}
 	    }
+	    set footer $menu
+	    lappend footer $menus(Search)
 	}
 
 	lappend menu [Ref /_history/$N History]
@@ -897,6 +903,8 @@ namespace eval WikitWub {
 	    lappend menu [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 #	    append links [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 	}
+	set footer $menu
+	lappend footer $menus(Search)
 #	if {$links ne {}} {
 #	    append C <p> $links </p> \n
 #	}
@@ -1366,6 +1374,8 @@ namespace eval WikitWub {
 	foreach m {Home "Recent changes" Help} {
 	    lappend menu $menus($m)
 	}
+	set footer $menu
+	lappend footer $menus(Search)
 
 	set name "References to $N"
 	set Title "References to [Ref $N]"
@@ -1624,8 +1634,11 @@ namespace eval WikitWub {
 		lappend menu [Ref /_edit/$N Edit]
 	    }
 	    lappend menu [Ref /_history/$N History]
+	    lappend menu [Ref /_diff/$N#diff0 "Latest differences"]
 	    lappend menu [Ref $backRef References]
 	}
+	set footer $menu
+	lappend footer $menus(Search)
 
 	#set Title "<h1 class='title'>$Title</h1>"
 	if {0} {
