@@ -1112,13 +1112,13 @@ namespace eval Wikit::Format {
       switch -exact -- $mode {
         Q  { 
           if { !$piscode } { 
-            append result "### <code_block id=$blockid> ############################################################\n"
+            append result "\n### <code_block id=$blockid> ############################################################\n\n"
             incr blockid
           }
           set iscode 2 
         }
         FI { 
-          append result "### <code_block id=$blockid> ############################################################\n"
+          append result "\n### <code_block id=$blockid> ############################################################\n\n"
           incr blockid
           set iscode 1 
         }
