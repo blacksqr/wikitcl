@@ -32,10 +32,6 @@ table {
   border: 0;
 }
 
-td.Date {
-  width: 10em;
-}
-
 table.history, table.sortable {
   width: 100%;
   font-size: 90%;
