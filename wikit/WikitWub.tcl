@@ -121,15 +121,15 @@ namespace eval WikitWub {
 		}]
  	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
-		set _submit [<submit> save   class positive disabled $disabled value 1 Save]
+		set _submit [<submit> save   class positive disabled $disabled value 1 {Save your changes}]
 		set _cancel [<submit> cancel class button   disabled 0         value 1 Cancel]
 		 #<button name='cancel' value='1' type='submit'><a class='button' href='/$N'>Cancel</a></button>
 		<form> edit method post action /_save/$N {
 		      [<textarea> C rows 30 cols 72 style width:100% [list [tclarmour $C]]]
 		      [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		      [<hidden> _charset_ {}]
-		       $_cancel
 		       $_submit
+		       $_cancel
 		 }]
 		<hr>
 		Editing quick-reference:
@@ -374,12 +374,6 @@ namespace eval WikitWub {
 		    content-type text/html]
     }
 
-    proc /cache {r args} {
-	set r [sortable $r]
-	set C [Html dict2table [Cache::2dict] {-when -refcount etag -hits}]
-	return [Http NoCache [Http Ok $r $C text/html]]
-    }
-
     # generate site map
     proc /sitemap {r args} {
 	set p http://[Url host $r]/
@@ -453,6 +447,7 @@ namespace eval WikitWub {
 
     # Special page: Recent Changes.
     variable delta [subst \u0394]
+    variable delta [subst \u24B2]
     proc RecentChanges {} {
 	variable delta
 	set count 0
