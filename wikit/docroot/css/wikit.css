@@ -236,14 +236,14 @@ th.Line, th.Word, td.Line3, td.Word3 {
 }
 
 td.Date {
-	font-family: fixed;
 	vertical-align: top;
-	min-width: 9em;
+	min-width: 10em;
+	font-size: 90%;
 }
 
 td.Who {
 	vertical-align: top;
-	font-family: fixed;
+	font-size: 90%;
 }
 
 table.history {
@@ -347,7 +347,7 @@ span.dots {
 a.delta {
  font-size: 70%;
  color: #D3D3D3;
- margin: 0 0 0 1em;
+ margin: 0 0 0 2em;
 }
 
 ins {
