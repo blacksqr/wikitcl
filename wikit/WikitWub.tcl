@@ -452,7 +452,7 @@ namespace eval WikitWub {
 
     # Special page: Recent Changes.
     variable delta [subst \u0394]
-    variable delta [subst \u24B2]
+    variable delta [subst \u25B2]
     proc RecentChanges {} {
 	variable delta
 	set count 0
