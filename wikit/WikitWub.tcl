@@ -375,7 +375,7 @@ namespace eval WikitWub {
     }
 
     proc /cache {r args} {
-	set C [Html dict2table [Cache::2dict] {-url -stale -when -refcount -hits}]
+	set C [Html dict2table [Cache::2dict] {-url -stale -hits -unmod -when}]
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
     }
 
