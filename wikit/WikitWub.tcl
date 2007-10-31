@@ -375,9 +375,8 @@ namespace eval WikitWub {
     }
 
     proc /cache {r args} {
-	set r [sortable $r]
-	set C [Html dict2table [Cache::2dict] {-when -refcount etag -hits}]
-	return [Http NoCache [Http Ok $r $C text/html]]
+	set C [Html dict2table [Cache::2dict] {-path -when -refcount -hits}]
+	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
     }
 
     # generate site map
