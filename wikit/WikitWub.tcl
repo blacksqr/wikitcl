@@ -374,6 +374,12 @@ namespace eval WikitWub {
 		    content-type text/html]
     }
 
+    proc /cache {r args} {
+	set r [sortable $r]
+	set C [Html dict2table [Cache::2dict] {-when -refcount etag -hits}]
+	return [Http NoCache [Http Ok $r $C text/html]]
+    }
+
     # generate site map
     proc /sitemap {r args} {
 	set p http://[Url host $r]/
