@@ -151,7 +151,7 @@ namespace eval Wikit::Format {
       ## there is any.
       #
       switch -exact -- $tag {
-        HR - UL - OL - DL - PRE - TBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED {
+        HR - UL - OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED {
           if {$paragraph != {}} {
             if {$mode_fixed} {
               lappend irep FI {}
@@ -438,6 +438,12 @@ namespace eval Wikit::Format {
             lappend irep TDH 0 ; render $te ; lappend irep TDEH 0
           }
         }
+        CTBL {
+          lappend irep CTR 0
+          foreach te [lrange [split [string range $txt 1 end-1] "|"] 1 end-1] {
+            lappend irep TD 0 ; render $te ; lappend irep TDE 0
+          }
+        }
         TBL {
           lappend irep TR 0
           foreach te [lrange [split $txt "|"] 1 end-1] {
@@ -542,6 +548,9 @@ namespace eval Wikit::Format {
     }
     if {[string match "%|*|%" $line]} {
       return [list TBLH 0 $line]
+    }
+    if {[string match "&|*|&" $line]} {
+      return [list CTBL 0 $line]
     }
     if {[string match "|*|" $line]} {
       return [list TBL 0 $line]
@@ -673,6 +682,8 @@ namespace eval Wikit::Format {
                                                  regsub -all {'''(.+?)'''} $text "\0\1b+\0\\1\0\1b-\0" text
                                                  regsub -all {''(.+?)''}   $text "\0\1i+\0\\1\0\1i-\0" text
                                                  regsub -all {`(.+?)`}   $text "\0\1f+\0\\1\0\1f-\0" text
+                                                 regsub -all {(<<br>>)}   $text "\0br\0" text
+                                                 regsub -all {(<<pipe>>)}   $text "|" text
 
                                                  # Normalize brackets ...
                                                  set text [string map {&! [ ]] ]} $text]
@@ -698,6 +709,7 @@ namespace eval Wikit::Format {
         i-    {lappend irep i 0}
         f+    {lappend irep f 1}
         f-    {lappend irep f 0}
+        br    {lappend irep BR 0}
         default {
           if {$detail == {}} {
             # Pure text
@@ -1170,6 +1182,7 @@ namespace eval Wikit::Format {
     set bltype "a"
     set insdelcnt 0
     set centered 0
+    set trow 0
     variable html_frag
 
     foreach {mode text} $s {
@@ -1282,9 +1295,19 @@ namespace eval Wikit::Format {
           }
           set state $mode 
         }
-        TR - TD - TDE - TRH - TDH - TDEH - T - Q - I - D - U - O - H - FI - FE - L - F {
-          append result $html_frag($state$mode)
+        TR - CTR - TD - TDE - TRH - TDH - TDEH - T - Q - I - D - U - O - H - FI - FE - L - F {
+          if { $mode eq "CTR" } { 
+            set mode TR
+            set oddoreven [expr {$trow % 2 ? "odd" : "even"}]
+            incr trow
+          } else {
+            set oddoreven ""
+          }
+          append result [subst $html_frag($state$mode)]
           set state $mode
+        }
+        BR {
+          append result "<br>"
         }
         CT {
           set mode T
@@ -1441,23 +1464,23 @@ namespace eval Wikit::Format {
   vs BLS  BLS                      \n ;vs BLS  BLE                      \n
   vs BLE  BLS                      \n ;vs BLE  BLE                      \n
 
-  vs T    L   "</p><table class=wikit_options><tr>" ;vs T    TR   "</p><table class=wikit_table><tbody><tr>" ;vs T    TRH   "</p><table class=wikit_table><thead><tr>" ;
-  vs Q    L "</pre><table class=wikit_options><tr>" ;vs Q    TR "</pre><table class=wikit_table><tbody><tr>" ;vs Q    TRH "</pre><table class=wikit_table><thead><tr>" ;
-  vs U    L  "</ul><table class=wikit_options><tr>" ;vs U    TR  "</ul><table class=wikit_table><tbody><tr>" ;vs U    TRH  "</ul><table class=wikit_table><thead><tr>" ;
-  vs O    L  "</ol><table class=wikit_options><tr>" ;vs O    TR  "</ol><table class=wikit_table><tbody><tr>" ;vs O    TRH  "</ol><table class=wikit_table><thead><tr>" ;
-  vs I    L  "</dl><table class=wikit_options><tr>" ;vs I    TR  "</dl><table class=wikit_table><tbody><tr>" ;vs I    TRH  "</dl><table class=wikit_table><thead><tr>" ;
-  vs D    L  "</dl><table class=wikit_options><tr>" ;vs D    TR  "</dl><table class=wikit_table><tbody><tr>" ;vs D    TRH  "</dl><table class=wikit_table><thead><tr>" ;
-  vs H    L       "<table class=wikit_options><tr>" ;vs H    TR       "<table class=wikit_table><tbody><tr>" ;vs H    TRH       "<table class=wikit_table><thead><tr>" ;
-  vs TDE  L                             "</tr><tr>" ;vs TDE  TR                                  "</tr><tr>" ;vs TDE  TRH                   "</tr></tbody><thead><tr>" ;
-  vs TDEH L                             "</tr><tr>" ;vs TDEH TR                   "</tr></thead><tbody><tr>" ;vs TDEH TRH                   "</tr></tbody><thead><tr>" ;
-  vs FE   L "</pre><table class=wikit_options><tr>" ;vs FE   TR "</pre><table class=wikit_table><tbody><tr>" ;vs FE   TRH "</pre><table class=wikit_table><thead><tr>" ;
-  vs FI   L       "<table class=wikit_options><tr>" ;vs FI   TR       "<table class=wikit_table><tbody><tr>" ;vs FI   TRH       "<table class=wikit_table><thead><tr>" ;
-  vs L    L                                  "<tr>" ;vs L    TR                                "<tbody><tr>" ;vs L    TRH                                "<thead><tr>" ;
-  vs HD2  L  "</h2><table class=wikit_options><tr>" ;vs HD2  TR  "</h2><table class=wikit_table><tbody><tr>" ;vs HD2  TRH  "</h2><table class=wikit_table><thead><tr>" ;
-  vs HD3  L  "</h3><table class=wikit_options><tr>" ;vs HD3  TR  "</h3><table class=wikit_table><tbody><tr>" ;vs HD3  TRH  "</h3><table class=wikit_table><thead><tr>" ;
-  vs HD4  L  "</h4><table class=wikit_options><tr>" ;vs HD4  TR  "</h4><table class=wikit_table><tbody><tr>" ;vs HD4  TRH  "</h4><table class=wikit_table><thead><tr>" ;
-  vs BLS  L     "\n<table class=wikit_options><tr>" ;vs BLS  TR     "\n<table class=wikit_table><tbody><tr>" ;vs BLS  TRH     "\n<table class=wikit_table><thead><tr>" ;
-  vs BLE  L     "\n<table class=wikit_options><tr>" ;vs BLE  TR     "\n<table class=wikit_table><tbody><tr>" ;vs BLE  TRH     "\n<table class=wikit_table><thead><tr>" ;
+  vs T    L   "</p><table class=wikit_options><tr>" ;vs T    TR   "</p><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs T    TRH   "</p><table class=wikit_table><thead><tr>" ;
+  vs Q    L "</pre><table class=wikit_options><tr>" ;vs Q    TR "</pre><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs Q    TRH "</pre><table class=wikit_table><thead><tr>" ;
+  vs U    L  "</ul><table class=wikit_options><tr>" ;vs U    TR  "</ul><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs U    TRH  "</ul><table class=wikit_table><thead><tr>" ;
+  vs O    L  "</ol><table class=wikit_options><tr>" ;vs O    TR  "</ol><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs O    TRH  "</ol><table class=wikit_table><thead><tr>" ;
+  vs I    L  "</dl><table class=wikit_options><tr>" ;vs I    TR  "</dl><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs I    TRH  "</dl><table class=wikit_table><thead><tr>" ;
+  vs D    L  "</dl><table class=wikit_options><tr>" ;vs D    TR  "</dl><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs D    TRH  "</dl><table class=wikit_table><thead><tr>" ;
+  vs H    L       "<table class=wikit_options><tr>" ;vs H    TR       "<table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs H    TRH       "<table class=wikit_table><thead><tr>" ;
+  vs TDE  L                             "</tr><tr>" ;vs TDE  TR                                  "</tr><tr class='\$oddoreven'>" ;vs TDE  TRH                   "</tr></tbody><thead><tr>" ;
+  vs TDEH L                             "</tr><tr>" ;vs TDEH TR                   "</tr></thead><tbody><tr class='\$oddoreven'>" ;vs TDEH TRH                   "</tr></tbody><thead><tr>" ;
+  vs FE   L "</pre><table class=wikit_options><tr>" ;vs FE   TR "</pre><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs FE   TRH "</pre><table class=wikit_table><thead><tr>" ;
+  vs FI   L       "<table class=wikit_options><tr>" ;vs FI   TR       "<table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs FI   TRH       "<table class=wikit_table><thead><tr>" ;
+  vs L    L                                  "<tr>" ;vs L    TR                                "<tbody><tr class='\$oddoreven'>" ;vs L    TRH                                "<thead><tr>" ;
+  vs HD2  L  "</h2><table class=wikit_options><tr>" ;vs HD2  TR  "</h2><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs HD2  TRH  "</h2><table class=wikit_table><thead><tr>" ;
+  vs HD3  L  "</h3><table class=wikit_options><tr>" ;vs HD3  TR  "</h3><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs HD3  TRH  "</h3><table class=wikit_table><thead><tr>" ;
+  vs HD4  L  "</h4><table class=wikit_options><tr>" ;vs HD4  TR  "</h4><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs HD4  TRH  "</h4><table class=wikit_table><thead><tr>" ;
+  vs BLS  L     "\n<table class=wikit_options><tr>" ;vs BLS  TR     "\n<table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs BLS  TRH     "\n<table class=wikit_table><thead><tr>" ;
+  vs BLE  L     "\n<table class=wikit_options><tr>" ;vs BLE  TR     "\n<table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs BLE  TRH     "\n<table class=wikit_table><thead><tr>" ;
 
   vs T    FI                          </p><pre> ;vs T   FE                          </p> ;
   vs Q    FI                        </pre><pre> ;vs Q   FE                        </pre> ;
