@@ -68,6 +68,8 @@ if {[info exists starkit::topdir]} {
 package require HttpdSingle	;# choose singlethreaded
 package require Http		;# Http support
 package require Debug 2.0
+# uncomment to turn off caching for testing
+# package provide Cache 2.0 ; proc Cache args {return {}}
 
 # Application Starts Here
 
