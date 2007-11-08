@@ -348,7 +348,12 @@ span.dots {
 a.delta {
  font-size: 70%;
  color: #D3D3D3;
- margin: 0 0 0 2em;
+ margin-left: 0.5em;
+}
+
+span.delta {
+ font-size: 70%;
+ color: #D3D3D3;
 }
 
 ins {
@@ -409,4 +414,7 @@ td.rc2 {
 }
 td.rc3 {
 	width: 10em;
+}
+a.cleared {
+	padding-left: 2em;
 }

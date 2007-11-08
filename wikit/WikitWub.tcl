@@ -502,7 +502,7 @@ namespace eval WikitWub {
 		    set result {}
 
 		    if { !$deletesAdded } {
-			lappend results [<p> [<a> href /_cleared "Cleared pages (title and/or page)"]]
+			lappend results [<p> [<a> class cleared href /_cleared "Cleared pages (title and/or page)"]]
 			set deletesAdded 1
 		    }
 		}
@@ -1037,7 +1037,7 @@ namespace eval WikitWub {
     variable protected
     variable menus
     variable bullet " &bull; "
-    array set protected {Home 0 About 1 Search 2 Help 3 Changes 4 HoneyPot 5 TOC 8 Init 9}
+    array set protected {Search 2 Changes 4 HoneyPot 5 Something 7 TOC 8 Init 9}
     foreach {n v} [array get protected] {
 	set protected($v) $n
     }
@@ -1297,6 +1297,7 @@ namespace eval WikitWub {
     # called to generate an edit page
     proc /edit {r N args} {
 	variable readonly
+	variable protected
 	if {$readonly ne ""} {
 	    return [sendPage $r ro]
 	}
@@ -1304,7 +1305,7 @@ namespace eval WikitWub {
 	if {![string is integer -strict $N]} {
 	    return [Http NotFound $r]
 	}
-	if {$N < 10} {
+	if {[info exists protected($N)]} {
 	    return [Http Forbidden $r]
 	}
 	if {$N >= [mk::view size wdb.pages]} {
