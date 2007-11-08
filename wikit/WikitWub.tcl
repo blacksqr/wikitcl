@@ -386,6 +386,11 @@ namespace eval WikitWub {
 		    content-type text/html]
     }
 
+    proc /cclear {r args} {
+	Cache clear
+	return [Http Redirect $r "http://[dict get $r host]/4"]
+    }
+
     proc /cache {r args} {
 	set C [Html dict2table [Cache::2dict] {-url -stale -hits -unmod -ifmod -when}]
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
