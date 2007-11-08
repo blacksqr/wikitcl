@@ -1228,7 +1228,7 @@ namespace eval Wikit::Format {
           }
         u {
           append result \
-            $html_frag(e_) $text $html_frag(tc) \
+            $html_frag(e_) [quote $text] $html_frag(tc) \
             [quote $text] $html_frag(_a)
         }
         x {
@@ -1236,7 +1236,7 @@ namespace eval Wikit::Format {
             append result $html_frag(i_) $text $html_frag(tc)
           } else {
             append result \
-              \[ $html_frag(e_) $text $html_frag(tc) \
+              \[ $html_frag(e_) [quote $text] $html_frag(tc) \
               [incr count] $html_frag(_a) \]
           }
         }
@@ -1261,7 +1261,7 @@ namespace eval Wikit::Format {
             a {
               append result "\n<div class='annotated'>\n"
               append result "  <span class='versioninfo'>\n"
-              append result "    <span class='versionnum'><a href='/_revision/$page?V=$version&A=1'>$version</a></span>\n"
+              append result "    <span class='versionnum'><a href='[quote /_revision/$page?V=$version&A=1]'>$version</a></span>\n"
               append result "    <span class='versionwho'>$who</span><br>\n"
               append result "    <span class='versiondate'>$when</span>\n"
               append result "  </span>\n"
@@ -1464,41 +1464,77 @@ namespace eval Wikit::Format {
   vs BLS  BLS                      \n ;vs BLS  BLE                      \n
   vs BLE  BLS                      \n ;vs BLE  BLE                      \n
 
-  vs T    L   "</p><table class=wikit_options><tr>" ;vs T    TR   "</p><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs T    TRH   "</p><table class=wikit_table><thead><tr>" ;
-  vs Q    L "</pre><table class=wikit_options><tr>" ;vs Q    TR "</pre><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs Q    TRH "</pre><table class=wikit_table><thead><tr>" ;
-  vs U    L  "</ul><table class=wikit_options><tr>" ;vs U    TR  "</ul><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs U    TRH  "</ul><table class=wikit_table><thead><tr>" ;
-  vs O    L  "</ol><table class=wikit_options><tr>" ;vs O    TR  "</ol><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs O    TRH  "</ol><table class=wikit_table><thead><tr>" ;
-  vs I    L  "</dl><table class=wikit_options><tr>" ;vs I    TR  "</dl><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs I    TRH  "</dl><table class=wikit_table><thead><tr>" ;
-  vs D    L  "</dl><table class=wikit_options><tr>" ;vs D    TR  "</dl><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs D    TRH  "</dl><table class=wikit_table><thead><tr>" ;
-  vs H    L       "<table class=wikit_options><tr>" ;vs H    TR       "<table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs H    TRH       "<table class=wikit_table><thead><tr>" ;
-  vs TDE  L                             "</tr><tr>" ;vs TDE  TR                                  "</tr><tr class='\$oddoreven'>" ;vs TDE  TRH                   "</tr></tbody><thead><tr>" ;
-  vs TDEH L                             "</tr><tr>" ;vs TDEH TR                   "</tr></thead><tbody><tr class='\$oddoreven'>" ;vs TDEH TRH                   "</tr></tbody><thead><tr>" ;
-  vs FE   L "</pre><table class=wikit_options><tr>" ;vs FE   TR "</pre><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs FE   TRH "</pre><table class=wikit_table><thead><tr>" ;
-  vs FI   L       "<table class=wikit_options><tr>" ;vs FI   TR       "<table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs FI   TRH       "<table class=wikit_table><thead><tr>" ;
-  vs L    L                                  "<tr>" ;vs L    TR                                "<tbody><tr class='\$oddoreven'>" ;vs L    TRH                                "<thead><tr>" ;
-  vs HD2  L  "</h2><table class=wikit_options><tr>" ;vs HD2  TR  "</h2><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs HD2  TRH  "</h2><table class=wikit_table><thead><tr>" ;
-  vs HD3  L  "</h3><table class=wikit_options><tr>" ;vs HD3  TR  "</h3><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs HD3  TRH  "</h3><table class=wikit_table><thead><tr>" ;
-  vs HD4  L  "</h4><table class=wikit_options><tr>" ;vs HD4  TR  "</h4><table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs HD4  TRH  "</h4><table class=wikit_table><thead><tr>" ;
-  vs BLS  L     "\n<table class=wikit_options><tr>" ;vs BLS  TR     "\n<table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs BLS  TRH     "\n<table class=wikit_table><thead><tr>" ;
-  vs BLE  L     "\n<table class=wikit_options><tr>" ;vs BLE  TR     "\n<table class=wikit_table><tbody><tr class='\$oddoreven'>" ;vs BLE  TRH     "\n<table class=wikit_table><thead><tr>" ;
+  vs T    L   "</p><table summary='' class=wikit_options><tr>"
+  vs Q    L "</pre><table summary='' class=wikit_options><tr>"
+  vs U    L  "</ul><table summary='' class=wikit_options><tr>"
+  vs O    L  "</ol><table summary='' class=wikit_options><tr>"
+  vs I    L  "</dl><table summary='' class=wikit_options><tr>"
+  vs D    L  "</dl><table summary='' class=wikit_options><tr>"
+  vs H    L       "<table summary='' class=wikit_options><tr>"
+  vs TDE  L                                        "</tr><tr>"
+  vs TDEH L                                        "</tr><tr>"
+  vs FE   L "</pre><table summary='' class=wikit_options><tr>"
+  vs FI   L       "<table summary='' class=wikit_options><tr>"
+  vs L    L                                             "<tr>"
+  vs HD2  L  "</h2><table summary='' class=wikit_options><tr>"
+  vs HD3  L  "</h3><table summary='' class=wikit_options><tr>"
+  vs HD4  L  "</h4><table summary='' class=wikit_options><tr>"
+  vs BLS  L     "\n<table summary='' class=wikit_options><tr>"
+  vs BLE  L     "\n<table summary='' class=wikit_options><tr>"
 
-  vs T    FI                          </p><pre> ;vs T   FE                          </p> ;
-  vs Q    FI                        </pre><pre> ;vs Q   FE                        </pre> ;
-  vs U    FI                         </ul><pre> ;vs U   FE                         </ul> ;
-  vs O    FI                         </ol><pre> ;vs O   FE                         </ol> ;
-  vs I    FI                         </dl><pre> ;vs I   FE                         </dl> ;
-  vs D    FI                         </dl><pre> ;vs D   FE                         </dl> ;
-  vs H    FI                              <pre> ;vs H   FE                            {} ;
-  vs TDE  FI </tr></tbody></table></table><pre> ;vs TDE FE </tr></tbody></table></table> ;
-  vs TDEH FI </tr></thead></table></table><pre> ;vs TDE FE </tr></thead></table></table> ;
-  vs FE   FI                        </pre><pre> ;vs FE  FE                        </pre> ;
-  vs FI   FI                              <pre> ;vs FI  FE                            {} ;
-  vs L    FI                      </table><pre> ;vs L   FE                      </table> ;
-  vs HD2  FI                         </h2><pre> ;vs HD2 FE                         </h2> ;
-  vs HD3  FI                         </h3><pre> ;vs HD3 FE                         </h3> ;
-  vs HD4  FI                         </h4><pre> ;vs HD4 FE                         </h4> ;
-  vs BLS  FI                            \n<pre> ;vs BLS FE                            \n ;
-  vs BLE  FI                            \n<pre> ;vs BLE FE                            \n ;
+  vs T    TR   "</p><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs Q    TR "</pre><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs U    TR  "</ul><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs O    TR  "</ol><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs I    TR  "</dl><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs D    TR  "</dl><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs H    TR       "<table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs TDE  TR                                             "</tr><tr class='\$oddoreven'>"
+  vs TDEH TR                              "</tr></thead><tbody><tr class='\$oddoreven'>"
+  vs FE   TR "</pre><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs FI   TR       "<table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs L    TR                                           "<tbody><tr class='\$oddoreven'>"
+  vs HD2  TR  "</h2><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs HD3  TR  "</h3><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs HD4  TR  "</h4><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs BLS  TR     "\n<table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs BLE  TR     "\n<table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  
+  vs T    TRH   "</p><table summary='' class=wikit_table><thead><tr>"
+  vs Q    TRH "</pre><table summary='' class=wikit_table><thead><tr>"
+  vs U    TRH  "</ul><table summary='' class=wikit_table><thead><tr>"
+  vs O    TRH  "</ol><table summary='' class=wikit_table><thead><tr>"
+  vs I    TRH  "</dl><table summary='' class=wikit_table><thead><tr>"
+  vs D    TRH  "</dl><table summary='' class=wikit_table><thead><tr>"
+  vs H    TRH       "<table summary='' class=wikit_table><thead><tr>"
+  vs TDE  TRH                              "</tr></tbody><thead><tr>"
+  vs TDEH TRH                              "</tr></tbody><thead><tr>"
+  vs FE   TRH "</pre><table summary='' class=wikit_table><thead><tr>"
+  vs FI   TRH       "<table summary='' class=wikit_table><thead><tr>"
+  vs L    TRH                                           "<thead><tr>"
+  vs HD2  TRH  "</h2><table summary='' class=wikit_table><thead><tr>"
+  vs HD3  TRH  "</h3><table summary='' class=wikit_table><thead><tr>"
+  vs HD4  TRH  "</h4><table summary='' class=wikit_table><thead><tr>"
+  vs BLS  TRH     "\n<table summary='' class=wikit_table><thead><tr>"
+  vs BLE  TRH     "\n<table summary='' class=wikit_table><thead><tr>"
+
+  vs T    FI                  </p><pre> ;vs T   FE                  </p> ;
+  vs Q    FI                </pre><pre> ;vs Q   FE                </pre> ;
+  vs U    FI                 </ul><pre> ;vs U   FE                 </ul> ;
+  vs O    FI                 </ol><pre> ;vs O   FE                 </ol> ;
+  vs I    FI                 </dl><pre> ;vs I   FE                 </dl> ;
+  vs D    FI                 </dl><pre> ;vs D   FE                 </dl> ;
+  vs H    FI                      <pre> ;vs H   FE                    {} ;
+  vs TDE  FI </tr></tbody></table><pre> ;vs TDE FE </tr></tbody></table> ;
+  vs TDEH FI </tr></thead></table><pre> ;vs TDE FE </tr></thead></table> ;
+  vs FE   FI                </pre><pre> ;vs FE  FE                </pre> ;
+  vs FI   FI                      <pre> ;vs FI  FE                    {} ;
+  vs L    FI              </table><pre> ;vs L   FE              </table> ;
+  vs HD2  FI                 </h2><pre> ;vs HD2 FE                 </h2> ;
+  vs HD3  FI                 </h3><pre> ;vs HD3 FE                 </h3> ;
+  vs HD4  FI                 </h4><pre> ;vs HD4 FE                 </h4> ;
+  vs BLS  FI                    \n<pre> ;vs BLS FE                    \n ;
+  vs BLE  FI                    \n<pre> ;vs BLE FE                    \n ;
 
   # Only TR and TDE can go to TD
   # TDE -> TDE is never required.

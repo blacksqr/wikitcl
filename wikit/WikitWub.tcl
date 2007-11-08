@@ -221,11 +221,11 @@ namespace eval WikitWub {
     }
 
     # list2table - convert list into sortable HTML table
-    proc list2table {l header {footer {}} {tag ""}} {
+    proc list2table {l header {footer {}}} {
 	set row 0
-	return [<table> class sortable [If {$tag ne ""} { class $tag }] [subst {
+	return [<table> class sortable summary {} [subst {
 	    [<thead> [<tr> [Foreach t $header {
-		[<th> class $t [string totitle $t]]
+		[<th> class $t  [string totitle $t]]
 	    }]]]
 	    [If {$footer ne {}} {
 		[<tfoot> [<tr> [Foreach t $footer {[<th> $t]}]]]
@@ -234,6 +234,18 @@ namespace eval WikitWub {
 		[<tr> class [If {[incr row] % 2} even else odd] \
 		     [Foreach th $header v $vl {
 			 [<td> class $th $v]
+		     }]]
+	    }]]
+	}]]
+    }
+
+    proc list2plaintable {l columnclasses {tag ""}} {
+	set row 0
+	return [<table> class $tag summary {} [subst {
+	    [<tbody> [Foreach vl $l {
+		[<tr> class [If {[incr row] % 2} even else odd] \
+		     [Foreach v $vl c $columnclasses {
+			 [<td> class $c $v]
 		     }]]
 	    }]]
 	}]]
@@ -395,7 +407,7 @@ namespace eval WikitWub {
 
     proc /state {r} {
 	set state [Activity state]
-	set result [<table> class sortable [subst {
+	set result [<table> summary {} class sortable [subst {
 	    [<thead> [<tr> [<th> [join {cid socket thread backend ip start end log} </th><th>]]]]
 	    [<tbody> [Foreach row $state {
 		[<tr> [<td> [join $row </td><td>]]]
@@ -431,7 +443,7 @@ namespace eval WikitWub {
 
 	    html -
 	    default {
-		set table [<table> class sortable [subst {
+		set table [<table> summary {} class sortable [subst {
 		    [<thead> [<tr> [Foreach t [lindex $act 0] {
 			[<th> [string totitle $t]]
 		    }]]]
@@ -461,8 +473,9 @@ namespace eval WikitWub {
 	set threshold [expr {[clock seconds] - 7 * 86400}]
 	set deletesAdded 0
 
+	set result {}
+
 	foreach id [mk::select wdb.pages -rsort date] {
-	    set result ""
 	    lassign [mk::get wdb.pages!$id date name who page] date name who page
 
 	    # these are fake pages, don't list them
@@ -479,35 +492,33 @@ namespace eval WikitWub {
 	    incr count
 	    if {$day != $lastDay} {
 
-		if { $lastDay && !$deletesAdded } {
-		    lappend results </ul>\n<ul>
-		    lappend results [<li> [<a> href /_cleared "Cleared pages (title and/or page)"]]
-		    set deletesAdded 1
+		if { [llength $result] } {
+		    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
+		    set result {}
+
+		    if { !$deletesAdded } {
+			lappend results [<p> [<a> href /_cleared "Cleared pages (title and/or page)"]]
+			set deletesAdded 1
+		    }
 		}
 
 		# only cut off on day changes and if over 7 days reported
 		if {$count > 100 && $date < $threshold} {
 		    break
 		}
-
-		if {$lastDay} {
-		    lappend results </ul>
-		}
-		set lastDay $day
 		lappend results [<p> "[<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]] [<span> class day [clock format $date -gmt 1 -format %A]]"]
-		lappend results <ul>
+		set lastDay $day
 	    }
 
-	    append result [<a> href /$id [armour $name]]
-	    append result [<span> class dots ". . ."]
-	    append result [<span> class nick $who]
-	    append result [<span> class dots ". . ."]
-	    append result [<span> class nick [clock format $date -gmt 1 -format %T]]
-	    append result [<a> class delta href /_diff/$id#diff0 $delta]
-
-	    lappend results [<li> $result]
+	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta href /_diff/$id#diff0 $delta]" $who [clock format $date -gmt 1 -format %T]]
 	}
-	lappend results </ul>
+
+	if { [llength $result] } {
+	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
+	    if { !$deletesAdded } {
+		lappend results [<p> [<a> href /_cleared "Cleared pages (title and/or page)"]]
+	    }
+	}
 
 	if {$count > 100 && $date < $threshold} {
 	    lappend results [<p> "Older entries omitted..."]
@@ -937,7 +948,7 @@ namespace eval WikitWub {
 	    append C <pre> $versions </pre>
 	} else {
 	    Wikit::pagevars $N name
-	    append C "<table class='history'><thead class='history'>\n<tr>"
+	    append C "<table summary='' class='history'><thead class='history'>\n<tr>"
 	    foreach {column span} {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1} {
 		append C [<th> class [lindex $column 0] colspan $span $column]
 	    }
@@ -1092,7 +1103,7 @@ namespace eval WikitWub {
 	    }
 	}
 
-	return [redir $r $R [<a> href $R "Created Account"]]
+        return [redir $r $R [<a> href $R "Created Account"]]
     }
 
     proc who {r} {
@@ -1381,7 +1392,7 @@ namespace eval WikitWub {
 	    lassign $ref date name who from
 	    lappend tableList [list $date [Ref $from {}] $who]
 	}
-	set C [list2table $tableList {Date Name Who} {} ref]
+	set C [list2table $tableList {Date Name Who} {}]
 
 	# include javascripts and CSS for sortable table.
 	set r [sortable $r]

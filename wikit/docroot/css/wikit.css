@@ -383,3 +383,30 @@ a.button {
         display: none;
     }
 }
+table.rctable {
+	margin: 0;
+	border: 0;
+	font-size: 100%;
+	// width: 100%;
+}
+table.rctable tr.odd {
+	background-color: white;
+}
+table.rctable tbody td {
+	border: 0;
+	vertical-align: top;
+}
+td.rc1 {
+	padding-left: 2em;
+	width: 30em;
+}
+td.rc2, td.rc3 {
+	font-size: 90%;
+	color: #666;
+}
+td.rc2 {
+	width: 15em;
+}
+td.rc3 {
+	width: 10em;
+}
