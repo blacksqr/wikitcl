@@ -151,7 +151,7 @@ namespace eval Wikit::Format {
       ## there is any.
       #
       switch -exact -- $tag {
-        HR - UL - OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS {
+        HR - UL - OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED {
           if {$paragraph != {}} {
             if {$mode_fixed} {
               lappend irep FI {}
@@ -459,9 +459,6 @@ namespace eval Wikit::Format {
         CENTERED {
           lappend irep CT 0
         }
-        BACKREFS {
-          lappend irep BACKREFS $txt
-        }
         default {
           error "Unknown linetype $tag"
         }
@@ -520,7 +517,6 @@ namespace eval Wikit::Format {
       BLAME_START {^(>>>>>>)(\s?)(.+)$}
       BLAME_END   {^(<<<<<<)$}
       CENTERED {^()()(!!!!!!)$}
-      BACKREFS {^(<<backrefs>>)()(.*)$}
     } {
       # Compat: Remove restriction to multiples of 3 spaces.
       if {[regexp $re $line - pfx aux txt]} {
@@ -1187,9 +1183,6 @@ namespace eval Wikit::Format {
     set insdelcnt 0
     set centered 0
     set trow 0
-    set backrefid 0
-    set brefs {}
-
     variable html_frag
 
     foreach {mode text} $s {
@@ -1328,20 +1321,6 @@ namespace eval Wikit::Format {
           }
           set state T
         }
-        BACKREFS {
-          set mode T
-          set text [string trim $text]
-          append result [subst $html_frag($state$mode)]
-          lappend brefs backrefs$backrefid $text
-          if { [string length $text]} {
-            set htext "<b>$text</b>"
-          } else {
-            set htext "current page"
-          }
-          append result "\n<div class='backrefs' id='backrefs$backrefid'>Fetching backrefs for <b>$htext</b>...</div>\n"
-          set state T
-          incr backrefid
-        }
       }
     }
     # Close off the last section.
@@ -1380,7 +1359,7 @@ namespace eval Wikit::Format {
     # Get rid of spurious newline at start of each quoted area.
     regsub -all "<pre>\n" $result "<pre>" result
 
-    list $result {} $toc $brefs
+    list $result {} $toc
   }
 
   proc quote {q} {
@@ -1633,18 +1612,70 @@ namespace eval Wikit::Format {
     append result "d = new dTree('d');\n"
     append result "d.config.useLines = 1;\n"
     append result "d.config.useIcons = 0;\n"
+    append result "d.add($cnt,-1,'Wiki contents');\n"
+    set toccnt $cnt
+    incr cnt
+    append result "d.add($cnt,-1,'<br>Categories');\n"
+    set catparent $cnt
+    incr cnt
     foreach line [split $C \n] {
       if {[string index $line 0] eq "+"} continue
       if {[string is alnum [string index $line 0]]} {
-         if { [string length $line] } {
-           append result "d.add($cnt,-1,'[armour_quote $line]');\n"
-           set parent $cnt
-           incr cnt
-         }
-      } elseif {[regexp {^\s*(.+?)(\*{0,1})\s+(\[.*\])} $line - opt ref link]} {
+        if { [string index [string trim $line] end] eq "*" } {
+          # Show backreferences in toc
+          set refs [mk::select wdb.refs to [::Wikit::LookupPage $line wdb]]
+          set refList ""
+          foreach r $refs {
+            set r [mk::get wdb.refs!$r from]
+            ::Wikit::pagevars $r name
+            lappend refList [list $name $r]
+          }
+          append result "d.add($cnt,$toccnt,'[armour_quote [string range [string trim $line] 0 end-1]]');\n"
+          set parent $cnt
+          incr cnt
+          foreach x [lsort -dict -index 0 [lsort -dict $refList]] {
+            lassign $x name r
+            # Strip Category and * if present
+            if {[string range $name 0 8] eq "Category "} {
+              set name [string range $name 9 end]
+            }
+            if { [string index [string trim $name] end] eq "*" } {
+              set name [string range [string trim $name] 0 end-1]
+            }
+            if { [string length $name] } {
+              append result "d.add($cnt,$parent,'[armour_quote $name]', '/$r')\n"
+              incr cnt
+            }
+          }
+        } else {
+          if { [string length $line] } {
+            if { [string match "Category *" $line] } {
+              if { $catparent < 0 } {
+                append result "d.add($cnt,$toccnt,'Categories');\n"
+                set catparent $cnt
+                incr cnt
+              }
+#              append result "d.add($cnt,$catparent,'[armour_quote $line]');\n"
+              # Strip "Category "
+              set cname [string range $line 9 end]
+              append result "d.add($cnt,$catparent,'[armour_quote $cname]');\n"
+              set parent $cnt
+              incr cnt
+            } else {
+              append result "d.add($cnt,$toccnt,'[armour_quote $line]');\n"
+              set parent $cnt
+              incr cnt
+            }
+          }
+        }
+      } elseif {[regexp {^\s*(.+?)(\*{0,1})\s+(\[.*\])(\*?)} $line - opt ref link rest brefs]} {
         set link [string trim $link {[]}]
         if { [string length $opt] } {
-          append result "d.add($cnt,$parent,'[armour_quote $opt]','/[::Wikit::LookupPage $link wdb]');\n"
+          if { [string length $brefs] } {
+            append result "d.add($cnt,$parent,'[armour_quote $opt]','/_ref/[::Wikit::LookupPage $link wdb]?P=1');\n"
+          } else {
+            append result "d.add($cnt,$parent,'[armour_quote $opt]','/[::Wikit::LookupPage $link wdb]');\n"
+          }
           incr cnt
         }
       }
@@ -1722,3 +1753,5 @@ namespace eval Wikit::Format {
 ### tcl-continued-indent-level:2 ***
 ### indent-tabs-mode:nil ***
 ### End: ***
+
+
