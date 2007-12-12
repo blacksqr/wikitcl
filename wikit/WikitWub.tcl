@@ -1706,6 +1706,9 @@ namespace eval WikitWub {
 Direct wikit -namespace ::WikitWub -ctype "x-text/wiki"
 Convert convert -conversions 1 -namespace ::WikitWub
 
+package require Dub
+Direct dub -namespace ::Dub -ctype "x-text/html-fragment"
+
 # directories of static files
 foreach {dom expiry} {css {tomorrow} images {next week} scripts {tomorrow} img {next week} html 0 bin 0} {
     File $dom -root [file join $::config(docroot) $dom] -expires $expiry
@@ -1761,6 +1764,15 @@ proc Incoming {req} {
 	    set suffix [file join {} {*}[lrange [file split $path] 2 end]]
 	    dict set req -suffix $suffix
 	    ::wub do $req
+	}
+
+	/_dub -
+	/_dub/* {
+	    # Dub metakit toy
+	    set path [dict get $req -path]
+	    set suffix [file join {} {*}[lrange [file split $path] 2 end]]
+	    dict set req -suffix $suffix
+	    ::dub do $req
 	}
 
 	/*.jpg -
