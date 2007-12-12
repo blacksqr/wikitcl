@@ -1707,6 +1707,7 @@ Direct wikit -namespace ::WikitWub -ctype "x-text/wiki"
 Convert convert -conversions 1 -namespace ::WikitWub
 
 package require Dub
+Dub init
 Direct dub -namespace ::Dub -ctype "x-text/html-fragment"
 
 # directories of static files
