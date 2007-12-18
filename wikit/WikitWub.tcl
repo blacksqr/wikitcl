@@ -1277,7 +1277,11 @@ namespace eval WikitWub {
 
 	    set who $nick@[dict get $r -ipaddr]
 	    Debug.wikit {SAVING $N}
-	    ::Wikit::SavePage $N [string map {"Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C] $who $name $when
+	    if {[catch {
+		::Wikit::SavePage $N [string map {"Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C] $who $name $when
+	    } err eo]} {
+		set readonly $err
+	    }
 	}
 
 	Debug.wikit {save done $N}

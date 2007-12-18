@@ -574,13 +574,14 @@ namespace eval Wikit {
           set commit 1
         }
 
-        if {$commit} {
-          AddLogEntry $id $db
-          DoCommit $db
-        }
       }
     } r eo]} {
       Debug.error "SavePageDb: '$r' ($eo)"
+    }
+
+    if {$commit} {
+      AddLogEntry $id $db
+      DoCommit $db
     }
 
     if {$mutex ne ""} {
