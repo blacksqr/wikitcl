@@ -14,7 +14,7 @@ foreach {name val} [subst {
     overwrite 0
 
     host [info hostname]
-    multi 1
+    multi 0
 
     wikidb wikit.tkd
     history history
@@ -239,8 +239,8 @@ if {$multi} {
     package require WikitWub
     Httpd configure dispatch ""	;# script for each request
     proc Send {r} {
-	if {[dict exists $r -sender]} {
-	    {*}[dict get $r -sender] $r
+	if {[dict exists $r -send]} {
+	    {*}[dict get $r -send] $r
 	} else {
 	    HttpdWorker Send $r
 	}
@@ -261,7 +261,8 @@ Listener listen -host $host -port $listener_port -httpd Httpd -dispatch Backend
 #### start scgi Listener
 if {[info exists scgi_port] && ($scgi_port > 0)} {
     package require scgi
-    Listener listen -host $host -port $scgi_port -httpd scgi -dispatch {WikitWub Incoming} -send {::scgi Send}
+    Debug on scgi 10
+    Listener listen -host $host -port $scgi_port -httpd scgi -dispatch Incoming -send {::scgi Send}
 }
 
 #### Load local semantics from ./local.tcl
