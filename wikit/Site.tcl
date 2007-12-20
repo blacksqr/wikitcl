@@ -239,7 +239,11 @@ if {$multi} {
     package require WikitWub
     Httpd configure dispatch ""	;# script for each request
     proc Send {r} {
-	HttpdWorker Send $r
+	if {[dict exists $r -sender]} {
+	    {*}[dict get $r -sender] $r
+	} else {
+	    HttpdWorker Send $r
+	}
     }
 }
 
@@ -257,7 +261,7 @@ Listener listen -host $host -port $listener_port -httpd Httpd -dispatch Backend
 #### start scgi Listener
 if {[info exists scgi_port] && ($scgi_port > 0)} {
     package require scgi
-    Listener listen -host $host -port $scgi_port -httpd scgi -dispatch {Backend Incoming}
+    Listener listen -host $host -port $scgi_port -httpd scgi -dispatch {WikitWub Incoming} -send {::scgi Send}
 }
 
 #### Load local semantics from ./local.tcl
