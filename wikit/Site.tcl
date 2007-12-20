@@ -5,6 +5,7 @@ lappend auto_path /usr/lib/
 # set some default configuration flags and values
 foreach {name val} [subst {
     listener_port 8080
+    scgi_port 8088
     base "/tmp/wiki"
     globaldocroot 0
     backends 5
@@ -233,6 +234,7 @@ if {$multi} {
     }] {
 	set ::config($n) $v
     }
+
     #lappend auto_path $home
     package require WikitWub
     Httpd configure dispatch ""	;# script for each request
@@ -250,7 +252,13 @@ if {[info exists server_port]} {
 }
 
 #### start Listener
-Listener listen -host $host -port $listener_port -sockets Httpd -dispatch Backend
+Listener listen -host $host -port $listener_port -httpd Httpd -dispatch Backend
+
+#### start scgi Listener
+if {[info exists scgi_port] && ($scgi_port > 0)} {
+    package require scgi
+    Listener listen -host $host -port $scgi_port -httpd scgi -dispatch {Backend Incoming}
+}
 
 #### Load local semantics from ./local.tcl
 catch {source [file join [file dirname [info script]] local.tcl]} r eo
