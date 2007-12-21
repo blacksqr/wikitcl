@@ -1783,7 +1783,10 @@ proc Incoming {req} {
 	    ::dub do $req
 	}
 
-	/_doc -
+	/_doc {
+	    Http Redirect $r "http://[dict get $r host]/_doc/"
+	}
+
 	/_doc/* {
 	    # Dub metakit toy
 	    set path [dict get $req -path]
