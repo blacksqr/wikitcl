@@ -1714,6 +1714,9 @@ package require Dub
 Dub init prefix /_dub
 Direct dub -namespace ::Dub -ctype "x-text/html-fragment"
 
+package require Commenter
+Direct doc -namespace ::Commenter -ctype "x-text/html-fragment"
+
 # directories of static files
 foreach {dom expiry} {css {tomorrow} images {next week} scripts {tomorrow} img {next week} html 0 bin 0} {
     File $dom -root [file join $::config(docroot) $dom] -expires $expiry
@@ -1757,7 +1760,7 @@ proc Incoming {req} {
 	/*.exe -
 	/cgi-bin/* {
 	    # block the originator by IP
-	    Block block [dict get $req -ipaddr] "Bogus URL"
+	    Block block [dict get $req -ipaddr] "Bogus URL '[dict get $req -path]'"
 	    Send [Http Forbidden $req]
 	    continue	;# process next request
 	}
@@ -1778,6 +1781,15 @@ proc Incoming {req} {
 	    set suffix [file join {} {*}[lrange [file split $path] 2 end]]
 	    dict set req -suffix $suffix
 	    ::dub do $req
+	}
+
+	/_doc -
+	/_doc/* {
+	    # Dub metakit toy
+	    set path [dict get $req -path]
+	    set suffix [file join {} {*}[lrange [file split $path] 2 end]]
+	    dict set req -suffix $suffix
+	    ::doc do $req
 	}
 
 	/*.jpg -
@@ -1880,5 +1892,3 @@ Debug off socket 10
 #### Source local config script (not under version control)
 catch {source [file join [file dirname [info script]] local.tcl]} r eo
 Debug.log {RESTART: [clock format [clock second]] '$r' ($eo)}
-
-
