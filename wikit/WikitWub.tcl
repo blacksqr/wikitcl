@@ -1784,7 +1784,7 @@ proc Incoming {req} {
 	}
 
 	/_doc {
-	    Http Redirect $r "http://[dict get $r host]/_doc/"
+	    Http Redirect $req "http://[dict get $req host]/_doc/"
 	}
 
 	/_doc/* {
