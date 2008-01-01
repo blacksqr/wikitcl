@@ -396,6 +396,11 @@ namespace eval WikitWub {
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
     }
 
+    proc /block {r args} {
+	set C [Html dict2table [Block blockdict] {-site -when -why}]
+	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
+    }
+
     # generate site map
     proc /sitemap {r args} {
 	set p http://[Url host $r]/
@@ -1752,7 +1757,8 @@ proc Responder::post {rsp} {
 # Incoming - indication of incoming request
 proc Incoming {req} {
 
-    dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
+    #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
+    set req [Cookies 4Server $req]
 
     Responder Incoming $req -glob -- [dict get $req -path] {
 	/*.php -
