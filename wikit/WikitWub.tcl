@@ -1868,6 +1868,10 @@ proc Incoming {req} {
     }
 }
 
+#### initialize Block
+package require Block
+Block init logdir $::config(docroot)
+
 #### initialize Wikit
 package require Wikit::Format
 package require Wikit::Db
