@@ -1714,15 +1714,15 @@ namespace eval WikitWub {
 Convert init
 
 # initialize wikit specific Direct domain and Convert domain
-Direct wikit -namespace ::WikitWub -ctype "x-text/wiki"
+Direct wikit namespace ::WikitWub ctype "x-text/wiki"
 Convert Namespace ::WikitWub
 
 package require Dub
 Dub init prefix /_dub
-Direct dub -namespace ::Dub -ctype "x-text/html-fragment"
+Direct dub namespace ::Dub ctype "x-text/html-fragment"
 
 package require Commenter
-Direct doc -namespace ::Commenter -ctype "x-text/html-fragment"
+Direct doc namespace ::Commenter ctype "x-text/html-fragment"
 
 # directories of static files
 foreach {dom expiry} {css {tomorrow} images {next week} scripts {tomorrow} img {next week} html 0 bin 0} {
