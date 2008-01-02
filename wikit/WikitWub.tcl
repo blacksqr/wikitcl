@@ -1751,7 +1751,7 @@ proc Disconnected {args} {
 
 # Responder::post - postprocess response by converting
 proc Responder::post {rsp} {
-    return [::convert do $rsp]
+    return [::Convert do $rsp]
 }
 
 # Incoming - indication of incoming request
