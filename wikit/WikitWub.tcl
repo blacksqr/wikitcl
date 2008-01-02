@@ -1711,6 +1711,8 @@ namespace eval WikitWub {
     namespace ensemble create -subcommands {}
 }
 
+Convert init
+
 # initialize wikit specific Direct domain and Convert domain
 Direct wikit -namespace ::WikitWub -ctype "x-text/wiki"
 Convert Namespace ::WikitWub
