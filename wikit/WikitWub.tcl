@@ -1713,7 +1713,7 @@ namespace eval WikitWub {
 
 # initialize wikit specific Direct domain and Convert domain
 Direct wikit -namespace ::WikitWub -ctype "x-text/wiki"
-Convert convert -conversions 1 -namespace ::WikitWub
+Convert Namespace ::WikitWub
 
 package require Dub
 Dub init prefix /_dub
@@ -1729,7 +1729,7 @@ foreach {dom expiry} {css {tomorrow} images {next week} scripts {tomorrow} img {
 
 # Wub documentation directory
 Mason wub -url /_wub -root [file join $::config(wubdir) docs] -auth .before -wrapper .after -dirhead {name size mtime}
-convert Namespace ::MConvert
+Convert Namespace ::MConvert
 
 # set message of the day (if any) to be displayed on /4
 catch {
