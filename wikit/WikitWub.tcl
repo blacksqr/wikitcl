@@ -388,7 +388,7 @@ namespace eval WikitWub {
 
     proc /cclear {r args} {
 	Cache clear
-	return [Http Redirect $r "http://[dict get $r host]/4"]
+	return [Http Redir $r "http://[dict get $r host]/4"]
     }
 
     proc /cache {r args} {
@@ -1522,10 +1522,10 @@ namespace eval WikitWub {
 	    set N [locate $term]
 	    if {$N == "2"} {
 		# locate has given up - can't find a page - go to search
-		return [Http Redirect $r "http://[dict get $r host]/_search" "" "" S [Query decode $term$fancy]]
+		return [Http Redir $r "http://[dict get $r host]/_search" S [Query decode $term$fancy]]
 	    } elseif {$N ne $term} {
 		# we really should redirect
-		return [Http Redirect $r "http://[dict get $r host]/$N"]
+		return [Http Redir $r "http://[dict get $r host]/$N"]
 	    }
 	}
 
@@ -1534,7 +1534,7 @@ namespace eval WikitWub {
 	    variable trailers
 	    # we need to redirect to the appropriate spot
 	    set url [dict get $trailers $fancy]/$N
-	    return [Http Redirect $r "http://[dict get $r host]/$url"]
+	    return [Http Redir $r "http://[dict get $r host]/$url"]
 	}
 
 	set date [clock seconds]	;# default date is now
@@ -1786,7 +1786,7 @@ proc Incoming {req} {
 	}
 
 	/_doc {
-	    Http Redirect $req "http://[dict get $req host]/_doc/"
+	    Http Redir $req "http://[dict get $req host]/_doc/"
 	}
 
 	/_doc/* {
