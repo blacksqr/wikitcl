@@ -1375,13 +1375,15 @@ namespace eval WikitWub {
 	invalidate $r wikit.css
 	invalidate $r ie6.css
 	set R [dict get $r -url]
+	Cache delete http://[dict get $r host]/_toc
 	return [Http Ok $r [<a> href $R "Loaded CSS"] text/html]
     }
 
     # called to generate wiki-TOC
     proc /toc {r} {
 	variable TOC
-	return [Http Ok $r $TOC text/javascript]
+	#return [Http Ok $r $TOC text/javascript]
+	return [Http CacheableContent $r [clock seconds] $TOC text/javascript]
     }
 
     # called to generate a page with references
