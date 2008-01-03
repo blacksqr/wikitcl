@@ -1714,15 +1714,15 @@ namespace eval WikitWub {
 Convert init
 
 # initialize wikit specific Direct domain and Convert domain
-Direct init wikit namespace ::WikitWub ctype "x-text/wiki"
+Direct init wikit namespace ::WikitWub prefix /_wub ctype "x-text/wiki"
 Convert Namespace ::WikitWub
 
 package require Dub
 Dub init prefix /_dub
-Direct init dub namespace ::Dub ctype "x-text/html-fragment"
+Direct init dub namespace ::Dub prefix /_dub ctype "x-text/html-fragment"
 
 package require Commenter
-Direct init doc namespace ::Commenter ctype "x-text/html-fragment"
+Direct init doc namespace ::Commenter prefix /_doc ctype "x-text/html-fragment"
 
 # directories of static files
 foreach {dom expiry} {css {tomorrow} images {next week} scripts {tomorrow} img {next week} html 0 bin 0} {
@@ -1776,18 +1776,12 @@ proc Incoming {req} {
 	/_wub -
 	/_wub/* {
 	    # Wub documentation - via the wikit Direct domain
-	    set path [dict get $req -path]
-	    set suffix [file join {} {*}[lrange [file split $path] 2 end]]
-	    dict set req -suffix $suffix
 	    ::wub do $req
 	}
 
 	/_dub -
 	/_dub/* {
 	    # Dub metakit toy
-	    set path [dict get $req -path]
-	    set suffix [file join {} {*}[lrange [file split $path] 2 end]]
-	    dict set req -suffix $suffix
 	    ::dub do $req
 	}
 
@@ -1797,9 +1791,6 @@ proc Incoming {req} {
 
 	/_doc/* {
 	    # Dub metakit toy
-	    set path [dict get $req -path]
-	    set suffix [file join {} {*}[lrange [file split $path] 2 end]]
-	    dict set req -suffix $suffix
 	    ::doc do $req
 	}
 
@@ -1834,7 +1825,7 @@ proc Incoming {req} {
 
 	/_* {
 	    # These are wiki-local restful command URLs,
-	    # we process them via the wikit Direct domain
+	    # we process them via the ::wikit Direct domain
 	    Debug.wikit {direct invocation}
 	    set path [file split [dict get $req -path]]
 	    set N [lindex $path end]
