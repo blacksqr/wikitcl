@@ -378,7 +378,7 @@ namespace eval WikitWub {
 	    append content <body> \n
 	    append content $rspcontent
 	    append content "
-		[<textarea> outbox id outbox {}]
+		[<textarea> outbox id outbox rows 30 cols 72 style width:100% {}]
 		[<button> toWiki onclick {document.getElementById("outbox").innerHTML = Wiky.toWiki(document.getElementById("content").innerHTML);} 2Wiki]
 		[<button> toHTML onclick {document.getElementById("content").innerHTML = Wiky.toHtml(document.getElementById("outbox").value);} 2HTML]
 	    "
