@@ -7,6 +7,7 @@ package require Convert
 package require Direct
 package require Html
 package require fileutil
+package require Form
 
 package require Debug
 package require Url
@@ -337,6 +338,7 @@ namespace eval WikitWub {
 	<style type='text/css' media='all'>@import url(/dtree.css);</style>
 	<script src='/transclude.js' type='text/javascript'></script>
 	<script src='/dtree.js' type='text/javascript'></script>
+	<script src='/wiky.js' type='text/javascript'></script>
 	<link rel='alternate' type='application/rss+xml' title='RSS' href='/rss.xml'>
 	<!--[if lte IE 6]>
 		<style type='text/css' media='all'>@import 'ie6.css';</style>
@@ -376,6 +378,11 @@ namespace eval WikitWub {
 	    append content <body> \n
 	    append content $rspcontent
 	    append content [Honeypot link /$protected(HoneyPot).html]
+	    append content [form {
+		[<textarea> id outbox]
+		[<button> onclick {wiky.toWiki();} 2Wiki]
+		[<button> onclick {wiky.toHTML();} 2HTML]
+	    }]
 	    append content </body> \n
 	    append content </html> \n
 	}
@@ -1792,7 +1799,7 @@ proc Incoming {req} {
 	}
 
 	/_doc/* {
-	    # Dub metakit toy
+	    # Wub docs
 	    ::doc do $req
 	}
 
