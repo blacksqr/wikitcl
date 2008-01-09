@@ -5,6 +5,22 @@
 	Author:  Stefan Goessner/2005-06
 	Web:     http://goessner.net/
 */
+
+var wiky = {
+  inbox: null,
+  outbox: null,
+  init: function() { 
+    this.inbox = document.getElementById("content");
+    this.outbox = document.getElementById("outbox");
+  },
+  function toHTML() {
+    inbox.innerHTML = Wiky.toHtml(outbox.value);
+  }
+  function toWiki() {
+    outbox.innerHTML = Wiky.toWiki(inbox.innerHTML);
+  }
+}
+
 var Wiky = {
   version: 0.95,
   blocks: null,
