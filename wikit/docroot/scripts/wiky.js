@@ -110,12 +110,12 @@ var Wiky = {
        "Wiky.inverse.nonwikiinlines",
        "Wiky.inverse.escapes",
        "Wiky.inverse.wikiinlines",
-       { rex:/<h1>(.*?)<\/h1>/mgi, tmplt:"=$1=" },
-       { rex:/<h2>(.*?)<\/h2>/mgi, tmplt:"==$1==" },
-       { rex:/<h3>(.*?)<\/h3>/mgi, tmplt:"===$1===" },
-       { rex:/<h4>(.*?)<\/h4>/mgi, tmplt:"====$1====" },
-       { rex:/<h5>(.*?)<\/h5>/mgi, tmplt:"=====$1=====" },
-       { rex:/<h6>(.*?)<\/h6>/mgi, tmplt:"======$1======" },
+       { rex:/<h1[^>]*>(.*?)<\/h1>/mgi, tmplt:"=$1=" },
+       { rex:/<h2[^>]*>(.*?)<\/h2>/mgi, tmplt:"==$1==" },
+       { rex:/<h3[^>]*>(.*?)<\/h3>/mgi, tmplt:"===$1===" },
+       { rex:/<h4[^>]*>(.*?)<\/h4>/mgi, tmplt:"====$1====" },
+       { rex:/<h5[^>]*>(.*?)<\/h5>/mgi, tmplt:"=====$1=====" },
+       { rex:/<h6[^>]*>(.*?)<\/h6>/mgi, tmplt:"======$1======" },
        { rex:/<(p|table)[^>]+(style=\"[^\"]*\")[^>]*>/mgi, tmplt:function($0,$1,$2){return "<"+$1+">"+Wiky.invStyle($2);} },
        { rex:/\xB6{2}<li/mgi, tmplt:"\xB6<li" },  // ie6 only ..
        { rex:/<li class=\"?([^ >\"]*)\"?[^>]*?>([^<]*)/mgi, tmplt:function($0,$1,$2){return $1.replace(/u/g,"*").replace(/([01aAiIg])$/,"$1.")+" "+$2;}},  // list items ..
@@ -148,7 +148,7 @@ var Wiky = {
        { rex:/<sub[^>]*?>(.*?)<\/sub>/mgi, tmplt:"~$1~" },
        { rex:/<del[^>]*?>(.*?)<\/del>/mgi, tmplt:"(-$1-)" },
        { rex:/<abbr title=\"([^\"]*)\">(.*?)<\/abbr>/mgi, tmplt:"?$2($1)?" },
-       { rex:/<a href=\"([^\"]*)\"[^>]*?>(.*?)<\/a>/mgi, tmplt:function($0,$1,$2){return $1==$2?$1:"["+$1+","+$2+"]";}},
+       { rex:/<a href=\"([^\"]*)\"[^>]*?>(.*?)<\/a>/mgi, tmplt:function($0,$1,$2){return $1==$2?$1:"["+$2+"]";}},
        { rex:/<img([^>]*)\/>/mgi, tmplt:function($0,$1){var a=Wiky.attrVal($1,"alt"),h=Wiky.attrVal($1,"src"),t=Wiky.attrVal($1,"title"),s=Wiky.attrVal($1,"style");return s||(t&&h!=t)?("["+Wiky.invStyle($1)+"img:"+h+(t&&(","+t))+"]"):h;}},
      ],
      escapes: [
