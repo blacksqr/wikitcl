@@ -377,12 +377,12 @@ namespace eval WikitWub {
 
 	    append content <body> \n
 	    append content $rspcontent
-	    append content [Honeypot link /$protected(HoneyPot).html]
-	    append content [form {
+	    append content [<form> {
 		[<textarea> id outbox]
 		[<button> onclick {wiky.toWiki();} 2Wiki]
 		[<button> onclick {wiky.toHTML();} 2HTML]
 	    }]
+	    append content [Honeypot link /$protected(HoneyPot).html]
 	    append content </body> \n
 	    append content </html> \n
 	}
