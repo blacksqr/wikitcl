@@ -13,10 +13,10 @@ var wiky = {
     this.inbox = document.getElementById("content");
     this.outbox = document.getElementById("outbox");
   },
-  function toHTML() {
+  toHTML: function () {
     inbox.innerHTML = Wiky.toHtml(outbox.value);
   }
-  function toWiki() {
+  toWiki: function () {
     outbox.innerHTML = Wiky.toWiki(inbox.innerHTML);
   }
 }
