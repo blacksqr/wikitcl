@@ -118,7 +118,7 @@ var Wiky = {
        { rex:/<h6[^>]*>(.*?)<\/h6>/mgi, tmplt:"======$1======" },
        { rex:/<(p|table)[^>]+(style=\"[^\"]*\")[^>]*>/mgi, tmplt:function($0,$1,$2){return "<"+$1+">"+Wiky.invStyle($2);} },
        { rex:/\xB6{2}<li/mgi, tmplt:"\xB6<li" },  // ie6 only ..
-       { rex:/<li class=\"?([^ >\"]*)\"?[^>]*?>([^<]*)/mgi, tmplt:function($0,$1,$2){return $1.replace(/u/g,"*").replace(/([01aAiIg])$/,"$1.")+" "+$2;}},  // list items ..
+       { rex:/<li[^>]*?>([^<]*)/mgi, tmplt:function($0,$1,$2){return $1.replace(/u/g,"*").replace(/([01aAiIg])$/,"$1.")+" "+$2;}},  // list items ..
        { rex:/(^|\xB6)<(u|o)l[^>]*?>\xB6/mgi, tmplt:"$1" },  // only outer level list start at BOL ...
        { rex:/(<\/(?:dl|ol|ul|p)>[ \xB6]*<(?:p)>)/gi, tmplt:"\xB6\xB6" },
        { rex:/<dt>(.*?)<\/dt>[ \f\n\r\t\v]*<dd>/mgi, tmplt:"; $1: " },
