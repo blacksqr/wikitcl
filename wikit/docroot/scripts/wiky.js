@@ -15,9 +15,11 @@ var wiky = {
   },
   toHTML: function () {
     inbox.innerHTML = Wiky.toHtml(outbox.value);
+    return false;
   },
   toWiki: function () {
     outbox.innerHTML = Wiky.toWiki(inbox.innerHTML);
+    return false;
   }
 }
 
