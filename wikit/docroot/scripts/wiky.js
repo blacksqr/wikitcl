@@ -6,17 +6,6 @@
 	Web:     http://goessner.net/
 */
 
-var wiky = {
-  toHTML: function () {
-    document.getElementById("content").innerHTML = Wiky.toHtml(document.getElementById("outbox").value);
-    return false;
-  },
-  toWiki: function () {
-    document.getElementById("outbox").innerHTML = Wiky.toWiki(document.getElementById("content").innerHTML);
-    return false;
-  }
-}
-
 var Wiky = {
   version: 0.95,
   blocks: null,
