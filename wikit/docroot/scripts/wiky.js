@@ -15,7 +15,7 @@ var wiky = {
   },
   toHTML: function () {
     inbox.innerHTML = Wiky.toHtml(outbox.value);
-  }
+  },
   toWiki: function () {
     outbox.innerHTML = Wiky.toWiki(inbox.innerHTML);
   }
