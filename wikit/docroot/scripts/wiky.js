@@ -7,18 +7,12 @@
 */
 
 var wiky = {
-  inbox: null,
-  outbox: null,
-  init: function() { 
-    this.inbox = document.getElementById("content");
-    this.outbox = document.getElementById("outbox");
-  },
   toHTML: function () {
-    inbox.innerHTML = Wiky.toHtml(outbox.value);
+    document.getElementById("content").innerHTML = Wiky.toHtml(document.getElementById("outbox").value);
     return false;
   },
   toWiki: function () {
-    outbox.innerHTML = Wiky.toWiki(inbox.innerHTML);
+    document.getElementById("outbox").innerHTML = Wiky.toWiki(document.getElementById("content").innerHTML);
     return false;
   }
 }
