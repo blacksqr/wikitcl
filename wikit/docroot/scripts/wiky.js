@@ -31,7 +31,6 @@ var Wiky = {
      wikiblocks: [
        "Wiky.rules.nonwikiinlines",
        "Wiky.rules.escapes",
-       { rex:/(?:^|\xB6)----(?=\xB6|$)/g,
        { rex:/(?:^|\xB6)(={1,6})(.*?)[=]*(?=\xB6|$)/g, tmplt:function($0,$1,$2){ var h=$1.length; return ":p]\xB6<h"+h+">"+$2+"</h"+h+">\xB6[p:";} }, // <h1> .. <h6>
        { rex:/(?:^|\xB6)[-]{4}(?:\xB6|$)/g, tmplt:"\xB6<hr/>\xB6" },  // horizontal ruler ..
        { rex:/\\\\([ \xB6])/g, tmplt:"<br/>$1" },  // forced line break ..
