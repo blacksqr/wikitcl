@@ -101,7 +101,7 @@ var Wiky = {
      ],
      post: [
        { rex:/@([0-9]+)@/g, tmplt:function($0,$1){return Wiky.restore($1);} },  // resolve blocks ..
-       { rex:/\xB6/g, tmplt:"\n" }  // replace '¶' with line breaks ..
+       { rex:/\xB6/g, tmplt:"\n\n" }  // replace '¶' with line breaks ..
      ],
      nonwikiblocks: [
        { rex:/<pre([^>]*)>(.*?)<\/pre>/mgi, tmplt:function($0,$1,$2){return Wiky.store("["+Wiky.invStyle($1)+Wiky.invAttr($1,["lang"]).replace(/x\-/,"")+"%"+Wiky.apply($2, Wiky.hasAttr($1,"lang")?Wiky.inverse.lang[Wiky.attrVal($1,"lang").substr(2)]:Wiky.inverse.code)+"%]");} } //code block
