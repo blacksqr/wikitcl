@@ -149,6 +149,7 @@ var Wiky = {
        { rex:/<del[^>]*?>(.*?)<\/del>/mgi, tmplt:"(-$1-)" },
        { rex:/<abbr title=\"([^\"]*)\">(.*?)<\/abbr>/mgi, tmplt:"?$2($1)?" },
        { rex:/<a rel=\"nofollow\" href=\"([^\"]*)\"[^>]*?>(.*?)<\/a>/mgi, tmplt:function($0,$1,$2){return $1==$2?$1:"["+$2+"]";}},
+       { rex:/<a href=\"([^\"]*)\"[^>]*?>([0-9]+)<\/a>/mgi, tmplt:function($0,$1,$2){return "["+$1+"]";}},
        { rex:/<a href=\"([^\"]*)\"[^>]*?>(.*?)<\/a>/mgi, tmplt:function($0,$1,$2){return $1==$2?$1:"["+$2+"]";}},
        { rex:/\[\[\]/mgi, tmplt:"["},
        { rex:/\[\]\]/mgi, tmplt:"]"},
