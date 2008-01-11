@@ -151,7 +151,7 @@ var Wiky = {
        { rex:/<a href=\"([^\"]*)\"[^>]*?>(.*?)<\/a>/mgi, tmplt:function($0,$1,$2){return $1==$2?$1:"["+$2+"]";}},
        { rex:/\[\[\]/mgi, tmplt:"["},
        { rex:/\[\]\]/mgi, tmplt:"]"},
-       { rex:/<img([^>]*)\/>/mgi, tmplt:function($0,$1){var a=Wiky.attrVal($1,"alt"),h=Wiky.attrVal($1,"src"),t=Wiky.attrVal($1,"title"),s=Wiky.attrVal($1,"style");return "["+h+"]";}},
+       { rex:/<img([^>]*)\/?>/mgi, tmplt:function($0,$1){var a=Wiky.attrVal($1,"alt"),h=Wiky.attrVal($1,"src"),t=Wiky.attrVal($1,"title"),s=Wiky.attrVal($1,"style");return "["+h+"]";}},
      ],
      escapes: [
        { rex:/([|*_~%\^])/g, tmplt:"\\$1" },
