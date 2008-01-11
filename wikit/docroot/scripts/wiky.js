@@ -131,7 +131,7 @@ var Wiky = {
        { rex:/<table>/mgi, tmplt:"[" },
        { rex:/<\/table>/mgi, tmplt:"]" },
        { rex:/<tr(?:[^>]*?)>\xB6*|<\/td>\xB6*|<tbody>\xB6*|<\/tbody>/mgi, tmplt:"" },
-       { rex:/<hr\/?>/mgi, tmplt:"----" },
+       { rex:/<hr\/?>/mgi, tmplt:"\xB6----\xB6" },
        { rex:/<br\/?>/mgi, tmplt:"\\\\" },
        { rex:/(<p>|<(d|o|u)l[^>]*>|<\/(dl|ol|ul|p)>|<\/(li|dd)>)/mgi, tmplt:"" },
        "Wiky.inverse.shortcuts"
