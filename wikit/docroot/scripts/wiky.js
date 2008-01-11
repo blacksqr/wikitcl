@@ -31,6 +31,7 @@ var Wiky = {
      wikiblocks: [
        "Wiky.rules.nonwikiinlines",
        "Wiky.rules.escapes",
+       { rex:/(?:^|\xB6)----(?=\xB6|$)/g,
        { rex:/(?:^|\xB6)(={1,6})(.*?)[=]*(?=\xB6|$)/g, tmplt:function($0,$1,$2){ var h=$1.length; return ":p]\xB6<h"+h+">"+$2+"</h"+h+">\xB6[p:";} }, // <h1> .. <h6>
        { rex:/(?:^|\xB6)[-]{4}(?:\xB6|$)/g, tmplt:"\xB6<hr/>\xB6" },  // horizontal ruler ..
        { rex:/\\\\([ \xB6])/g, tmplt:"<br/>$1" },  // forced line break ..
@@ -118,7 +119,7 @@ var Wiky = {
        { rex:/<h6[^>]*>(.*?)<\/h6>/mgi, tmplt:"======$1======" },
        { rex:/<(p|table)[^>]+(style=\"[^\"]*\")[^>]*>/mgi, tmplt:function($0,$1,$2){return "<"+$1+">"+Wiky.invStyle($2);} },
        { rex:/\xB6{2}<li/mgi, tmplt:"\xB6<li" },  // ie6 only ..
-       { rex:/<li[^>]*?>([^<]*)/mgi, tmplt:function($0,$1,$2){return $1.replace(/u/g,"*").replace(/([01aAiIg])$/,"$1.")+" "+$2;}},  // list items ..
+       { rex:/<li class=\"?([^ >\"]*)\"?[^>]*?>([^<]*)/mgi, tmplt:function($0,$1,$2){return $1.replace(/u/g,"*").replace(/([01aAiIg])$/,"$1.")+" "+$2;}},  // list items ..
        { rex:/(^|\xB6)<(u|o)l[^>]*?>\xB6/mgi, tmplt:"$1" },  // only outer level list start at BOL ...
        { rex:/(<\/(?:dl|ol|ul|p)>[ \xB6]*<(?:p)>)/gi, tmplt:"\xB6\xB6" },
        { rex:/<dt>(.*?)<\/dt>[ \f\n\r\t\v]*<dd>/mgi, tmplt:"; $1: " },
@@ -149,6 +150,8 @@ var Wiky = {
        { rex:/<del[^>]*?>(.*?)<\/del>/mgi, tmplt:"(-$1-)" },
        { rex:/<abbr title=\"([^\"]*)\">(.*?)<\/abbr>/mgi, tmplt:"?$2($1)?" },
        { rex:/<a href=\"([^\"]*)\"[^>]*?>(.*?)<\/a>/mgi, tmplt:function($0,$1,$2){return $1==$2?$1:"["+$2+"]";}},
+       { rex:/\[\[\]/mgi, tmplt:"["},
+       { rex:/\[\]\]/mgi, tmplt:"]"},
        { rex:/<img([^>]*)\/>/mgi, tmplt:function($0,$1){var a=Wiky.attrVal($1,"alt"),h=Wiky.attrVal($1,"src"),t=Wiky.attrVal($1,"title"),s=Wiky.attrVal($1,"style");return s||(t&&h!=t)?("["+Wiky.invStyle($1)+"img:"+h+(t&&(","+t))+"]"):h;}},
      ],
      escapes: [
