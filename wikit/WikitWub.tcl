@@ -381,10 +381,10 @@ namespace eval WikitWub {
 		[<a> id showexperiment onClick {document.getElementById('showexperiment').style.display='none';document.getElementById('experimental').style.display='block';} "Experimental"]
 		[<div> id experimental style {display: none} [subst {
 		[<p> "This area is for experimentation on the running wiki."]
-		[<textarea> outbox id outbox rows 30 cols 72 style {width:80%;	border: 0px solid \#ffffff;padding: 5px;} {}]
-		<br>
 		[<button> toWiki onclick {document.getElementById("outbox").innerHTML = Wiky.toWiki(document.getElementById("content").innerHTML);} 2Wiki]
 		[<button> toHTML onclick {document.getElementById("content").innerHTML = Wiky.toHtml(document.getElementById("outbox").value);} 2HTML]
+		<br>
+		[<textarea> outbox id outbox rows 30 cols 72 style {width:80%;	border: 0px solid \#ffffff;padding: 5px;} {}]
 		}]]
 	    "
 	    append content [Honeypot link /$protected(HoneyPot).html]
