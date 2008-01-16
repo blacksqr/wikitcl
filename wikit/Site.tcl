@@ -73,15 +73,17 @@ namespace eval Site {
     } else {
 	catch {file mkdir $::env(WIKIT_HIST)}
     }
+}
 
-    #### Wikit Db Initialization
+#### Wikit Db Initialization
 
-    # load Wikit packages
-    package require Mk4tcl
-    package require Wikit::Format
-    namespace import Wikit::Format::*
-    package require Wikit::Db
+# load Wikit packages
+package require Mk4tcl
+package require Wikit::Format
+namespace import Wikit::Format::*
+package require Wikit::Db
 
+namespace eval Site {
     # initialize wikit DB
     Wikit::WikiDatabase [file join $wikitroot $wikidb] wdb 1
 
