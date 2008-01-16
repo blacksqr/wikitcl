@@ -7,25 +7,23 @@ array set ::env [array get _env]; unset _env
 namespace eval Site {
     # Site WikitWub-specific defaults
     # These may be overwritten by command line, or by vars.tcl
-    variable {*}[rc {
-	home [file normalize [file dirname [info script]]]
-	base "/tmp/wiki"	;# default place for wiki to live
-	wubdir "../../Wub/"	;# relative path to Wub libraries
-	overwrite 0		;# we do *not* want to overwrite the wiki
-	application WikitWub	;# what's our application package?
+    variable home [file normalize [file dirname [info script]]]
+    variable base "/tmp/wiki"	;# default place for wiki to live
+    variable wubdir "../../Wub/"	;# relative path to Wub libraries
+    variable overwrite 0		;# we do *not* want to overwrite the wiki
+    variable application WikitWub	;# what's our application package?
 	
-	wikidb wikit.tkd	;# wikit's Metakit DB name
-	history history		;# history directory
-	readonly 0		;# the wiki is not readonly
-	prime 0			;# we do not wish to prime the wikit
-	utf8clean 0		;# we do not want utf8 cleansing
-	upflag ""		;# no URL syncing
+    variable wikidb wikit.tkd	;# wikit's Metakit DB name
+    variable history history		;# history directory
+    variable readonly 0		;# the wiki is not readonly
+    variable prime 0			;# we do not wish to prime the wikit
+    variable utf8clean 0		;# we do not want utf8 cleansing
+    variable upflag ""		;# no URL syncing
 
-	multi 0			;# we're single-threaded
+    variable multi 0			;# we're single-threaded
 
-	varnish {}		;# don't use varnish cache by default
-	cache {maxsize 204800}	;# use in-RAM cache by default
-    }]
+    variable varnish {}		;# don't use varnish cache by default
+    variable cache {maxsize 204800}	;# use in-RAM cache by default
 }
 
 lappend auto_path /usr/lib/ ../../wub/
