@@ -335,7 +335,6 @@ namespace eval WikitWub {
 	<style type='text/css' media='all'>@import url(/dtree.css);</style>
 	<script src='/transclude.js' type='text/javascript'></script>
 	<script src='/dtree.js' type='text/javascript'></script>
-	<script src='/wiky.js' type='text/javascript'></script>
 	<link rel='alternate' type='application/rss+xml' title='RSS' href='/rss.xml'>
 	<!--[if lte IE 6]>
 		<style type='text/css' media='all'>@import 'ie6.css';</style>
@@ -344,6 +343,7 @@ namespace eval WikitWub {
 		<style type='text/css' media='all'>@import 'ie7.css';</style>
 	<![endif]-->
     }
+    #<script src='/wiky.js' type='text/javascript'></script>
 
     # convertor from wiki to html
     proc .x-text/wiki.text/html {rsp} {
@@ -374,7 +374,7 @@ namespace eval WikitWub {
 
 	    append content <body> \n
 	    append content $rspcontent
-	    append content "
+	    if 0 {append content "
 		[<a> id showexperiment onClick {document.getElementById('showexperiment').style.display='none';document.getElementById('experimental').style.display='block';} "Experimental"]
 		[<div> id experimental style {display: none} [subst {
 		[<p> "This area is for experimentation on the running wiki."]
@@ -383,7 +383,7 @@ namespace eval WikitWub {
 		<br>
 		[<textarea> outbox id outbox rows 30 cols 72 style {width:80%;	border: 0px solid \#ffffff;padding: 5px;} {}]
 		}]]
-	    "
+	    "}
 	    append content [Honeypot link /$protected(HoneyPot).html]
 	    append content </body> \n
 	    append content </html> \n
