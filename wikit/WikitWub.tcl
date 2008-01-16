@@ -1740,6 +1740,8 @@ foreach {dom expiry} {css {tomorrow} images {next week} scripts {tomorrow} img {
     File $dom -root [file join $::config(docroot) $dom] -expires $expiry
 }
 
+File webalizer -root /var/www/webalizer -prefix /_stats/
+
 # Wub documentation directory
 Mason wub -url /_wub -root [file join $::config(wubdir) docs] -auth .before -wrapper .after -dirhead {name size mtime}
 Convert Namespace ::MConvert
@@ -1782,6 +1784,11 @@ proc Incoming {req} {
 	    Block block [dict get $req -ipaddr] "Bogus URL '[dict get $req -path]'"
 	    Send [Http Forbidden $req]
 	    continue	;# process next request
+	}
+
+	/_stats -
+	/_stats/* {
+	    ::webalizer do $req
 	}
 
 	/_wub -
