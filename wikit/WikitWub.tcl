@@ -20,17 +20,14 @@ package require WikitRss
 package require Sitemap
 package require stx
 package require Responder
-
-# uncomment to turn off caching for testing
-# package provide Cache 2.0 ; proc Cache args {return {}}
-
 package require Honeypot
-Honeypot init dir [file join $::config(docroot) captcha]
-
-proc pest {req} {return 0}
-catch {source [file join [file dirname [info script]] pest.tcl]}
 
 package provide WikitWub 1.0
+
+Honeypot init dir [file join $::config(docroot) captcha]
+
+proc pest {req} {return 0}	;# default [pest] catcher
+catch {source [file join [file dirname [info script]] pest.tcl]}
 
 # ::Wikit::GetPage {id} -
 # ::Wikit::Expand_HTML {text}
