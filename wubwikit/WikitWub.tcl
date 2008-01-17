@@ -1831,7 +1831,6 @@ proc Incoming {req} {
 	    ::images do $req
 	}
 	
-	/css/*.css -
 	/*.css {
 	    # silently redirect css files
 	    dict set req -suffix [file tail [dict get $req -path]]
