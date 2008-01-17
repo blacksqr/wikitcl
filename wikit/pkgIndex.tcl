@@ -1,7 +1,5 @@
 # Manually created, package setup
 
-package ifneeded WikitWub 1.0 [list source [file join $dir WikitWub.tcl]]
-
 package ifneeded Wikit 1.1 [list source [file join $dir wikit.tcl]]
 
 package ifneeded Wikit::Format 1.1 [list source [file join $dir format.tcl]]
@@ -15,5 +13,3 @@ package ifneeded Wikit::Search 1.0 [list source [file join $dir search.tcl]]
 package ifneeded Wikit::Utils 1.0 [list source [file join $dir utils.tcl]]
 
 package ifneeded Web 1.0 [list source [file join $dir web.tcl]]
-
-package ifneeded WikitRss 1.0 [list source [file join $dir WikitRss.tcl]]
