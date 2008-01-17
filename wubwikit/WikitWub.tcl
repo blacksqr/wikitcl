@@ -1750,7 +1750,7 @@ foreach {dom expiry} {css {tomorrow} images {next week} scripts {tomorrow} img {
     File $dom -root [file join $::config(docroot) $dom] -expires $expiry
 }
 
-File webalizer -root /var/www/webalizer -prefix /_stats/
+Mason webalizer -root /var/www/webalizer -url /_stats/ -auth .before -wrapper .after -dirhead {name size mtime}
 
 # Wub documentation directory
 Mason wub -url /_wub -root [file join $::config(wubdir) docs] -auth .before -wrapper .after -dirhead {name size mtime}
