@@ -120,7 +120,7 @@ namespace eval Wikit {
       }
 
       set msg ""
-      if {[catch {eval mk::file open $db $name -nocommit $flags} msg eo]
+      if {[catch {eval mk::file open $db $name -nocommit $flags} msg]
           && [file $tst $name]} {
 
         # if we can write and/or read the file but can't open
@@ -581,8 +581,8 @@ namespace eval Wikit {
         }
 
       }
-    } r eo]} {
-      Debug.error "SavePageDb: '$r' ($eo)"
+    } r]} {
+      Debug.error "SavePageDb: '$r'"
     }
 
     if {$commit} {
