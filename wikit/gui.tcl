@@ -228,11 +228,11 @@ if {[catch {package require gbutton}]} {
             } else {
                 gButton::modify Help -state normal
             }
-			if {$id == 2} {
-				gButton::modify Edit -state disabled
-			} else {
-				gButton::modify Edit -state normal
-			}
+            if {$id == 2} {
+                gButton::modify Edit -state disabled
+            } else {
+                gButton::modify Edit -state normal
+            }
             $D configure -cursor ""
         }
         
@@ -246,15 +246,15 @@ if {[catch {package require gbutton}]} {
             pagevars $id name page
             
             $D tag configure fixed -foreground {} -background {} \
-					-font wikit_edit -wrap word
+                    -font wikit_edit -wrap word
 			gButton::modify Back -text Cancel -command "Wikit::ShowPage $id
 	        $D tag configure fixed -foreground $Color::fixedFg -background $Color::fixedBg -font wikit_fixed -wrap none
-	        " -state normal
+            " -state normal
 	      	gButton::modify Forward -text Save -command "
 	        $D tag configure fixed -foreground $Color::fixedFg -background $Color::fixedBg -font wikit_fixed -wrap none
 	        Wikit::SavePage $id \[$D get 1.0 end\] local \[$top.n.enter get\]
-	        Wikit::ShowPage $id" -state normal
-	      
+            Wikit::ShowPage $id" -state normal
+            
             gButton::modify Home -text Copy -state disabled -command Wikit::Copy
             gButton::modify Edit -text Paste -state normal -command Wikit::Paste
             gButton::modify Help -state disabled
@@ -335,8 +335,8 @@ if {[catch {package require gbutton}]} {
             variable b0
             variable b1
             variable linkText
-			variable fixedwid
-			
+            variable fixedwid
+            
             set pageStack ""
             set forwStack ""
             
@@ -367,19 +367,19 @@ if {[catch {package require gbutton}]} {
                 font create wikit_italic -family $family -size $default -slant italic
                 font create wikit_bolditalic -family $family -size $default \
                         -weight bold -slant italic
-				font create wikit_fixedbold -family courier -size $default \
-											-weight bold
-				font create wikit_fixeditalic -family courier -size $default \
-											-weight normal -slant italic
-				font create wikit_fixedbolditalic -family courier
-			 						-size $default -weight bold -slant italic	        
-		
+                font create wikit_fixedbold -family courier -size $default \
+                        -weight bold
+                font create wikit_fixeditalic -family courier -size $default \
+                        -weight normal -slant italic
+                font create wikit_fixedbolditalic -family courier
+                -size $default -weight bold -slant italic
+                
                 
                 gButton::init -bg $Color::wikiBg -font wikit_button -disabledfill $Color::btnDisable
             }
             
-			set fixedwid [font measure wikit_fixed " "]
-			
+            set fixedwid [font measure wikit_fixed " "]
+            
             if {$top == ""} {
                 set topwin "."
             } else {
@@ -444,43 +444,43 @@ if {[catch {package require gbutton}]} {
                 $D tag bind backlink <Any-Leave> \
                         "$D tag configure backlink -foreground $Color::linkFg"
                 $D tag configure fixed -font wikit_fixed -wrap none \
-						-lmargin1 3 -lmargin2 3 \
+                        -lmargin1 3 -lmargin2 3 \
                         -foreground $Color::fixedFg \
-						-background $Color::fixedBg
+                        -background $Color::fixedBg
                 $D tag configure code -font wikit_fixed -wrap none \
-						-lmargin1 3 -lmargin2 3 \
+                        -lmargin1 3 -lmargin2 3 \
                         -foreground $Color::codeFg \
-						-background $Color::codeBg
+                        -background $Color::codeBg
                 $D tag configure body  -font wikit_default \
-									   -lmargin1 3 -lmargin2 3
-
-				# support for option lists - these need to be before the
-				# declaration of i + b below (not sure why though?)
-				$D tag configure optfix -font wikit_fixed \
-								-foreground $Color::codeFg \
-								-background $Color::codeBg
-				
-				$D tag configure optvar -font wikit_default -wrap word \
- 								-lmargin1 3 -lmargin2 3
-
+                        -lmargin1 3 -lmargin2 3
+                
+                # support for option lists - these need to be before the
+                # declaration of i + b below (not sure why though?)
+                $D tag configure optfix -font wikit_fixed \
+                        -foreground $Color::codeFg \
+                        -background $Color::codeBg
+                
+                $D tag configure optvar -font wikit_default -wrap word \
+                        -lmargin1 3 -lmargin2 3
+                
                 $D tag configure url -font wikit_default -foreground $Color::linkFg
                 $D tag configure urlq -font wikit_fixed -foreground $Color::linkFg
-
-				# calculate the indent based on 3 spaces, a bullet and 2 spaces
-				set in [expr {[font measure wikit_default "   \u2022  "] + 3}]			
+                
+                # calculate the indent based on 3 spaces, a bullet and 2 spaces
+                set in [expr {[font measure wikit_default "   \u2022  "] + 3}]
                 $D tag configure ul -font wikit_default -tabs 30 -lmargin1 3 \
-														-lmargin2 $in
-
+                        -lmargin2 $in
+                
                 $D tag configure ol -font wikit_default -lmargin1  3 -lmargin2 30 -tabs 30
                 $D tag configure dt -font wikit_default -lmargin1  3 -lmargin2  3 -tabs 30
                 $D tag configure dl -font wikit_default -lmargin1 30 -lmargin2 30 -tabs 30
                 $D tag configure i -font wikit_italic
                 $D tag configure b -font wikit_bold
                 $D tag configure bi -font wikit_bolditalic
-				$D tag configure fb -font wikit_fixedbold 
-				$D tag configure fi -font wikit_fixeditalic
-				$D tag configure fbi -font wikit_fixedbolditalic
-
+                $D tag configure fb -font wikit_fixedbold
+                $D tag configure fi -font wikit_fixeditalic
+                $D tag configure fbi -font wikit_fixedbolditalic
+                
                 # support for horizontal lines
                 $D tag configure thin -font wikit_thin
                 $D tag configure hr -relief sunken -borderwidth 1 -wrap none
@@ -489,7 +489,7 @@ if {[catch {package require gbutton}]} {
                 gButton::modify Forward -command "Wikit::ShowPage -1"
                 gButton::modify Help -text [lindex [GetTitle 3] 0] \
                         -command "Wikit::ShowPage 3"
-
+                
             }
             
             gButton::modify Home -command "Wikit::ShowPage $toppage"
@@ -506,27 +506,27 @@ if {[catch {package require gbutton}]} {
                 tkwait window $topwin
             }
         }
-
-		# creates a tag to set the fixed width part of an option block
-		# 	- converts from length to pixels using width of space char in the
-		# 	  fixed width font
-		proc optwid {n l} {
-			variable D
-			variable fixedwid
-			set indent 5	;# indent from end of widest fixed part to var part
-			set margin2 [expr {$fixedwid * $l + $fixedwid * $indent + 3}]
-			# set margin2 [expr {$fixedwid * $l + 3}]
-			$D tag configure optfix$n -font wikit_fixed -wrap word \
-			 					   	-lmargin1 3 -lmargin2 $margin2 \
-									-tabs [list ${margin2}p left] \
-					               	-foreground $Color::codeFg \
-									-background $Color::codeBg
-			$D tag configure optvar$n -font wikit_default -wrap word \
-					 			  	  -lmargin1 3 -lmargin2 $margin2
-			$D tag configure vb -font wikit_bold 
-			$D tag configure vi -font wikit_italic
-			$D tag configure vbi -font wikit_bolditalic			                
-		}
+        
+        # creates a tag to set the fixed width part of an option block
+        # 	- converts from length to pixels using width of space char in the
+        # 	  fixed width font
+        proc optwid {n l} {
+            variable D
+            variable fixedwid
+            set indent 5	;# indent from end of widest fixed part to var part
+            set margin2 [expr {$fixedwid * $l + $fixedwid * $indent + 3}]
+            # set margin2 [expr {$fixedwid * $l + 3}]
+            $D tag configure optfix$n -font wikit_fixed -wrap word \
+                    -lmargin1 3 -lmargin2 $margin2 \
+                    -tabs [list ${margin2}p left] \
+                    -foreground $Color::codeFg \
+                    -background $Color::codeBg
+            $D tag configure optvar$n -font wikit_default -wrap word \
+                    -lmargin1 3 -lmargin2 $margin2
+            $D tag configure vb -font wikit_bold
+            $D tag configure vi -font wikit_italic
+            $D tag configure vbi -font wikit_bolditalic
+        }
         
         proc KeyTracker {v op} {
             variable currMode
@@ -607,5 +607,7 @@ if {[catch {package require gbutton}]} {
         
     }
 }
+
+
 
 
