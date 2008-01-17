@@ -277,6 +277,7 @@ namespace eval WikitWub {
 
     variable motd ""
     variable TOC ""
+    variable TOCchange 0
 
     proc div {ids content} {
 	set divs ""
@@ -1367,8 +1368,17 @@ namespace eval WikitWub {
     }
 
     proc /reloadTOC {r} {
+	set tocf [file join $::config(docroot) TOC]
+
+	set changed [file mtime $tocf]
+	if {$changed <= $TOCchange} {
+	    set R http://[dict get $r host]/4
+	    return [redir $r $R [<a> href $R "No Change"]]
+	}
+	variable TOCchange $changed
+
 	variable TOC
-	catch {set TOC [::fileutil::cat [file join $::config(docroot) TOC]]}
+	catch {set TOC [::fileutil::cat $tocf]}
 	set TOC [string trim $TOC]
 	if { [string length $TOC] } {
 	    set TOC [::Wikit::FormatTocJavascriptDtree $TOC]
@@ -1391,8 +1401,8 @@ namespace eval WikitWub {
     # called to generate wiki-TOC
     proc /toc {r} {
 	variable TOC
-	#return [Http Ok $r $TOC text/javascript]
-	return [Http CacheableContent $r [clock seconds] $TOC text/javascript]
+	variable TOCchange
+	return [Http CacheableContent $r $TOCchange $TOC text/javascript]
     }
 
     # called to generate a page with references
