@@ -1392,7 +1392,7 @@ namespace eval WikitWub {
     proc /toc {r} {
 	variable TOC
 	#return [Http Ok $r $TOC text/javascript]
-	return [Http CacheableContent [Http DCache $r] [clock seconds] $TOC text/javascript]
+	return [Http CacheableContent $r [clock seconds] $TOC text/javascript]
     }
 
     # called to generate a page with references
