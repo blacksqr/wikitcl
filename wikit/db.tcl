@@ -67,6 +67,12 @@ package provide Wikit::Db 1.2
 package require Wikit::Utils
 package require Wikit::Format
 
+if {[info commands Debug.error] eq {}} {
+  proc Debug.error {args} {
+    puts stderr $args
+  }
+}
+
 namespace eval Wikit {
   # accessors
   namespace export pagevars Wiki WikiDatabase GetTitle GetPage pagevars pagevarsDB
