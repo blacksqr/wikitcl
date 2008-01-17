@@ -4,7 +4,7 @@
 #
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/local/wikitcl/wikit/Site.tcl
+DAEMON=/usr/local/wikitcl/wubwikit/Site.tcl
 NAME=wub
 DESC="Wub Web Server"
 TCLSH=/usr/bin/tclsh
