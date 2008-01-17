@@ -16,6 +16,7 @@
 package require Tk
 package require Wikit::Db
 package require Wikit::Search
+package require Wikit::Lock
 
 if {[catch {package require gbutton}]} {
     puts stderr "cannot load gbutton"
@@ -36,18 +37,50 @@ if {[catch {package require gbutton}]} {
             variable codeBg  	white
             variable codeFg   	gray50
             variable copyBg     "#fafad2"    # Lightgoldenrodyellow
-            
+            variable bnormal    black        # normal button text
+            variable bdisabled  darkgrey     # disabled button text
         }
         
         variable searchPage "" ;# avoid error when viewing before searching
         variable refPage 0     ;# boolean that indicates a reference page is currently displayed
         variable isLink 0      ;# boolean that indicates a link is being processed
+        variable geomID	""	   ;# after ID for tracking geometry changes
+        variable geomLast ""   ;# last saved geometry
         
-        proc Expand_Tk {str} {
+        variable bindkey	   ;# keyboard bindings
+        
+        switch [tk windowingsystem] {
+            aqua {
+                set bindkey(Back)    {Command-[}
+                set bindkey(Forward) {Command-]}
+                set bindkey(Home)    {Shift-Command-H}
+                set bindkey(Cancel)  {Command-z}
+                set bindkey(Save)    {Command-s}
+                set bindkey(Copy)    {Command-c}
+                set bindkey(Paste)   {Command-v}
+            }
+            win32 -
+            x11 {
+                if 0 {
+                    set bindkey(Back)    {Alt-Key-leftarrow}
+                    set bindkey(Forward) {Alt-Key-rightarrow}
+                    set bindkey(Home)	 {Alt-Key-home}
+                    set bindkey(Cancel)  {Control-z}
+                    set bindkey(Save)	 {Control-s}
+                }
+            }
+            default {
+                set bindkey(Back) ""
+                set bindkey(Front) ""
+                set bindkey(Home) ""
+            }
+        }
+        
+        proc Expand_Tk {str id} {
             global tcl_platform
             variable D
             
-            set result [StreamToTk [TextToStream $str] [list ::Wikit::InfoProc wdb]]
+            set result [StreamToTk [TextToStream $str] $id [list ::Wikit::InfoProc wdb] [list ::Wikit::BrefProc wdb]]
             
             foreach {a b c} [lindex $result 1] {
                 set tag $a$b
@@ -98,7 +131,7 @@ if {[catch {package require gbutton}]} {
         
         # Show a page containing a list of links to all pages
         # referring to the page with the given id.
-        proc ShowRefsPage {id} {
+        proc ShowRefsPage {id {toc ""}} {
             variable D
             variable readonly
             variable top
@@ -114,27 +147,30 @@ if {[catch {package require gbutton}]} {
             
             # wm title $topwin "References to $name - WiKit"
             
-            #gButton::modify Edit -state disabled
+            buttonState Edit disabled
             $D configure -state normal -font wiki_default
             $D delete 1.0 end
-            $D insert end "References to $name" title
+            if {$toc eq ""} {
+                set txt "References to $name"
+            } else {
+                set txt $name
+            }
+            $D insert end $txt title
             
             # Generate a wiki formatted list of links.  One link for each reference
             set contents "\n"
             foreach r [mk::select wdb.refs to $id] {
                 set r [mk::get wdb.refs!$r from]
+                if {$r < 10} continue
                 pagevars $r name
                 append contents "   * \[$name]\n"
             }
-            eval $D insert end [lindex [Expand_Tk $contents] 0]
+            eval $D insert end [lindex [Expand_Tk $contents $id] 0]
             $D configure -state disabled
             focus $top.n.enter
             $D configure -cursor ""
             # setup a return to the page that requested the reference page
-            gButton::modify Back \
-                    -text Back \
-                    -command "Wikit::ShowPage $id" \
-                    -state normal
+            setButton one Back "Wikit::ShowPage $id"
         }
         
         # Internal helper. Central functionality to render wiki pages in the
@@ -153,19 +189,22 @@ if {[catch {package require gbutton}]} {
             variable readonly
             variable top
             variable toppage
+            variable HelpButton
+            variable toc
+            
             set urlSeq 0
             
             $D configure -cursor watch
             if {!$readonly} {
-                if {![string equal [gButton::cget Back -text] Back]} {
+                if {[getButton one] ne "Back"} {
                     # only update these if changed after edit
-                    gButton::modify Back -text Back -command "Wikit::ShowPage"
-                    gButton::modify Forward -text Forward -command "Wikit::ShowPage -1"
-                    gButton::modify Home -text Home -command "Wikit::ShowPage $toppage"
-                    gButton::modify Edit -text Edit -command "Wikit::EditPage"
+                    setButton one Back Wikit::ShowPage
+                    setButton two Forward "Wikit::ShowPage -1"
+                    setButton three Home "Wikit::ShowPage $toppage"
+                    setButton four Edit Wikit::EditPage
                     bind $D <ButtonRelease-1> {}
                 }
-                gButton::modify Edit -state normal
+                buttonState Edit normal
             }
             
             # Record new page in transient viewing history (or retrieve it
@@ -207,7 +246,7 @@ if {[catch {package require gbutton}]} {
             
             set cmd "$D insert end {$name} {$titleTags} "
             
-            set etk [Expand_Tk $page]
+            set etk [Expand_Tk $page $id]
             append cmd [lindex $etk 0]
             
             eval $cmd
@@ -217,23 +256,26 @@ if {[catch {package require gbutton}]} {
             
             $D configure -state disabled
             
-            focus $top.n.enter
             if {$id == $toppage} {
-                gButton::modify Home -state disabled
+                buttonState Home disabled
             } else {
-                gButton::modify Home -state normal
+                buttonState Home normal
             }
             if {$id == 3} {
-                gButton::modify Help -state disabled
+                buttonState $HelpButton disabled
             } else {
-                gButton::modify Help -state normal
+                buttonState $HelpButton normal
             }
             if {$id == 2} {
-                gButton::modify Edit -state disabled
+                buttonState Edit disabled
             } else {
-                gButton::modify Edit -state normal
+                buttonState Edit normal
             }
             $D configure -cursor ""
+            
+            if {$toc ne ""} { tocHighlight $page }
+            
+            focus $top.n.enter
         }
         
         proc EditPage {} {
@@ -241,23 +283,20 @@ if {[catch {package require gbutton}]} {
             variable currMode
             variable pageStack
             variable top
+            variable HelpButton
+            
             set id [lindex $pageStack end]
             
             pagevars $id name page
             
             $D tag configure fixed -foreground {} -background {} \
                     -font wikit_edit -wrap word
-			gButton::modify Back -text Cancel -command "Wikit::ShowPage $id
-	        $D tag configure fixed -foreground $Color::fixedFg -background $Color::fixedBg -font wikit_fixed -wrap none
-            " -state normal
-	      	gButton::modify Forward -text Save -command "
-	        $D tag configure fixed -foreground $Color::fixedFg -background $Color::fixedBg -font wikit_fixed -wrap none
-	        Wikit::SavePage $id \[$D get 1.0 end\] local \[$top.n.enter get\]
-            Wikit::ShowPage $id" -state normal
             
-            gButton::modify Home -text Copy -state disabled -command Wikit::Copy
-            gButton::modify Edit -text Paste -state normal -command Wikit::Paste
-            gButton::modify Help -state disabled
+            setButton one Cancel "Wikit::EditCancel $id"
+            setButton two Save "Wikit::EditSave $id"
+            setButton three Copy Wikit::Copy disabled
+            setButton four Paste Wikit::Paste disabled
+            buttonState $HelpButton disabled		;# About/Help
             bind $D <ButtonRelease-1> Wikit::CopyCheck
             
             $top.n.mode configure -text "Edit Title:"
@@ -272,17 +311,34 @@ if {[catch {package require gbutton}]} {
             focus $D
         }
         
+        proc EditCancel {id} {
+            variable D
+            $D tag configure fixed -foreground $Color::fixedFg \
+                    -background $Color::fixedBg -font wikit_fixed -wrap none
+            Wikit::ShowPage $id
+        }
+        
+        proc EditSave {id} {
+            variable D
+            variable top
+            $D tag configure fixed -foreground $Color::fixedFg \
+                    -background $Color::fixedBg -font wikit_fixed -wrap none
+            Wikit::SavePage $id [$D get 1.0 end] local [$top.n.enter get]
+            Wikit::ShowPage $id
+        }
+        
         proc History {page} {
             variable pageStack
             variable forwStack
             variable refPage
             variable isLink
+            variable top
             if {$page == ""} {
                 # Process <Back> button
                 set forwStack [linsert $forwStack 0 [lindex $pageStack end]]
                 set pageStack [lreplace $pageStack end end]
                 set page [lindex $pageStack end]
-                gButton::modify Forward -state normal
+                buttonState Forward normal
             } elseif {$page == -1} {
                 # Process <Forward> button
                 set page [lindex $forwStack 0]
@@ -306,14 +362,15 @@ if {[catch {package require gbutton}]} {
             }
             # Back button may have been modified by ref page call so
             # restore Back button behavior
-            gButton::modify Back -text Back -command "Wikit::ShowPage"
+            setButton one Back Wikit::ShowPage
             
             if {[llength $forwStack] == 0} {
-                gButton::modify Forward -state disabled
+                buttonState Forward disabled
             }
             set state normal
-            if {[llength $pageStack] <= 1} {set state disabled}
-            gButton::modify Back -state $state
+            if {[llength $pageStack] <= 1} {
+                buttonState Back disabled
+            }
             
             # puts "history $page: $pageStack : $forwStack"
             # reset reference page flags
@@ -336,6 +393,9 @@ if {[catch {package require gbutton}]} {
             variable b1
             variable linkText
             variable fixedwid
+            variable entry
+            variable HelpButton
+            variable toc
             
             set pageStack ""
             set forwStack ""
@@ -345,6 +405,8 @@ if {[catch {package require gbutton}]} {
             
             set family arial
             set title 16
+            set title3 14
+            set title4 14
             set thin 4
             if {[string match Windows* $tcl_platform(os)]} {
                 set default 9
@@ -360,6 +422,8 @@ if {[catch {package require gbutton}]} {
                         -underline true
                 font create wikit_button -family $family -size $buttonsize
                 font create wikit_title -family $family -size $title -weight bold
+                font create wikit_title3 -family $family -size $title3 -slant italic -weight bold
+                font create wikit_title4 -family $family -size $title3 -slant italic
                 font create wikit_edit -family courier -size $default -weight normal
                 font create wikit_fixed -family courier -size $default -weight normal
                 font create wikit_thin -family courier -size $thin
@@ -371,9 +435,8 @@ if {[catch {package require gbutton}]} {
                         -weight bold
                 font create wikit_fixeditalic -family courier -size $default \
                         -weight normal -slant italic
-                font create wikit_fixedbolditalic -family courier
-                -size $default -weight bold -slant italic
-                
+                font create wikit_fixedbolditalic -family courier \
+                        -size $default -weight bold -slant italic
                 
                 gButton::init -bg $Color::wikiBg -font wikit_button -disabledfill $Color::btnDisable
             }
@@ -392,15 +455,16 @@ if {[catch {package require gbutton}]} {
                 frame $top.n -relief raised -bg $Color::wikiBg -bd 1
                 frame $top.n.f0 -background $Color::wikiBg
                 set b0 [gButton #auto $top.n.f0]
-                $b0 new Back
-                $b0 new Forward
-                $b0 new Home
+                $b0 new one
+                $b0 new two
+                $b0 new three
                 label $top.n.mode -width 7 -anchor e -bg $Color::wikiBg \
                         -fg $Color::wikiFg -font wikit_default
+                set entry $top.n.enter
                 entry $top.n.enter -textvariable Wikit::currMode -font wikit_default
                 if {!$readonly} {
-                    $b0 new Edit
-                    gButton::modify Edit -command "Wikit::EditPage"
+                    $b0 new four
+                    setButton four Edit "Wikit::EditPage"
                 }
                 $b0 size
                 pack $top.n.f0 -side left -padx 0 -pady 0
@@ -408,11 +472,11 @@ if {[catch {package require gbutton}]} {
                 pack $top.n.enter -side left -padx 4 -expand 1 -fill x
                 frame $top.n.f1 -background $Color::wikiBg
                 set b1 [gButton #auto $top.n.f1]
-                $b1 new Help
+                $b1 new five
                 $b1 size
                 
                 pack $top.n.f1 -side left -padx 0 -pady 0
-                scrollbar $top.scroll -orient vertical -command [list $top.details yview]
+                scrollbar $top.scroll -orient vertical -command Wikit::yscroll
                 scrollbar $top.hbar -orient horizontal -command [list $top.details xview]
                 label $top.status -anchor w -bg $Color::wikiBg -padx 4 -pady 4 \
                         -fg $Color::wikiFg -font wikit_default \
@@ -427,10 +491,29 @@ if {[catch {package require gbutton}]} {
                         -selectforeground $Color::wikiFg
                 
                 grid $top.n -row 0 -column 0 -columnspan 2 -sticky new
-                grid $top.details -row 1 -column 0 -sticky news
-                grid $top.scroll -row 1 -column 1 -sticky ns
-                grid $top.hbar -row 2 -column 0 -sticky news
-                grid $top.status -row 3 -column 0 -sticky ew
+                set col 0
+                pagevars 8 name
+                set toc ""
+                if {$name ne 8} {
+                    set toc $top.toc
+                    text $top.toc \
+                            -width 20 -wrap none \
+                            -font wikit_default \
+                            -exportselection 1 \
+                            -background $Color::fixedBg \
+                            -borderwidth 0 \
+                            -yscrollcommand Wikit::ysize
+                    $top.toc tag configure title -font wikit_title
+                    $top.toc tag configure heading -font wikit_bold
+                    grid $top.toc -row 1 -column 0 -sticky nws -rowspan 3
+                    incr col
+                    tocDisplay
+                }
+                grid $top.details -row 1 -column $col -sticky news
+                grid $top.hbar -row 2 -column $col -sticky news
+                grid $top.status -row 3 -column $col -sticky ew
+                grid $top.scroll -row 1 -column [incr col] -sticky ns
+                
                 grid columnconfigure $topwin 0 -weight 1
                 grid rowconfigure $topwin 1 -weight 1
                 grid rowconfigure $topwin 1 -weight 1
@@ -438,6 +521,8 @@ if {[catch {package require gbutton}]} {
                 autoscroll::autoscroll $top.hbar
                 set D $top.details
                 $D tag configure title -font wikit_title -lmargin1 3 -lmargin2 3
+                $D tag configure title3 -font wikit_title3 -lmargin1 3 -lmargin2 3
+                $D tag configure title4 -font wikit_title4 -lmargin1 3 -lmargin2 3
                 $D tag configure backlink -foreground $Color::linkFg
                 $D tag bind backlink <Any-Enter> \
                         "$D tag configure backlink -foreground $Color::linkActive"
@@ -448,6 +533,10 @@ if {[catch {package require gbutton}]} {
                         -foreground $Color::fixedFg \
                         -background $Color::fixedBg
                 $D tag configure code -font wikit_fixed -wrap none \
+                        -lmargin1 3 -lmargin2 3 \
+                        -foreground $Color::codeFg \
+                        -background $Color::codeBg
+                $D tag configure fwrap -font wikit_fixed -wrap word \
                         -lmargin1 3 -lmargin2 3 \
                         -foreground $Color::codeFg \
                         -background $Color::codeBg
@@ -476,6 +565,7 @@ if {[catch {package require gbutton}]} {
                 $D tag configure dl -font wikit_default -lmargin1 30 -lmargin2 30 -tabs 30
                 $D tag configure i -font wikit_italic
                 $D tag configure b -font wikit_bold
+                $D tag configure f -font wikit_fixed
                 $D tag configure bi -font wikit_bolditalic
                 $D tag configure fb -font wikit_fixedbold
                 $D tag configure fi -font wikit_fixeditalic
@@ -484,28 +574,246 @@ if {[catch {package require gbutton}]} {
                 # support for horizontal lines
                 $D tag configure thin -font wikit_thin
                 $D tag configure hr -relief sunken -borderwidth 1 -wrap none
-                bind $D <Configure> {%W tag configure hr -tabs [expr %w-10]}
-                gButton::modify Back -command "Wikit::ShowPage"
-                gButton::modify Forward -command "Wikit::ShowPage -1"
-                gButton::modify Help -text [lindex [GetTitle 3] 0] \
-                        -command "Wikit::ShowPage 3"
+                bind $D <Configure> {if {%w > 10} { %W tag configure hr -tabs [expr {%w-10}]}}
                 
+                # support for tables
+                $D tag configure TR -background white
+                $D tag configure CTR -background #EEF
+                $D tag configure TDH -background gray80
+                
+                setButton one Back Wikit::ShowPage
+                setButton two Forward "Wikit::ShowPage -1"
+                set HelpButton [lindex [GetTitle 3] 0]
+                setButton five $HelpButton "Wikit::ShowPage 3"
             }
             
-            gButton::modify Home -command "Wikit::ShowPage $toppage"
+            setButton three Home "Wikit::ShowPage $toppage"
             Wikit::ShowPage $page
             
             trace variable currMode w { after cancel Wikit::KeyTracker; after 500 Wikit::KeyTracker }
-            
             wm title $topwin [GetTitle $page]
             wm protocol $topwin WM_DELETE_WINDOW [list destroy $topwin]
+            # need to figure a way to get reasonable min size based on min
+            # size needed to display buttons + search widget
+            wm minsize $topwin [winfo reqwidth $topwin] \
+                    [winfo reqheight $topwin]
+            load_geom $topwin
             update
             after idle raise $topwin
-            wm minsize $topwin [winfo width $topwin] [winfo height $topwin]
+            bind $topwin <Configure> [namespace code [list resize $topwin]]
             if {$topwin == "."} {
                 tkwait window $topwin
             }
         }
+        
+        proc yscroll {args} {
+            variable D
+            variable toc
+            eval $D yview $args
+            eval $toc yview $args
+        }
+        
+        proc max args {lindex [lsort -real $args] end}
+        
+        proc min args {lindex [lsort -real $args] 0}
+        
+        proc ysize {from to} {
+            variable top
+            variable D
+            variable toc
+            foreach {d1 d2} [$D yview] {}
+            foreach {t1 t2} [$toc yview] {}
+            set from [max $d1 $t1]
+            set to [min $d2 $t2]
+            $top.scroll set $from $to
+        }
+        
+        proc resize {win} {
+            variable geomID
+            variable geomLast
+            if {$geomID ne ""} {
+                after cancel $geomID
+            }
+            set geom [winfo geom $win]
+            if {$geom ne $geomLast} {
+                set geomID [after 1000 [namespace code [list save_geom $geom]]]
+            }
+        }
+        
+        proc save_geom {geom} {
+            variable geomLast
+            set name [file tail $Wikit::wikifile]
+            if {$::tcl_platform(platform) eq "windows"} {
+                # save in the Registry
+                set key HKEY_CURRENT_USER\\Software\\Wikit
+                registry set $key $name $geom
+            } else {
+                # save in a metakit datafile, so we get atomic writes
+                set info ~/.wikit.db
+                set lock ~/.wikit.lock
+                if {[Wikit::AcquireLock $lock]} {
+                    mk::file open info [file normalize $info]
+                    mk::view layout info.geom {name:S geom:S}
+                    set idx [mk::select info.geom name $name]
+                    if {$idx ne ""} {
+                        mk::set info.geom!$idx geom $geom
+                    } else {
+                        mk::row append info.geom name $name geom $geom
+                    }
+                    mk::file commit info
+                    mk::file close info
+                    Wikit::ReleaseLock $lock
+                }
+            }
+            set geomLast $geom
+        }
+        
+        proc load_geom {win} {
+            variable geomLast
+            set name [file tail $Wikit::wikifile]
+            set geom ""
+            if {$::tcl_platform(platform) eq "windows"} {
+                # load from the Registry
+                set key HKEY_CURRENT_USER\\Software\\Wikit
+                if {![catch {registry get $key $name}]} {
+                    set geom [registry get $key $name]
+                }
+            } else {
+                # load from a metakit datafile
+                set info ~/.wikit.db
+                if {[file readable $info]} {
+                    mk::file open info [file normalize $info] -readonly
+                    set idx [mk::select info.geom name $name]
+                    if {$idx ne ""} {
+                        set geom [mk::get info.geom!$idx geom]
+                        
+                    }
+                    mk::file close info
+                }
+            }
+            if {$geom ne $geomLast} {
+                if {[tk windowingsystem] eq "aqua"} {
+                    set geom [check_geom_aqua $win $geom]
+                } else {
+                    set geom [check_geom $win $geom]
+                }
+                wm geometry $win $geom
+                set geomLast $geom
+            }
+        }
+        
+        proc check_geom {win geom {yoffset 0}} {
+            # yoffset can be used to allow for a menubar (as in MacOS X Aqua)
+            # or space at the bottom for window manager controls
+            scan $geom "%ix%i+%i+%i" w h x y
+            set sw [winfo screenwidth $win]
+            set sh [winfo screenheight $win]
+            if {$w + $x > $sw} {
+                set x [expr {($sw - $w)/2}]
+                set geom ""
+            }
+            if {$h + $y > $sh} {
+                set y [expr {($sh - $y)/2}]
+                set geom ""
+            }
+            if {$y < $yoffset} {
+                set y $yoffset
+                set geom ""
+            }
+            if {$h + $yoffset*2 > $sh} {
+                set h [expr {$sh - $yoffset*2}]
+                set geom ""
+            }
+            if {$geom eq ""} {
+                set geom =${w}x${h}+${x}+$y
+            }
+            return $geom
+        }
+        
+        proc check_geom_aqua {win geom} {
+            scan $geom "%ix%i+%i+%i" w h x y
+            set cmd /usr/sbin/system_profiler
+            if {[auto_execok $cmd] ne ""} {
+                set fd [open "| $cmd SPDisplaysDataType"]
+                set displaynum 0
+                foreach line [split [read $fd] \n] {
+                    set fields [split [string trim $line] :]
+                    set arg [string trim [lindex $fields 1]]
+                    switch -- [lindex $fields 0] {
+                        Resolution { incr displaynum }
+                        Mirror     { set mirror [expr {$arg ne "Off"}] }
+                    }
+                }
+                close $fd
+                if {$displaynum == 1 || $mirror} {
+                    # if a single display or mirrored we can trust Tk to
+                    # tell us the screen size
+                    return [check_geom $win $geom 20]
+                }
+                set prefs /Library/Preferences/com.apple.windowserver
+                if {![catch {
+                    set fd [open "| defaults read $prefs DisplaySets"]
+                }]} {
+                    set lines [read $fd]
+                    set num -1
+                    foreach line [split [lindex [split $lines "()"] 2] \n] {
+                        set fields [split [string trim $line " ;"] =]
+                        set var [string trim [lindex $fields 0]]
+                        set val [string trim [lindex $fields 1]]
+                        switch -- $var {
+                            Active { incr num }
+                            OriginX -
+                            OriginY -
+                            Height { set $var $val }
+                            Width   {
+                                if {$num == 0} {
+                                    # allow for menubar
+                                    incr OriginY 20
+                                }
+                                # note the window must have at least 20 pixels
+                                # overlapping with the display (enough to move
+                                # via the window manager)
+                                lappend displays $num $OriginX $OriginY \
+                                        [expr {$OriginX + $val - 20}] \
+                                        [expr {$OriginY + $Height - 1}]
+                            }
+                        }
+                    }
+                    close $fd
+                    # look for top left on a display
+                    set found ""
+                    foreach {num x1 y1 x2 y2} $displays {
+                        if {$x >= $x1 && $x < $x2 && $y >= $y1 && $y < $y2} {
+                            set found $num
+                            break
+                        }
+                    }
+                    if {$found eq ""} {
+                        # look for top right on a display
+                        set ex [expr {$x + $w - 1}]
+                        foreach {num x1 y1 x2 y2} $displays {
+                            if {$ex >= $x1 && $ex < $x2 && $y >= $y1 && $y < $y2} {
+                                set found $num
+                                break
+                            }
+                        }
+                    }
+                    if {$found eq ""} {
+                        set geom [check_geom $win $geom]
+                        # not on any display, so we center on primary display
+                        foreach {num x1 y1 x2 y2} [lrange $displays 0 4] {}
+                        set x [expr {($x2 - $x1 - $w) / 2}]
+                        if {[set y [expr {($y2 - $y1 - $h) / 2}]] < $y1} {
+                            set y $y1
+                        }
+                        set geom =${w}x${h}+${x}+$y
+                        
+                    }
+                }
+            }
+            return $geom
+        }
+        
         
         # creates a tag to set the fixed width part of an option block
         # 	- converts from length to pixels using width of space char in the
@@ -546,9 +854,9 @@ if {[catch {package require gbutton}]} {
             # we're on page 2 and the search box is empty
             #   (return to previous page)
             
-            #puts "KeyTracker [gButton::cget Edit -text] [lindex $pageStack end] $currMode"
+            #puts "KeyTracker [getButton four] [lindex $pageStack end] $currMode"
             
-            set txt [gButton::cget Edit -text]
+            set txt [getButton four]
             if {$txt != "" && $txt != "Edit"} return
             
             if {$currMode == ""} {
@@ -602,12 +910,158 @@ if {[catch {package require gbutton}]} {
             } else {
                 set state normal
             }
-            gButton::modify Home -state $state
+            buttonState Copy $state
         }
         
+        proc buttonState {name state} {
+            variable entry
+            variable bindkey
+            variable bindcmd
+            variable button
+            variable D
+            if {[info exists button($name)]} {
+                set num $button($name)
+                gButton::modify $num -state $state -fill [set Color::b$state]
+                if {[info exists bindkey($name)]} {
+                    if {$state eq "normal"} {
+                        set cmd $bindcmd($num)
+                    } else {
+                        set cmd ""
+                    }
+                    # bind to both the entry and text widgets, so editing
+                    # commands work
+                    bind $entry <$bindkey($name)> $cmd
+                    bind $D <$bindkey($name)> $cmd
+                    focus .details
+                }
+            }
+        }
+        
+        proc setButton {num name cmd {state normal}} {
+            variable entry
+            variable bindkey
+            variable bindcmd
+            variable button
+            variable D
+            
+            if {[info exists bindcmd($num)]} {
+                # clear old keyboard binding
+                bind $entry $bindcmd($num) {}
+                bind $D $bindcmd($num) {}
+            }
+            gButton::modify $num -text $name -command $cmd
+            if {[info exists bindkey($name)]} {
+                set bindcmd($num) $cmd
+            } else {
+                set bindcmd($num) ""
+            }
+            set button($name) $num
+            buttonState $name $state
+        }
+        
+        proc getButton {num} {
+            return [gButton::cget $num -text]
+        }
+        
+        proc tocDisplay {} {
+            variable toc
+            variable tocmap
+            pagevars 8 name page
+            $toc delete 1.0 end
+            $toc insert end $name\n title
+            set num 0
+            set allref 0
+            set ref ""
+            set tocprefix ""
+            foreach line [split $page \n] {
+                if {[string index $line 0] eq "+"} continue
+                if {[string is alnum [string index $line 0]]} {
+                    set last [lindex $line end]
+                    set ref ""
+                    set allref 0
+                    if {[string index $last 0] eq "*"} {
+                        # show backreferences rather than page
+                        set tocprefix [string range $last 1 end]
+                        if {$tocprefix ne ""} {
+                            append tocprefix " "
+                        }
+                        set allref 1
+                        set line [join [lrange [split $line] 0 end-1]]
+                    }
+                    $toc insert end \n$line heading
+                } elseif {[regexp {^\s*(.+?)(\*{0,1})\s+(\[.*\])} $line -  \
+                        opt ref link rest]} {
+                    if {$allref} { set ref * }
+                    $toc insert end "\n   $opt" [list toc$num tocAll]
+                    set link [string trim $link {[]}]
+                    set tocmap([string tolower $tocprefix$opt]) $num
+                    set tag toc$num
+                    $toc tag bind $tag <ButtonPress-1> \
+                            [list Wikit::tocLoad [LookupPage $link] $ref]
+                    $toc tag bind $tag <Any-Enter> "Wikit::tocActive $tag"
+                    $toc tag bind $tag <Any-Leave> "Wikit::tocInactive $tag"
+                    incr num
+                }
+            }
+            
+            proc tocActive {tag} {
+                variable toc
+                Wikit::linkActive $toc $tag $Color::linkFg ""
+            }
+            
+            proc tocInactive {tag} {
+                variable toc
+                Wikit::linkInactive $toc $tag $Color::wikiFg
+            }
+            
+            proc tocLoad {id ref} {
+                variable toc
+                variable D
+                variable entry
+                # $toc configure -cursor watch
+                # after idle $toc configure -cursor ""
+                Wikit::linkInactive $toc tocAll $Color::wikiFg
+                if {$ref eq ""} {
+                    ShowPage $id
+                } else {
+                    # show pages that refer to this - mainly for categories
+                    # on the Tclers Wiki
+                    ShowRefsPage $id toc
+                    pagevars $id name page
+                    $D configure -state normal
+                    # extract "See also:" from page
+                    set see {}
+                    foreach line [split $page \n] {
+                        if {[string match -nocase "*See also:*" $line]} {
+                            lappend see $line
+                        } elseif {$see ne {}} {
+                            set first [string index $line 0]
+                            if {[string trim $first] ne ""} break
+                            lappend see $line
+                        }
+                    }
+                    if {$see ne {}} {
+                        set cmd [lindex [Expand_Tk [join $see \n] $id] 0]
+                        eval $D insert end $cmd
+                    }
+                    $D configure -state disabled
+                }
+                after idle focus -force $entry
+            }
+            
+            proc tocHighlight {page} {
+                variable tocmap
+                variable toc
+                $toc tag configure tocAll -foreground $Color::wikiFg
+                foreach {all suffix} [regexp -inline -all {\[(.+?)\]} $page] {
+                    set suffix [string tolower $suffix]
+                    if {[info exists tocmap($suffix)]} {
+                        tocActive toc$tocmap($suffix)
+                    }
+                }
+            }
+        }
     }
 }
-
-
 
 
