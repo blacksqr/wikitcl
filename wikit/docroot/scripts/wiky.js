@@ -156,7 +156,7 @@ var Wiky = {
        { rex:/<img([^>]*)\/?>/mgi, tmplt:function($0,$1){var a=Wiky.attrVal($1,"alt"),h=Wiky.attrVal($1,"src"),t=Wiky.attrVal($1,"title"),s=Wiky.attrVal($1,"style");return "["+h+"]";}},
      ],
      escapes: [
-       { rex:/([|*_~%\^])/g, tmplt:"\\$1" },
+       { rex:/([|*~%\^])/g, tmplt:"\\$1" },
        { rex:/&amp;/g, tmplt:"\\&" },
        { rex:/&gt;/g, tmplt:"\\>" },
        { rex:/&lt;/g, tmplt:"\\<" }
