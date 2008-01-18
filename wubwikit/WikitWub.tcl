@@ -1483,7 +1483,6 @@ namespace eval WikitWub {
 	    append result { and contents}
 	}
 	append result "):\n\n"
-
 	set pcnt 0
 	foreach i $rows {
 	    # these are fake pages, don't list them
@@ -1516,11 +1515,7 @@ namespace eval WikitWub {
 	    }
 	}
 
-	if {!$long} {
-	    append result "\n''Tip: append an asterisk to search the page contents as well as titles.''"
-	}
-
-	return [list $result $rdate]
+	return [list $result $rdate $long]
     }
 
     variable trailers {@ _edit ! _ref - _diff + _history}
@@ -1584,11 +1579,20 @@ namespace eval WikitWub {
 			set qdate 0
 		    }
 
-		    lassign [search $term $qdate] C nqdate
+		    lassign [search $term $qdate] C nqdate long
 		    set C [::Wikit::TextToStream $C]
 		    lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T
 		    if { $nqdate } {
-			append C [<p> [<a> href "/_search?S=[armour $term]&F=$nqdate" "More search results..."]]
+			append C [<p> [<a> href "/_search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
+		    }
+		    if { $long } {
+			append C <p> 
+			append C [<a> href "/_search?S=[armour [string trimright $term *]]&_charset_=utf-8" "Repeat search in titles only"]
+			append C ", or remove trailing asterisks from the search string to search the titles only.</p>"
+		    } else {
+			append C <p> 
+			append C [<a> href "/_search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
+			append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
 		    }
 		} else {
 		    # send a search page
@@ -1750,7 +1754,9 @@ foreach {dom expiry} {css {tomorrow} images {next week} scripts {tomorrow} img {
     File $dom -root [file join $::config(docroot) $dom] -expires $expiry
 }
 
-Mason webalizer -root /var/www/webalizer -url /_stats/ -auth .before -wrapper .after -dirhead {name size mtime}
+if {[file exists /var/www/webalizer]} {
+    Mason webalizer -root /var/www/webalizer -url /_stats/ -auth .before -wrapper .after -dirhead {name size mtime}
+}
 
 # Wub documentation directory
 Mason wub -url /_wub -root [file join $::config(wubdir) docs] -auth .before -wrapper .after -dirhead {name size mtime}
