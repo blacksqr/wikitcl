@@ -1120,7 +1120,7 @@ namespace eval WikitWub {
 	}
 
 	variable cookie
-	set cdict [Cookies add $cdict -path / -name $cookie -value $nickname {*}$age]
+	set cdict [Cookies add $cdict -path /_edit -name $cookie -value $nickname {*}$age]
 	dict set r -cookies $cdict
 	if {$R eq ""} {
 	    set R [Http Referer $r]
