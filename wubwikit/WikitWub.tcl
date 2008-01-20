@@ -1140,10 +1140,6 @@ namespace eval WikitWub {
     proc movecookie {r} {
 	variable cookie
 	set cdict [dict get $r -cookies]
-	if {[llength [Cookies match $cdict -name $cookie -path /_edit/]] == 1} {
-	    Debug.wikit {cookie already moved}
-	    return $r
-	}
 
         set cl [Cookies match $cdict -name $cookie -path /]
 	if {[llength $cl] != 1} {
@@ -1151,11 +1147,9 @@ namespace eval WikitWub {
 	    return $r
 	}
 
-	set who [dict get [Cookies fetch $cdict -name $cookie -path /] -value]
 	set cdict [Cookies clear $cdict -name $cookie -path /]
-	set cdict [Cookies add cdict -path /_edit/ -name $cookie -value $who]
 	dict set r cookies $cdict
-	Debug.wikit {added $who under /_edit/}
+	Debug.wikit {Cookie CLEAR}
 
 	return $r
     }
@@ -1165,14 +1159,7 @@ namespace eval WikitWub {
 	set cdict [dict get $r -cookies]
 	set cl [Cookies match $cdict -name $cookie -path /_edit/]
 	if {[llength $cl] != 1} {
-	    set cl [Cookies match $cdict -name $cookie -path /]
-	    if {[llength $cl] != 1} {
-		Debug.wikit {who 'none' $cl}
-		return ""
-	    } else {
-		Debug.wikit {who /}
-		return [dict get [Cookies fetch $cdict -name $cookie -path /] -value]
-	    }
+	    return ""
 	} else {
 	    Debug.wikit {who /edit/ $cl}
 	    return [dict get [Cookies fetch $cdict -name $cookie -path /_edit/] -value]
