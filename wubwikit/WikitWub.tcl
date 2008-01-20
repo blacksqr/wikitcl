@@ -1167,14 +1167,14 @@ namespace eval WikitWub {
 	if {[llength $cl] != 1} {
 	    set cl [Cookies match $cdict -name $cookie -path /]
 	    if {[llength $cl] != 1} {
-		Debug.wikit {who 'none'}
+		Debug.wikit {who 'none' $cl}
 		return ""
 	    } else {
 		Debug.wikit {who /}
 		return [dict get [Cookies fetch $cdict -name $cookie -path /] -value]
 	    }
 	} else {
-	    Debug.wikit {who /edit/}
+	    Debug.wikit {who /edit/ $cl}
 	    return [dict get [Cookies fetch $cdict -name $cookie -path /_edit/] -value]
 	}
     }
