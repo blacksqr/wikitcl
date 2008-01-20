@@ -1929,7 +1929,7 @@ proc Incoming {req} {
 
 	/_edit/* {
 	    # /_edit domain - wiki-local restful command URL,
-	    Debug.wikit {direct invocation}
+	    Debug.wikit {direct invocation1 [dict get $req -path]}
 	    set path [file split [dict get $req -path]]
 	    set N [lindex $path end]
 	    set suffix /[string trimleft [lindex $path end-1] _]
@@ -1941,7 +1941,7 @@ proc Incoming {req} {
 	/_* {
 	    # These are wiki-local restful command URLs,
 	    # we process them via the ::wikit Direct domain
-	    Debug.wikit {direct invocation}
+	    Debug.wikit {direct invocation2 [dict get $req -path]}
 	    set path [file split [dict get $req -path]]
 	    set N [lindex $path end]
 	    set suffix /[string trimleft [lindex $path 1] _]
