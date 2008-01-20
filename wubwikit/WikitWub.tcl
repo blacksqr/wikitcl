@@ -1132,14 +1132,41 @@ namespace eval WikitWub {
         return [redir $r $R [<a> href $R "Created Account"]]
     }
 
+    # move old cookies from path / to path /_edit
+    proc movecookie {r} {
+	variable cookie
+	set cdict [dict get $r -cookies]
+	if {[llength [Cookies match $cdict -name $cookie -path /_edit]] == 1} {
+	    return $r
+	}
+
+        set cl [Cookies match $cdict -name $cookie -path /]
+	if {[llength $cl] != 1} {
+		return $r
+	}
+
+	set who [dict get [Cookies fetch $cdict -name $cookie -path /] -value]
+	set cdict [Cookies clear $cdict -name $cookie -path /]
+	set cdict [Cookies add cdict -path /_edit -name $cookie -value $who]
+	dict set r cookies $cdict
+
+	return $r
+    }
+
     proc who {r} {
 	variable cookie
 	set cdict [dict get $r -cookies]
-	set cl [Cookies match $cdict -name $cookie]
+	set cl [Cookies match $cdict -name $cookie -path /_edit]
 	if {[llength $cl] != 1} {
-	    return ""
+	    set cl [Cookies match $cdict -name $cookie -path /]
+	    if {[llength $cl] != 1} {
+		return ""
+	    } else {
+		return [dict get [Cookies fetch $cdict -name $cookie -path /] -value]
+	    }
+	} else {
+	    return [dict get [Cookies fetch $cdict -name $cookie -path /_edit] -value]
 	}
-	return [dict get [Cookies fetch $cdict -name $cookie] -value]
     }
 
     proc invalidate {r url} {
@@ -1237,6 +1264,10 @@ namespace eval WikitWub {
 	# is the caller logged in?
 	set nick [who $r]
 	set when [expr {[dict get $r -received] / 1000000}]
+
+	# temporary fix - move cookies under -path /_edit
+        set r [movecookie $r]
+
 	Debug.wikit {/edit/save N:$N [expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
 
 	# if there is new page content, save it now
@@ -1339,6 +1370,7 @@ namespace eval WikitWub {
 
 	# is the caller logged in?
 	set nick [who $r]
+	
 	if {$nick eq ""} {
 	    set R ""	;# make it return here
 	    # TODO KBK: Perhaps allow anon edits with a CAPTCHA?
@@ -1351,7 +1383,9 @@ namespace eval WikitWub {
 	set who_nick ""
 	regexp {^(.+)[,@]} $who - who_nick
 	set C [armour [GetPage $N]]
-	if {$C eq ""} {set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"}
+	if {$C eq ""} {
+	    set C {This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n}
+	}
 
 	# set some session data
 	dict set r -session who $nick
@@ -1808,7 +1842,7 @@ proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
     #set req [Cookies 4Server $req]
-    set req [Session fetch $req]
+    set req [Session fetch $req -path /_edit]
 
     set rsp [Responder Incoming $req -glob -- [dict get $req -path] {
 	/*.php -
@@ -1921,7 +1955,7 @@ proc Incoming {req} {
 	}
     }]
 
-    return [Session store $rsp]
+    return [Session store $rsp -path /_edit]
 }
 
 #### initialize Block
