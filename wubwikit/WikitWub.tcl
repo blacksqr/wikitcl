@@ -123,7 +123,7 @@ namespace eval WikitWub {
 		set _submit [<submit> save   class positive disabled $disabled value 1 {Save your changes}]
 		set _cancel [<submit> cancel class button   disabled 0         value 1 Cancel]
 		 #<button name='cancel' value='1' type='submit'><a class='button' href='/$N'>Cancel</a></button>
-		<form> edit method post action /_save/$N {
+		<form> edit method post action /_edit/save/$N {
 		      [<textarea> C rows 30 cols 72 style width:100% [list [tclarmour $C]]]
 		      [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		      [<hidden> _charset_ {}]
@@ -1206,7 +1206,7 @@ namespace eval WikitWub {
 	return [WikitWub do $r 2]
     }
 
-    proc /save {r N C O save cancel} {
+    proc /edit/save {r N C O save cancel} {
 
 	if { [string is integer -strict $cancel] && $cancel } {
 	    set url http://[Url host $r]/$N
@@ -1237,7 +1237,7 @@ namespace eval WikitWub {
 	# is the caller logged in?
 	set nick [who $r]
 	set when [expr {[dict get $r -received] / 1000000}]
-	Debug.wikit {/save N:$N [expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
+	Debug.wikit {/edit/save N:$N [expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
 
 	# if there is new page content, save it now
 	variable protected
