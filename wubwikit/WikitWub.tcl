@@ -1927,6 +1927,18 @@ proc Incoming {req} {
 	    ::scripts do $req
 	}
 
+	/_edit/login {
+	    # These are wiki-local restful command URLs,
+	    # we process them via the ::wikit Direct domain
+	    Debug.wikit {direct invocation2 [dict get $req -path]}
+	    set path [file split [dict get $req -path]]
+	    set N [lindex $path end]
+	    set suffix /[string trimleft [lindex $path 1] _]
+	    dict set req -suffix $suffix
+	    dict set req -Query [Query add [Query parse $req] N $N]
+	    ::wikit do $req
+	}
+
 	/_edit/* {
 	    # /_edit domain - wiki-local restful command URL,
 	    Debug.wikit {direct invocation1 [dict get $req -path]}
