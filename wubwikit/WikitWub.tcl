@@ -1087,6 +1087,7 @@ namespace eval WikitWub {
 	if {$nickname eq ""} {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
+	    Debug.wikit {/login - redo with referer}
 	    set R [Http Referer $r]
 	    return [sendPage $r login]]]
 	}
@@ -1120,35 +1121,40 @@ namespace eval WikitWub {
 	}
 
 	variable cookie
-	set cdict [Cookies add $cdict -path /_edit -name $cookie -value $nickname {*}$age]
+	Debug.wikit {/login - created cookie $nickname with R $R}
+	set cdict [Cookies add $cdict -path /_edit/ -name $cookie -value $nickname {*}$age]
+
 	dict set r -cookies $cdict
 	if {$R eq ""} {
 	    set R [Http Referer $r]
 	    if {$R eq ""} {
-		set R "http://[dict get $r host]/0"
+		set R "http://[dict get $r host]/"
 	    }
 	}
 
-        return [redir $r $R [<a> href $R "Created Account"]]
+	return [redir $r $R [<a> href $R "Created Account"]]
     }
 
-    # move old cookies from path / to path /_edit
+    # move old cookies from path / to path /_edit/
     proc movecookie {r} {
 	variable cookie
 	set cdict [dict get $r -cookies]
-	if {[llength [Cookies match $cdict -name $cookie -path /_edit]] == 1} {
+	if {[llength [Cookies match $cdict -name $cookie -path /_edit/]] == 1} {
+	    Debug.wikit {cookie already moved}
 	    return $r
 	}
 
         set cl [Cookies match $cdict -name $cookie -path /]
 	if {[llength $cl] != 1} {
-		return $r
+	    Debug.wikit {no old cookie}
+	    return $r
 	}
 
 	set who [dict get [Cookies fetch $cdict -name $cookie -path /] -value]
 	set cdict [Cookies clear $cdict -name $cookie -path /]
-	set cdict [Cookies add cdict -path /_edit -name $cookie -value $who]
+	set cdict [Cookies add cdict -path /_edit/ -name $cookie -value $who]
 	dict set r cookies $cdict
+	Debug.wikit {added $who under /_edit/}
 
 	return $r
     }
@@ -1156,16 +1162,19 @@ namespace eval WikitWub {
     proc who {r} {
 	variable cookie
 	set cdict [dict get $r -cookies]
-	set cl [Cookies match $cdict -name $cookie -path /_edit]
+	set cl [Cookies match $cdict -name $cookie -path /_edit/]
 	if {[llength $cl] != 1} {
 	    set cl [Cookies match $cdict -name $cookie -path /]
 	    if {[llength $cl] != 1} {
+		Debug.wikit {who 'none'}
 		return ""
 	    } else {
+		Debug.wikit {who /}
 		return [dict get [Cookies fetch $cdict -name $cookie -path /] -value]
 	    }
 	} else {
-	    return [dict get [Cookies fetch $cdict -name $cookie -path /_edit] -value]
+	    Debug.wikit {who /edit/}
+	    return [dict get [Cookies fetch $cdict -name $cookie -path /_edit/] -value]
 	}
     }
 
@@ -1265,7 +1274,7 @@ namespace eval WikitWub {
 	set nick [who $r]
 	set when [expr {[dict get $r -received] / 1000000}]
 
-	# temporary fix - move cookies under -path /_edit
+	# temporary fix - move cookies under -path /_edit/
         set r [movecookie $r]
 
 	Debug.wikit {/edit/save N:$N [expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
@@ -1842,7 +1851,7 @@ proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
     #set req [Cookies 4Server $req]
-    set req [Session fetch $req -path /_edit]
+    set req [Session fetch $req -path /_edit/]
 
     set rsp [Responder Incoming $req -glob -- [dict get $req -path] {
 	/*.php -
@@ -1966,7 +1975,7 @@ proc Incoming {req} {
 	}
     }]
 
-    return [Session store $rsp -path /_edit]
+    return [Session store $rsp -path /_edit/]
 }
 
 #### initialize Block
