@@ -16,6 +16,7 @@ package require Form
 package require struct::queue
 package require Http
 package require Cookies
+package require Session
 package require WikitRss
 package require Sitemap
 package require stx
@@ -1074,6 +1075,11 @@ namespace eval WikitWub {
 	return [Http NoCache [Http SeeOther $r $url [subst $redir]]]
     }
 
+    proc /who {r} {
+	set C [Html dict2table [dict get $r -session] {who edit}]
+	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
+    }
+
     proc /login {r {nickname ""} {R ""}} {
 	# cleanse nickname
 	regsub -all {[^A-Za-z0-0_]} $nickname {} nickname
@@ -1346,6 +1352,12 @@ namespace eval WikitWub {
 	regexp {^(.+)[,@]} $who - who_nick
 	set C [armour [GetPage $N]]
 	if {$C eq ""} {set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"}
+
+	# set some session data
+	dict set r -session who $nick
+	set r [Session with $r {
+	    lappend edit [clock second] $N
+	}]
 
 	return [sendPage $r edit]
     }
@@ -1795,9 +1807,10 @@ proc Responder::post {rsp} {
 proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
-    set req [Cookies 4Server $req]
+    #set req [Cookies 4Server $req]
+    set req [Session fetch $req]
 
-    Responder Incoming $req -glob -- [dict get $req -path] {
+    set rsp [Responder Incoming $req -glob -- [dict get $req -path] {
 	/*.php -
 	/*.wmv -
 	/*.exe -
@@ -1906,7 +1919,9 @@ proc Incoming {req} {
 	default {
 	    ::WikitWub do $req [file tail [dict get $req -path]]
 	}
-    }
+    }]
+
+    return [Session store $rsp]
 }
 
 #### initialize Block
