@@ -325,7 +325,8 @@ namespace eval WikitWub {
     }
 
     variable maxAge "next month"	;# maximum age of login cookie
-    variable cookie "wikit"		;# name of login cookie
+    variable cookie "wikit_e"		;# name of login cookie
+    variable oldcookie "wikit"		;# name of login cookie
 
     variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 //EN">}
     variable language "en"	;# language for HTML
@@ -1138,16 +1139,16 @@ namespace eval WikitWub {
 
     # move old cookies from path / to path /_edit/
     proc movecookie {r} {
-	variable cookie
+	variable oldcookie
 	set cdict [dict get $r -cookies]
 
-        set cl [Cookies match $cdict -name $cookie -path /]
+        set cl [Cookies match $cdict -name $oldcookie]
 	if {[llength $cl] != 1} {
 	    Debug.wikit {no old cookie}
 	    return $r
 	}
 
-	set cdict [Cookies clear $cdict -name $cookie -path /]
+	set cdict [Cookies clear $cdict -name $oldcookie]
 	dict set r cookies $cdict
 	Debug.wikit {Cookie CLEAR}
 
@@ -1157,12 +1158,12 @@ namespace eval WikitWub {
     proc who {r} {
 	variable cookie
 	set cdict [dict get $r -cookies]
-	set cl [Cookies match $cdict -name $cookie -path /_edit/]
+	set cl [Cookies match $cdict -name $cookie]
 	if {[llength $cl] != 1} {
 	    return ""
 	} else {
 	    Debug.wikit {who /edit/ $cl}
-	    return [dict get [Cookies fetch $cdict -name $cookie -path /_edit/] -value]
+	    return [dict get [Cookies fetch $cdict -name $cookie] -value]
 	}
     }
 
