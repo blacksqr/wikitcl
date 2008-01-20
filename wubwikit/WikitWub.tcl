@@ -166,7 +166,7 @@ namespace eval WikitWub {
 	login {login} {
 	    <!-- page sent to enable login -->
 	    <p>You must have a nickname to post here</p>
-	    <form action='/_login' method='post'>
+	    <form action='/_edit/login' method='post'>
 	    <fieldset><legend>Login</legend>
 	    <label for='nickname'>Nickname </label><input type='text' name='nickname'><input type='submit' value='login'>
 	    </fieldset>
