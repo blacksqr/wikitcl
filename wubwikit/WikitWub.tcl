@@ -1813,7 +1813,10 @@ proc Incoming {req} {
 	    ::webalizer do $req
 	}
 
-	/_sinorca -
+	/_sinorca {
+	    Http Redir $req "http://[dict get $req host]/_sinorca/"
+	}
+
 	/_sinorca/* {
 	    # Sinorca page style demo
 	    Sinorca ram do $req
