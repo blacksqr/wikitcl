@@ -1089,6 +1089,7 @@ namespace eval WikitWub {
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
 	    set R [Http Referer $r]
+	    set r [movecookie $r]
 	    return [sendPage $r login]]]
 	}
 
@@ -1850,8 +1851,8 @@ proc Responder::post {rsp} {
 proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
-    #set req [Cookies 4Server $req]
-    set req [Session fetch $req -path /_edit/]
+    set req [Cookies 4Server $req]
+    #set req [Session fetch $req -path /_edit/]
 
     set rsp [Responder Incoming $req -glob -- [dict get $req -path] {
 	/*.php -
@@ -1983,7 +1984,8 @@ proc Incoming {req} {
 	}
     }]
 
-    return [Session store $rsp -path /_edit/]
+    return $rsp
+    #return [Session store $rsp -path /_edit/]
 }
 
 #### initialize Block
