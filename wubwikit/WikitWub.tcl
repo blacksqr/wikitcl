@@ -1355,9 +1355,9 @@ namespace eval WikitWub {
 
 	# set some session data
 	dict set r -session who $nick
-	set r [Session with $r {
+	Session with r {
 	    lappend edit [clock second] $N
-	}]
+	}
 
 	return [sendPage $r edit]
     }
