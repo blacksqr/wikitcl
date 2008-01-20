@@ -1206,7 +1206,7 @@ namespace eval WikitWub {
 	return [WikitWub do $r 2]
     }
 
-    proc /edit/save {r N C O save cancel} {
+    proc /save {r N C O save cancel} {
 
 	if { [string is integer -strict $cancel] && $cancel } {
 	    set url http://[Url host $r]/$N
