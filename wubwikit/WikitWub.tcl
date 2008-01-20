@@ -1742,6 +1742,12 @@ Convert init
 Direct init wikit namespace ::WikitWub prefix /_wub ctype "x-text/wiki"
 Convert Namespace ::WikitWub
 
+#### Sinorca package
+# provides a page-level conversion
+package require Sinorca
+Sinorca init path /_sinorca/
+Convert Namespace ::Sinorca
+
 package require Dub
 Dub init prefix /_dub
 Direct init dub namespace ::Dub prefix /_dub ctype "x-text/html-fragment"
@@ -1805,6 +1811,12 @@ proc Incoming {req} {
 	/_stats -
 	/_stats/* {
 	    ::webalizer do $req
+	}
+
+	/_sinorca -
+	/_sinorca/* {
+	    # Sinorca page style demo
+	    Sinorca ram do $req
 	}
 
 	/_wub -
