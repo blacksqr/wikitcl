@@ -8,21 +8,23 @@ namespace eval Site {
     # Site WikitWub-specific defaults
     # These may be overwritten by command line, or by vars.tcl
     variable home [file normalize [file dirname [info script]]]
-    variable base "/tmp/wiki"	;# default place for wiki to live
+    variable base "/tmp/wiki"		;# default place for wiki to live
     variable wubdir "../../Wub/"	;# relative path to Wub libraries
-    variable overwrite 0		;# we do *not* want to overwrite the wiki
     variable application WikitWub	;# what's our application package?
 	
-    variable wikidb wikit.tkd	;# wikit's Metakit DB name
+    variable overwrite 0		;# set both to overwrite
+    variable reallyreallyoverwrite 0	;# set both to overwrite
+
+    variable wikidb wikit.tkd		;# wikit's Metakit DB name
     variable history history		;# history directory
-    variable readonly 0		;# the wiki is not readonly
+    variable readonly 0			;# the wiki is not readonly
     variable prime 0			;# we do not wish to prime the wikit
     variable utf8clean 0		;# we do not want utf8 cleansing
-    variable upflag ""		;# no URL syncing
+    variable upflag ""			;# no URL syncing
 
     variable multi 0			;# we're single-threaded
-
-    variable varnish {}		;# don't use varnish cache by default
+    variable globaldocroot 0		;# use the local docroot
+    variable varnish {}			;# don't use varnish cache by default
     variable cache {maxsize 204800}	;# use in-RAM cache by default
 }
 
@@ -32,7 +34,7 @@ package require Site	;# load main Site configuration
 #### WikitWub-specific Configuration
 # create data and document dirs, priming them from original
 namespace eval Site {
-    variable origin [file join $home docroot] ;# the original copies for priming
+    variable origin $docroot ;# the original copies for priming
     variable wikitroot [file join $base data]	;# where the wikit lives
     set docroot [file join $base docroot]	;# where ancillary docs live
 
@@ -42,13 +44,13 @@ namespace eval Site {
 	# copy the origin docroot to $base
 	file copy $origin [file dirname $docroot]
 	file copy [file join $home doc.sample $wikidb] $wikitroot
-    } elseif {0 && $overwrite} {
+    } elseif {$reallyreallyoverwrite && $overwrite} {
 	# destructively overwrite the $base with the origin
 	file delete -force $docroot
 	file copy -force $origin [file dirname $docroot]
 	file copy -force [file join $home doc $wikidb] $wikitroot
     } else {
-	puts stderr "Not overwriting existing docroot '$docroot'"
+	#puts stderr "Not overwriting existing docroot '$docroot'"
     }
     
     # clean up any symlinks in docroot
