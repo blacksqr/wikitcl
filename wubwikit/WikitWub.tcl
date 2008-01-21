@@ -1275,9 +1275,7 @@ namespace eval WikitWub {
 	    && ![info exists protected($N)]
 	} {
 	    # added 2002-06-13 - edit conflict detection
-            if {$O ne [list $date $who]
-                && $O ne [list $date "$who@[dict get $r -ipaddr]"]
-            } {
+            if {$O ne [list $date $who]} {
 		#lassign [split [lassign $O ewhen] @] enick eip
 		if {$who eq "$nick@[dict get $r -ipaddr]"} {
 		    # this is a ghostly conflict-with-self - log and ignore
@@ -1378,7 +1376,7 @@ namespace eval WikitWub {
 	    return [sendPage $r login]
 	}
 
-	::Wikit::pagevars $N name date who
+	::Wikit::pagevars $N name date who	;# get the last change author
 
 	set who_nick ""
 	regexp {^(.+)[,@]} $who - who_nick
@@ -1388,11 +1386,12 @@ namespace eval WikitWub {
 	}
 
 	# set some session data
-	dict set r -session who $nick
-	Session with r {
-	    lappend edit [clock second] $N
+	if {0} {
+	    dict set r -session who $nick
+	    Session with r {
+		lappend edit [clock second] $N
+	    }
 	}
-
 	return [sendPage $r edit]
     }
 
