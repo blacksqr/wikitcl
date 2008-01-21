@@ -26,13 +26,13 @@ namespace eval Site {
     variable cache {maxsize 204800}	;# use in-RAM cache by default
 }
 
-lappend auto_path /usr/lib/ ../../wub/
+lappend auto_path /usr/lib/ ../../Wub/
 package require Site	;# load main Site configuration
 
 #### WikitWub-specific Configuration
 # create data and document dirs, priming them from original
 namespace eval Site {
-    variable origin $docroot	;# the original copies for priming
+    variable origin [file join $home docroot] ;# the original copies for priming
     variable wikitroot [file join $base data]	;# where the wikit lives
     set docroot [file join $base docroot]	;# where ancillary docs live
 
@@ -41,14 +41,14 @@ namespace eval Site {
     if {![file exists $docroot]} {
 	# copy the origin docroot to $base
 	file copy $origin [file dirname $docroot]
-	file copy [file join $home doc $wikidb] $wikitroot
-    } elseif {$overwrite} {
+	file copy [file join $home doc.sample $wikidb] $wikitroot
+    } elseif {0 && $overwrite} {
 	# destructively overwrite the $base with the origin
 	file delete -force $docroot
 	file copy -force $origin [file dirname $docroot]
 	file copy -force [file join $home doc $wikidb] $wikitroot
     } else {
-	#puts stderr "Not overwriting existing docroot '$docroot'"
+	puts stderr "Not overwriting existing docroot '$docroot'"
     }
     
     # clean up any symlinks in docroot
