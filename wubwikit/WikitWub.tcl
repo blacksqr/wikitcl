@@ -1279,8 +1279,7 @@ namespace eval WikitWub {
 		#lassign [split [lassign $O ewhen] @] enick eip
 		if {$who eq "$nick@[dict get $r -ipaddr]"} {
 		    # this is a ghostly conflict-with-self - log and ignore
-		    Debug.error "Conflict on Edit of $N: '$O' ne '[list $date $who]' at date $when"
-		    Debug.wikit {auto-conflict $N}
+		    Debug.wikit "Conflict on Edit of $N: '$O' ne '[list $date $who]' at date $when"
 		    #set url http://[dict get $r host]/$N
 		    #return [redir $r $url [<a> href $url "Edited Page"]]
 		} else {
