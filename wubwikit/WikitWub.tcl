@@ -1275,10 +1275,9 @@ namespace eval WikitWub {
 	    && ![info exists protected($N)]
 	} {
 	    # added 2002-06-13 - edit conflict detection
-	    lassign [split $who ,] nick
-	    if {$O ne [list $date $who]
-		&& $O ne [list $date $nick]
-	    } {
+            if {$O ne [list $date $who]
+                && $O ne [list $date "$who@[dict get $r -ipaddr]"]
+            } {
 		#lassign [split [lassign $O ewhen] @] enick eip
 		if {$who eq "$nick@[dict get $r -ipaddr]"} {
 		    # this is a ghostly conflict-with-self - log and ignore
