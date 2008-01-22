@@ -148,6 +148,7 @@ div#menu_area, div#wiki_menu, div#page_toc, div#wiki_toc, form#searchform span#t
 
 div.dtree {
     margin-bottom: 1em;
+    font-size: 80%;
 }
 
 form#searchform {
