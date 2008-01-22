@@ -146,6 +146,10 @@ div#menu_area, div#wiki_menu, div#page_toc, div#wiki_toc, form#searchform span#t
   display: none;
 }
 
+div.dtree {
+    margin-bottom: 1em;
+}
+
 form#searchform {
   padding: 0; margin: 0;
 }
