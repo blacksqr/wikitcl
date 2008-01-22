@@ -1840,6 +1840,13 @@ proc Incoming {req} {
     #set req [Cookies 4Server $req]
     set req [Session fetch $req -path /_edit/]
 
+    if {[dict exists $req -session]} {
+	# do something with existing session
+    } else {
+	# this will create a new session on request completion
+	dict set $req -session created [clock seconds]
+    }
+
     set rsp [Responder Incoming $req -glob -- [dict get $req -path] {
 	/*.php -
 	/*.wmv -
