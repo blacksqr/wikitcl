@@ -335,8 +335,12 @@ namespace eval WikitWub {
 	[<script> src /transclude.js]
 	[<script> src /dtree.js]
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
-	<!--\[if lte IE 6\]>[<style> media all "@import 'ie6.css';"]<!\[endif\]-->
-	<!--\[if gte IE 7\]>[<style> media all "@import 'ie7.css';"]<!\[endif\]-->
+	<!--\[if lte IE 6\]>
+		[<style> media all "@import 'ie6.css';"]
+	<!\[endif\]-->
+	<!--\[if gte IE 7\]>
+		[<style> media all "@import 'ie7.css';"]
+	<!\[endif\]-->
     }]
 
     # convertor from wiki to html
