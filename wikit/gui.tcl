@@ -75,7 +75,7 @@ if {[catch {package require gbutton}]} {
                 set bindkey(Home) ""
             }
         }
-        
+
         proc Expand_Tk {str id} {
             global tcl_platform
             variable D
@@ -91,13 +91,7 @@ if {[catch {package require gbutton}]} {
                         [namespace code [list linkInactive $D $tag $Color::linkFg]]
                 
                 if {$a == "u" || $a == "x"} {
-                    # Browsing in local mode is consistent for Windows,
-                    # so render an underline and add a binding.
-                    if { $tcl_platform(platform) == "windows" } {
-                        $D tag configure $tag -font wikit_underline
-                        $D tag bind $tag <ButtonPress-1> \
-                                "eval exec [auto_execok start] $c &"
-                    }
+					LinkBrowser $D $tag $c
                 }
                 
                 if {$a == "g"} {
@@ -1061,7 +1055,37 @@ if {[catch {package require gbutton}]} {
                 }
             }
         }
+
+		proc GetBrowser {} {
+			global tcl_platform env
+			variable browser ""
+			if {$tcl_platform(platform) eq "windows"} {
+				set cmd [auto_execok start]
+			} elseif {$tcl_platform(os) eq "Darwin"} {
+				set cmd open
+			} elseif {[info exists env(BROWSER)]} {
+				set cmd $env(BROWSER) 
+			} else {
+				foreach executable {firefox mozilla netscape iexplorer opera
+						lynx w3m links epiphany galeon konqueror mosaic amaya
+						browsex elinks} {
+					if {[set cmd [auto_execok $executable]] ne ""} break
+				}
+            }
+			if {$cmd ne ""} {
+				set browser "exec $cmd \$url &"
+			}
+		}
+
+		proc LinkBrowser {D tag url} {
+			variable browser
+			if {$browser ne ""} {
+				$D tag configure $tag -font wikit_underline
+				$D tag bind $tag <ButtonPress-1> [subst $browser]
+			}
+		}
+
+		GetBrowser
+
     }
 }
-
-
