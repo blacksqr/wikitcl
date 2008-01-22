@@ -48,9 +48,9 @@ namespace eval WikitWub {
     # sortable - include javascripts and CSS for sortable table.
     proc sortable {r} {
 	foreach js {common css standardista-table-sorting} {
-	    dict lappend r -headers [<script> type text/javascript src /$js.js {}]
+	    dict lappend r -headers [<script> src /$js.js]
 	}
-	dict lappend r -headers [<style> type text/css media all "@import url(/sorttable.css);"]
+	dict lappend r -headers [<style> media all "@import url(/sorttable.css);"]
 	return $r
     }
 
@@ -84,7 +84,7 @@ namespace eval WikitWub {
 		    [divID wiki_menu {[menuUL $menu]}]
 		    [searchF]
 		    [div navigation {
-			[divID page_toc {[script $T]}]
+			[divID page_toc {[<script> $T]}]
 		    }]
 		    [div extra {
 			[divID wiki_toc {}]
@@ -93,7 +93,7 @@ namespace eval WikitWub {
 		[div footer {
 		    [<p> id footer [variable bullet; join $footer $bullet]]
 		}]
-		[script checkTOC($N);]
+		[<script> checkTOC($N);]
 	    }]
 	}
 
@@ -311,10 +311,6 @@ namespace eval WikitWub {
 	append m "</ul>"
     }
 
-    proc script { script } {
-	return "<script type='text/javascript'>$script</script>"
-    }
-
     # return a search form
     proc searchF {} {
 	return {<form id='searchform' action='/_search' method='get'>
@@ -333,20 +329,15 @@ namespace eval WikitWub {
 
     # header sent with each page
     #<meta name='robots' content='index,nofollow' />
-    variable head {
-	<style type='text/css' media='all'>@import url(/wikit.css);</style>
-	<style type='text/css' media='all'>@import url(/dtree.css);</style>
-	<script src='/transclude.js' type='text/javascript'></script>
-	<script src='/dtree.js' type='text/javascript'></script>
-	<link rel='alternate' type='application/rss+xml' title='RSS' href='/rss.xml'>
-	<!--[if lte IE 6]>
-		<style type='text/css' media='all'>@import 'ie6.css';</style>
-	<![endif]-->
-	<!--[if gte IE 7]>
-		<style type='text/css' media='all'>@import 'ie7.css';</style>
-	<![endif]-->
-    }
-    #<script src='/wiky.js' type='text/javascript'></script>
+    variable head [subst {
+	[<style> media all "@import url(/wikit.css)"]
+	[<style> media all "@import url(/dtree.css)"]
+	[<script> src /transclude.js]
+	[<script> src /dtree.js]
+	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
+	<!--\[if lte IE 6\]>[<style> media all "@import 'ie6.css';"]<!\[endif\]-->
+	<!--\[if gte IE 7\]>[<style> media all "@import 'ie7.css';"]<!\[endif\]-->
+    }]
 
     # convertor from wiki to html
     proc .x-text/wiki.text/html {rsp} {
