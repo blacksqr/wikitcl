@@ -151,7 +151,7 @@ namespace eval Wikit::Format {
       ## there is any.
       #
       switch -exact -- $tag {
-        HR - UL - OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED {
+        HR - UL - OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS {
           if {$paragraph != {}} {
             if {$mode_fixed} {
               lappend irep FI {}
@@ -459,6 +459,9 @@ namespace eval Wikit::Format {
         CENTERED {
           lappend irep CT 0
         }
+        BACKREFS {
+          lappend irep BACKREFS $txt
+        }
         default {
           error "Unknown linetype $tag"
         }
@@ -517,6 +520,7 @@ namespace eval Wikit::Format {
       BLAME_START {^(>>>>>>)(\s?)(.+)$}
       BLAME_END   {^(<<<<<<)$}
       CENTERED {^()()(!!!!!!)$}
+      BACKREFS {^(<<backrefs>>)()(.*)$}
     } {
       # Compat: Remove restriction to multiples of 3 spaces.
       if {[regexp $re $line - pfx aux txt]} {
@@ -567,7 +571,7 @@ namespace eval Wikit::Format {
     # Compat: (Bugfix) Added " to the regexp as proper boundary of an url.
     #set re {\m(https?|ftp|news|mailto|file):(\S+[^\]\)\s\.,!\?;:'>"])}
     #set re {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])}
-    set re {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])}
+    set re {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ;#"
     set txt 0
     set end [string length $text]
 
@@ -615,11 +619,13 @@ namespace eval Wikit::Format {
 
     # Complex RE's used to process the string
     set pre  {\[([^\]]*)]}  ; #  page references ; # compat
-  #set lre  {\m(https?|ftp|news|mailto|file):(\S+[^\]\)\s\.,!\?;:'>"])} ; # "
-  #set lre  {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])} ; # "
-  set lre  {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ; # "
+    set bpre  {\[(brefs:)([^\]]*)]}  ; #  page back-references ; # compat
+    #set lre  {\m(https?|ftp|news|mailto|file):(\S+[^\]\)\s\.,!\?;:'>"])} ; # "
+    #set lre  {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])} ; # "
+    set lre  {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ; # "
+    set lre2 {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"]%\|%[^%]+%\|%)} ; # "
 
-                                                 set blre "\\\[\0\1u\2(\[^\0\]*)\0\\\]"
+    set blre "\\\[\0\1u\2(\[^\0\]*)\0\\\]"
 
                                                  # Order of operation:
                                                  # - Remap double brackets to avoid their interference.
@@ -647,7 +653,9 @@ namespace eval Wikit::Format {
                                                  ## puts stderr A>>$text<<*
 
                                                  # Isolate external links.
-                                                 regsub -all $lre $text "\0\1u\2\\1:\\2\0" text
+                                                 regsub -all $lre2 $text "\0\1u\2\\1\3\\2\0" text
+                                                 regsub -all $lre  $text "\0\1u\2\\1\3\\2\0" text
+                                                 set text [string map {\3 :} $text]
                                                  ## puts stderr C>>$text<<*
 
                                                  # External links in brackets are simpler cause we know where the
@@ -655,7 +663,8 @@ namespace eval Wikit::Format {
                                                  regsub -all $blre $text "\0\1x\2\\1\0" text
                                                  ## puts stderr D>>$text<<*
 
-                                                 # Now handle wiki page references
+                                                 # Now handle wiki page (back) references
+                                                 regsub -all $bpre $text "\0\1G\2\\2\0" text
                                                  regsub -all $pre $text "\0\1g\2\\1\0" text
                                                  ## puts stderr B>>$text<<*
 
@@ -683,6 +692,7 @@ namespace eval Wikit::Format {
                                                  regsub -all {''(.+?)''}   $text "\0\1i+\0\\1\0\1i-\0" text
                                                  regsub -all {`(.+?)`}   $text "\0\1f+\0\\1\0\1f-\0" text
                                                  regsub -all {(<<br>>)}   $text "\0br\0" text
+                                                 regsub -all {(<<nbsp>>)}   $text "\0nbsp\0" text
                                                  regsub -all {(<<pipe>>)}   $text "|" text
 
                                                  # Normalize brackets ...
@@ -710,6 +720,7 @@ namespace eval Wikit::Format {
         f+    {lappend irep f 1}
         f-    {lappend irep f 0}
         br    {lappend irep BR 0}
+        nbsp  {lappend irep NBSP 0}
         default {
           if {$detail == {}} {
             # Pure text
@@ -779,33 +790,49 @@ namespace eval Wikit::Format {
     upvar 1 $resultnm result
     set row -1
     set col -1
+    set tdtag ""
+    set trtag ""
     foreach {text tags} $table {
       switch -exact -- $tags {
-        TR {
+        CTR - TR - TRH {
+          if { $col >= 0 } {
+            lappend result \t $tdtag
+          }
           incr row
           set col -1
+          set tdtag ""
+          set trtag ""
           lappend result \n ""
+          if { $tags eq "CTR" } {
+            if { $row % 2 } {
+              set trtag CTR
+            } else {
+              set trtag TR
+            }
+          }
         }
-        TD {
+        TD - TDH {
+          if { $col >= 0 } { 
+            set tdtag $tags 
+          } else {
+            lappend result \t ""
+          }
+          set tdtag $tags
           incr col
-          lappend result \t ""
         }
-        TDE {
+        TDE - TDEH {
+          lappend result \t [list $tdtag $trtag]
+          set tdtag ""
         }
         default {
-          if { [info exists td($row,$col)] } {
-            lappend td($row,$col) $text $tags
-          } else {
-            set td($row,$col) [list $text $tags]
-          }
-          lappend result $text $tags
+          lappend result $text [list $tags $tdtag $trtag]
         }
       }
     }
     # What to do with the table elements?
   }
 
-  proc StreamToTk {s {ip ""}} {
+  proc StreamToTk {s N {ip ""} {brp ""}} {
     variable tagmap ; # pre-assembled information, tags and spacing
     variable vspace ; # ....
     #              ; # State of renderer
@@ -825,14 +852,14 @@ namespace eval Wikit::Format {
 
     foreach {mode text} $s {
       switch -exact -- $mode {
-        Q - T - I - D - C - U - O - H - L - F - V - X - FI - FE - HD2 - HD3 - HD4 {
+        Q - T - I - D - C - U - O - H - L - F - V - X - FI - FE - HD2 - HD3 - HD4 - BR - NBSP {
           if {[llength $tresult]} {
             FormatTable result $tresult
             set tresult {}
           }
           set cresult result
         }
-        TR - TD - TDE {
+        TR - CTR - TRH - TD - TDE - TDH - TDEH {
           set cresult tresult
         }
       }
@@ -846,13 +873,14 @@ namespace eval Wikit::Format {
               set text "   $new"
             }
           }
-          lappend $cresult $text $tagmap($state$b$i)
+          lappend $cresult $text $tagmap($state$b$i$f)
         }
-        b - i {set $mode $text }
-        g {
+        b - i - f {set $mode $text }
+        g - G {
+          lassign [split_url_link_text $text] link text
           set     n    [incr count]
-          lappend urls g $n $text
-          set     tags [set base $tagmap($state$b$i)]
+          lappend urls g $n $link
+          set     tags [set base $tagmap($state$b$i$f)]
           lappend tags url g$n
 
           if {$ip == ""} {
@@ -870,10 +898,11 @@ namespace eval Wikit::Format {
           lappend $cresult $text $tags
         }
         u {
+          lassign [split_url_link_text $text] link text
           set n [incr count]
-          lappend urls u $n $text
+          lappend urls u $n $link
 
-          set tags $tagmap($state$b$i)
+          set tags $tagmap($state$b$i$f)
           if {[lindex $tags 0] == "fixed"} {
             lappend tags urlq u$n
           } else {
@@ -882,11 +911,12 @@ namespace eval Wikit::Format {
           lappend $cresult $text $tags
         }
         x {
+          lassign [split_url_link_text $text] link text
           # support embedded images if present in "images" view
           set iseq ""
-          if {[regexp -nocase {\.(gif|jpg|jpeg|png)$} $text - ifmt]} {
+          if {[regexp -nocase {\.(gif|jpg|jpeg|png)$} $link - ifmt]} {
             set ifmt [string tolower $ifmt]
-            set iseq [mk::select wdb.images url $text -count 1]
+            set iseq [mk::select wdb.images url $link -count 1]
             if {$iseq != "" && [info commands eim_$iseq] == ""} {
               if {$ifmt eq "jpg"} { set ifmt jpeg }
               catch { package require tkimg::$ifmt }
@@ -902,9 +932,9 @@ namespace eval Wikit::Format {
             lappend eims eim_$iseq
           } else {
             set n [incr xcount]
-            lappend urls x $n $text
+            lappend urls x $n $link
 
-            set     tags [set base $tagmap($state$b$i)]
+            set     tags [set base $tagmap($state$b$i$f)]
             lappend tags url x$n
             lappend $cresult \[ $base $n $tags \] $base
           }
@@ -913,30 +943,30 @@ namespace eval Wikit::Format {
           set number 0 ;# reset counter for items in enumerated lists
           # use the body tag for the space before a quoted string
           # so the don't get a gray background.
-          lappend $cresult $vspace($state$mode) $tagmap(T00)
+          lappend $cresult $vspace($state$mode) $tagmap(T000)
           set state $mode
         }
         T - I - D - C {
           set number 0 ;# reset counter for items in enumerated lists
-          lappend $cresult $vspace($state$mode) $tagmap(${mode}00)
+          lappend $cresult $vspace($state$mode) $tagmap(${mode}000)
           set state $mode
         }
         U {
           lappend $cresult \
-            "$vspace($state$mode)   \u2022  " $tagmap(${mode}00)
+            "$vspace($state$mode)   \u2022  " $tagmap(${mode}000)
           set state $mode
         }
         O {
           lappend $cresult \
             "$vspace($state$mode)   [incr number].\t" \
-            $tagmap(${mode}00)
+            $tagmap(${mode}000)
           set state $mode
         }
         H {
           lappend $cresult \
-            $vspace($state$mode) $tagmap(T00) \
-            \t                   $tagmap(Hxx) \
-            \n                   $tagmap(H00)
+            $vspace($state$mode) $tagmap(T000) \
+            \t                   $tagmap(Hxxx) \
+            \n                   $tagmap(H000)
           set state $mode
         }
         L {	# start/end of option list
@@ -944,17 +974,17 @@ namespace eval Wikit::Format {
           set optnum [lindex $text 0]
           if {[set len [lindex $text 1]] ne ""} {
             # end - set width of fixed part of option block
-            Wikit::optwid $optnum $len
+            catch {Wikit::optwid $optnum $len} 
             set state T
           }
         }
         F { # fixed text part of option declaration
           set indent "   "
-          lappend $cresult $vspace(TF)$indent $tagmap(F00)$optnum
+          lappend $cresult $vspace(TF)$indent $tagmap(F000)$optnum
           set state F
         }
         V { # variable text part of option declaration
-          set tag $tagmap(V$b$i)
+          set tag $tagmap(V$b$i$f)
           set font [lindex $tag 0]$optnum
           set attr [lrange $tag 1 end]
           lappend $cresult $text "$font $attr"
@@ -970,21 +1000,63 @@ namespace eval Wikit::Format {
             set state $oldstate
           }
         }
-        TR {
-          lappend $cresult $vspace($state$mode) $tagmap(T00) TR TR
-          set state TR
+        CTR - TR - TRH {
+          lappend $cresult $vspace($state$mode) $tagmap(T000) $mode $mode
+          set state $mode
         }
-        TD {
-          lappend $cresult TD TD
+        TD - TDH {
+          lappend $cresult $mode $mode
           set state TD
         }
-        TDE {
+        TDE - TDEH {
           lappend $cresult TDE TDE
           set state TDE
         }
         HD2 - HD3 - HD4 {
           lappend $cresult $vspace($state$mode) ""
           set state $mode
+        }
+        BLS {
+          lappend $cresult $text body
+        }
+        BLE {
+          lappend $cresult $text body
+        }
+        BR {
+          lappend $cresult "\n" body
+          set state T
+        }
+        NBSP {
+          lappend $cresult " " body
+          set state T
+        }
+        CT {
+          lappend $cresult $text body
+        }
+        BACKREFS {
+          if { $brp eq "" } {
+            if { [string length $text]} {
+              lappend $cresult "Back references to current page not available." body
+            } else {
+              lappend $cresult "Back references to '$text' not available." body
+            }
+          } else {
+            lappend $cresult "\n" body
+            if { [string length $text]} {
+              set refList [eval $brp [list $text]]
+            } else {
+              set refList [eval $brp $N]
+            }
+            
+            foreach br $refList {
+              lassign $br date name who from
+              set     n    [incr count]
+              lappend urls g $n $name
+              lappend $cresult "\n   \u2022 " body $name [list url g$n]
+            }
+            lappend $cresult "\n" body
+#            lappend $cresult $text body
+          }
         }
       }
     }
@@ -999,24 +1071,71 @@ namespace eval Wikit::Format {
 
   variable  tagmap
   array set tagmap {
-    T00 body     T01 {body i}    T10 {body b}    T11 {body bi}
-    Q00 fixed    Q01 {fixed i}   Q10 {fixed b}   Q11 {fixed bi}
-    H00 thin     H01 {thin i}    H10 {thin b}    H11 {thin bi}
-    U00 ul       U01 {ul i}      U10 {ul b}      U11 {ul bi}
-    O00 ol       O01 {ol i}      O10 {ol b}      O11 {ol bi}
-    I00 dt       I01 {dt i}      I10 {dt b}      I11 {dt bi}
-    D00 dl       D01 {dl i}      D10 {dl b}      D11 {dl bi}
-    C00 code     C01 {code fi}   C10 {code fb}   C11 {code fbi}
-    V00 {optvar} V01 {optvar vi} V10 {optvar vb} V11 {optvar vbi}
-    F00 {optfix} F01 {optfix fi} F10 {optfix fb} F11 {optfix fbi}
-    Y00 fwrap    Y01 {fwrap i}   Y10 {fwrap b}   Y11 {fwrap bi}
-    Hxx {hr thin}
-    TR00  body TR01  {body i} TR10  {body b} TR11  {body bi}
-    TD00  body TD01  {body i} TD10  {body b} TD11  {body bi}
-    TDE00 body TDE01 {body i} TDE10 {body b} TDE11 {body bi}
-    HD200 title  HD201 {title  i} HD210 {title b} HD211 {title bi}
-    HD300 title3 HD301 {title3 i} HD310 {title4 b} HD311 {title3 bi}
-    HD400 title4 HD401 {title4 i} HD410 {title3 b} HD411 {title4 bi}
+
+    T000 body     T010 {body i}    T100 {body b}  T110 {body bi}
+    T001 {body f} T011 {body fi}   T101 {body fb} T111 {body fbi}
+
+    Q000 fixed    Q010 {fi}   Q100 {fb}   Q110 {fbi}
+    Q001 fixed    Q011 {fi}   Q101 {fb}   Q111 {fbi}
+
+    H000 thin     H010 {thin i}  H100 {thin b}  H110 {thin bi}
+    H000 {thin f} H010 {thin fi} H100 {thin fb} H110 {thin fbi}
+
+    U000 ul     U010 {ul i}  U100 {ul b}  U110 {ul bi}
+    U001 {ul f} U011 {ul fi} U101 {ul fb} U111 {ul fbi}
+
+    O000 ol     O010 {ol i}  O100 {ol b}  O110 {ol bi}
+    O001 {ol f} O010 {ol fi} O100 {ol fb} O110 {ol fbi}
+
+    I000 dt     I010 {dt i}  I100 {dt b}  I110 {dt bi}
+    I001 {dt f} I011 {dt fi} I101 {dt fb} I111 {dt fbi}
+
+    D000 dl     D010 {dl i}  D100 {dl b}  D110 {dl bi}
+    D001 {dl f} D011 {dl fi} D101 {dl fb} D111 {dl fbi}
+
+    C000 code     C010 {code fi} C100 {code fb} C110 {code fbi}
+    C001 {code f} C011 {code fi} C101 {code fb} C111 {code fbi}
+
+    V000 {optvar}   V010 {optvar vi}       V100 {optvar vb}       V110 {optvar vbi}
+    V001 {optvar f} V011 {optvar f vi} V101 {optvar f vb} V111 {optvar f vbi}
+
+    F000 {optfix}   F010 {optfix fi} F100 {optfix fb} F110 {optfix fbi}
+    F001 {optfix f} F011 {optfix fi} F101 {optfix fb} F111 {optfix fbi}
+
+    Y000 fwrap     Y010 {fwrap i}  Y100 {fwrap b}  Y110 {fwrap bi}
+    Y001 {fwrap f} Y011 {fwrap fi} Y101 {fwrap fb} Y111 {fwrap fbi}
+
+    Hxxx {hr thin}
+
+    TR000  body     TR010  {body i}  TR100  {body b}  TR110  {body bi}
+    TR001  {body f} TR011  {body fi} TR101  {body fb} TR111  {body fbi}
+
+    CTR000  body     CTR010  {body i}  CTR100  {body b}  CTR110  {body bi}
+    CTR001  {body f} CTR011  {body fi} CTR101  {body fb} CTR111  {body fbi}
+
+    TRH000  body     TRH010  {body i}  TRH100  {body b}  TRH110  {body bi}
+    TRH001  {body f} TRH011  {body fi} TRH101  {body fb} TRH111  {body fbi}
+
+    TD000  body     TD010  {body i}  TD100  {body b}  TD110  {body bi}
+    TD001  {body f} TD011  {body fi} TD101  {body fb} TD111  {body fbi}
+
+    TDH000  body     TDH010  {body i}  TDH100  {body b}  TDH110  {body bi}
+    TDH001  {body f} TDH011  {body fi} TDH101  {body fb} TDH111  {body fbi}
+
+    TDE000 body     TDE010 {body i}  TDE100 {body b}  TDE110 {body bi}
+    TDE001 {body f} TDE011 {body fi} TDE101 {body fb} TDE111 {body fbi}
+
+    TDEH000 body     TDEH010 {body i}  TDEH100 {body b}  TDEH110 {body bi}
+    TDEH001 {body f} TDEH011 {body fi} TDEH101 {body fb} TDEH111 {body fbi}
+
+    HD2000 title     HD2010 {title  i} HD2100 {title b}  HD2110 {title bi}
+    HD2001 {title f} HD2011 {title fi} HD2101 {title fb} HD2111 {title fbi}
+
+    HD3000 title3     HD3010 {title3 i}  HD3100 {title4 b}  HD3110 {title3 bi}
+    HD3001 {title3 f} HD3011 {title3 fi} HD3101 {title4 fb} HD3111 {title3 fbi}
+
+    HD4000 title4     HD4010 {title4 i}  HD4100 {title3 b}  HD4110 {title4 bi}
+    HD4001 {title4 f} HD4011 {title4 fi} HD4101 {title3 fb} HD4111 {title4 fbi}
   }
 
   # Define amount of vertical space used between each logical section of text.
@@ -1086,10 +1205,25 @@ namespace eval Wikit::Format {
   vs TDE X   --- 2  ;vs TDE Y --- 3  ;vs TDE HD2 --- 2 ; vs TDE HD3 --- 2
   vs TDE HD4 --- 2
 
-  vs T   TR --- 2  ;vs Q   TR --- 3  ;vs U   TR --- 2  ;vs O   TR --- 2
-  vs I   TR --- 2  ;vs D   TR --- 2  ;vs H   TR --- 2  ;vs TDE TR --- 1
-  vs C   TR --- 2  ;vs X   TR --- 2  ;vs Y   TR --- 3  ;vs HD2 TR --- 2
-  vs HD3 TR --- 2  ;vs HD4 TR --- 2
+  vs TDEH T   --- 2  ;vs TDEH Q --- 2  ;vs TDEH U   --- 2  ;vs TDEH O   --- 2
+  vs TDEH I   --- 2  ;vs TDEH D --- 2  ;vs TDEH H   --- 3  ;vs TDEH C   --- 2
+  vs TDEH X   --- 2  ;vs TDEH Y --- 3  ;vs TDEH HD2 --- 2 ; vs TDEH HD3 --- 2
+  vs TDEH HD4 --- 2
+
+  vs T   TR --- 1  ;vs Q   TR --- 2  ;vs U    TR --- 1  ;vs O   TR --- 1
+  vs I   TR --- 1  ;vs D   TR --- 1  ;vs H    TR --- 1  ;vs TDE TR --- 0
+  vs C   TR --- 1  ;vs X   TR --- 1  ;vs Y    TR --- 1  ;vs HD2 TR --- 1
+  vs HD3 TR --- 1  ;vs HD4 TR --- 1  ;vs TDEH TR --- 0
+
+  vs T   TRH --- 1  ;vs Q   TRH --- 2  ;vs U    TRH --- 1  ;vs O   TRH --- 1
+  vs I   TRH --- 1  ;vs D   TRH --- 1  ;vs H    TRH --- 1  ;vs TDE TRH --- 0
+  vs C   TRH --- 1  ;vs X   TRH --- 1  ;vs Y    TRH --- 2  ;vs HD2 TRH --- 1
+  vs HD3 TRH --- 1  ;vs HD4 TRH --- 1  ;vs TDEH TRH --- 0
+
+  vs T   CTR --- 1  ;vs Q   CTR --- 2  ;vs U    CTR --- 1  ;vs O   CTR --- 1
+  vs I   CTR --- 1  ;vs D   CTR --- 1  ;vs H    CTR --- 1  ;vs TDE CTR --- 0
+  vs C   CTR --- 1  ;vs X   CTR --- 1  ;vs Y    CTR --- 2  ;vs HD2 CTR --- 1
+  vs HD3 CTR --- 1  ;vs HD4 CTR --- 1  ;vs TDEH CTR --- 0
 
   # headers
   vs HD2 T   --- 2 ; vs HD2 Q   --- 2 ; vs HD2 U --- 2 ; vs HD2 O --- 2 ; vs HD2 I --- 2
@@ -1172,9 +1306,19 @@ namespace eval Wikit::Format {
   # references found in the stream (each triplet consists reference
   # type, page-local numeric id and reference text).
 
+  proc split_url_link_text { text } {
+    if { [string match "*%|%*" $text] } {
+      return [split [string map [list "%|%" \1] $text] \1]
+    }
+    return [list $text $text]
+  }
+
   proc StreamToHTML {s {cgi ""} {ip ""}} {
+
+    # here so we aren't dependent on cksum unless rendering to HTML
+    package require cksum
+
     set result ""
-    set tocid 0
     set tocpos {}
     set state H   ; # bogus hline as initial state.
     set vstate "" ; # Initial state of visual FSM
@@ -1183,13 +1327,32 @@ namespace eval Wikit::Format {
     set insdelcnt 0
     set centered 0
     set trow 0
+    set backrefid 0
+    set brefs {}
+    set in_header 0
+    set tocheader ""
+
     variable html_frag
 
     foreach {mode text} $s {
       switch -exact -- $mode {
-        {}    {append result [quote $text]}
-        b - i - f {append result $html_frag($mode$text)}
-        g {
+        {}    {
+	  if { $in_header } {
+            append tocheader [quote $text]
+	  }
+          append result [quote $text]
+        }
+        b - i - f {
+	  if { $in_header } {
+            append tocheader [quote $text]
+	  }
+          append result $html_frag($mode$text)
+        }
+        g - G {
+          lassign [split_url_link_text $text] link text
+	  if { $in_header } {
+            append tocheader [quote $text]
+	  }
           if {$cgi == ""} {
             append result "\[[quote $text]\]"
             continue
@@ -1202,7 +1365,7 @@ namespace eval Wikit::Format {
             continue
           }
 
-          set info [eval $ip [list $text]]
+          set info [eval $ip [list $link]]
           foreach {id name date} $info break
 
           if {$id == ""} {
@@ -1211,32 +1374,51 @@ namespace eval Wikit::Format {
             continue
           }
 
-          regsub {^/} $id {} id
+          #regsub {^/} $id {} id
+          set id [string trim $id /]
           if {$date > 0} {
             # exists, use ID
-            append result \
-              $html_frag(a_) $id $html_frag(tc) \
+            if { $mode eq "G" } {
+              append result $html_frag(A_) _ref/$id
+            } else {
+              append result $html_frag(a_) $id
+            }
+            append result $html_frag(tc) \
               [quote $text] $html_frag(_a)
             continue
           }
 
-          # missing, use ID -- editor link on the brackets.
-          append result \
-            $html_frag(a_) $id $html_frag(tc) \[ $html_frag(_a) \
-            [quote $text] \
-            $html_frag(a_) $id $html_frag(tc) \] $html_frag(_a) \
+          # missing, 
+          if { $mode eq "G" } {
+            # Insert a plain text
+            append result [quote $text]
+          } else {
+            # use ID -- editor link on the brackets.
+            append result \
+              $html_frag(a_) $id $html_frag(tc) \[ $html_frag(_a) \
+              [quote $text] \
+              $html_frag(a_) $id $html_frag(tc) \] $html_frag(_a) \
+            }
           }
         u {
+          lassign [split_url_link_text $text] link text
+	  if { $in_header } {
+	    append tocheader [quote $text]
+	  }
           append result \
-            $html_frag(e_) [quote $text] $html_frag(tc) \
+            $html_frag(e_) [quote $link] $html_frag(tc) \
             [quote $text] $html_frag(_a)
         }
         x {
-          if {[regexp -nocase {\.(gif|jpg|jpeg|png)$} $text]} {
-            append result $html_frag(i_) $text $html_frag(tc)
+          lassign [split_url_link_text $text] link text
+	  if { $in_header } {
+	    append tocheader [quote $text]
+	  }
+          if {[regexp -nocase {\.(gif|jpg|jpeg|png)$} $link]} {
+            append result $html_frag(i_) $link $html_frag(tc)
           } else {
             append result \
-              \[ $html_frag(e_) [quote $text] $html_frag(tc) \
+              \[ $html_frag(e_) [quote $link] $html_frag(tc) \
               [incr count] $html_frag(_a) \]
           }
         }
@@ -1246,13 +1428,15 @@ namespace eval Wikit::Format {
           append result $text
         }
         HD2 - HD3 - HD4 {
-          append result "$html_frag($state$mode) id='pagetoc$tocid'>"
-          lappend tocpos [string index $mode 2] $tocid [string length $result]
-          incr tocid
+          append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
+          lappend tocpos [string index $mode 2] [string length $result]
           set state $mode
+	  set in_header 1
+	  set tocheader ""
         }
         HDE {
-          lappend tocpos [expr {[string length $result]-1}]
+          lappend tocpos $tocheader
+	  set in_header 0
         }
         BLS {
           append result $html_frag($state$mode)
@@ -1309,6 +1493,9 @@ namespace eval Wikit::Format {
         BR {
           append result "<br>"
         }
+        NBSP {
+          append result "&nbsp;"
+        }
         CT {
           set mode T
           append result $html_frag($state$mode)
@@ -1320,6 +1507,20 @@ namespace eval Wikit::Format {
             set centered 1
           }
           set state T
+        }
+        BACKREFS {
+          set mode T
+          set text [string trim $text]
+          append result [subst $html_frag($state$mode)]
+          lappend brefs backrefs$backrefid $text
+          if { [string length $text]} {
+            set htext "<b>$text</b>"
+          } else {
+            set htext "current page"
+          }
+          append result "\n<div class='backrefs' id='backrefs$backrefid'>Fetching backrefs for <b>$htext</b>...</div>\n"
+          set state T
+          incr backrefid
         }
       }
     }
@@ -1337,18 +1538,26 @@ namespace eval Wikit::Format {
       append toc "dp.add(0,-1,'Page contents');\n"
       set id 1
       set parentl {-1 0}
-      foreach {ht tpid tpb tpe} $tocpos {
+      set parentnml {"" ""}
+      foreach {ht tpb thdr} $tocpos {
         if { $ht > [llength $parentl] } {
           while { $ht > [llength $parentl] } {
             append toc "dp.add($id,[lindex $parentl end],'');\n"
             lappend parentl $id
+            lappend parentnml ""
             incr id
           }
         } elseif { $ht < [llength $parentl] } {
           set parentl [lrange $parentl 0 [expr {$ht-1}]]
+          set parentnml [lrange $parentnml 0 [expr {$ht-1}]]
         } else {
         }
-        append toc "dp.add($id,[lindex $parentl end],'[armour_quote [string range $result $tpb $tpe]]','#pagetoc$tpid');\n"
+        lappend parentnml $thdr
+        set tkn [::crc::CksumInit]
+        ::crc::CksumUpdate $tkn $parentnml
+        set cksum [::crc::CksumFinal $tkn]
+        append toc "dp.add($id,[lindex $parentl end],'[armour_quote $thdr]','#pagetoc[format %08x $cksum]');\n"
+        set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
         lappend parentl $id
         incr id
       }
@@ -1359,7 +1568,7 @@ namespace eval Wikit::Format {
     # Get rid of spurious newline at start of each quoted area.
     regsub -all "<pre>\n" $result "<pre>" result
 
-    list $result {} $toc
+    list $result {} $toc $brefs
   }
 
   proc quote {q} {
@@ -1554,6 +1763,7 @@ namespace eval Wikit::Format {
   vs V L </td></tr>
   array set html_frag {
     a_ {<a href="}         b0 </b> f0 </tt>
+    A_ {<a class='backreflink' href="}
 	_a {</a>}              b1 <b>  f1 <tt>
         i_ {<img alt="" src="} i0 </i>
     tc {">}                i1 <i>
@@ -1753,5 +1963,3 @@ namespace eval Wikit::Format {
 ### tcl-continued-indent-level:2 ***
 ### indent-tabs-mode:nil ***
 ### End: ***
-
-
