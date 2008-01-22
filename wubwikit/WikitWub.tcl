@@ -267,6 +267,14 @@ namespace eval WikitWub {
 	return $r
     }
 
+    # record some session information per save
+    proc setSession {page nick} {
+	dict set r -session who $nick
+	Session with r {
+	    lappend edit [clock second] $page
+	}
+    }
+
     variable searchForm [string map {%S $search} [<form> search action /_search {
 	[<fieldset> sfield title "Construct a new search" {
 	    [<legend> "Enter a Search Phrase"]
@@ -1227,7 +1235,7 @@ namespace eval WikitWub {
     }
 
     proc /save {r N C O save cancel} {
-
+	
 	if { [string is integer -strict $cancel] && $cancel } {
 	    set url http://[Url host $r]/$N
 	    return [redir $r $url [<a> href $url "Canceled page edit"]]
@@ -1251,7 +1259,7 @@ namespace eval WikitWub {
 	    return [Http NotFound $er [subst {
 		[<h2> "$N is not a valid page."]
 		[<p> "[armour $r]([armour $eo])"]
-	    }]
+	    }]]
 	}
 
 	# is the caller logged in?
@@ -1341,7 +1349,7 @@ namespace eval WikitWub {
     proc /reload {r} {
 	foreach {} {}
     }
-
+	    
     # called to generate an edit page
     proc /edit {r N args} {
 	variable readonly
@@ -1379,13 +1387,8 @@ namespace eval WikitWub {
 	    set C {This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n}
 	}
 
-	# set some session data
-	if {0} {
-	    dict set r -session who $nick
-	    Session with r {
-		lappend edit [clock second] $N
-	    }
-	}
+	setSession $N $nick	;# set some session data
+
 	return [sendPage $r edit]
     }
 
@@ -1834,8 +1837,8 @@ proc Responder::post {rsp} {
 proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
-    set req [Cookies 4Server $req]
-    #set req [Session fetch $req -path /_edit/]
+    #set req [Cookies 4Server $req]
+    set req [Session fetch $req -path /_edit/]
 
     set rsp [Responder Incoming $req -glob -- [dict get $req -path] {
 	/*.php -
@@ -1967,8 +1970,8 @@ proc Incoming {req} {
 	}
     }]
 
-    return $rsp
-    #return [Session store $rsp -path /_edit/]
+    return [Session store $rsp -path /_edit/]
+    #return $rsp
 }
 
 #### initialize Block
