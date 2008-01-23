@@ -64,6 +64,18 @@ namespace eval Wikit {
     return [list /$id $name $date]
   }
 
+  proc BrefProc {db ref} {
+      if {![string is integer -strict $ref]} {
+	  set ref [::Wikit::LookupPage $ref $db]
+      }
+      set refList ""
+      foreach from [mk::select wdb.refs to $ref] {
+	  set from [mk::get wdb.refs!$from from]
+	  ::Wikit::pagevars $from name who date
+	  lappend refList [list [::Wikit::GetTimeStamp $date] $name $who $from]
+      }
+      return [lsort -dictionary -index 1 $refList]
+  }
 
   # graburl - grab the contents of a URL
   proc graburl {url} {
