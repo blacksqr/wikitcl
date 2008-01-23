@@ -110,6 +110,11 @@ namespace eval WikitWub {
 	    }]
 	}
 
+	refs_tc {References to $N} {
+	    <!-- page sent when constructing a transcluded reference page -->
+	    [tclarmour $C]
+	}
+
 	edit {Editing $N} {
 	    <!-- page sent when editing a page -->
 	    [div edit {
@@ -179,7 +184,8 @@ namespace eval WikitWub {
 	    <h2>Encoding error on page $N - [Ref $N $name]</h2>
 	    <p><b>Your changes have NOT been saved</b>,
 	    because the content your browser sent contains bogus characters.
-	    At character number $point.</p>
+	    At character number $point:</p>
+	    <p>$E</p>
 	    <p><i>Please check your browser.</i></p>
 	    <hr size=1>
 	    <p><pre>[armour $C]</pre></p>
@@ -797,7 +803,7 @@ namespace eval WikitWub {
 		    set Title [<h1> "Difference between version $V and $D for [Ref $N]"]
 		    set name "Difference between version $V and $D for $name"
 		    set C [::Wikit::TextToStream $C]
-		    lassign [::Wikit::StreamToTk $C ::WikitWub::InfoProc] C U
+		    lassign [::Wikit::StreamToTk $C $N ::WikitWub::InfoProc] C U
 		    append result "<p>$C"
 		}
 		.code {
@@ -815,7 +821,7 @@ namespace eval WikitWub {
 		    if { $W } {
 			set C [::Wikit::ShowDiffs $C]
 		    } else {
-			lassign [::Wikit::StreamToHTML [::Wikit::TextToStream $C] / ::WikitWub::InfoProc] C U T
+			lassign [::Wikit::StreamToHTML [::Wikit::TextToStream $C] / ::WikitWub::InfoProc] C U T BR
 		    }
 		    set tC "<span class='newwikiline'>Text added in version $V is highlighted like this</span>, <span class='oldwikiline'>text deleted from version $D is highlighted like this</span>"
 		    if {!$W} { append tC ", <span class='whitespacediff'>text with only white-space differences is highlighted like this</span>" }
@@ -877,7 +883,7 @@ namespace eval WikitWub {
 		    set Title "Version $V of [Ref $N]"
 		    set name "Version $V of $name"
 		    set C [::Wikit::TextToStream [get_page_with_version $N $V $A]]
-		    lassign [::Wikit::StreamToTk $C ::WikitWub::InfoProc] C U T
+		    lassign [::Wikit::StreamToTk $C $N ::WikitWub::InfoProc] C U T
 		    append result "<p>$C"
 		}
 		.code {
@@ -900,7 +906,7 @@ namespace eval WikitWub {
 			    set Title "Version $V of [Ref $N]"
 			    set name "Version $V of $name"
 			}
-			lassign [::Wikit::StreamToHTML [::Wikit::TextToStream $C] / ::WikitWub::InfoProc] C U T
+			lassign [::Wikit::StreamToHTML [::Wikit::TextToStream $C] / ::WikitWub::InfoProc] C U T BR
 			if { $V > 0 } {
 			    lappend menu [Ref "/_revision/$N?V=[expr {$V-1}]&A=$A" "Previous version"]
 			}
@@ -1305,6 +1311,9 @@ namespace eval WikitWub {
 		    incr point
 		    binary scan [string index $C $point] H* bogus
 		    set C [string replace $C $point $point "<BOGUS 0x$bogus>"]
+		    set E [string range $C [expr {$point-50}] [expr {$point-1}]]
+		} else {
+		    set E ""
 		}
 		Debug.wikit {badutf $N}
 		return [sendPage $r badutf]
@@ -1448,7 +1457,10 @@ namespace eval WikitWub {
     }
 
     # called to generate a page with references
-    proc /ref {r N} {
+    proc /ref {r N A} {
+	if { ![string is integer -strict $A] } {
+	    set A 0
+	}
 	#set N [dict get $r -suffix]
 	Debug.wikit {/ref $N}
 	if {![string is integer -strict $N]} {
@@ -1470,11 +1482,19 @@ namespace eval WikitWub {
 	    lassign $ref date name who from
 	    lappend tableList [list $date [Ref $from {}] $who]
 	}
-	set C [list2table $tableList {Date Name Who} {}]
 
-	# include javascripts and CSS for sortable table.
-	set r [sortable $r]
-
+	if { $A } { 
+	    set C "<ul class='backrefs'>\n"
+	    foreach br $tableList {
+		lassign $br date ref who
+		append C "[<li> $ref]\n"
+	    }
+	    append C "</ul>\n"
+	} else {
+	    set C [list2table $tableList {Date Name Who} {}]
+	    # include javascripts and CSS for sortable table.
+	    set r [sortable $r]
+	} 
 	variable menus
 	set menu {}
 	foreach m {Home "Recent changes" Help} {
@@ -1487,7 +1507,11 @@ namespace eval WikitWub {
 	set Title "References to [Ref $N]"
 	set updated ""
 	set T "function page_toc() {}"
-	return [sendPage $r]
+	set tplt page
+	if { $A } {
+	    set tplt refs_tc
+	}
+	return [sendPage $r $tplt]
     }
 
     proc InfoProc {ref} {
@@ -1600,6 +1624,7 @@ namespace eval WikitWub {
 	set who ""	;# no default editor
 	set cacheit 1	;# default is to cache
 	set T "function page_toc() {}"
+	set BR {}
 
 	switch -- $N {
 	    2 {
@@ -1623,7 +1648,7 @@ namespace eval WikitWub {
 
 		    lassign [search $term $qdate] C nqdate long
 		    set C [::Wikit::TextToStream $C]
-		    lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T
+		    lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 		    if { $nqdate } {
 			append C [<p> [<a> href "/_search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
 		    }
@@ -1675,7 +1700,7 @@ namespace eval WikitWub {
 		    }
 		    .tk {
 			set C [::Wikit::TextToStream [GetPage $N]]
-			lassign [::Wikit::StreamToTk $C ::WikitWub::InfoProc] C U T
+			lassign [::Wikit::StreamToTk $C $N ::WikitWub::InfoProc] C U T
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
 		    .str {
@@ -1689,7 +1714,15 @@ namespace eval WikitWub {
 		    }
 		    default {
 			set C [::Wikit::TextToStream [GetPage $N]]
-			lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T
+			lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+			foreach {containerid bref} $BR {
+			    if {[string length $bref]} {
+				set brefpage [::Wikit::LookupPage $bref wdb]
+			    } else {
+				set brefpage $N
+			    }
+			    append C [<script> "getBackRefs($brefpage,'$containerid')"]
+			}
 		    }
 		}
 	    }
