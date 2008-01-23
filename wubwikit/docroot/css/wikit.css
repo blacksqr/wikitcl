@@ -388,6 +388,10 @@ a.button {
    color: black;
 }
 
+a.backreflink {
+  color: green
+}
+
 @media print {
     div#menu_area, div.footer {
         display: none;
