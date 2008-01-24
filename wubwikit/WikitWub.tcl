@@ -72,9 +72,9 @@ namespace eval WikitWub {
 	    <!-- standard page decoration -->
 	    [div container {
 		[div header {
-			[div logo [<a> href http://wiki.tcl.tk class logo wiki.tcl.tk]]
-			[div title [tclarmour $Title]]
-			[div updated $updated]
+		    [div logo [<a> href http://wiki.tcl.tk class logo wiki.tcl.tk]]
+		    [div title [tclarmour $Title]]
+		    [div updated $updated]
 		}]
 		[expr {[info exists ro]?$ro:""}]
 		[divID wrapper {
@@ -93,7 +93,7 @@ namespace eval WikitWub {
 		[div footer {
 		    [<p> id footer [variable bullet; join $footer $bullet]]
 		}]
-		[<script> checkTOC($N);]
+		[<script> "checkTOC($N);"]
 	    }]
 	}
 
@@ -102,7 +102,7 @@ namespace eval WikitWub {
 	    [div container {
 		[div header {[<h1> "References to [Ref $N]"]}]
 		[div {wrapper content} {[tclarmour $C]}]
-		<hr noshade>
+		[<hr> noshade]
 		[div footer {
 		    [<p> id footer [variable bullet; join $footer $bullet]]
 		    [searchF]
@@ -119,106 +119,94 @@ namespace eval WikitWub {
 	    <!-- page sent when editing a page -->
 	    [div edit {
 		[div header {
-			[div logo wiki.tcl.tk]
-			[div title "Edit [tclarmour [Ref $N]]"]
-			[div updated "make your changes then press Save below"]
+		    [div logo wiki.tcl.tk]
+		    [div title "Edit [tclarmour [Ref $N]]"]
+		    [div updated "make your changes then press Save below"]
 		}]
- 	    [div editcontents {
-		[set disabled [expr {$nick eq ""}]
-		set _submit [<submit> save   class positive disabled $disabled value 1 {Save your changes}]
-		set _cancel [<submit> cancel class button   disabled 0         value 1 Cancel]
-		 #<button name='cancel' value='1' type='submit'><a class='button' href='/$N'>Cancel</a></button>
-		<form> edit method post action /_edit/save/$N {
-		      [<textarea> C rows 30 cols 72 style width:100% [list [tclarmour $C]]]
-		      [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
-		      [<hidden> _charset_ {}]
-		       $_submit
-		       $_cancel
-		 }]
-		<hr>
-		Editing quick-reference:
-		<blockquote><font size=-1>
-		<b>LINK</b> to <b>\[<a href='../6' target='_blank'>Wiki formatting rules</a>\]</b> - or to
-		<b><a href='http://here.com/' target='_blank'>http://here.com/</a></b>
-		- use <b>\[http://here.com/\]</b> to show as
-		<b>\[<a href='http://here.com/' target='_blank'>1</a>\]</b>
-		<br>
-		<b>BULLETS</b> are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line
-		<br>
-		<b>NUMBERED LISTS</b> are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line
-		<br>
-		<b>PARAGRAPHS</b> are split with empty lines,
-		<b>UNFORMATTED TEXT </b>starts with white space
-		<br>
-		<b>HIGHLIGHTS</b> are indicated by groups of single quotes - use two for
-		<b>''</b><i>italics</i><b>''</b>, three for <b>'''bold'''</b>
-		<br>
-		<b>SECTIONS</b> can be separated with a horizontal line - insert a line containing just 4 dashes
-		</font></blockquote><hr>
-		[If {$date != 0} {
-		    [<i> "Last saved on [<b> [clock format $date -gmt 1 -format {%Y-%m-%d %T}]]"]
+		[div editcontents {
+		    [set disabled [expr {$nick eq ""}]
+		     <form> edit method post action /_edit/save/$N {
+			 [<textarea> C rows 30 cols 72 style width:100% [list [tclarmour $C]]]
+			 [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
+			 [<hidden> _charset_ {}]
+			 [<submit> save class positive disabled $disabled value 1 {Save your changes}]
+			 [<submit> cancel class button disabled 0 value 1 Cancel]
+		     }]
+		    [<hr>]
+		    Editing quick-reference:
+		    [<blockquote> [subst {
+			[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]
+			[<br>]
+			[<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line
+			[<br>]
+			[<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line
+			[<br>]
+			[<b> PARAGRAPHS] are split with empty lines,
+			[<b> "UNFORMATTED TEXT"] starts with white space
+			[<br>]
+			[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']
+			[<br>]
+			[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes
+		    }]]
+		    [<hr>]
+		    [If {$date != 0} {
+			[<i> "Last saved on [<b> [clock format $date -gmt 1 -format {%Y-%m-%d %T}]]"]
+		    }]
+		    [If {$who_nick ne ""} {
+			[<i> "by [<b> $who_nick]"]
+		    }]
+		    [If {$nick ne ""} {
+			(you are: [<b> $nick])
+		    }]
 		}]
-		[If {$who_nick ne ""} {
-		    [<i> "by [<b> $who_nick]"]
-		}]
-		[If {$nick ne ""} {
-		    (you are: [<b> $nick])
-		}]
-	    }]
 	    }]
 	}
 
 	login {login} {
 	    <!-- page sent to enable login -->
-	    <p>You must have a nickname to post here</p>
-	    <form action='/_edit/login' method='post'>
-	    <fieldset><legend>Login</legend>
-	    <label for='nickname'>Nickname </label><input type='text' name='nickname'><input type='submit' value='login'>
-	    </fieldset>
-	    <input type='hidden' name='R' value='[armour $R]'>
-	    </form>
+	    [<p> "You must have a nickname to post here"]
+	    [<form> login method post action /_edit/login {
+		[<fieldset> login title Login {
+		    [<text> nickname title "Nickname"]
+		    [<submit> save value login "Login"]
+		}]
+		[<hidden> R [armour $R]]
+	    }]
 	}
 
 	badutf {bad UTF-8} {
 	    <!-- page sent when a browser sent bad utf8 -->
-	    <h2>Encoding error on page $N - [Ref $N $name]</h2>
-	    <p><b>Your changes have NOT been saved</b>,
-	    because the content your browser sent contains bogus characters.
-	    At character number $point:</p>
-	    <p>$E</p>
-	    <p><i>Please check your browser.</i></p>
-	    <hr size=1>
-	    <p><pre>[armour $C]</pre></p>
-	    <hr size=1>
+	    [<h2> "Encoding error on page $N - [Ref $N $name]"]
+	    [<p> "[<b> "Your changes have NOT been saved"], because the content your browser sent contains bogus characters. At character number $point"]
+	    [<p> $E]
+	    [<p> [<i> "Please check your browser."]]
+	    [<hr> size 1]
+	    [<p> [<pre> [armour $C]]]
+	    [<hr> size 1]
 	}
 
 	search {} {
 	    <!-- page sent in response to a search -->
-	    [<form> search \
-		 method get \
-		 action /_search \
-		 {[<fieldset> sfield title "Construct a new search" {
-		     [<legend> "Enter a Search Phrase"]
-		     [<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
-		     [<checkbox> SC title "search page contents" value 1; set _disabled ""]
-		     [<hidden> _charset_]}]
-		 }]
+	    [<form> search method get action /_search {
+		[<fieldset> sfield title "Construct a new search" {
+		    [<legend> "Enter a Search Phrase"]
+		    [<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
+		    [<checkbox> SC title "search page contents" value 1; set _disabled ""]
+		    [<hidden> _charset_]
+		}]
+	    }]
 	    $C
 	}
 
 	conflict {Edit Conflict on $N} {
 	    <!-- page sent when a save causes edit conflict -->
 	    [<h2> "Edit conflict on page $N - [Ref $N $name]"]
-	    [<p> [subst {
-		[<b> "Your changes have NOT been saved"],
-		because someone (at IP address $who) saved
-		a change to this page while you were editing.
-	    }]]
+	    [<p> "[<b> "Your changes have NOT been saved"] because someone (at IP address $who) saved a change to this page while you were editing."]
 	    [<p> [<i> "Please restart a new [Ref /_edit/$N edit] and merge your version (which is shown in full below.)"]]
 	    [<p> "Got '$O' expected '$X'"]
-	    <hr size=1>
+	    [<hr> size 1]
 	    [<p> [<pre> [armour $C]]]
-	    <hr size=1>
+	    [<hr> size 1]
 	}
     } {
 	set templates($name) $template
