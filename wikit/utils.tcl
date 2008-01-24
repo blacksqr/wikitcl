@@ -14,7 +14,7 @@ namespace eval Wikit {
   variable delta [subst \u0394]	;# sexy char for 'diff'
 
   # Special page: Recent Changes.
-  proc RecentChanges {{db wdb}} {
+    proc RecentChanges {{db wdb} {guiMode 0}} {
       variable delta
     set count 0
     set result ""
@@ -43,7 +43,11 @@ namespace eval Wikit {
         append result "'''[clock format $date -gmt 1 -format {%B %e, %Y}]'''\n"
       }
 
-      append result "   * \[$name\]<a href='/_diff/$id'>$delta</a> . . . $who\n"
+      append result "   * \[$name\]"
+      if {!$guiMode} {
+        append result "<a href='/_diff/$id'>$delta</a>"
+      }
+      append result " . . . $who\n"
     }
 
     return $result

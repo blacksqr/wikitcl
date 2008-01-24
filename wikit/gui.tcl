@@ -32,6 +32,7 @@ if {[catch {package require gbutton}]} {
             variable btnDisable "#404040"    #
             variable linkFg     "#0000ff"    # blue
             variable linkActive "#ff0000"    # red
+            variable brefActive "#00ff00"    # green
             variable fixedFg    "#8b0000"    # dark red
             variable fixedBg    "#e0e0e0"    # light gray
             variable codeBg  	white
@@ -85,8 +86,12 @@ if {[catch {package require gbutton}]} {
             foreach {a b c} [lindex $result 1] {
                 set tag $a$b
                 
+		set lac $Color::linkActive
+		if {$a == "G"} {
+		    set lac $Color::brefActive		    
+		}
                 $D tag bind $tag <Any-Enter> \
-                        [namespace code [list linkActive $D $tag $Color::linkActive $c]]
+                        [namespace code [list linkActive $D $tag $lac $c]]
                 $D tag bind $tag <Any-Leave> \
                         [namespace code [list linkInactive $D $tag $Color::linkFg]]
                 
@@ -95,10 +100,13 @@ if {[catch {package require gbutton}]} {
                 }
                 
                 if {$a == "g"} {
-                    set id [LookupPage $c]
-                    $D tag bind $tag <ButtonPress-1> "Wikit::showLinkedPage $id"
+                    set lid [LookupPage $c]
+                    $D tag bind $tag <ButtonPress-1> "Wikit::showLinkedPage $lid"
+                } elseif {$a == "G"} {
+                    set lid [LookupPage $c]
+                    $D tag bind $tag <ButtonPress-1> "Wikit::ShowRefsPage $lid {} $id"
                 }
-            }
+             }
             
             return [lreplace $result 1 1]
         }
@@ -125,7 +133,7 @@ if {[catch {package require gbutton}]} {
         
         # Show a page containing a list of links to all pages
         # referring to the page with the given id.
-        proc ShowRefsPage {id {toc ""}} {
+        proc ShowRefsPage {id {toc ""} {oid -1}} {
             variable D
             variable readonly
             variable top
@@ -164,7 +172,11 @@ if {[catch {package require gbutton}]} {
             focus $top.n.enter
             $D configure -cursor ""
             # setup a return to the page that requested the reference page
-            setButton one Back "Wikit::ShowPage $id"
+	    if { $oid >= 0 } {
+		setButton one Back "Wikit::ShowPage $oid"
+	    } else {
+		setButton one Back "Wikit::ShowPage $id"
+	    }
         }
         
         # Internal helper. Central functionality to render wiki pages in the
@@ -215,7 +227,7 @@ if {[catch {package require gbutton}]} {
             if {$id == 2} {
                 set page $searchPage
             } else {
-                set page [GetPage $id]
+                set page [GetPage $id wdb 1]
             }
             
             $top.n.mode configure -text Search:

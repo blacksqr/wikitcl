@@ -879,9 +879,10 @@ namespace eval Wikit::Format {
         g - G {
           lassign [split_url_link_text $text] link text
           set     n    [incr count]
-          lappend urls g $n $link
+          lappend urls $mode $n $link
           set     tags [set base $tagmap($state$b$i$f)]
-          lappend tags url g$n
+
+          lappend tags url $mode$n
 
           if {$ip == ""} {
             lappend $cresult $text $tags
