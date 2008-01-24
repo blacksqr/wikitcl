@@ -66,6 +66,7 @@
 package provide Wikit::Db 1.2
 package require Wikit::Utils
 package require Wikit::Format
+package require struct::list
 
 if {[info commands Debug.error] eq {}} {
   proc Debug.error {args} {
@@ -195,10 +196,10 @@ namespace eval Wikit {
     return $title
   }
 
-  proc GetPage {id {db wdb}} {
+  proc GetPage {id {db wdb} {guiMode 0}} {
     switch $id {
       2		{ SearchResults [SearchList] }
-      4		{ RecentChanges $db}
+      4		{ RecentChanges $db $guiMode}
       default	{ return [mk::get $db.pages!$id page] }
     }
   }
