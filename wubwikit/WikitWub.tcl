@@ -1327,6 +1327,9 @@ namespace eval WikitWub {
 	    set who $nick@[dict get $r -ipaddr]
 	    Debug.wikit {SAVING $N}
 	    if {[catch {
+		if {[string match "*Cloverfield*" $name]} {
+		    set when [clock scan "1/1/71"]
+		}
 		::Wikit::SavePage $N [string map {"Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C] $who $name $when
 	    } err eo]} {
 		set readonly $err
