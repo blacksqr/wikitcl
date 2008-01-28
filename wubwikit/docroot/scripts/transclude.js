@@ -103,33 +103,43 @@ function ajaxnotocpages(){
     document.getElementById('menu_area').style.display='none';
 }
 
-function setCookie(c_name,value,expiredays)
-{
-    var exdate=new Date();
-    exdate.setDate(exdate.getDate()+expiredays);
-    document.cookie=c_name+ "=" +escape(value)+
-	((expiredays==null) ? "" : ";expires="+exdate.toGMTString())+
-	";path=/";
-}
+// [Cookie] Sets value in a cookie
+function setCookie(cookieName, cookieValue, expires, path, domain, secure) {
+  document.cookie =
+    escape(cookieName) + '=' + escape(cookieValue)
+    + (expires ? '; expires=' + expires.toGMTString() : '')
+    + (path ? '; path=' + path : '')
+    + (domain ? '; domain=' + domain : '')
+    + (secure ? '; secure' : '');
+};
 
-function getCookie(c_name)
-{
-    if (document.cookie.length>0) {
-	c_start=document.cookie.indexOf(c_name + "=");
-	if (c_start!=-1) { 
-	    c_start=c_start + c_name.length+1;
-	    c_end=document.cookie.indexOf(";",c_start);
-	    if (c_end==-1) c_end=document.cookie.length;
-	    return unescape(document.cookie.substring(c_start,c_end));
-	} 
-    }
-    return ""
-}
+// [Cookie] Clears a cookie
+function clearCookie(name, path) {
+  var now = new Date();
+  var yesterday = new Date(now.getTime() - 1000 * 60 * 60 * 24);
+  setCookie(name, 'cookieValue', yesterday, path);
+};
+
+// [Cookie] Gets a value from a cookie
+function getCookie(cookieName) {
+  var cookieValue = '';
+  var posName = document.cookie.indexOf(escape(cookieName) + '=');
+  if (posName != -1) {
+    var posValue = posName + (escape(cookieName) + '=').length;
+    var endPos = document.cookie.indexOf(';', posValue);
+    if (endPos != -1)
+      cookieValue = unescape(document.cookie.substring(posValue, endPos));
+    else
+      cookieValue = unescape(document.cookie.substring(posValue));
+  }
+  return (cookieValue);
+};
 
 function checkTOC()
 {
     ajaxinittocpages();
-    needs_toc=getCookie('witoc')
+    clearCookie('wikitoc', '/');	/* remove old cookie */
+    needs_toc=getCookie('witoc');
     if (needs_toc==null || needs_toc=="" || needs_toc=="1") {
 	ajaxtocpages();
     }
@@ -149,11 +159,10 @@ function toggleTOC()
     needs_toc=getCookie('witoc')
     if (needs_toc==null || needs_toc=="" || needs_toc=="1") {
 	ajaxnotocpages();
-	setCookie('witoc', 0, 365);
-    }
-    else {
+	setCookie('witoc', 0, 365, "/_cookies/");
+    } else {
 	ajaxtocpages();
-	setCookie('witoc', 1, 365);
+	setCookie('witoc', 1, 365, "/_cookies/");
     }
 }
 
