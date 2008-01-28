@@ -1821,6 +1821,8 @@ namespace eval Wikit::Format {
     set cnt 0
     set result ""
     append result "d = new dTree('d');\n"
+    append result "d.clearCookie();\n"	;# temporary code to delete old cookies
+    append result "d.config.useCookies = false;\n"
     append result "d.config.useLines = 1;\n"
     append result "d.config.useIcons = 0;\n"
     append result "d.add($cnt,-1,'Wiki contents');\n"
