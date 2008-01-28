@@ -180,8 +180,10 @@ function checkTOC()
 {
     ajaxinittocpages();
     clearCookie('wikitoc', '/');	/* remove old cookie */
+    clearCookie('witoc', '/_cookies/');	/* remove old cookie */
     clearCookie('witoc', '/');	/* remove old cookie */
-    needs_toc=getCookie('witoc');
+
+    needs_toc=getCookie('wiki_toc');
     if (needs_toc==null || needs_toc=="" || needs_toc=="1") {
 	ajaxtocpages();
     }
@@ -198,13 +200,13 @@ function getBackRefs(page,containerid)
 
 function toggleTOC()
 {
-    needs_toc=getCookie('witoc')
+    needs_toc=getCookie('wiki_toc')
     if (needs_toc==null || needs_toc=="" || needs_toc=="1") {
 	ajaxnotocpages();
-	setCookie('witoc', 0, 365, "/_cookies/");
+	setCookie('wiki_toc', 0, 365, "/_cookies/");
     } else {
 	ajaxtocpages();
-	setCookie('witoc', 1, 365, "/_cookies/");
+	setCookie('wiki_toc', 1, 365, "/_cookies/");
     }
 }
 
