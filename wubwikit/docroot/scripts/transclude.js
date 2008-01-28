@@ -153,6 +153,7 @@ function checkTOC()
 {
     ajaxinittocpages();
     clearCookie('wikitoc', '/');	/* remove old cookie */
+    clearCookie('witoc', '/');	/* remove old cookie */
     needs_toc=getCookie('witoc');
     if (needs_toc==null || needs_toc=="" || needs_toc=="1") {
 	ajaxtocpages();
