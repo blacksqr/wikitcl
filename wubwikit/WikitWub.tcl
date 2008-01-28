@@ -126,7 +126,7 @@ namespace eval WikitWub {
 		[div editcontents {
 		    [set disabled [expr {$nick eq ""}]
 		     <form> edit method post action /_edit/save/$N {
-			 [<textarea> C rows 30 cols 72 style width:100% [list [tclarmour $C]]]
+			 [<textarea> C rows 30 cols 72 style width:100% [tclarmour $C]]
 			 [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 			 [<hidden> _charset_ {}]
 			 [<submit> save class positive disabled $disabled value 1 {Save your changes}]
