@@ -103,15 +103,29 @@ function ajaxnotocpages(){
     document.getElementById('menu_area').style.display='none';
 }
 
-// [Cookie] Sets value in a cookie
-function setCookie(cookieName, cookieValue, expires, path, domain, secure) {
-  document.cookie =
-    escape(cookieName) + '=' + escape(cookieValue)
-    + (expires ? '; expires=' + expires.toGMTString() : '')
-    + (path ? '; path=' + path : '')
-    + (domain ? '; domain=' + domain : '')
-    + (secure ? '; secure' : '');
-};
+function setCookie( name, value, expires, path, domain, secure ) 
+{
+  // set time, it's in milliseconds
+  var today = new Date();
+  today.setTime( today.getTime() );
+
+  /*
+    if the expires variable is set, make the correct 
+    expires time, the current script below will set 
+    it for x number of days, to make it for hours, 
+    delete * 24, for minutes, delete * 60 * 24
+  */
+  if ( expires ) {
+    expires = expires * 1000 * 60 * 60 * 24;
+  }
+  var expires_date = new Date( today.getTime() + (expires) );
+
+  document.cookie = name + "=" +escape( value ) +
+    ( ( expires ) ? ";expires=" + expires_date.toGMTString() : "" ) + 
+    ( ( path ) ? ";path=" + path : "" ) + 
+    ( ( domain ) ? ";domain=" + domain : "" ) +
+    ( ( secure ) ? ";secure" : "" );
+}
 
 // [Cookie] Clears a cookie
 function clearCookie(name, path) {
