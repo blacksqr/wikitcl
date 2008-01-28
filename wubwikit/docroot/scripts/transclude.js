@@ -179,9 +179,6 @@ function getCookie( check_name ) {
 function checkTOC()
 {
     ajaxinittocpages();
-    clearCookie('wikitoc', '/');	/* remove old cookie */
-    clearCookie('witoc', '/_cookies/');	/* remove old cookie */
-    clearCookie('witoc', '/');	/* remove old cookie */
 
     needs_toc=getCookie('wiki_toc');
     if (needs_toc==null || needs_toc=="" || needs_toc=="1") {
