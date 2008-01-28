@@ -332,7 +332,7 @@ namespace eval WikitWub {
     # header sent with each page
     #<meta name='robots' content='index,nofollow' />
     variable head [subst {
-	[<style> media all "@import url(/wikit.css);"]
+	[<style> media all "@import url(/_toc/wikit.css);"]
 	[<style> media all "@import url(/dtree.css);"]
 	[<script> src /transclude.js]
 	[<script> src /dtree.js]
