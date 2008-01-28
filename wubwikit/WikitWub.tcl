@@ -1818,6 +1818,10 @@ package require Dub
 Dub init prefix /_dub
 Direct init dub namespace ::Dub prefix /_dub ctype "x-text/html-fragment"
 
+#### jQ - jQuery framework
+package require jQ
+jQ init prefix /jquery
+
 package require Commenter
 Direct init doc namespace ::Commenter prefix /_doc ctype "x-text/html-fragment"
 
@@ -1882,6 +1886,11 @@ proc Incoming {req} {
 	    continue	;# process next request
 	}
 
+	/jquery/* -
+	/jquery/ {
+	    jQ do $req
+	}
+
 	/_stats -
 	/_stats/* {
 	    ::webalizer do $req
@@ -1902,7 +1911,10 @@ proc Incoming {req} {
 	    ::wub do $req
 	}
 
-	/_dub -
+	/_dub {
+	    Http Redir $req "/_dub/"
+	}
+
 	/_dub/* {
 	    # Dub metakit toy
 	    ::dub do $req
