@@ -1167,8 +1167,8 @@ namespace eval WikitWub {
 	    Debug.error {toggle new - set on - $c}
 	} else {
 	    set toc [dict get $toc -value]
-	    Debug.error {toggle existing: $toc => [expr {!$toc}] - $c}
 	    set c [Cookies modify [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value [expr {!$toc}]]
+	    Debug.error {toggle existing: [expr {!$toc}] -> $toc - $c}
 	}
 
 	dict set r -cookies $c
