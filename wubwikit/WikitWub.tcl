@@ -2077,7 +2077,7 @@ proc Incoming {req} {
 	    } x eo]} {
 		Debug.error {no wiki_toc cookie ($eo): [Dict get? $req -cookies] / [Dict get? $req cookies]}
                 Http NotFound $req
-	    } elseif {!$toc} {
+	    } elseif {![dict get $toc -value]} {
                 Http NotFound $req
             } else {
                 dict set req -suffix [file tail [dict get $req -path]] 
