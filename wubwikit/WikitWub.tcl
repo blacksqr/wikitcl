@@ -1175,13 +1175,14 @@ namespace eval WikitWub {
 	} toc eo]} {
 	    set c [Cookies add [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value 1]
 	} else {
+	    set toc [dict get $toc -value]
 	    set c [Cookies modify [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value [expr !$toc]]
 	}
 	dict set r -cookies $c
 	Debug.error {Referer: [Http Referer $r] - $c}
 	set C [subst {
 	    [<h2> "Menu Toggled"]
-	    [<p> [<a> href [Http Referer $r] "Return to Wiki "]]
+	    [<p> [<a> href [Http Referer $r] "Return to Wiki"]]
 	}]
 
 	return [Http NoCache [Http Ok $r $C]]
