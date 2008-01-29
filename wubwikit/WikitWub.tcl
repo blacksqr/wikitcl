@@ -407,16 +407,6 @@ namespace eval WikitWub {
 		    return null;
 		}
 	    }				
-
-	    function checkTOC()
-	    {
-		needs_toc=getCookie('wiki_toc');
-		if (needs_toc==null) {
-		    setCookie('wiki_toc', 0, 30, "/_toc/");
-		} else if (needs_toc=="" || needs_toc=="1") {
-		} else {
-		}
-	    }
 	}]
 
 	[<script> src /_toc/transclude.js]
