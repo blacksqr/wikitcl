@@ -125,10 +125,10 @@ function toggleTOC()
     needs_toc=getCookie('wiki_toc')
     if (needs_toc==null || needs_toc=="" || needs_toc=="1") {
 	ajaxnotocpages();
-	setCookie('wiki_toc', 0, 365, "/_toc/");
+	setCookie('wiki_toc', 0, 30, "/_toc/");
     } else {
 	ajaxtocpages();
-	setCookie('wiki_toc', 1, 365, "/_toc/");
+	setCookie('wiki_toc', 1, 30, "/_toc/");
     }
 }
 
