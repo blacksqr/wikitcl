@@ -2072,9 +2072,9 @@ proc Incoming {req} {
 		set toc [dict get $toc -value]
 	    } x eo]} {
 		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1]
-                Http NotFound $req
+                Http NoCache [Http Ok $req {} text/javascript]
 	    } elseif {!$toc} {
-                Http NotFound $req
+                Http NoCache [Http Ok $req {} text/javascript]
             } else {
                 dict set req -suffix [file tail [dict get $req -path]] 
                 ::scripts do $req 
