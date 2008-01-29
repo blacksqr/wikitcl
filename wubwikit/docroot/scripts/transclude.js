@@ -194,6 +194,8 @@ function URLencode(sStr) {
 }
 
 function App(query) {
+    this.query = query;
+    this.resultCount = 0;
     this.siteSearch = new GwebSearch();
     this.siteSearch.setUserDefinedLabel("Tcler's wiki");
     this.siteSearch.setUserDefinedClassSuffix("siteSearch");
@@ -208,13 +210,12 @@ function App(query) {
     document.getElementById("footer").innerHTML = "<a href='http://wiki.tcl.tk'>Home</a> &bull; <a href='/4'>Recent changes</a> &bull; <a href='/3'>Help</a> &bull; <a href='/2'>Search</a> &bull; <a href='javascript:toggleTOC();' id='toggle_toc'>Hide menu</a>";
     document.getElementById("content").innerHTML = "<div id='branding'>Powered by google</div>";
     GSearch.getBranding(document.getElementById("branding"));
-    var googleQuery = query + "+site:http://wiki.tcl.tk";
-    document.getElementById("content").innerHTML += "<p><a class='googlesearch' href='http://www.google.com/search?q=" + URLencode(googleQuery) + "'>Click here to see all matches on Google Web Search</a></p>";
-    document.getElementById("content").innerHTML += "<p>Search results for &quot;<b>" + query + "</b>&quot; :</p>";
+    document.getElementById("content").innerHTML += "<p><div id='searchprogress'>Searching for &quot;<b>" + query + "</b>&quot;...</div></p>";
     this.siteSearch.execute(query);
 }
 
 App.prototype.OnSearchComplete = function() {
+    var eos = 0;
     if (this.siteSearch.results && this.siteSearch.results.length > 0) {
 	document.getElementById("content").innerHTML += "<ul>";
 	for (var i = 0; i < this.siteSearch.results.length; i++) {
@@ -222,6 +223,7 @@ App.prototype.OnSearchComplete = function() {
 	    try {
 		var h = "<li class='result'><a href='" + result.url + "'>" + result.title + "</a><p class='result'>" + result.content + "</p></li>";
 		document.getElementById("content").innerHTML += h;
+		this.resultCount++;
 	    }
 	    catch(err) {
 	    }
@@ -230,6 +232,21 @@ App.prototype.OnSearchComplete = function() {
 	var cursor = this.siteSearch.cursor;
 	if (cursor && cursor.currentPageIndex < cursor.pages.length - 1) {
 	    this.siteSearch.gotoPage(cursor.currentPageIndex + 1);
+	}
+	else
+	    eos = 1;
+    }
+    else
+	eos = 1;
+    
+    if (eos) {
+	var googleQuery = this.query + " site:http://wiki.tcl.tk";
+	if (this.resultCount > 0) {
+	    document.getElementById("searchprogress").innerHTML = "Search results for &quot;<b>" + this.query + "</b>&quot;:";
+	    document.getElementById("content").innerHTML += "<p><a class='googlesearch' target='_blank' href='http://www.google.com/search?q=" + URLencode(googleQuery) + "'>Click here to see all matches on Google Web Search</a></p>";
+	}
+	else {
+	    document.getElementById("searchprogress").innerHTML = "No search results for &quot;<b>" + this.query + "</b>&quot;.";
 	}
     }
 }
