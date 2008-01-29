@@ -1164,12 +1164,15 @@ namespace eval WikitWub {
 	    Cookies fetch [Dict get? $r -cookies] -name wiki_toc
 	} toc eo]} {
 	    set c [Cookies add [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value 1]
+	    Debug.error {toggle new - set on - $c}
 	} else {
 	    set toc [dict get $toc -value]
-	    set c [Cookies modify [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value [expr !$toc]]
+	    Debug.error {toggle existing: $toc => [expr {!$toc}] - $c}
+	    set c [Cookies modify [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value [expr {!$toc}]]
 	}
+
 	dict set r -cookies $c
-	Debug.error {Referer: [Http Referer $r] - $c}
+	Debug.error {Toggle Referer: [Http Referer $r] - $c}
 	set C [subst {
 	    [<h2> "Menu Toggled"]
 	    [<p> [<a> href [Http Referer $r] "Return to Wiki"]]
@@ -2065,10 +2068,11 @@ proc Incoming {req} {
 	    if {[catch {
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
 		Debug.error {wiki_toc cookie $toc: [dict get $toc -value]}
+		set toc [dict get $toc -value]
 	    } x eo]} {
 		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1]
                 Http NotFound $req
-	    } elseif {![dict get $toc -value]} {
+	    } elseif {!$toc} {
                 Http NotFound $req
             } else {
                 dict set req -suffix [file tail [dict get $req -path]] 
