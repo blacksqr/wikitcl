@@ -2073,7 +2073,7 @@ proc Incoming {req} {
             # silently redirect js files
 	    if {[catch {
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
-		Debug.error {wiki_toc cookie $toc: [Dict get? $req -cookies] / [Dict get? $req cookies]}
+		Debug.error {wiki_toc cookie $toc: [dict get $toc -value]}
 	    } x eo]} {
 		Debug.error {no wiki_toc cookie ($eo): [Dict get? $req -cookies] / [Dict get? $req cookies]}
                 Http NotFound $req
