@@ -1159,29 +1159,6 @@ namespace eval WikitWub {
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
     }
 
-    proc /toggle {r} {
-	if {[catch {
-	    set c [Dict get? $r -cookies]
-	    set toc [Cookies fetch $c -name wiki_toc]
-	    set toc [expr {![dict get $toc -value]}]
-	} err eo]} {
-	    Debug.error {toggle new}
-	    set toc 1
-	}
-
-	set c [Cookies add $c -name wiki_toc -path /_toc/ -value $toc]
-	Debug.error {toggle: $toc - $c}
-
-	dict set r -cookies $c
-	Debug.error {Toggle Referer: [Http Referer $r] - $c}
-	set C [subst {
-	    [<h2> "Menu Toggled"]
-	    [<p> [<a> href [Http Referer $r] "Return to Wiki"]]
-	}]
-
-	return [Http NoCache [Http Ok $r $C]]
-    }
-
     proc /login {r {nickname ""} {R ""}} {
 	# cleanse nickname
 	regsub -all {[^A-Za-z0-0_]} $nickname {} nickname
@@ -2060,8 +2037,26 @@ proc Incoming {req} {
 	    # These are wiki-local restful command URLs,
 	    # we process them via the ::wikit Direct domain
 	    Debug.wikit {toggle TOC invocation [dict get $req -path]}
-	    dict set req -suffix /toggle
-	    ::wikit do $req
+	    if {[catch {
+		set c [Dict get? $req -cookies]
+		set toc [Cookies fetch $c -name wiki_toc]
+		set toc [expr {![dict get $toc -value]}]
+	    } err eo]} {
+		Debug.error {toggle new}
+		set toc 1
+	    }
+
+	    set c [Cookies add $c -name wiki_toc -path /_toc/ -value $toc]
+	    Debug.error {toggle: $toc - $c}
+
+	    dict set req -cookies $c
+	    Debug.error {Toggle Referer: [Http Referer $req] - $c}
+	    set C [subst {
+		[<h2> "Menu Toggled"]
+		[<p> [<a> href [Http Referer $req] "Return to Wiki"]]
+	    }]
+
+	    Http RedirectReferer $req
 	}
 
        /_toc/*.js {
