@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-# env handling - remove the C-linked env
+## env handling - remove the C-linked env
 array set _env [array get ::env]; unset ::env
 array set ::env [array get _env]; unset _env
 
