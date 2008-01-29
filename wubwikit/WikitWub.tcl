@@ -1148,7 +1148,7 @@ namespace eval WikitWub {
 
     # Init common menu items
     set menus(Home)             [<a> href "http://wiki.tcl.tk" Home]
-    set menus(Recent changes) [Ref 4 "Recent changes"]
+    set menus("Recent changes") [Ref 4 "Recent changes"]
     set menus(Help)             [Ref 3 "Help"]
     set menus(Search)           [Ref 2 "Search"]
     set menus(TOC)		[<a> href "/_toc/toggle" "Toggle Menu"]
