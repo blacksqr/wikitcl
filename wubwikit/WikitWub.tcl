@@ -2072,7 +2072,7 @@ proc Incoming {req} {
                 Http NoCache [Http Ok $req {} text/javascript]
             } else {
                 dict set req -suffix [file tail [dict get $req -path]] 
-                ::scripts do $req 
+                Http NoCache [Http Ok [::scripts do $req]]
             }
         }
 
