@@ -413,7 +413,7 @@ namespace eval WikitWub {
 		needs_toc=getCookie('wiki_toc');
 		if (needs_toc==null) {
 		    setCookie('wiki_toc', 0, 30, "/_toc/");
-		} elseif (needs_toc=="" || needs_toc=="1") {
+		} else if (needs_toc=="" || needs_toc=="1") {
 		} else {
 		}
 	    }
