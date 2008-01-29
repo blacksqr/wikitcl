@@ -2066,7 +2066,7 @@ proc Incoming {req} {
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
 		Debug.error {wiki_toc cookie $toc: [dict get $toc -value]}
 	    } x eo]} {
-		Debug.error {no wiki_toc cookie ($eo): [Dict get? $req -cookies] / [Dict get? $req cookies]}
+		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1]
                 Http NotFound $req
 	    } elseif {![dict get $toc -value]} {
                 Http NotFound $req
