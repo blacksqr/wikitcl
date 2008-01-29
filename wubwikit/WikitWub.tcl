@@ -2056,6 +2056,14 @@ proc Incoming {req} {
 	    ::bin do $req
 	}
 
+	/_toc/toggle {
+	    # These are wiki-local restful command URLs,
+	    # we process them via the ::wikit Direct domain
+	    Debug.wikit {toggle TOC invocation [dict get $req -path]}
+	    dict set req -suffix /toggle
+	    ::wikit do $req
+	}
+
        /_toc/*.js {
             # silently redirect js files
             Debug.error {cookies: [Dict get? $req -cookies] / [Dict get? $req cookies]}
