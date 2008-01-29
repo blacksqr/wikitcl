@@ -825,7 +825,7 @@ namespace eval Wikit::Format {
           set tdtag ""
         }
         default {
-          lappend result $text [list $tags $tdtag $trtag]
+          lappend result $text [linsert $tags end $tdtag $trtag]
         }
       }
     }
@@ -1032,7 +1032,7 @@ namespace eval Wikit::Format {
           set state T
         }
         CT {
-          lappend $cresult $text body
+          lappend $cresult "\n" body
         }
         BACKREFS {
           if { $brp eq "" } {
