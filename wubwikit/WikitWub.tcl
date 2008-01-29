@@ -1161,15 +1161,16 @@ namespace eval WikitWub {
 
     proc /toggle {r} {
 	if {[catch {
-	    Cookies fetch [Dict get? $r -cookies] -name wiki_toc
-	} toc eo]} {
-	    set c [Cookies add [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value 1]
-	    Debug.error {toggle new - set on - $c}
-	} else {
-	    set toc [dict get $toc -value]
-	    set c [Cookies modify [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value [expr {!$toc}]]
-	    Debug.error {toggle existing: [expr {!$toc}] -> $toc - $c}
+	    set c [Dict get? $r -cookies]
+	    set toc [Cookies fetch $c -name wiki_toc]
+	    set toc [expr {![dict get $toc -value]}]
+	} err eo]} {
+	    Debug.error {toggle new}
+	    set toc 1
 	}
+
+	set c [Cookies add $c -name wiki_toc -path /_toc/ -value $toc]
+	Debug.error {toggle: $toc - $c}
 
 	dict set r -cookies $c
 	Debug.error {Toggle Referer: [Http Referer $r] - $c}
