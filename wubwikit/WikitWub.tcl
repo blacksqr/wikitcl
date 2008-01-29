@@ -1178,7 +1178,7 @@ namespace eval WikitWub {
 	    set c [Cookies modify [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value [expr !$toc]]
 	}
 	dict set r -cookies $c
-
+	Debug.error {Referer: [Http Referer $r]}
 	return [Http RedirectReferer $r]
     }
 
