@@ -685,7 +685,7 @@ namespace eval WikitWub {
 	set N 0
 	set updated ""
 	variable menus
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	set footer $menu
@@ -909,7 +909,7 @@ namespace eval WikitWub {
 	set menu {}
 	variable menus
 	set updated ""
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
@@ -944,7 +944,7 @@ namespace eval WikitWub {
 	variable menus
 	set menu {}
 	lappend menu [Ref /_history/$N History]
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 
@@ -1025,7 +1025,7 @@ namespace eval WikitWub {
 
 	set menu {}
 	variable menus
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	set C ""
@@ -1148,7 +1148,7 @@ namespace eval WikitWub {
 
     # Init common menu items
     set menus(Home)             [<a> href "http://wiki.tcl.tk" Home]
-    set menus("Recent changes") [Ref 4 "Recent changes"]
+    set menus(Recent) [Ref 4 "Recent changes"]
     set menus(Help)             [Ref 3 "Help"]
     set menus(Search)           [Ref 2 "Search"]
     set menus(TOC)		[<a> href "/_toc/toggle" "Toggle Menu"]
@@ -1592,7 +1592,7 @@ namespace eval WikitWub {
 	} 
 	variable menus
 	set menu {}
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	set footer $menu
@@ -1865,7 +1865,7 @@ namespace eval WikitWub {
 
 	variable protected
 	variable menus
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	if {![info exists protected($N)]} {
