@@ -334,8 +334,8 @@ namespace eval WikitWub {
     variable head [subst {
 	[<style> media all "@import url(/_toc/wikit.css);"]
 	[<style> media all "@import url(/dtree.css);"]
-	[<script> src /transclude.js]
-	[<script> src /dtree.js]
+	[<script> src /_toc/transclude.js]
+	[<script> src /_toc/dtree.js]
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
 		[<style> media all "@import 'ie6.css';"]
@@ -1948,6 +1948,13 @@ proc Incoming {req} {
 	    # silently redirect gz files
 	    dict set req -suffix [file tail [dict get $req -path]]
 	    ::bin do $req
+	}
+
+	/_toc/*.js {
+	    # silently redirect js files
+	    #set toc_flag [Cookie fetchAll [dict exists $req -cookies] -name wiki_toc]
+	    dict set req -suffix [file tail [dict get $req -path]]
+	    ::scripts do $req
 	}
 
 	/robots.txt -
