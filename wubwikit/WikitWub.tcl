@@ -73,8 +73,8 @@ namespace eval WikitWub {
 	    [div container {
 		[div header {
 		    [div logo [<a> href http://wiki.tcl.tk class logo wiki.tcl.tk]]
-		    [div title [tclarmour $Title]]
-		    [div updated $updated]
+		    [div title [divID title [tclarmour $Title]]]
+		    [div updated [divID updated $updated]]
 		}]
 		[expr {[info exists ro]?$ro:""}]
 		[divID wrapper {
@@ -91,9 +91,9 @@ namespace eval WikitWub {
 		    }]
 		}]
 		[div footer {
-		    [lappend footer [<a> href "javascript:toggleTOC();" id toggle_toc "Hide menu"]]
-		     <p> id footer [variable bullet; join $footer $bullet]]
+		    [<p> id footer [variable bullet; join $footer $bullet]]
 		}]
+		[<script> "google.load(\"search\", \"1\");"]
 		[<script> "checkTOC($N);"]
 	    }]
 	}
@@ -127,7 +127,7 @@ namespace eval WikitWub {
 		[div editcontents {
 		    [set disabled [expr {$nick eq ""}]
 		     <form> edit method post action /_edit/save/$N {
-			 [<textarea> C rows 30 cols 72 style width:100% [tclarmour $C]]
+			 [<textarea> C rows 30 cols 72 style width:100% [list [tclarmour $C]]]
 			 [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 			 [<hidden> _charset_ {}]
 			 [<submit> save class positive disabled $disabled value 1 {Save your changes}]
@@ -318,9 +318,14 @@ namespace eval WikitWub {
     proc searchF {} {
 	return {<form id='searchform' action='/_search' method='get'>
 	    <input type='hidden' name='_charset_'>
-	    <input id='searchtxt' name='S' type='text' value='Search' 
+	    <input id='searchtxt' name='S' type='text' value='Search titles' 
 		onfocus='clearSearch();' onblur='setSearch();'>
-	    </form>}
+	    </form>
+	    <form id='gsearchform' action='' method='get' onSubmit='return googleQuery();'>
+	    <input id='googletxt' type='text' value='Search in pages'
+	        onfocus='clearGoogle();' onblur='setGoogle();'>
+	    </form>
+	}
     }
 
     variable maxAge "next month"	;# maximum age of login cookie
@@ -335,93 +340,9 @@ namespace eval WikitWub {
     variable head [subst {
 	[<style> media all "@import url(/wikit.css);"]
 	[<style> media all "@import url(/dtree.css);"]
-	[<script> {
-	    function setCookie( name, value, expires, path, domain, secure ) 
-	    {
-		// set time, it's in milliseconds
-		var today = new Date();
-		today.setTime( today.getTime() );
-
-		/*
-		if the expires variable is set, make the correct 
-		expires time, the current script below will set 
-		it for x number of days, to make it for hours, 
-		delete * 24, for minutes, delete * 60 * 24
-		*/
-		if ( expires ) {
-		    expires = expires * 1000 * 60 * 60 * 24;
-		}
-		var expires_date = new Date( today.getTime() + (expires) );
-
-		document.cookie = name + "=" +escape( value ) +
-		( ( expires ) ? ";expires=" + expires_date.toGMTString() : "" ) + 
-		( ( path ) ? ";path=" + path : "" ) + 
-		( ( domain ) ? ";domain=" + domain : "" ) +
-		( ( secure ) ? ";secure" : "" );
-	    }
-
-	    // [Cookie] Clears a cookie
-	    function clearCookie(name, path) {
-		var now = new Date();
-		var yesterday = new Date(now.getTime() - 1000 * 60 * 60 * 24);
-		setCookie(name, 'cookieValue', yesterday, path);
-	    };
-
-	    // this fixes an issue with the old method, ambiguous values 
-	    // with this test document.cookie.indexOf( name + "=" );
-	    function getCookie( check_name ) {
-		// first we'll split this cookie up into name/value pairs
-		// note: document.cookie only returns name=value, not the other components
-		var a_all_cookies = document.cookie.split( ';' );
-		var a_temp_cookie = '';
-		var cookie_name = '';
-		var cookie_value = '';
-		var b_cookie_found = false; // set boolean t/f default f
-		
-		for ( i = 0; i < a_all_cookies.length; i++ )
-		{
-		 // now we'll split apart each name=value pair
-		 a_temp_cookie = a_all_cookies[i].split( '=' );
-		 
-		 
-		 // and trim left/right whitespace while we're at it
-		 cookie_name = a_temp_cookie[0].replace(/^\s+|\s+$/g, '');
-		 
-		 // if the extracted name matches passed check_name
-		 if ( cookie_name == check_name )
-		 {
-		     b_cookie_found = true;
-		     // we need to handle case where cookie has no value but exists (no = sign, that is):
-		     if ( a_temp_cookie.length > 1 )
-		     {
-			 cookie_value = unescape( a_temp_cookie[1].replace(/^\s+|\s+$/g, '') );
-		     }
-		     // note that in cases where cookie is initialized but no value, null is returned
-		     return cookie_value;
-		     break;
-		 }
-		 a_temp_cookie = null;
-		 cookie_name = '';
-	     }
-		if ( !b_cookie_found )
-		{
-		    return null;
-		}
-	    }				
-
-	    function checkTOC()
-	    {
-		needs_toc=getCookie('wiki_toc');
-		if (needs_toc==null) {
-		    setCookie('wiki_toc', 0, 30, "/_toc/");
-		} else if (needs_toc=="" || needs_toc=="1") {
-		} else {
-		}
-	    }
-	}]
-
-	[<script> src /_toc/transclude.js]
-	[<script> src /_toc/dtree.js]
+	[<script> src http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw]
+	[<script> src /transclude.js]
+	[<script> src /dtree.js]
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
 		[<style> media all "@import 'ie6.css';"]
@@ -1904,10 +1825,6 @@ package require Dub
 Dub init prefix /_dub
 Direct init dub namespace ::Dub prefix /_dub ctype "x-text/html-fragment"
 
-#### jQ - jQuery framework
-package require jQ
-jQ init prefix /jquery
-
 package require Commenter
 Direct init doc namespace ::Commenter prefix /_doc ctype "x-text/html-fragment"
 
@@ -1951,8 +1868,8 @@ proc Responder::post {rsp} {
 proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
-    set req [Cookies 4Server $req]
-    #set req [Session fetch $req -path /_edit/]
+    #set req [Cookies 4Server $req]
+    set req [Session fetch $req -path /_edit/]
 
     if {[dict exists $req -session]} {
 	# do something with existing session
@@ -1970,11 +1887,6 @@ proc Incoming {req} {
 	    Block block [dict get $req -ipaddr] "Bogus URL '[dict get $req -path]'"
 	    Send [Http Forbidden $req]
 	    continue	;# process next request
-	}
-
-	/jquery/* -
-	/jquery/ {
-	    jQ do $req
 	}
 
 	/_stats -
@@ -1997,10 +1909,7 @@ proc Incoming {req} {
 	    ::wub do $req
 	}
 
-	/_dub {
-	    Http Redir $req "/_dub/"
-	}
-
+	/_dub -
 	/_dub/* {
 	    # Dub metakit toy
 	    ::dub do $req
@@ -2035,17 +1944,6 @@ proc Incoming {req} {
 	    dict set req -suffix [file tail [dict get $req -path]]
 	    ::bin do $req
 	}
-
-       /_toc/*.js {
-            # silently redirect js files
-            Debug.error {cookies: [Dict get? $req -cookies] / [Dict get? $req cookies]}
-            if {[Dict get? $req -cookies] eq {}} {
-                Http NotFound $req
-            } else {
-                dict set req -suffix [file tail [dict get $req -path]] 
-                ::scripts do $req 
-            }
-        }
 
 	/robots.txt -
 	/*.js {

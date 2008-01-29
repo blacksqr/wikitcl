@@ -155,7 +155,16 @@ form#searchform {
   padding: 0; margin: 0;
 }
 
+form#gsearchform {
+  padding: 0; margin: 0;
+}
+
 input#searchtxt {
+  width: 135px;
+  color: gray;
+}
+
+input#googletxt {
   width: 135px;
   color: gray;
 }

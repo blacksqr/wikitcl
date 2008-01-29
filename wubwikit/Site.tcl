@@ -10,6 +10,15 @@ namespace eval Site {
     variable home [file normalize [file dirname [info script]]]
     variable base "/tmp/wiki"		;# default place for wiki to live
     variable wubdir "../../Wub/"	;# relative path to Wub libraries
+    if {![file isdirectory $wubdir]} {
+	if {[file isdirectory ../$wubdir]} {
+	    # running WubWikit from the svn trunk dir?
+	    set wubdir ../$wubdir
+	} elseif {[file isdirectory ../../$wubdir]} {
+	    # running WubWikit from an svn branch dir?
+	    set wubdir ../../$wubdir
+	}
+    }
     variable application WikitWub	;# what's our application package?
 	
     variable overwrite 0		;# set both to overwrite
@@ -28,7 +37,7 @@ namespace eval Site {
     variable cache {maxsize 204800}	;# use in-RAM cache by default
 }
 
-lappend auto_path /usr/lib/ ../../Wub/
+lappend auto_path /usr/lib/ $Site::wubdir
 package require Site	;# load main Site configuration
 
 #### WikitWub-specific Configuration
