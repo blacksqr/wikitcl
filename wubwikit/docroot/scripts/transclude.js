@@ -78,8 +78,6 @@ function ajaxinittocpages(){
     document.getElementById('content').style.marginLeft = '160px';
     document.getElementById('menu_area').style.display = 'inline';
     document.getElementById('searchform').style.display = 'inline';
-    document.getElementById('footer').innerHTML += ' &bull; ' + 
-	    '<a href="javascript:toggleTOC();" id="toggle_toc">Hide menu</a>';
 }
 
 function ajaxtocpages(){
