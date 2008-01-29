@@ -436,3 +436,11 @@ td.rc3 {
 a.cleared {
 	padding-left: 2em;
 }
+li.result {
+	list-style: none;
+	margin-top: 1.5em;
+}
+p.result {
+	margin-left: 1.5em;
+	margin-top: 0.5em;
+}

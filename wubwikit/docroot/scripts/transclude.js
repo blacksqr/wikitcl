@@ -78,7 +78,7 @@ function ajaxinittocpages(){
     document.getElementById('content').style.marginLeft = '160px';
     document.getElementById('menu_area').style.display = 'inline';
     document.getElementById('searchform').style.display = 'inline';
-    document.getElementById('gsearchform').style.display = 'inline';
+    // document.getElementById('gsearchform').style.display = 'inline';
     document.getElementById('footer').innerHTML += ' &bull; ' + 
 	    '<a href="javascript:toggleTOC();" id="toggle_toc">Hide menu</a>';
 }
@@ -220,7 +220,7 @@ App.prototype.OnSearchComplete = function() {
 	for (var i = 0; i < this.siteSearch.results.length; i++) {
             var result = this.siteSearch.results[i];
 	    try {
-		var h = "<li><a href='" + result.url + "'>" + result.title + "</a><p>" + result.content + "</p></li>";
+		var h = "<li class='result'><a href='" + result.url + "'>" + result.title + "</a><p class='result'>" + result.content + "</p></li>";
 		document.getElementById("content").innerHTML += h;
 	    }
 	    catch(err) {
