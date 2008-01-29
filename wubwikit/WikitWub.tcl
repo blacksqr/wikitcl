@@ -91,7 +91,7 @@ namespace eval WikitWub {
 		    }]
 		}]
 		[div footer {
-		    [lappend footer [<a> href "javascript:toggleTOC();" id toggle_toc "Hide menu"]; <p> id footer [variable bullet; join $footer $bullet]]
+		    [<p> id footer [variable bullet; join $footer $bullet]]
 		}]
 		[<script> "checkTOC($N);"]
 	    }]
@@ -307,7 +307,7 @@ namespace eval WikitWub {
     proc menuUL { l } {
 	set m "<ul id='menu'>\n"
 	foreach i $l {
-	    regsub {id='toggle_toc'} $i {id='toggle_toc_menu'} i
+	    #regsub {id='toggle_toc'} $i {id='toggle_toc_menu'} i
 	    append m "<li>$i</li>"
 	}
 	append m "</ul>"
@@ -690,6 +690,8 @@ namespace eval WikitWub {
 	}
 	set footer $menu
 	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
+
 	set C [join $results "\n"]
 	
 	return [sendPage $r]
@@ -913,6 +915,7 @@ namespace eval WikitWub {
 	lappend menu [Ref /_history/$N History]
 	set footer $menu
 	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
 	return [sendPage $r]
     }
 
@@ -996,6 +999,7 @@ namespace eval WikitWub {
 	    }
 	    set footer $menu
 	    lappend footer $menus(Search)
+	    lappend footer $menus(TOC)
 	}
 
 	lappend menu [Ref /_history/$N History]
@@ -1045,6 +1049,7 @@ namespace eval WikitWub {
 	}
 	set footer $menu
 	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
 #	if {$links ne {}} {
 #	    append C <p> $links </p> \n
 #	}
@@ -1143,9 +1148,10 @@ namespace eval WikitWub {
 
     # Init common menu items
     set menus(Home)             [<a> href "http://wiki.tcl.tk" Home]
-    set "menus(Recent changes)" [Ref 4 "Recent changes"]
+    set menus(Recent changes) [Ref 4 "Recent changes"]
     set menus(Help)             [Ref 3 "Help"]
     set menus(Search)           [Ref 2 "Search"]
+    set menus(TOC)		[<a> href "/_toc/toggle" "Toggle Menu"]
 
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
@@ -1161,6 +1167,19 @@ namespace eval WikitWub {
     proc /who {r} {
 	set C [Html dict2table [dict get $r -session] {who edit}]
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
+    }
+
+    proc /toggle {r} {
+	if {[catch {
+	    Cookies get [Dict get? $r -cookies] -name wiki_toc
+	} toc eo]} {
+	    set c [Cookies add [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value 1]
+	} else {
+	    set c [Cookies modify [Dict get? $r -cookies] -name wiki_toc -path /_toc/ -value [expr !$toc]]
+	}
+	dict set r -cookies $c
+
+	return [Http RedirectReferer $r]
     }
 
     proc /login {r {nickname ""} {R ""}} {
@@ -1578,6 +1597,7 @@ namespace eval WikitWub {
 	}
 	set footer $menu
 	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
 
 	set name "References to $N"
 	set Title "References to [Ref $N]"
@@ -1853,11 +1873,12 @@ namespace eval WikitWub {
 		lappend menu [Ref /_edit/$N Edit]
 	    }
 	    lappend menu [Ref /_history/$N History]
-	    lappend menu [Ref /_diff/$N#diff0 "Latest differences"]
+	    lappend menu [Ref "/_diff/$N#diff0" "Latest differences"]
 	    lappend menu [Ref $backRef References]
 	}
 	set footer $menu
 	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
 
 	#set Title "<h1 class='title'>$Title</h1>"
 	if {0} {

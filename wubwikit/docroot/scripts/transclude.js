@@ -86,7 +86,7 @@ function ajaxtocpages(){
     document.getElementById('wiki_toc').style.display='inline';
     document.getElementById('wrapper').style.marginLeft = '-160px';
     document.getElementById('content').style.marginLeft = '160px';
-    document.getElementById('toggle_toc').innerHTML = "Hide menu";
+    /*document.getElementById('toggle_toc').innerHTML = "Hide menu";*/
     document.getElementById('menu_area').style.display='inline';
 }
 
@@ -97,7 +97,7 @@ function ajaxnotocpages(){
     document.getElementById('wrapper').style.marginLeft = '0';
     document.getElementById('wrapper').style.marginRight = '-5px';
     document.getElementById('content').style.marginLeft = '5px';
-    document.getElementById('toggle_toc').innerHTML = "Show menu";
+    /*document.getElementById('toggle_toc').innerHTML = "Show menu";*/
     document.getElementById('menu_area').style.display='none';
 }
 
