@@ -1181,7 +1181,7 @@ namespace eval WikitWub {
 	Debug.error {Referer: [Http Referer $r] - $c}
 	set C [subst {
 	    [<h2> "Menu Toggled"]
-	    [<p> "Return to Wiki [<a> href [Http Referer $r]"]
+	    [<p> "Return to Wiki [<a> href [Http Referer $r]]"]
 	}]
 
 	return [Http NoCache [Http Ok $r $C]]
