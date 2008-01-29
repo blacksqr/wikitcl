@@ -91,8 +91,7 @@ namespace eval WikitWub {
 		    }]
 		}]
 		[div footer {
-		    [lappend footer [<a> href "javascript:toggleTOC();" id toggle_toc "Hide menu"]]
-		     <p> id footer [variable bullet; join $footer $bullet]]
+		    [lappend footer [<a> href "javascript:toggleTOC();" id toggle_toc "Hide menu"]; <p> id footer [variable bullet; join $footer $bullet]]
 		}]
 		[<script> "checkTOC($N);"]
 	    }]
