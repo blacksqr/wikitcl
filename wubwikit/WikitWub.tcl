@@ -93,7 +93,7 @@ namespace eval WikitWub {
 		[div footer {
 		    [<p> id footer [variable bullet; join $footer $bullet]]
 		}]
-		[<script> "/*checkTOC($N)*/;"]
+		[<script> "checkTOC($N);"]
 	    }]
 	}
 
