@@ -78,9 +78,6 @@ function ajaxinittocpages(){
     document.getElementById('content').style.marginLeft = '160px';
     document.getElementById('menu_area').style.display = 'inline';
     document.getElementById('searchform').style.display = 'inline';
-    // document.getElementById('gsearchform').style.display = 'inline';
-    document.getElementById('footer').innerHTML += ' &bull; ' + 
-	    '<a href="javascript:toggleTOC();" id="toggle_toc">Hide menu</a>';
 }
 
 function ajaxtocpages(){
@@ -218,7 +215,7 @@ function setSearch() {
 	var txt = document.getElementById('searchtxt');
 	txt.style.color = 'gray';
 	if (txt.value == '') {
-		txt.value = 'Search';
+		txt.value = 'Search titles';
 	}
 }
 
@@ -257,7 +254,7 @@ function App(query) {
     document.getElementById("title").innerHTML = "Search";
     document.getElementById("updated").innerHTML = "";
     document.getElementById("wiki_menu").innerHTML = "<ul id='menu'><li><a href='http://wiki.tcl.tk'>Home</a></li><li><a href='/4'>Recent changes</a></li><li><a href='/3'>Help</a></li></ul>";
-    document.getElementById("footer").innerHTML = "<a href='http://wiki.tcl.tk'>Home</a> &bull; <a href='/4'>Recent changes</a> &bull; <a href='/3'>Help</a> &bull; <a href='/2'>Search</a> &bull; <a href='javascript:toggleTOC();' id='toggle_toc'>Hide menu</a>";
+    document.getElementById("footer").innerHTML = "<a href='http://wiki.tcl.tk'>Home</a> &bull; <a href='/4'>Recent changes</a> &bull; <a href='/3'>Help</a> &bull; <a href='/2'>Search</a>";
     document.getElementById("content").innerHTML = "<div id='branding'>Powered by google</div>";
     GSearch.getBranding(document.getElementById("branding"));
     document.getElementById("content").innerHTML += "<p><div id='searchprogress'>Searching for &quot;<b>" + query + "</b>&quot;...</div></p>";
