@@ -219,4 +219,4 @@ function setSearch() {
 	}
 }
 
-
+checkTOC();
