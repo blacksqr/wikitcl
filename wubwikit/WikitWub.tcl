@@ -351,7 +351,10 @@ namespace eval WikitWub {
 		// flag this function so we don't do the same thing twice
 		arguments.callee.done = true;
 
-		checkTOC();
+		try {
+		    checkTOC();
+		} catch {
+		}
 	    };
 
 	    /* for Mozilla */
