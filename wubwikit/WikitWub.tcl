@@ -326,7 +326,7 @@ namespace eval WikitWub {
     variable cookie "wikit_e"		;# name of login cookie
     variable oldcookie "wikit"		;# name of login cookie
 
-    variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 //EN">}
+    variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">}
     variable language "en"	;# language for HTML
 
     # header sent with each page
