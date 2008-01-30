@@ -93,8 +93,7 @@ namespace eval WikitWub {
 		[div footer {
 		    [<p> id footer [variable bullet; join $footer $bullet]]
 		}]
-		[<script> "google.load(\"search\", \"1\");"]
-		[<script> "checkTOC($N);"]
+		[<script> {google.load("search", "1");}]
 	    }]
 	}
 
@@ -127,7 +126,7 @@ namespace eval WikitWub {
 		[div editcontents {
 		    [set disabled [expr {$nick eq ""}]
 		     <form> edit method post action /_edit/save/$N {
-			 [<textarea> C rows 30 cols 72 style width:100% [list [tclarmour $C]]]
+			 [<textarea> C rows 30 cols 72 style width:100% [tclarmour $C]]
 			 [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 			 [<hidden> _charset_ {}]
 			 [<submit> save class positive disabled $disabled value 1 {Save your changes}]
@@ -308,7 +307,7 @@ namespace eval WikitWub {
     proc menuUL { l } {
 	set m "<ul id='menu'>\n"
 	foreach i $l {
-	    regsub {id='toggle_toc'} $i {id='toggle_toc_menu'} i
+	    #regsub {id='toggle_toc'} $i {id='toggle_toc_menu'} i
 	    append m "<li>$i</li>"
 	}
 	append m "</ul>"
@@ -332,7 +331,8 @@ namespace eval WikitWub {
     variable cookie "wikit_e"		;# name of login cookie
     variable oldcookie "wikit"		;# name of login cookie
 
-    variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 //EN">}
+    #variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">}
+    variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">}
     variable language "en"	;# language for HTML
 
     # header sent with each page
@@ -340,9 +340,9 @@ namespace eval WikitWub {
     variable head [subst {
 	[<style> media all "@import url(/wikit.css);"]
 	[<style> media all "@import url(/dtree.css);"]
-	[<script> src http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw]
-	[<script> src /transclude.js]
-	[<script> src /dtree.js]
+	[<script> src "http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw"]
+	[<script> src /_toc/transclude.js]
+	[<script> src /_toc/dtree.js]
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
 		[<style> media all "@import 'ie6.css';"]
@@ -350,6 +350,35 @@ namespace eval WikitWub {
 	<!--\[if gte IE 7\]>
 		[<style> media all "@import 'ie7.css';"]
 	<!\[endif\]-->
+	[<script> {
+	    function init() {
+		// quit if this function has already been called
+		if (arguments.callee.done) return;
+
+		// flag this function so we don't do the same thing twice
+		arguments.callee.done = true;
+
+		try {
+		    checkTOC();
+		} catch (err) {
+		    /* nothing */
+		}
+	    };
+
+	    /* for Mozilla */
+	    if (document.addEventListener) {
+		document.addEventListener("DOMContentLoaded", init, false);
+	    }
+
+	    /* for Internet Explorer */
+	    /*@cc_on @*/
+	    /*@if (@_win32)
+	    document.write("<script defer src=ie_onload.js><"+"/script>");
+	    /*@end @*/
+	    
+	    /* for other browsers */
+	    window.onload = init;
+	}]
     }]
 
     # convertor from wiki to html
@@ -607,11 +636,13 @@ namespace eval WikitWub {
 	set N 0
 	set updated ""
 	variable menus
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	set footer $menu
 	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
+
 	set C [join $results "\n"]
 	
 	return [sendPage $r]
@@ -829,12 +860,13 @@ namespace eval WikitWub {
 	set menu {}
 	variable menus
 	set updated ""
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
 	set footer $menu
 	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
 	return [sendPage $r]
     }
 
@@ -863,7 +895,7 @@ namespace eval WikitWub {
 	variable menus
 	set menu {}
 	lappend menu [Ref /_history/$N History]
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 
@@ -918,6 +950,7 @@ namespace eval WikitWub {
 	    }
 	    set footer $menu
 	    lappend footer $menus(Search)
+	    lappend footer $menus(TOC)
 	}
 
 	lappend menu [Ref /_history/$N History]
@@ -943,7 +976,7 @@ namespace eval WikitWub {
 
 	set menu {}
 	variable menus
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	set C ""
@@ -967,6 +1000,7 @@ namespace eval WikitWub {
 	}
 	set footer $menu
 	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
 #	if {$links ne {}} {
 #	    append C <p> $links </p> \n
 #	}
@@ -1065,9 +1099,10 @@ namespace eval WikitWub {
 
     # Init common menu items
     set menus(Home)             [<a> href "http://wiki.tcl.tk" Home]
-    set "menus(Recent changes)" [Ref 4 "Recent changes"]
+    set menus(Recent) [Ref 4 "Recent changes"]
     set menus(Help)             [Ref 3 "Help"]
     set menus(Search)           [Ref 2 "Search"]
+    set menus(TOC)		[<a> href "/_toc/toggle" "Toggle Menu"]
 
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
@@ -1495,11 +1530,12 @@ namespace eval WikitWub {
 	} 
 	variable menus
 	set menu {}
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	set footer $menu
 	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
 
 	set name "References to $N"
 	set Title "References to [Ref $N]"
@@ -1767,7 +1803,7 @@ namespace eval WikitWub {
 
 	variable protected
 	variable menus
-	foreach m {Home "Recent changes" Help} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	if {![info exists protected($N)]} {
@@ -1775,11 +1811,12 @@ namespace eval WikitWub {
 		lappend menu [Ref /_edit/$N Edit]
 	    }
 	    lappend menu [Ref /_history/$N History]
-	    lappend menu [Ref /_diff/$N#diff0 "Latest differences"]
+	    lappend menu [Ref "/_diff/$N#diff0" "Latest differences"]
 	    lappend menu [Ref $backRef References]
 	}
 	set footer $menu
 	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
 
 	#set Title "<h1 class='title'>$Title</h1>"
 	if {0} {
@@ -1825,6 +1862,10 @@ package require Dub
 Dub init prefix /_dub
 Direct init dub namespace ::Dub prefix /_dub ctype "x-text/html-fragment"
 
+#### jQ - jQuery framework
+package require jQ
+jQ init prefix /jquery
+
 package require Commenter
 Direct init doc namespace ::Commenter prefix /_doc ctype "x-text/html-fragment"
 
@@ -1868,8 +1909,8 @@ proc Responder::post {rsp} {
 proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
-    #set req [Cookies 4Server $req]
-    set req [Session fetch $req -path /_edit/]
+    set req [Cookies 4Server $req]
+    #set req [Session fetch $req -path /_edit/]
 
     if {[dict exists $req -session]} {
 	# do something with existing session
@@ -1887,6 +1928,11 @@ proc Incoming {req} {
 	    Block block [dict get $req -ipaddr] "Bogus URL '[dict get $req -path]'"
 	    Send [Http Forbidden $req]
 	    continue	;# process next request
+	}
+
+	/jquery/* -
+	/jquery/ {
+	    jQ do $req
 	}
 
 	/_stats -
@@ -1909,7 +1955,10 @@ proc Incoming {req} {
 	    ::wub do $req
 	}
 
-	/_dub -
+	/_dub {
+	    Http Redir $req "/_dub/"
+	}
+
 	/_dub/* {
 	    # Dub metakit toy
 	    ::dub do $req
@@ -1944,6 +1993,51 @@ proc Incoming {req} {
 	    dict set req -suffix [file tail [dict get $req -path]]
 	    ::bin do $req
 	}
+
+	/_toc/toggle {
+	    # These are wiki-local restful command URLs,
+	    # we process them via the ::wikit Direct domain
+	    Debug.wikit {toggle TOC invocation [dict get $req -path]}
+	    if {[catch {
+		set c [Dict get? $req -cookies]
+		set toc [Cookies fetch $c -name wiki_toc]
+		set toc [expr {![dict get $toc -value]}]
+	    } err eo]} {
+		Debug.error {toggle new}
+		set toc 1
+	    }
+
+	    set c [Cookies add $c -name wiki_toc -path /_toc/ -value $toc]
+	    Debug.error {toggle: $toc - $c}
+
+	    dict set req -cookies $c
+	    Debug.error {Toggle Referer: [Http Referer $req] - $c}
+	    set C [subst {
+		[<h2> "Menu Toggled"]
+		[<p> [<a> href [Http Referer $req] "Return to Wiki"]]
+	    }]
+
+	    Http RedirectReferer $req
+	}
+
+       /_toc/*.js {
+            # silently redirect js files
+	    if {[catch {
+		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
+		Debug.error {wiki_toc cookie $toc: [dict get $toc -value]}
+		set toc [dict get $toc -value]
+	    } x eo]} {
+		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1]
+                dict set req -suffix [file tail [dict get $req -path]] 
+                Http NoCache [Http Ok [::scripts do $req]]
+                #Http NoCache [Http Ok $req {} text/javascript]
+	    } elseif {!$toc} {
+                Http NoCache [Http Ok $req {} text/javascript]
+            } else {
+                dict set req -suffix [file tail [dict get $req -path]] 
+                Http NoCache [Http Ok [::scripts do $req]]
+            }
+        }
 
 	/robots.txt -
 	/*.js {
