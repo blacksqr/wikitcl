@@ -155,7 +155,16 @@ form#searchform {
   padding: 0; margin: 0;
 }
 
+form#gsearchform {
+  padding: 0; margin: 0;
+}
+
 input#searchtxt {
+  width: 135px;
+  color: gray;
+}
+
+input#googletxt {
   width: 135px;
   color: gray;
 }
@@ -426,4 +435,12 @@ td.rc3 {
 }
 a.cleared {
 	padding-left: 2em;
+}
+li.result {
+	list-style: none;
+	margin-top: 1.5em;
+}
+p.result {
+	margin-left: 1.5em;
+	margin-top: 0.5em;
 }
