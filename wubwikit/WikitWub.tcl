@@ -93,6 +93,7 @@ namespace eval WikitWub {
 		[div footer {
 		    [<p> id footer [variable bullet; join $footer $bullet]]
 		}]
+		[<script> {google.load('search', '1');}]
 	    }]
 	}
 
@@ -316,9 +317,14 @@ namespace eval WikitWub {
     proc searchF {} {
 	return {<form id='searchform' action='/_search' method='get'>
 	    <input type='hidden' name='_charset_'>
-	    <input id='searchtxt' name='S' type='text' value='Search' 
+	    <input id='searchtxt' name='S' type='text' value='Search titles' 
 		onfocus='clearSearch();' onblur='setSearch();'>
-	    </form>}
+	    </form>
+	    <form id='gsearchform' action='' method='get' onSubmit='return googleQuery();'>
+	    <input id='googletxt' type='text' value='Search in pages'
+	        onfocus='clearGoogle();' onblur='setGoogle();'>
+	    </form>
+	}
     }
 
     variable maxAge "next month"	;# maximum age of login cookie
@@ -331,12 +337,14 @@ namespace eval WikitWub {
 
     # header sent with each page
     #<meta name='robots' content='index,nofollow' />
-    #[<script> src http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw]
     variable head [subst {
 	[<style> media all "@import url(/wikit.css);"]
 	[<style> media all "@import url(/dtree.css);"]
+
+	[<script> src "http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw"]
 	[<script> src /_toc/transclude.js]
 	[<script> src /_toc/dtree.js]
+
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
 		[<style> media all "@import 'ie6.css';"]
@@ -354,7 +362,6 @@ namespace eval WikitWub {
 
 		try {
 		    checkTOC();
-		    google.load('search', '1');
 		} catch (err) {
 		    /* nothing */
 		}
