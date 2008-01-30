@@ -343,6 +343,31 @@ namespace eval WikitWub {
 	<!--\[if gte IE 7\]>
 		[<style> media all "@import 'ie7.css';"]
 	<!\[endif\]-->
+	[<script> {
+	    function init() {
+		// quit if this function has already been called
+		if (arguments.callee.done) return;
+
+		// flag this function so we don't do the same thing twice
+		arguments.callee.done = true;
+
+		checkTOC();
+	    };
+
+	    /* for Mozilla */
+	    if (document.addEventListener) {
+		document.addEventListener("DOMContentLoaded", init, false);
+	    }
+
+	    /* for Internet Explorer */
+	    /*@cc_on @*/
+	    /*@if (@_win32)
+	    document.write("<script defer src=ie_onload.js><"+"/script>");
+	    /*@end @*/
+	    
+	    /* for other browsers */
+	    window.onload = init;
+	}]
     }]
 
     # convertor from wiki to html

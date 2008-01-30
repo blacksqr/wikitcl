@@ -218,5 +218,3 @@ function setSearch() {
 		txt.value = 'Search';
 	}
 }
-
-checkTOC();
