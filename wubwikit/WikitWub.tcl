@@ -73,8 +73,8 @@ namespace eval WikitWub {
 	    [div container {
 		[div header {
 		    [div logo [<a> href http://wiki.tcl.tk class logo wiki.tcl.tk]]
-		    [div title [tclarmour $Title]]
-		    [div updated $updated]
+		    [<div> id title class title [tclarmour $Title]]
+		    [<div> id updated class updated $updated]
 		}]
 		[expr {[info exists ro]?$ro:""}]
 		[divID wrapper {
