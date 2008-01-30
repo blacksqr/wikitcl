@@ -353,7 +353,7 @@ namespace eval WikitWub {
 
 		try {
 		    checkTOC();
-		} finally {
+		} catch {
 		    /* nothing */
 		}
 	    };
