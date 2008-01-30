@@ -334,7 +334,7 @@ namespace eval WikitWub {
     variable head [subst {
 	[<style> media all "@import url(/wikit.css);"]
 	[<style> media all "@import url(/dtree.css);"]
-
+	[<script> src http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw]
 	[<script> src /_toc/transclude.js]
 	[<script> src /_toc/dtree.js]
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
@@ -354,6 +354,7 @@ namespace eval WikitWub {
 
 		try {
 		    checkTOC();
+		    google.load('search', '1');
 		} catch (err) {
 		    /* nothing */
 		}
