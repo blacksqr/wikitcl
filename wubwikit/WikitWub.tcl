@@ -316,7 +316,7 @@ namespace eval WikitWub {
     # return a search form
     proc searchF {} {
 	return {<form id='gsearchform' action='' method='get' onSubmit='return googleQuery();'>
-	    <input id='googletxt' type='text' value='Search in pages'
+	    <input id='googletxt' type='text' value='Search'
 	        onfocus='clearGoogle();' onblur='setGoogle();'>
 	    </form>
 	}
@@ -370,7 +370,7 @@ namespace eval WikitWub {
 	    /* for Internet Explorer */
 	    /*@cc_on @*/
 	    /*@if (@_win32)
-	    document.write("<script defer src=ie_onload.js><"+"\/script>");
+	    document.write("<script defer src=ie_onload.js><\/script>");
 	    /*@end @*/
 	    
 	    /* for other browsers */

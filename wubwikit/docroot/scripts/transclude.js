@@ -213,7 +213,7 @@ function setGoogle() {
 	var txt = document.getElementById('googletxt');
 	txt.style.color = 'gray';
 	if (txt.value == '') {
-		txt.value = 'Search in pages';
+		txt.value = 'Search';
 	}
 }
 
