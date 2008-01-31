@@ -1429,7 +1429,11 @@ namespace eval Wikit::Format {
           append result $text
         }
         HD2 - HD3 - HD4 {
-          append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
+          if {$mode eq "HD2"} {
+            append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
+          } else {
+            append result "$html_frag($state$mode)>" 
+          }
           lappend tocpos [string index $mode 2] [string length $result]
           set state $mode
 	  set in_header 1
@@ -1533,46 +1537,17 @@ namespace eval Wikit::Format {
     # Create page-TOC as dtree javascript
     set toc ""
     if { [llength $tocpos] } {
-      append toc "<a class='pagetoc1'>Page contents</a>\n"
-      set id 1
-      set parentl {-1}
-      set parentnml {""}
+      append toc "<a class='pagetoc'>Page contents</a><ul>\n"
       foreach {ht tpb thdr} $tocpos {
-        if { $ht > [llength $parentl] } {
-          while { $ht > [llength $parentl] } {
-#            append toc "dp.add($id,[lindex $parentl end],'');\n"
-            if {[llength $parentl] > 1} {
-              append toc "<li>"
-            }
-            append toc "<ul class='pagetoc$ht'>\n"
-            lappend parentl $id
-            lappend parentnml ""
-            incr id
-          }
-        } elseif { $ht < [llength $parentl] } {
-          while { $ht < [llength $parentl] } {
-            append toc "</ul></li>\n"
-            set parentl [lrange $parentl 0 end-1]
-            set parentnml [lrange $parentnml 0 end-1]
-          }
-        } else {
+        if { $ht == 2 } {
+          set tkn [::crc::CksumInit]
+          ::crc::CksumUpdate $tkn $thdr
+          set cksum [::crc::CksumFinal $tkn]
+          append toc "<li class='pagetoc'><a class='pagetoc' href='#pagetoc[format %08x $cksum]'>[armour_quote $thdr]</a></li>\n"
+          set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
         }
-        lappend parentnml $thdr
-        set tkn [::crc::CksumInit]
-        ::crc::CksumUpdate $tkn $parentnml
-        set cksum [::crc::CksumFinal $tkn]
-        append toc "<li class='pagetoc$ht'><a class='pagetoc$ht' href='#pagetoc[format %08x $cksum]'>[armour_quote $thdr]</a></li>\n"
-        set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
-        incr id
       }
-      while { [llength $parentl] > 1 } {
-        append toc "</ul>\n"
-        if {[llength $parentl] > 2} {
-          append toc "</li>"
-        }
-        set parentl [lrange $parentl 0 end-1]
-        set parentnml [lrange $parentnml 0 end-1]
-      }
+      append toc "</ul>\n"
     }
 
     # Get rid of spurious newline at start of each quoted area.
