@@ -87,7 +87,7 @@ namespace eval WikitWub {
 			[divID page_toc $T]
 		    }]
 		    [div extra {
-			[divID wiki_toc {}]
+			[divID wiki_toc $TOC]
 		    }]
 		}]
 		[div footer {
@@ -334,11 +334,9 @@ namespace eval WikitWub {
     #<meta name='robots' content='index,nofollow' />
     variable head [subst {
 	[<style> media all "@import url(/wikit.css);"]
-	[<style> media all "@import url(/dtree.css);"]
 
 	[<script> src "http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw"]
 	[<script> src /_toc/transclude.js]
-	[<script> src /_toc/dtree.js]
 
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
@@ -641,7 +639,7 @@ namespace eval WikitWub {
 	lappend footer $menus(TOC)
 
 	set C [join $results "\n"]
-	
+	variable TOC
 	return [sendPage $r]
     }
 
@@ -856,6 +854,7 @@ namespace eval WikitWub {
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set menu {}
 	variable menus
+	variable TOC
 	set updated ""
 	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
@@ -953,6 +952,7 @@ namespace eval WikitWub {
 	lappend menu [Ref /_history/$N History]
 	set updated ""
 	set T ""
+	variable TOC
 	return [sendPage $r]
     }
 
@@ -1070,6 +1070,7 @@ namespace eval WikitWub {
 
 	set updated ""
 	set T ""
+	variable TOC
 	return [sendPage $r]
     }
 
@@ -1462,7 +1463,7 @@ namespace eval WikitWub {
 	catch {set TOC [::fileutil::cat $tocf]}
 	set TOC [string trim $TOC]
 	if { [string length $TOC] } {
-	    set TOC [::Wikit::FormatTocJavascriptDtree $TOC]
+	    set TOC [::Wikit::FormatWikiToc $TOC]
 	}
 
 	invalidate $r _toc ;# make the new TOC show up
@@ -1542,6 +1543,7 @@ namespace eval WikitWub {
 	if { $A } {
 	    set tplt refs_tc
 	}
+	variable TOC
 	return [sendPage $r $tplt]
     }
 
@@ -1824,7 +1826,7 @@ namespace eval WikitWub {
 		set Title ""
 	    }
 	}
-
+	variable TOC
 	variable readonly
 	if {$readonly ne ""} {
 	    set ro "<it>(Read Only Mode: $readonly)</it>"
@@ -1888,7 +1890,7 @@ catch {
 catch {
     set ::WikitWub::TOC [::fileutil::cat [file join $::config(docroot) TOC]]
     if { [string length $::WikitWub::TOC] } {
-	set ::WikitWub::TOC [::Wikit::FormatTocJavascriptDtree $::WikitWub::TOC]
+	set ::WikitWub::TOC [::Wikit::FormatWikiToc $::WikitWub::TOC]
     }
 }
 

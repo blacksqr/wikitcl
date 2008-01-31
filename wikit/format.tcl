@@ -5,7 +5,7 @@ package provide Wikit::Format 1.1
 
 namespace eval Wikit::Format {
   namespace export TextToStream StreamToTk StreamToTcl StreamToHTML StreamToRefs \
-    StreamToUrls Expand_HTML FormatTocJavascriptDtree ShowDiffs
+    StreamToUrls Expand_HTML FormatWikiToc ShowDiffs
 
   # In this file:
   #
@@ -1795,89 +1795,29 @@ namespace eval Wikit::Format {
     array get urls
   }
 
-  proc FormatTocJavascriptDtree { C } {
+  proc FormatWikiToc { C } {
     variable protected
     if { [string length $C] == 0 } {
       return ""
     }
-    set parent 0
-    set first ""
-    set cnt 0
     set result ""
-    append result "d = new dTree('d');\n"
-    append result "d.clearCookie();\n"	;# temporary code to delete old cookies
-    append result "d.config.useCookies = false;\n"
-    append result "d.config.useLines = 1;\n"
-    append result "d.config.useIcons = 0;\n"
-    append result "d.add($cnt,-1,'Wiki contents');\n"
-    set toccnt $cnt
-    incr cnt
-    append result "d.add($cnt,-1,'<br>Categories');\n"
-    set catparent $cnt
-    incr cnt
     foreach line [split $C \n] {
       if {[string index $line 0] eq "+"} continue
       if {[string is alnum [string index $line 0]]} {
-        if { [string index [string trim $line] end] eq "*" } {
-          # Show backreferences in toc
-          set refs [mk::select wdb.refs to [::Wikit::LookupPage $line wdb]]
-          set refList ""
-          foreach r $refs {
-            set r [mk::get wdb.refs!$r from]
-            ::Wikit::pagevars $r name
-            lappend refList [list $name $r]
-          }
-          append result "d.add($cnt,$toccnt,'[armour_quote [string range [string trim $line] 0 end-1]]');\n"
-          set parent $cnt
-          incr cnt
-          foreach x [lsort -dict -index 0 [lsort -dict $refList]] {
-            lassign $x name r
-            # Strip Category and * if present
-            if {[string range $name 0 8] eq "Category "} {
-              set name [string range $name 9 end]
-            }
-            if { [string index [string trim $name] end] eq "*" } {
-              set name [string range [string trim $name] 0 end-1]
-            }
-            if { [string length $name] } {
-              append result "d.add($cnt,$parent,'[armour_quote $name]', '/$r')\n"
-              incr cnt
-            }
-          }
-        } else {
-          if { [string length $line] } {
-            if { [string match "Category *" $line] } {
-              if { $catparent < 0 } {
-                append result "d.add($cnt,$toccnt,'Categories');\n"
-                set catparent $cnt
-                incr cnt
-              }
-#              append result "d.add($cnt,$catparent,'[armour_quote $line]');\n"
-              # Strip "Category "
-              set cname [string range $line 9 end]
-              append result "d.add($cnt,$catparent,'[armour_quote $cname]');\n"
-              set parent $cnt
-              incr cnt
-            } else {
-              append result "d.add($cnt,$toccnt,'[armour_quote $line]');\n"
-              set parent $cnt
-              incr cnt
-            }
-          }
+        if {[string length $result]} {
+          append result "</ul>\n"
         }
-      } elseif {[regexp {^\s*(.+?)(\*{0,1})\s+(\[.*\])(\*?)} $line - opt ref link rest brefs]} {
+        append result "<a href='pagetoc'>$line</a><ul>\n"
+      } elseif {[regexp {^\s*(.+?)\s+(\[.*\])} $line - opt link]} {
         set link [string trim $link {[]}]
         if { [string length $opt] } {
-          if { [string length $brefs] } {
-            append result "d.add($cnt,$parent,'[armour_quote $opt]','/_ref/[::Wikit::LookupPage $link wdb]?P=1');\n"
-          } else {
-            append result "d.add($cnt,$parent,'[armour_quote $opt]','/[::Wikit::LookupPage $link wdb]');\n"
-          }
-          incr cnt
+          append result "<li class='pagetoc'><a class='pagetoc' href='/[::Wikit::LookupPage $link wdb]'>[armour_quote $opt]</a></li>\n"
         }
       }
     }
-    append result "document.getElementById(containerid).innerHTML=d;\n"
+    if {[string length $result]} {
+      append result "</ul>\n"
+    }
     return $result
   }
 

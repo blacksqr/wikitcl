@@ -7,38 +7,6 @@
  *    loadpage
  ***********************************************/
     
-function ajaxtocpage(url, containerid){
-    var page_request = false
-    if (window.XMLHttpRequest) // if Mozilla, Safari etc
-        page_request = new XMLHttpRequest()
-    else if (window.ActiveXObject){ // if IE
-	try {
-	    page_request = new ActiveXObject("Msxml2.XMLHTTP")
-	} 	
-	catch (e){
-	    try{
-		page_request = new ActiveXObject("Microsoft.XMLHTTP")
-	    }
-	    catch (e){}
-	}
-    }
-    else
-        return false
-    page_request.onreadystatechange=function(){
-	loadtocpage(page_request, containerid)
-    }
-    page_request.open('GET', url, true)
-    page_request.send(null)
-}
-
-function loadtocpage(page_request, containerid){
-    if (page_request.readyState == 4 && (page_request.status==200 || window.location.href.indexOf("http")==-1)) {
-	if (page_request.responseText.length) {
-	    eval(page_request.responseText);
-	}
-    }
-}
-    
 function ajaxbackrefspage(url, containerid){
     var page_request = false
     if (window.XMLHttpRequest) // if Mozilla, Safari etc
@@ -72,7 +40,6 @@ function loadbackrefspage(page_request, containerid){
 }
 
 function ajaxinittocpages(){
-    ajaxtocpage('/_toc', 'wiki_toc');
     document.getElementById('wrapper').style.marginLeft = '-160px';
     document.getElementById('content').style.marginLeft = '160px';
     document.getElementById('menu_area').style.display = 'inline';
