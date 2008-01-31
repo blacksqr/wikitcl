@@ -239,7 +239,7 @@ function App(query) {
     document.getElementById("updated").innerHTML = "";
     document.getElementById("wiki_menu").innerHTML = "<ul id='menu'><li><a href='http://wiki.tcl.tk'>Home</a></li><li><a href='/4'>Recent changes</a></li><li><a href='/3'>Help</a></li></ul>";
     document.getElementById("footer").innerHTML = "<a href='http://wiki.tcl.tk'>Home</a> &bull; <a href='/4'>Recent changes</a> &bull; <a href='/3'>Help</a> &bull; <a href='/2'>Search</a>";
-    document.getElementById("content").innerHTML = "<div id='branding'>Powered by google</div>";
+    document.getElementById("content").innerHTML = "<div id='branding'>Search powered by google</div>";
     GSearch.getBranding(document.getElementById("branding"));
     document.getElementById("content").innerHTML += "<p><div id='searchprogress'>Searching for &quot;<b>" + query + "</b>&quot;...</div></p>";
     this.siteSearch.execute(query);
