@@ -268,9 +268,15 @@ App.prototype.OnSearchComplete = function() {
 	for (var i = 0; i < this.siteSearch.results.length; i++) {
             var result = this.siteSearch.results[i];
 	    try {
-		var h = "<li class='result'><a href='" + result.url + "'>" + result.title + "</a><p class='result'>" + result.content + "</p></li>";
-		document.getElementById("content").innerHTML += h;
-		this.resultCount++;
+		var idx = result.url.lastIndexOf("/");
+		var page = "";
+		if (idx >= 0)
+		    page = result.url.substr(idx);
+		if (page != "/4") {
+		    var h = "<li class='result'><a href='" + result.url + "'>" + result.title + "</a><p class='result'>" + result.content + "</p></li>";
+		    document.getElementById("content").innerHTML += h;
+		    this.resultCount++;
+		}
 	    }
 	    catch(err) {
 	    }
