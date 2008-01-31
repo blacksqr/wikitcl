@@ -432,6 +432,14 @@ li.result {
 	margin-top: 1.5em;
 }
 p.result {
-	margin-left: 1.5em;
+	margin: 0 1.5em 0 2em;
 	margin-top: 0.5em;
+}
+span.branding {
+    font-size: 90%;
+    color: #666;
+}
+img.branding {
+    border: 0;
+    margin-bottom: -4pt;
 }

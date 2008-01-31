@@ -276,13 +276,12 @@ App.prototype.OnSearchComplete = function() {
     if (eos) {
 	var googleQuery = this.query + " site:http://wiki.tcl.tk";
 	if (this.resultCount > 0) {
-	    document.getElementById("searchprogress").innerHTML = "Search results for &quot;<b>" + this.query + "</b>&quot;:";
-	    document.getElementById("content").innerHTML += "<p><a class='googlesearch' target='_blank' href='http://www.google.com/search?q=" + URLencode(googleQuery) + "'>Click here to see all matches on Google Web Search</a><div id='branding'>Search powered by google</div></p>";
+	    document.getElementById("searchprogress").innerHTML = "Search results for &quot;<b>" + this.query + "</b>&quot; - <span class='branding'>powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'</img></span>";
+	    document.getElementById("content").innerHTML += "<p><a class='googlesearch' target='_blank' href='http://www.google.com/search?q=" + URLencode(googleQuery) + "'>Click here to see all matches on Google Web Search</a></p>"
 	}
 	else {
-	    document.getElementById("searchprogress").innerHTML = "No search results for &quot;<b>" + this.query + "</b>&quot;.<div id='branding'>Search powered by google</div>";
+	    document.getElementById("searchprogress").innerHTML = "No search results for &quot;<b>" + this.query + "</b>&quot;";
 	}
-	GSearch.getBranding(document.getElementById("branding"));
     }
 }
 
