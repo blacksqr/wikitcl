@@ -142,7 +142,7 @@ div#wiki_menu {
   line-height: 150%;
 }
 
-div#menu_area, div#wiki_menu, div#page_toc, div#wiki_toc, form#searchform span#toggle {
+div#menu_area, div#wiki_menu, div#page_toc, div#wiki_toc, form#gsearchform span#toggle {
   display: none;
 }
 
@@ -151,17 +151,8 @@ div.dtree {
     font-size: 80%;
 }
 
-form#searchform {
-  padding: 0; margin: 0;
-}
-
 form#gsearchform {
   padding: 0; margin: 0;
-}
-
-input#searchtxt {
-  width: 135px;
-  color: gray;
 }
 
 input#googletxt {
