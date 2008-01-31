@@ -694,7 +694,7 @@ namespace eval WikitWub {
 	return $n
     }
 
-    proc /diff {r N {V -1} {D -1} {W 0}} {
+    proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
 	Debug.wikit {/diff $N $V $D $W}
 
 	set ext [file extension $N]	;# file extension?
@@ -710,16 +710,37 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
+	if {![string is integer -strict $T]} {
+	    set T 0
+	}
+
 	set nver [expr {1 + [mk::view size wdb.pages!$N.changes]}]
-	if { $V >= $nver || $D >= $nver } {
+	if { $V >= $nver || ($T == 0 && $D >= $nver) } {
 	    return [Http NotFound $r]
 	}
 
 	if {$V < 0} {
 	    set V [expr {$nver - 1}]	;# default
 	}
-	if {$D < 0} {
-	    set D [expr {$nver - 2}]	;# default
+
+	# If T is zero, D contains version to compare with
+	# If T is non zero, D contains a number of days and /diff must search for a version $D days older than version $V
+	if {$T == 0} {
+	    if {$D < 0} {
+		set D [expr {$nver - 2}]	;# default
+	    }
+	} else {
+	    if {$V >= ($nver-1)} {
+		set vt [mk::get wdb.pages!$N date]
+	    } else {
+		set vt [mk::get wdb.pages!$N.changes!$V date]
+	    }
+	    set dt [expr {$vt-$D*86400}]
+	    set dl [mk::select wdb.pages!$N.changes -max date $dt -rsort date]
+	    if {[llength $dl]==0} {
+		set dl [mk::select wdb.pages!$N.changes -sort date]
+	    }
+	    set D [lindex $dl 0]
 	}
 
 	Wikit::pagevars $N name
