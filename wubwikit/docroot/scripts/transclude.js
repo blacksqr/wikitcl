@@ -72,7 +72,6 @@ function loadbackrefspage(page_request, containerid){
 }
 
 function ajaxinittocpages(){
-    page_toc();
     ajaxtocpage('/_toc', 'wiki_toc');
     document.getElementById('wrapper').style.marginLeft = '-160px';
     document.getElementById('content').style.marginLeft = '160px';
@@ -239,9 +238,7 @@ function App(query) {
     document.getElementById("updated").innerHTML = "";
     document.getElementById("wiki_menu").innerHTML = "<ul id='menu'><li><a href='http://wiki.tcl.tk'>Home</a></li><li><a href='/4'>Recent changes</a></li><li><a href='/3'>Help</a></li></ul>";
     document.getElementById("footer").innerHTML = "<a href='http://wiki.tcl.tk'>Home</a> &bull; <a href='/4'>Recent changes</a> &bull; <a href='/3'>Help</a> &bull; <a href='/2'>Search</a>";
-    document.getElementById("content").innerHTML = "<div id='branding'>Search powered by google</div>";
-    GSearch.getBranding(document.getElementById("branding"));
-    document.getElementById("content").innerHTML += "<p><div id='searchprogress'>Searching for &quot;<b>" + query + "</b>&quot;...</div></p>";
+    document.getElementById("content").innerHTML = "<p><div id='searchprogress'>Searching for &quot;<b>" + query + "</b>&quot;...</div></p>";
     this.siteSearch.execute(query);
 }
 
@@ -285,6 +282,8 @@ App.prototype.OnSearchComplete = function() {
 	else {
 	    document.getElementById("searchprogress").innerHTML = "No search results for &quot;<b>" + this.query + "</b>&quot;.";
 	}
+	document.getElementById("content").innerHTML += "<div id='branding'>Search powered by google</div>";
+	GSearch.getBranding(document.getElementById("branding"));
     }
 }
 

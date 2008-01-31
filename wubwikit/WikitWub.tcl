@@ -84,7 +84,7 @@ namespace eval WikitWub {
 		    [divID wiki_menu {[menuUL $menu]}]
 		    [searchF]
 		    [div navigation {
-			[divID page_toc {[<script> $T]}]
+			[divID page_toc $T]
 		    }]
 		    [div extra {
 			[divID wiki_toc {}]
@@ -629,7 +629,7 @@ namespace eval WikitWub {
 
 	set name "Cleared pages"
 	set Title "Cleared pages"
-	set T "function page_toc() {}"
+	set T ""
 	set N 0
 	set updated ""
 	variable menus
@@ -853,7 +853,7 @@ namespace eval WikitWub {
 	    }
 	}
 
-	set T "function page_toc() {}" ;# Do not show page TOC, can be one of the diffs.
+	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set menu {}
 	variable menus
 	set updated ""
@@ -952,7 +952,7 @@ namespace eval WikitWub {
 
 	lappend menu [Ref /_history/$N History]
 	set updated ""
-	set T "function page_toc() {}"
+	set T ""
 	return [sendPage $r]
     }
 
@@ -1069,7 +1069,7 @@ namespace eval WikitWub {
 #	}
 
 	set updated ""
-	set T "function page_toc() {}"
+	set T ""
 	return [sendPage $r]
     }
 
@@ -1537,7 +1537,7 @@ namespace eval WikitWub {
 	set name "References to $N"
 	set Title "References to [Ref $N]"
 	set updated ""
-	set T "function page_toc() {}"
+	set T ""
 	set tplt page
 	if { $A } {
 	    set tplt refs_tc
@@ -1654,7 +1654,7 @@ namespace eval WikitWub {
 	set name ""	;# no default page name
 	set who ""	;# no default editor
 	set cacheit 1	;# default is to cache
-	set T "function page_toc() {}"
+	set T ""
 	set BR {}
 
 	switch -- $N {

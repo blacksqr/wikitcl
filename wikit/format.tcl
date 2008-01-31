@@ -1531,40 +1531,49 @@ namespace eval Wikit::Format {
     }
 
     # Create page-TOC as dtree javascript
-    set toc "function page_toc() {\n"
+    set toc ""
     if { [llength $tocpos] } {
-      append toc "dp = new dTree('dp');\n"
-      append toc "dp.config.useLines = 1;\n"
-      append toc "dp.config.useIcons = 0;\n"
-      append toc "dp.add(0,-1,'Page contents');\n"
+      append toc "<a class='pagetoc1'>Page contents</a>\n"
       set id 1
-      set parentl {-1 0}
-      set parentnml {"" ""}
+      set parentl {-1}
+      set parentnml {""}
       foreach {ht tpb thdr} $tocpos {
         if { $ht > [llength $parentl] } {
           while { $ht > [llength $parentl] } {
-            append toc "dp.add($id,[lindex $parentl end],'');\n"
+#            append toc "dp.add($id,[lindex $parentl end],'');\n"
+            if {[llength $parentl] > 1} {
+              append toc "<li>"
+            }
+            append toc "<ul class='pagetoc$ht'>\n"
             lappend parentl $id
             lappend parentnml ""
             incr id
           }
         } elseif { $ht < [llength $parentl] } {
-          set parentl [lrange $parentl 0 [expr {$ht-1}]]
-          set parentnml [lrange $parentnml 0 [expr {$ht-1}]]
+          while { $ht < [llength $parentl] } {
+            append toc "</ul></li>\n"
+            set parentl [lrange $parentl 0 end-1]
+            set parentnml [lrange $parentnml 0 end-1]
+          }
         } else {
         }
         lappend parentnml $thdr
         set tkn [::crc::CksumInit]
         ::crc::CksumUpdate $tkn $parentnml
         set cksum [::crc::CksumFinal $tkn]
-        append toc "dp.add($id,[lindex $parentl end],'[armour_quote $thdr]','#pagetoc[format %08x $cksum]');\n"
+        append toc "<li class='pagetoc$ht'><a class='pagetoc$ht' href='#pagetoc[format %08x $cksum]'>[armour_quote $thdr]</a></li>\n"
         set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
-        lappend parentl $id
         incr id
       }
-      append toc "document.getElementById('page_toc').innerHTML=dp;\n"
+      while { [llength $parentl] > 1 } {
+        append toc "</ul>\n"
+        if {[llength $parentl] > 2} {
+          append toc "</li>"
+        }
+        set parentl [lrange $parentl 0 end-1]
+        set parentnml [lrange $parentnml 0 end-1]
+      }
     }
-    append toc "}\n"
 
     # Get rid of spurious newline at start of each quoted area.
     regsub -all "<pre>\n" $result "<pre>" result
