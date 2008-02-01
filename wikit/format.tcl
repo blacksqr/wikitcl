@@ -1537,7 +1537,7 @@ namespace eval Wikit::Format {
     # Create page-TOC as dtree javascript
     set toc ""
     if { [llength $tocpos] } {
-      append toc "<a class='pagetoc'>Page contents</a><ul>\n"
+      append toc "<div class='pagetoc'>Page contents</div><ul>\n"
       foreach {ht tpb thdr} $tocpos {
         if { $ht == 2 } {
           set tkn [::crc::CksumInit]
@@ -1807,7 +1807,7 @@ namespace eval Wikit::Format {
         if {[string length $result]} {
           append result "</ul>\n"
         }
-        append result "<a href='pagetoc'>$line</a><ul>\n"
+        append result "<div class='pagetoc'>$line</div>\n<ul>\n"
       } elseif {[regexp {^\s*(.+?)\s+(\[.*\])} $line - opt link]} {
         set link [string trim $link {[]}]
         if { [string length $opt] } {
