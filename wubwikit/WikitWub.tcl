@@ -1861,7 +1861,7 @@ Sinorca init path /_sinorca/
 Convert Namespace ::Sinorca
 
 package require Dub
-Dub init prefix /_dub
+Dub init prefix /_dub/
 Direct init dub namespace ::Dub prefix /_dub ctype "x-text/html-fragment"
 
 #### jQ - jQuery framework
