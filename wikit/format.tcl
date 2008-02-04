@@ -1534,20 +1534,19 @@ namespace eval Wikit::Format {
       append result $html_frag(${state}_)
     }
 
-    # Create page-TOC as dtree javascript
+    # Create page-TOC
     set toc ""
     if { [llength $tocpos] } {
-      append toc "<div class='pagetoc'>Page contents</div><ul>\n"
+      append toc "<div class='toc1'>Page contents</div>\n"
       foreach {ht tpb thdr} $tocpos {
         if { $ht == 2 } {
           set tkn [::crc::CksumInit]
           ::crc::CksumUpdate $tkn $thdr
           set cksum [::crc::CksumFinal $tkn]
-          append toc "<li class='pagetoc'><a class='pagetoc' href='#pagetoc[format %08x $cksum]'>[armour_quote $thdr]</a></li>\n"
+          append toc "<div class='toc2'><a class='toc' href='#pagetoc[format %08x $cksum]'>[armour_quote $thdr]</a></div>\n"
           set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
         }
       }
-      append toc "</ul>\n"
     }
 
     # Get rid of spurious newline at start of each quoted area.
@@ -1802,21 +1801,16 @@ namespace eval Wikit::Format {
     }
     set result ""
     foreach line [split $C \n] {
+      if {[string length [string trim $line]]==0} continue
       if {[string index $line 0] eq "+"} continue
       if {[string is alnum [string index $line 0]]} {
-        if {[string length $result]} {
-          append result "</ul>\n"
-        }
-        append result "<div class='pagetoc'>$line</div>\n<ul>\n"
+        append result "<div class='toc1'>$line</div>\n"
       } elseif {[regexp {^\s*(.+?)\s+(\[.*\])} $line - opt link]} {
         set link [string trim $link {[]}]
         if { [string length $opt] } {
-          append result "<li class='pagetoc'><a class='pagetoc' href='/[::Wikit::LookupPage $link wdb]'>[armour_quote $opt]</a></li>\n"
+          append result "<div class='toc2'><a class='toc' href='/[::Wikit::LookupPage $link wdb]'>[armour_quote $opt]</a></div>\n"
         }
       }
-    }
-    if {[string length $result]} {
-      append result "</ul>\n"
     }
     return $result
   }

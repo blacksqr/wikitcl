@@ -735,6 +735,9 @@ namespace eval WikitWub {
 	    } else {
 		set vt [mk::get wdb.pages!$N.changes!$V date]
 	    }
+	    if {$D < 0} {
+		set D 1
+	    }
 	    set dt [expr {$vt-$D*86400}]
 	    set dl [mk::select wdb.pages!$N.changes -max date $dt -rsort date]
 	    if {[llength $dl]==0} {
