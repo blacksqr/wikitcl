@@ -1536,17 +1536,26 @@ namespace eval Wikit::Format {
 
     # Create page-TOC
     set toc ""
+    set toce ""
     if { [llength $tocpos] } {
-      append toc "<div class='toc1'>Page contents</div>\n"
+      append toc "<div class='toc1'>Page contents\n"
       foreach {ht tpb thdr} $tocpos {
         if { $ht == 2 } {
           set tkn [::crc::CksumInit]
           ::crc::CksumUpdate $tkn $thdr
           set cksum [::crc::CksumFinal $tkn]
-          append toc "<div class='toc2'><a class='toc' href='#pagetoc[format %08x $cksum]'>[armour_quote $thdr]</a></div>\n"
+          if {[string length $toce]} {
+            append toc "<div class='toc2'>$toce</div>\n"
+            set toce ""
+          }
+          set toce "<a class='toc' href='#pagetoc[format %08x $cksum]'>[armour_quote $thdr]</a>"
           set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
         }
       }
+      if {[string length $toce]} {
+        append toc "<div class='toc3'>$toce</div>\n"
+      }
+      append toc "</div>"
     }
 
     # Get rid of spurious newline at start of each quoted area.
@@ -1800,17 +1809,36 @@ namespace eval Wikit::Format {
       return ""
     }
     set result ""
+    set toce ""
     foreach line [split $C \n] {
       if {[string length [string trim $line]]==0} continue
       if {[string index $line 0] eq "+"} continue
       if {[string is alnum [string index $line 0]]} {
-        append result "<div class='toc1'>$line</div>\n"
+        if {[string length $result]} {
+          if {[string length $toce]} {
+            append result "<div class='toc3'>$toce</div>\n"
+            set toce ""
+          }
+          append result "</div>\n"
+        }
+        append result "<div class='toc1'>$line\n"
       } elseif {[regexp {^\s*(.+?)\s+(\[.*\])} $line - opt link]} {
+        if {[string length $toce]} {
+          append result "<div class='toc2'>$toce</div>\n"
+        }
         set link [string trim $link {[]}]
         if { [string length $opt] } {
-          append result "<div class='toc2'><a class='toc' href='/[::Wikit::LookupPage $link wdb]'>[armour_quote $opt]</a></div>\n"
+          set toce "<a class='toc' href='/[::Wikit::LookupPage $link wdb]'>[armour_quote $opt]</a>"
+        } else {
+          set toce ""
         }
       }
+    }
+    if {[string length $toce]} {
+      append result "<div class='toc3'>$toce</div>\n"
+    }
+    if {[string length $result]} {
+      append result "</div>\n"
     }
     return $result
   }
