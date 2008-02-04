@@ -15,13 +15,14 @@ h2 {
   font-size: 120%;
 }
 
-A:link { 
-    text-decoration: none;
-}
-
-A:visited, A:active { 
+A {
    color: blue;
    text-decoration: none;
+}
+
+A:link, A:visited, A:active, A:inactive { 
+   // color: blue;
+   // text-decoration: none;
 }
 
 pre {
@@ -140,15 +141,11 @@ div.footer p {
 div#wiki_menu {
   # font-size: 90%;
   line-height: 150%;
+  margin-bottom: 1em;
 }
 
 div#menu_area, div#wiki_menu, div#page_toc, div#wiki_toc, form#gsearchform span#toggle {
   display: none;
-}
-
-div.dtree {
-    margin-bottom: 1em;
-    font-size: 80%;
 }
 
 form#gsearchform {
@@ -158,43 +155,6 @@ form#gsearchform {
 input#googletxt {
   width: 135px;
   color: gray;
-}
-
-/*--------------------------------------------------|
-| dTree 2.05 | www.destroydrop.com/javascript/tree/ |
-|---------------------------------------------------|
-| Copyright (c) 2002-2003 Geir Landrö               |
-|--------------------------------------------------*/
-
-.dtree {
-	color: #666;
-	white-space: nowrap;
-}
-
-div.category {
-	margin: 5em 0 0 0;
-}
-.dtree img {
-	border: 0px;
-	vertical-align: middle;
-}
-.dtree a {
-	color: #333;
-	text-decoration: none;
-}
-.dtree a.node, .dtree a.nodeSel {
-	white-space: nowrap;
-	padding: 1px 2px 1px 2px;
-}
-.dtree a.node:hover, .dtree a.nodeSel:hover {
-	color: #333;
-	text-decoration: underline;
-}
-.dtree a.nodeSel {
-	background-color: #c0d2ec;
-}
-.dtree .clip {
-	overflow: hidden;
 }
 
 /*
@@ -457,6 +417,7 @@ div.toc2, div.toc3 {
     vertical-align: middle;
     width: 400pt;
     overflow: hidden;
+    color: black;
 }
 div.toc2 {
     background: url('join.gif') top left no-repeat;
@@ -464,7 +425,10 @@ div.toc2 {
 div.toc3 {
     background: url('joinbottom.gif') top left no-repeat;
 }
-a.toc {
-    font-size: 90%;
+A.toc {
     color: black;
+    font-size: 90%;
+}
+A:active, A:hover {
+    color: blue;
 }
