@@ -1918,7 +1918,7 @@ proc Incoming {req} {
 	# do something with existing session
     } else {
 	# this will create a new session on request completion
-	dict set $req -session created [clock seconds]
+	dict set req -session created [clock seconds]
     }
 
     set rsp [Responder Incoming $req -glob -- [dict get $req -path] {
