@@ -281,6 +281,8 @@ namespace eval WikitWub {
     variable motd ""
     variable TOC ""
     variable TOCchange 0
+    variable WELCOME ""
+    variable WELCOMEchange 0
 
     proc div {ids content} {
 	set divs ""
@@ -1474,6 +1476,8 @@ namespace eval WikitWub {
     }
 
     proc /reloadTOC {r} {
+	variable TOCchange 
+
 	set tocf [file join $::config(docroot) TOC]
 
 	set changed [file mtime $tocf]
@@ -1481,7 +1485,8 @@ namespace eval WikitWub {
 	    set R http://[dict get $r host]/4
 	    return [redir $r $R [<a> href $R "No Change"]]
 	}
-	variable TOCchange $changed
+
+	set TOCchange $changed
 
 	variable TOC
 	catch {set TOC [::fileutil::cat $tocf]}
@@ -1490,7 +1495,26 @@ namespace eval WikitWub {
 	    set TOC [::Wikit::FormatWikiToc $TOC]
 	}
 
-	invalidate $r _toc ;# make the new TOC show up
+	set R http://[dict get $r host]/4
+	return [redir $r $R [<a> href $R "Loaded MOTD"]]
+    }
+
+    proc /reloadWELCOME {r} {
+	variable WELCOMEchange
+
+	set wf [file join $::config(docroot) html welcome.html]
+
+	set changed [file mtime $wf]
+	if {$changed <= $WELCOMEchange} {
+	    set R http://[dict get $r host]/4
+	    return [redir $r $R [<a> href $R "No Change"]]
+	}
+	
+	set WELCOMEchange $changed
+
+	variable WELCOME
+	catch {set WELCOME [::fileutil::cat $wf]}
+	set WELCOME [string trim $WELCOME]
 
 	set R http://[dict get $r host]/4
 	return [redir $r $R [<a> href $R "Loaded MOTD"]]
@@ -1504,11 +1528,27 @@ namespace eval WikitWub {
 	return [Http Ok $r [<a> href $R "Loaded CSS"] text/html]
     }
 
-    # called to generate wiki-TOC
-    proc /toc {r} {
+    proc /welcome { r} {
 	variable TOC
-	variable TOCchange
-	return [Http CacheableContent $r $TOCchange $TOC text/javascript]
+	variable WELCOME
+	variable protected
+	variable menus
+
+	set menu {}
+	lappend menu $menus(Recent)
+	lappend menu $menus(Help)
+	set footer $menu
+	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
+
+	set Title "Welcome on the Tcler's wiki!"
+	set updated ""
+	set ro ""
+	set C $WELCOME
+	set T ""
+	set name "Welcome on the Tcler's wiki!"
+
+	return [sendPage $r]
     }
 
     # called to generate a page with references
@@ -1918,6 +1958,10 @@ catch {
     }
 }
 
+catch {
+    set ::WikitWub::WELCOME [::fileutil::cat [file join $::config(docroot) html welcome.html]]
+}
+
 # Disconnected - courtesy indication that we've been disconnected
 proc Disconnected {args} {
     # we're pretty well stateless
@@ -2107,9 +2151,8 @@ proc Incoming {req} {
 
 	/ {
 	    # need to silently redirect welcome file
-	    dict set req -suffix welcome.html
-	    dict set req -prefix ""
-	    ::html do $req
+	    dict set req -suffix /welcome
+	    ::wikit do $req
 	}
 
 	//// {
