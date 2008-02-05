@@ -2026,7 +2026,6 @@ proc Incoming {req} {
             # silently redirect js files
 	    if {[catch {
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
-		Debug.error {wiki_toc cookie $toc: [dict get $toc -value]}
 		set toc [dict get $toc -value]
 	    } x eo]} {
 		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1]
