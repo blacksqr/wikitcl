@@ -1428,7 +1428,7 @@ namespace eval WikitWub {
 	regexp {^(.+)[,@]} $who - who_nick
 	set C [armour [GetPage $N]]
 	if {$C eq ""} {
-	    set C {This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n}
+	    set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"
 	}
 
 	setSession $N $nick	;# set some session data
