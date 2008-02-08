@@ -727,6 +727,7 @@ namespace eval WikitWub {
 
 	# If T is zero, D contains version to compare with
 	# If T is non zero, D contains a number of days and /diff must search for a version $D days older than version $V
+	set updated ""
 	if {$T == 0} {
 	    if {$D < 0} {
 		set D [expr {$nver - 2}]	;# default
@@ -739,6 +740,15 @@ namespace eval WikitWub {
 	    }
 	    if {$D < 0} {
 		set D 1
+	    }
+	    if {$V == ($nver - 1)} {
+		if {$D==1} {
+		    set updated "Changes in last day"
+		} elseif {$D==7} {
+		    set updated "Changes in last week"
+		} else {
+		    set updated "Changes in last $D days"
+		}
 	    }
 	    set dt [expr {$vt-$D*86400}]
 	    set dl [mk::select wdb.pages!$N.changes -max date $dt -rsort date]
@@ -877,11 +887,12 @@ namespace eval WikitWub {
 	    }
 	}
 
-	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set menu {}
 	variable menus
 	variable TOC
-	set updated "Difference between version $V and $D"
+	if {![string length $updated]} {
+	    set updated "Difference between version $V and $D"
+	}
 	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
@@ -892,6 +903,7 @@ namespace eval WikitWub {
 	set footer $menu
 	lappend footer $menus(Search)
 	lappend footer $menus(TOC)
+	set T "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
     }
 
@@ -1867,7 +1879,7 @@ namespace eval WikitWub {
 	}
 	if {[string length $updated]} {
 	    variable delta
-	    append updated [<a> class delta href /_diff/$N#diff0 $delta]
+	    append updated " " [<a> class delta href /_diff/$N#diff0 $delta]
 	}
 	set menu [list]
 
