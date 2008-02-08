@@ -1,11 +1,11 @@
 Getting started
 	What is Tcl			[What is Tcl]
-	Getting Tcl			[]
+	What is Tk			[What is Tk]
+	Getting Tcl/Tk			[]
 	Getting help			[]
 	Learning Tcl			[]
 	The Tcl Dev Xchange		[]
 	About the Wiki			[]
-	... more			[]
 
 Community
 	Advocacy			[Advocacy]
@@ -15,17 +15,15 @@ Community
 	Humor				[]
 	People				[]
 	Tcl websites			[]
-	... more			[]
 
 Reference
-	Acronyms			[]
 	Companies			[]
 	Getting Help			[]
 	Online books			[]
 	Online tutorials		[]
 	Manual pages			[]
 	Tcl Roadmap			[]
-	... more			[]
+	Acronyms			[Acronym collection]
 
 Tcl software
 	Applications			[]
@@ -34,7 +32,6 @@ Tcl software
 	Documentation			[]
 	Extensions			[]
 	Toys and games			[]
-	... more			[]
 
 Tcl in the wild
 	Major applications		[]
@@ -43,4 +40,3 @@ Tcl in the wild
 	Engineering			[]
 	Government			[]
 	Medicine			[]
-	... more			[]
