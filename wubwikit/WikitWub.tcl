@@ -847,7 +847,7 @@ namespace eval WikitWub {
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		.tk {
-		    set Title [<h1> "Difference between version $V and $D for [Ref $N]"]
+		    set Title [<h1> [Ref $N]]
 		    set name "Difference between version $V and $D for $name"
 		    set C [::Wikit::TextToStream $C]
 		    lassign [::Wikit::StreamToTk $C $N ::WikitWub::InfoProc] C U
@@ -863,7 +863,7 @@ namespace eval WikitWub {
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		default {
-		    set Title "Difference between version $V and $D for [Ref $N]"
+		    set Title [Ref $N]
 		    set name "Difference between version $V and $D for $name"
 		    if { $W } {
 			set C [::Wikit::ShowDiffs $C]
@@ -881,11 +881,14 @@ namespace eval WikitWub {
 	set menu {}
 	variable menus
 	variable TOC
-	set updated ""
+	set updated "Difference between version $V and $D"
 	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
+	lappend menu [Ref /_diff/$N "Last change"]
+	lappend menu [Ref /_diff/$N?T=1&D=1 "Changes in last day"]
+	lappend menu [Ref /_diff/$N?T=1&D=7 "Changes in last week"]
 	set footer $menu
 	lappend footer $menus(Search)
 	lappend footer $menus(TOC)
@@ -1862,6 +1865,10 @@ namespace eval WikitWub {
 	} {
 	    append updated " by $who_nick"
 	}
+	if {[string length $updated]} {
+	    variable delta
+	    append updated [<a> class delta href /_diff/$N#diff0 $delta]
+	}
 	set menu [list]
 
 	variable protected
@@ -1874,7 +1881,6 @@ namespace eval WikitWub {
 		lappend menu [Ref /_edit/$N Edit]
 	    }
 	    lappend menu [Ref /_history/$N History]
-	    lappend menu [Ref "/_diff/$N#diff0" "Latest differences"]
 	    lappend menu [Ref $backRef References]
 	}
 	set footer $menu

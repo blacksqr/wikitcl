@@ -78,8 +78,8 @@ div.title {
 
 div.updated {
   padding: 0 0 7px 7px;
-  font-size: 80%;
-  color: #666;
+  font-size: 90%;
+  color: #333;
 }
 
 div#menu_area {
@@ -312,7 +312,7 @@ span.dots {
 
 a.delta {
  font-size: 70%;
- color: #D3D3D3;
+ color: #A3A3A3;
  margin-left: 0.5em;
 }
 
