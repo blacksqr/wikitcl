@@ -1380,9 +1380,9 @@ namespace eval Wikit::Format {
           if {$date > 0} {
             # exists, use ID
             if { $mode eq "G" } {
-              append result $html_frag(A_) _ref/$id
+              append result $html_frag(A_) /_ref/$id
             } else {
-              append result $html_frag(a_) $id
+              append result $html_frag(a_) /$id
             }
             append result $html_frag(tc) \
               [quote $text] $html_frag(_a)
@@ -1396,9 +1396,9 @@ namespace eval Wikit::Format {
           } else {
             # use ID -- editor link on the brackets.
             append result \
-              $html_frag(a_) $id $html_frag(tc) \[ $html_frag(_a) \
+              $html_frag(a_) /$id $html_frag(tc) \[ $html_frag(_a) \
               [quote $text] \
-              $html_frag(a_) $id $html_frag(tc) \] $html_frag(_a) \
+              $html_frag(a_) /$id $html_frag(tc) \] $html_frag(_a) \
             }
           }
         u {
