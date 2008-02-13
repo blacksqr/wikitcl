@@ -1566,22 +1566,17 @@ namespace eval WikitWub {
     proc search {key date} {
 	Debug.wikit {search: '$key'}
 	set long [regexp {^(.*)\*+$} $key x key]
-	set multi [regexp {^(.*)%+$} $key x key]
 
 	set fields name
 	if {$long} {
 	    lappend fields page
 	}
 
-	if {$multi} {
-	    set search {}
-	    foreach k [split $key "+ "] {
-		if {$k ne ""} {
-		    lappend search -keyword $fields $k
-		}
+	set search {}
+	foreach k [split $key +] {
+	    if {$k ne ""} {
+		lappend search -keyword $fields $k
 	    }
-	} else {
-	    set search [list -keyword $fields $key]
 	}
 
 	if { $date == 0 } {
