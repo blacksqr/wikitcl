@@ -26,7 +26,7 @@ namespace eval Wikit {
       lappend fields page
     }
       set search {}
-      foreach key [split [string map {[ "" ] "" $ ""} $searchKey]] {
+      foreach key [split [string map {[ "" ] "" $ ""} $searchKey] "+ "] {
 	  if {$key ne ""} {
 	      lappend search -keyword $fields $key
 	  }
