@@ -25,8 +25,13 @@ namespace eval Wikit {
     if {$searchLong} {
       lappend fields page
     }
-    
-    return [mk::select $db.pages -rsort date -keyword $fields $searchKey]
+      set search {}
+      foreach key [split [string map {[ "" ] "" $ ""} $searchKey]] {
+	  if {$key ne ""} {
+	      lappend search -keyword $fields $key
+	  }
+      }
+      return [eval [list mk::select $db.pages -rsort date] $search]
   }
   
   proc GetTimeStamp {{t ""}} {
