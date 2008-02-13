@@ -2045,7 +2045,6 @@ proc Incoming {req} {
                 dict set req -suffix [file tail [dict get $req -path]] 
                 Http NoCache [Http Ok [::scripts do $req]]
             }
-	    Http NoCache $rsp
         }
 
 	/robots.txt -
