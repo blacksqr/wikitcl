@@ -2030,7 +2030,7 @@ proc Incoming {req} {
 	}
 
 	/*ie_onload.js {
-	    Http CacheableContent $req 0 {} {init();} application/javascript
+	    Http CacheableContent $req 0 {init();} application/javascript
 
 	    # send out this piddling script to IE users.
 	    # See variable head above for how it's invoked.
