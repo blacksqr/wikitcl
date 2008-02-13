@@ -1572,9 +1572,9 @@ namespace eval WikitWub {
 	}
 
 	set search {}
-	foreach key [split [string map {[ "" ] "" $ ""} $searchKey] "+ "] {
-	    if {$key ne ""} {
-		lappend search -keyword $fields $key
+	foreach k [split [string map {[ "" ] "" $ ""} $key] "+ "] {
+	    if {$k ne ""} {
+		lappend search -keyword $fields $k
 	    }
 	}
 
