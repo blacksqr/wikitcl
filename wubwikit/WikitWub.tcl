@@ -1573,12 +1573,11 @@ namespace eval WikitWub {
 	}
 
 	set search {}
-	foreach k [split $key +] {
+	foreach k [split $key " "] {
 	    if {$k ne ""} {
-		lappend search -keyword $fields $k
+		lappend search -keyword $fields [string map {+ " "} $k]
 	    }
 	}
-
 	if { $date == 0 } {
 	    set rows [mk::select wdb.pages -rsort date {*}$search]
 	} else {
