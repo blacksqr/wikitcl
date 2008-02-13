@@ -89,6 +89,7 @@ div#menu_area {
   background:#DDD;
   margin-top: 1px;
   overflow: hidden;
+  display: none;
 }
 
 div#menu_area ul {
@@ -148,11 +149,11 @@ div#menu_area, div#wiki_menu, div#page_toc, div#wiki_toc, form#gsearchform span#
   display: none;
 }
 
-form#gsearchform {
+form#searchform {
   padding: 0; margin: 0;
 }
 
-input#googletxt {
+input#searchtxt {
   width: 135px;
   color: gray;
 }
