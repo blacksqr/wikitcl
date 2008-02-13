@@ -93,7 +93,6 @@ namespace eval WikitWub {
 		[div footer {
 		    [<p> id footer [variable bullet; join $footer $bullet]]
 		}]
-		[<script> {google.load('search', '1');}]
 	    }]
 	}
 
@@ -317,9 +316,10 @@ namespace eval WikitWub {
 
     # return a search form
     proc searchF {} {
-	return {<form id='gsearchform' action='' method='get' onSubmit='return googleQuery();'>
-	    <input id='googletxt' type='text' value='Search'
-	        onfocus='clearGoogle();' onblur='setGoogle();'>
+	return {<form id='searchform' action='/_search' method='get'>
+	    <input type='hidden' name='_charset_'>
+	    <input id='searchtxt' name='S' type='text' value='Search' 
+		onfocus='clearSearch();' onblur='setSearch();'>
 	    </form>
 	}
     }
@@ -337,7 +337,6 @@ namespace eval WikitWub {
     variable head [subst {
 	[<style> media all "@import url(/wikit.css);"]
 
-	[<script> src "http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw"]
 	[<script> src /_toc/transclude.js]
 
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
@@ -370,7 +369,7 @@ namespace eval WikitWub {
 	    /* for Internet Explorer */
 	    /*@cc_on @*/
 	    /*@if (@_win32)
-	    document.write("<script defer src=ie_onload.js><\/script>");
+	    document.write("<script defer src=ie_onload.js><"+"/script>");
 	    /*@end @*/
 	    
 	    /* for other browsers */
@@ -1465,7 +1464,7 @@ namespace eval WikitWub {
 	regexp {^(.+)[,@]} $who - who_nick
 	set C [armour [GetPage $N]]
 	if {$C eq ""} {
-	    set C {This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n}
+	    set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"
 	}
 
 	setSession $N $nick	;# set some session data
@@ -1641,16 +1640,23 @@ namespace eval WikitWub {
 
     proc search {key date} {
 	Debug.wikit {search: '$key'}
-	set long [regexp {^(.*)\*$} $key x key]
+	set long [regexp {^(.*)\*+$} $key x key]
+
 	set fields name
 	if {$long} {
 	    lappend fields page
 	}
 
+	set search {}
+	foreach k [split $key " "] {
+	    if {$k ne ""} {
+		lappend search -keyword $fields [string map {+ " "} $k]
+	    }
+	}
 	if { $date == 0 } {
-	    set rows [mk::select wdb.pages -rsort date -keyword $fields $key]
+	    set rows [mk::select wdb.pages -rsort date {*}$search]
 	} else {
-	    set rows [mk::select wdb.pages -max date $date -rsort date -keyword $fields $key]
+	    set rows [mk::select wdb.pages -max date $date -rsort date {*}$search]
 	}
 
 	# tclLog "SearchResults key <$key> long <$searchLong>"
@@ -1773,6 +1779,9 @@ namespace eval WikitWub {
 			append C [<a> href "/_search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
 			append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
 		    }
+		    set q [string trimright $term *]
+		    append q " site:http://wiki.tcl.tk"
+		    append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
 		} else {
 		    # send a search page
 		    set search ""
@@ -1940,7 +1949,7 @@ Sinorca init path /_sinorca/
 Convert Namespace ::Sinorca
 
 package require Dub
-Dub init prefix /_dub
+Dub init prefix /_dub/
 Direct init dub namespace ::Dub prefix /_dub ctype "x-text/html-fragment"
 
 #### jQ - jQuery framework
@@ -2001,7 +2010,7 @@ proc Incoming {req} {
 	# do something with existing session
     } else {
 	# this will create a new session on request completion
-	dict set $req -session created [clock seconds]
+	dict set req -session created [clock seconds]
     }
 
     set rsp [Responder Incoming $req -glob -- [dict get $req -path] {
@@ -2105,11 +2114,20 @@ proc Incoming {req} {
 	    Http RedirectReferer $req
 	}
 
+	/*ie_onload.js {
+	    Http CacheableContent [Http Cache $req 100000000] 0 {init();} application/javascript
+
+	    # send out this piddling script to IE users.
+	    # See variable head above for how it's invoked.
+	    # yet another reason to hate Windows IE
+	    # see http://dean.edwards.name/weblog/2005/09/busted/
+	    # for the reason for this offence to good taste.
+	}
+
        /_toc/*.js {
             # silently redirect js files
 	    if {[catch {
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
-		Debug.error {wiki_toc cookie $toc: [dict get $toc -value]}
 		set toc [dict get $toc -value]
 	    } x eo]} {
 		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1]
