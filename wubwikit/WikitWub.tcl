@@ -1571,10 +1571,17 @@ namespace eval WikitWub {
 	    lappend fields page
 	}
 
+	set search {}
+	foreach key [split [string map {[ "" ] "" $ ""} $searchKey] "+ "] {
+	    if {$key ne ""} {
+		lappend search -keyword $fields $key
+	    }
+	}
+
 	if { $date == 0 } {
-	    set rows [mk::select wdb.pages -rsort date -keyword $fields $key]
+	    set rows [mk::select wdb.pages -rsort date {*}$search]
 	} else {
-	    set rows [mk::select wdb.pages -max date $date -rsort date -keyword $fields $key]
+	    set rows [mk::select wdb.pages -max date $date -rsort date {*}$search]
 	}
 
 	# tclLog "SearchResults key <$key> long <$searchLong>"
@@ -2038,6 +2045,7 @@ proc Incoming {req} {
                 dict set req -suffix [file tail [dict get $req -path]] 
                 Http NoCache [Http Ok [::scripts do $req]]
             }
+	    Http NoCache $rsp
         }
 
 	/robots.txt -
