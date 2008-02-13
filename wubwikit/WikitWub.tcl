@@ -375,7 +375,7 @@ namespace eval WikitWub {
 	    /* for Internet Explorer */
 	    /*@cc_on @*/
 	    /*@if (@_win32)
-	    /*document.write("<script defer src=ie_onload.js><"+"/script>");*/
+	    document.write("<script defer src=ie_onload.js><"+"/script>");
 	    /*@end @*/
 	    
 	    /* for other browsers */
@@ -2027,6 +2027,16 @@ proc Incoming {req} {
 	    }]
 
 	    Http RedirectReferer $req
+	}
+
+	/*ie_onload.js {
+	    Http CacheableContent 0 {} {init();} application/javascript
+
+	    # send out this piddling script to IE users.
+	    # See variable head above for how it's invoked.
+	    # yet another reason to hate Windows IE
+	    # see http://dean.edwards.name/weblog/2005/09/busted/
+	    # for the reason for this offence to good taste.
 	}
 
        /_toc/*.js {
