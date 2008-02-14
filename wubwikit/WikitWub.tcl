@@ -2040,6 +2040,8 @@ proc Incoming {req} {
 	}
 
        /_toc/*.js {
+	   # Remove if-modified-since, incorrectly sent by Opera
+	   dict unset req if-modified-since
             # silently redirect js files
 	    if {[catch {
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
