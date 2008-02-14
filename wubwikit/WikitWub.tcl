@@ -344,10 +344,6 @@ namespace eval WikitWub {
     variable head [subst {
 	[<style> media all "@import url(/wikit.css);"]
 
-	[<script> src backrefs.js]
-	[<script> src search.js]
-	[<script> src /_toc/toc.js]
-
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
 		[<style> media all "@import 'ie6.css';"]
@@ -1997,7 +1993,7 @@ package require Commenter
 Direct init doc namespace ::Commenter prefix /_doc ctype "x-text/html-fragment"
 
 # directories of static files
-foreach {dom expiry} {css {tomorrow} images {next week} scripts {tomorrow} img {next week} html 0 bin 0} {
+foreach {dom expiry} {css {next week} images {next week} scripts {next week} img {next week} html 0 bin 0} {
     File $dom -root [file join $::config(docroot) $dom] -expires $expiry
 }
 
