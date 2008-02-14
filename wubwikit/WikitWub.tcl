@@ -342,7 +342,9 @@ namespace eval WikitWub {
 	[<style> media all "@import url(/dtree.css);"]
 
 	[<script> src "http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw"]
-	[<script> src /_toc/transclude.js]
+	[<script> src search.js]
+	[<script> src backrefs.js]
+	[<script> src /_toc/toc.js]
 	[<script> src /_toc/dtree.js]
 
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
