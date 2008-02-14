@@ -344,7 +344,9 @@ namespace eval WikitWub {
     variable head [subst {
 	[<style> media all "@import url(/wikit.css);"]
 
-	[<script> src /_toc/transclude.js]
+	[<script> src backrefs.js]
+	[<script> src search.js]
+	[<script> src /_toc/toc.js]
 
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
@@ -1908,20 +1910,22 @@ namespace eval WikitWub {
 
 	# arrange the page's tail
 	set updated ""
-	if {$date != 0} {
-	    set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
-	    set updated "Updated $update"
-	}
+	if {$N != 4} {
+	    if {$date != 0} {
+		set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
+		set updated "Updated $update"
+	    }
 
-	if {$who ne "" &&
-	    [regexp {^(.+)[,@]} $who - who_nick]
-	    && $who_nick ne ""
-	} {
-	    append updated " by $who_nick"
-	}
-	if {[string length $updated]} {
-	    variable delta
-	    append updated " " [<a> class delta href /_diff/$N#diff0 $delta]
+	    if {$who ne "" &&
+		[regexp {^(.+)[,@]} $who - who_nick]
+		&& $who_nick ne ""
+	    } {
+		append updated " by $who_nick"
+	    }
+	    if {[string length $updated]} {
+		variable delta
+		append updated " " [<a> class delta href /_diff/$N#diff0 $delta]
+	    }
 	}
 	set menu [list]
 
