@@ -1533,10 +1533,13 @@ namespace eval WikitWub {
 	set TOCchange $changed
 
 	variable TOC
+	variable IMTOC
 	catch {set TOC [::fileutil::cat $tocf]}
 	set TOC [string trim $TOC]
+	unset -nocomplain IMTOC
 	if { [string length $TOC] } {
-	    set TOC [::Wikit::FormatWikiToc $TOC]
+	    lassign [::Wikit::FormatWikiToc $TOC] TOC IMTOCl
+	    array set IMTOC $IMTOCl
 	}
 
 	set R http://[dict get $r host]/4
@@ -2010,8 +2013,10 @@ catch {
 # set table of contents (if any) to be displayed on in left column menu
 catch {
     set ::WikitWub::TOC [::fileutil::cat [file join $::config(docroot) TOC]]
+    unset -nocomplain ::WikitWub::IMTOC
     if { [string length $::WikitWub::TOC] } {
-	set ::WikitWub::TOC [::Wikit::FormatWikiToc $::WikitWub::TOC]
+	lassign [::Wikit::FormatWikiToc $::WikitWub::TOC] ::WikitWub::TOC IMTOCl
+	array set ::WikitWub::IMTOC $IMTOCl
     }
 }
 
@@ -2198,6 +2203,15 @@ proc Incoming {req} {
 	    ::wikit do $req
 	}
 
+	/toc/* {
+	    set imp [dict get $req -path]
+	    if {[info exists ::WikitWub::IMTOC($imp)]} {
+		return [Http Redir $req "http://[dict get $req host]/$::WikitWub::IMTOC($imp)"]
+	    } else {
+		return [Http NotFound $req]
+	    }
+	}
+	
 	/_* {
 	    # These are wiki-local restful command URLs,
 	    # we process them via the ::wikit Direct domain

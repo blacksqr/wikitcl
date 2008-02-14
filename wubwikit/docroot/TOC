@@ -1,43 +1,43 @@
-Getting started
-	What is Tcl?			[What is Tcl]
-	What is Tk?			[What is Tk]
-	Getting Tcl/Tk			[]
-	Getting help			[]
-	Learning Tcl			[]
-	The Tcl Dev Xchange		[]
-	About the Wiki			[]
+Getting started                                              /toc/01
+	What is Tcl?			[What is Tcl]        /toc/0101
+	What is Tk?			[What is Tk]         /toc/0102
+	Getting Tcl/Tk			[]                   /toc/0103
+	Getting help			[]                   /toc/0104
+	Learning Tcl			[]                   /toc/0105
+	The Tcl Dev Xchange		[]                   /toc/0106
+	About the Wiki			[]                   /toc/0107
 
-Community
-	Advocacy			[Advocacy]
-	Conferences			[Conferences]
-	Chat, newsgroup, lists		[]
-	History 			[]
-	Humor				[]
-	People				[]
-	Tcl websites			[]
+Community                                                    /toc/02
+	Advocacy			[Advocacy]           /toc/0201
+	Conferences			[Conferences]        /toc/0202
+	Chat, newsgroup, lists		[]                   /toc/0203
+	History 			[]                   /toc/0204
+	Humor				[]                   /toc/0205
+	People				[]                   /toc/0206
+	Tcl websites			[]                   /toc/0207
 
-Reference
-	Companies			[]
-	Getting Help			[]
-	Online books			[]
-	Online tutorials		[]
-	Manual pages			[]
-	Tcl Roadmap			[]
-	Acronyms			[Acronym collection]
+Reference                                                    /toc/03
+	Companies			[]                   /toc/0301
+	Getting Help			[]                   /toc/0302
+	Online books			[]                   /toc/0303
+	Online tutorials		[]                   /toc/0304
+	Manual pages			[]                   /toc/0305
+	Tcl Roadmap			[]                   /toc/0306
+	Acronyms			[Acronym collection] /toc/0307
 
-Tcl software
-	Applications			[]
-	Core				[]
-	Development tools		[]
-	Documentation			[]
-	Extensions			[]
-	Toys and games			[]
+Tcl software                                                 /toc/04
+	Applications			[]                   /toc/0401
+	Core				[]                   /toc/0402
+	Development tools		[]                   /toc/0403
+	Documentation			[]                   /toc/0404
+	Extensions			[]                   /toc/0405
+	Toys and games			[]                   /toc/0406
 
-Tcl in the wild
-	Major applications		[]
-	Businesses			[]
-	Education			[]
-	Engineering			[]
-	Government			[]
-	Medicine			[]
-	Other
+Tcl in the wild                                              /toc/05
+	Major applications		[]                   /toc/0501
+	Businesses			[]                   /toc/0502
+	Education			[]                   /toc/0503
+	Engineering			[]                   /toc/0504
+	Government			[]                   /toc/0505
+	Medicine			[]                   /toc/0506
+	Other                           []                   /toc/0507

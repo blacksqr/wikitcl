@@ -1810,6 +1810,7 @@ namespace eval Wikit::Format {
     }
     set result ""
     set toce ""
+    set imtoc {}
     foreach line [split $C \n] {
       if {[string length [string trim $line]]==0} continue
       if {[string index $line 0] eq "+"} continue
@@ -1821,14 +1822,23 @@ namespace eval Wikit::Format {
           }
           append result "</div>\n"
         }
+        set tidx [string first "/toc/" $line]
+        if {$tidx > 0} {
+          set imurl [string trim [string range $line $tidx end]]
+          set line [string trim [string range $line 0 [expr {$tidx-1}]]]
+          set p [::Wikit::LookupPage $line wdb]
+          lappend imtoc $imurl $p
+        }
         append result "<div class='toc1'>$line\n"
-      } elseif {[regexp {^\s*(.+?)\s+(\[.*\])} $line - opt link]} {
+      } elseif {[regexp {^\s*(.+?)\s+(\[.*\])\s*(.*)} $line - opt link imurl]} {
         if {[string length $toce]} {
           append result "<div class='toc2'>$toce</div>\n"
         }
         set link [string trim $link {[]}]
         if { [string length $opt] } {
-          set toce "<a class='toc' href='/[::Wikit::LookupPage $link wdb]'>[armour_quote $opt]</a>"
+          set p [::Wikit::LookupPage $link wdb]
+          set toce "<a class='toc' href='/$p'>[armour_quote $opt]</a>"
+          lappend imtoc [string trim $imurl] $p
         } else {
           set toce ""
         }
@@ -1840,7 +1850,7 @@ namespace eval Wikit::Format {
     if {[string length $result]} {
       append result "</div>\n"
     }
-    return $result
+    return [list $result $imtoc]
   }
 
   proc armour_quote { t } {
