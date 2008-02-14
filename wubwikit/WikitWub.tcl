@@ -2160,6 +2160,7 @@ proc Incoming {req} {
 	}
 
        /_toc/*.js {
+	   dict unset req if-modified-since
             # silently redirect js files
 	    if {[catch {
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
