@@ -82,7 +82,7 @@ namespace eval WikitWub {
 		}]
 		[divID menu_area {
 		    [divID wiki_menu {[menuUL $menu]}]
-		    [searchF]
+		    [expr {[info exists gsearch]?[gsearchF $query]:[searchF]}]
 		    [div navigation {
 			[divID page_toc $T]
 		    }]
@@ -316,12 +316,19 @@ namespace eval WikitWub {
 
     # return a search form
     proc searchF {} {
-	return {<form id='searchform' action='/_search' method='get'>
+	return {<form id='searchform' action='/_gsearch' method='get'>
 	    <input type='hidden' name='_charset_'>
 	    <input id='searchtxt' name='S' type='text' value='Search' 
 		onfocus='clearSearch();' onblur='setSearch();'>
 	    </form>
 	}
+    }
+
+    proc gsearchF {Q} {
+	return "<form id='searchform' action='' method='get' onSubmit='return googleQuery();'>
+	    <input id='gsearchtxt' type='text' value='$Q'>
+	    </form>
+	"
     }
 
     variable maxAge "next month"	;# maximum age of login cookie
@@ -1306,6 +1313,29 @@ namespace eval WikitWub {
 
 	set ::Wikit::searchLong [regexp {^(.*)\*$} $S x ::Wikit::searchKey]
 	return [WikitWub do $r 2]
+    }
+
+    proc /gsearch {r {S ""}} {
+	set name "Search"
+	set Title "Search"
+	set updated "powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'</img>"
+	set C [<script> src "http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw"]
+	append C \n
+	append C [<script> {google.load('search', '1');}]
+	append C \n
+	set menu {}
+	variable menus
+	variable TOC
+	variable gsearch 1
+	variable query $S
+	foreach m {Home Recent Help} {
+	    lappend menu $menus($m)
+	}
+	set footer $menu
+	set T ""
+	set r [sendPage $r]
+	unset gsearch
+	return $r
     }
 
     proc /save {r N C O save cancel} {

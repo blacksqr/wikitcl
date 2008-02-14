@@ -158,6 +158,10 @@ input#searchtxt {
   color: gray;
 }
 
+input#gsearchtxt {
+  width: 135px;
+}
+
 /*
  * Markup for version history
  */
@@ -395,10 +399,6 @@ li.result {
 p.result {
 	margin: 0 1.5em 0 2em;
 	margin-top: 0.5em;
-}
-span.branding {
-    font-size: 90%;
-    color: #666;
 }
 img.branding {
     border: 0;
