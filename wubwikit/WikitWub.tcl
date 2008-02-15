@@ -1594,7 +1594,7 @@ namespace eval WikitWub {
 	set ro ""
 	set C $WELCOME
 	set T ""
-	set name "Welcome on the Tcler's Wiki!"
+	set name "Welcome to the Tclers Wiki!"
 
 	return [sendPage $r]
     }
