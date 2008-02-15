@@ -1,4 +1,4 @@
-Getting started                                              /_map/01
+Getting started
 	What is Tcl?			[What is Tcl]        /_map/0101
 	What is Tk?			[What is Tk]         /_map/0102
 	Getting Tcl/Tk			[]                   /_map/0103
@@ -7,7 +7,7 @@ Getting started                                              /_map/01
 	The Tcl Dev Xchange		[]                   /_map/0106
 	About the Wiki			[]                   /_map/0107
 
-Community                                                    /_map/02
+Community
 	Advocacy			[Advocacy]           /_map/0201
 	Conferences			[Conferences]        /_map/0202
 	Chat, newsgroup, lists		[]                   /_map/0203
@@ -16,7 +16,7 @@ Community                                                    /_map/02
 	People				[]                   /_map/0206
 	Tcl websites			[]                   /_map/0207
 
-Reference                                                    /_map/03
+Reference
 	Companies			[]                   /_map/0301
 	Getting Help			[]                   /_map/0302
 	Online books			[]                   /_map/0303
@@ -25,7 +25,7 @@ Reference                                                    /_map/03
 	Tcl Roadmap			[]                   /_map/0306
 	Acronyms			[Acronym collection] /_map/0307
 
-Tcl software                                                 /_map/04
+Tcl software
 	Applications			[]                   /_map/0401
 	Core				[]                   /_map/0402
 	Development tools		[]                   /_map/0403
@@ -33,7 +33,7 @@ Tcl software                                                 /_map/04
 	Extensions			[]                   /_map/0405
 	Toys and games			[]                   /_map/0406
 
-Tcl in the wild                                              /_map/05
+Tcl in the wild
 	Major applications		[]                   /_map/0501
 	Businesses			[]                   /_map/0502
 	Education			[]                   /_map/0503

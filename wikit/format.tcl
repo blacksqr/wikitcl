@@ -1822,13 +1822,6 @@ namespace eval Wikit::Format {
           }
           append result "</div>\n"
         }
-        set tidx [string first "/toc/" $line]
-        if {$tidx > 0} {
-          set imurl [string trim [string range $line $tidx end]]
-          set line [string trim [string range $line 0 [expr {$tidx-1}]]]
-          set p [::Wikit::LookupPage $line wdb]
-          lappend imtoc $imurl $p
-        }
         append result "<div class='toc1'>$line\n"
       } elseif {[regexp {^\s*(.+?)\s+(\[.*\])\s*(.*)} $line - opt link imurl]} {
         if {[string length $toce]} {
