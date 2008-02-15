@@ -2205,7 +2205,7 @@ proc Incoming {req} {
 	    ::wikit do $req
 	}
 
-	/toc/* {
+	/_map/* {
 	    set imp [dict get $req -path]
 	    if {[info exists ::WikitWub::IMTOC($imp)]} {
 		return [Http Redir $req "http://[dict get $req host]/$::WikitWub::IMTOC($imp)"]
