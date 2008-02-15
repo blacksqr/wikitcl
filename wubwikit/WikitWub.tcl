@@ -1589,12 +1589,12 @@ namespace eval WikitWub {
 	lappend footer $menus(Search)
 	lappend footer $menus(TOC)
 
-	set Title "Welcome on the Tcler's wiki!"
+	set Title "Welcome on the Tcler's Wiki!"
 	set updated ""
 	set ro ""
 	set C $WELCOME
 	set T ""
-	set name "Welcome on the Tcler's wiki!"
+	set name "Welcome on the Tcler's Wiki!"
 
 	return [sendPage $r]
     }
