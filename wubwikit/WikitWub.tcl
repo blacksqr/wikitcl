@@ -1920,8 +1920,8 @@ proc Responder::post {rsp} {
 proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
-    set req [Cookies 4Server $req]
-    #set req [Session fetch $req -path /_edit/]
+    #set req [Cookies 4Server $req]
+    set req [Session fetch $req -path /_edit/]
 
     if {[dict exists $req -session]} {
 	# do something with existing session
@@ -2151,6 +2151,8 @@ set ::roflag 0
 
 # initialize RSS feeder
 WikitRss init wdb "Tcler's Wiki" http://wiki.tcl.tk/
+
+Session init cpath /_edit/	;# Session cookies are in /_edit
 
 #### set up appropriate debug levels
 Debug on log 10
