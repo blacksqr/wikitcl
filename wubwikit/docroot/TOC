@@ -1,43 +1,43 @@
 Getting started
-	What is Tcl?			[What is Tcl]        /_map/0101
-	What is Tk?			[What is Tk]         /_map/0102
-	Getting Tcl/Tk			[]                   /_map/0103
-	Getting help			[]                   /_map/0104
-	Learning Tcl			[]                   /_map/0105
-	The Tcl Dev Xchange		[]                   /_map/0106
-	About the Wiki			[]                   /_map/0107
+	What is Tcl?			[What is Tcl]        /_map/5-1
+	What is Tk?			[What is Tk]         /_map/5-2
+	Getting Tcl/Tk			[]                   /_map/5-3
+	Getting help			[]                   /_map/5-4
+	Learning Tcl			[]                   /_map/5-5
+	The Tcl Dev Xchange		[]                   /_map/5-6
+	About the Wiki			[]                   /_map/5-7
 
 Community
-	Advocacy			[Advocacy]           /_map/0201
-	Conferences			[Conferences]        /_map/0202
-	Chat, newsgroup, lists		[]                   /_map/0203
-	History 			[]                   /_map/0204
-	Humor				[]                   /_map/0205
-	People				[]                   /_map/0206
-	Tcl websites			[]                   /_map/0207
+	Advocacy			[Advocacy]           /_map/1-1
+	Conferences			[Conferences]        /_map/1-2
+	Chat, newsgroup, lists		[]                   /_map/1-3
+	History 			[]                   /_map/1-4
+	Humor				[]                   /_map/1-5
+	People				[]                   /_map/1-6
+	Tcl websites			[]                   /_map/1-7
 
 Reference
-	Companies			[]                   /_map/0301
-	Getting Help			[]                   /_map/0302
-	Online books			[]                   /_map/0303
-	Online tutorials		[]                   /_map/0304
-	Manual pages			[]                   /_map/0305
-	Tcl Roadmap			[]                   /_map/0306
-	Acronyms			[Acronym collection] /_map/0307
+	Companies			[]                   /_map/4-1
+	Getting Help			[]                   /_map/4-2
+	Online books			[]                   /_map/4-3
+	Online tutorials		[]                   /_map/4-4
+	Manual pages			[]                   /_map/4-5
+	Tcl Roadmap			[]                   /_map/4-6
+	Acronyms			[Acronym collection] /_map/4-7
 
 Tcl software
-	Applications			[]                   /_map/0401
-	Core				[]                   /_map/0402
-	Development tools		[]                   /_map/0403
-	Documentation			[]                   /_map/0404
-	Extensions			[]                   /_map/0405
-	Toys and games			[]                   /_map/0406
+	Applications			[]                   /_map/3-1
+	Core				[]                   /_map/3-2
+	Development tools		[]                   /_map/3-3
+	Documentation			[]                   /_map/3-4
+	Extensions			[]                   /_map/3-5
+	Toys and games			[]                   /_map/3-6
 
 Tcl in the wild
-	Major applications		[]                   /_map/0501
-	Businesses			[]                   /_map/0502
-	Education			[]                   /_map/0503
-	Engineering			[]                   /_map/0504
-	Government			[]                   /_map/0505
-	Medicine			[]                   /_map/0506
-	Other                           []                   /_map/0507
+	Major applications		[]                   /_map/2-1
+	Businesses			[]                   /_map/2-2
+	Education			[]                   /_map/2-3
+	Engineering			[]                   /_map/2-4
+	Government			[]                   /_map/2-5
+	Medicine			[]                   /_map/2-6
+	Other                           []                   /_map/2-7
