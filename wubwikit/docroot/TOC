@@ -1,43 +1,43 @@
-Getting started                                              /toc/01
-	What is Tcl?			[What is Tcl]        /toc/0101
-	What is Tk?			[What is Tk]         /toc/0102
-	Getting Tcl/Tk			[]                   /toc/0103
-	Getting help			[]                   /toc/0104
-	Learning Tcl			[]                   /toc/0105
-	The Tcl Dev Xchange		[]                   /toc/0106
-	About the Wiki			[]                   /toc/0107
+Getting started                                              /_map/01
+	What is Tcl?			[What is Tcl]        /_map/0101
+	What is Tk?			[What is Tk]         /_map/0102
+	Getting Tcl/Tk			[]                   /_map/0103
+	Getting help			[]                   /_map/0104
+	Learning Tcl			[]                   /_map/0105
+	The Tcl Dev Xchange		[]                   /_map/0106
+	About the Wiki			[]                   /_map/0107
 
-Community                                                    /toc/02
-	Advocacy			[Advocacy]           /toc/0201
-	Conferences			[Conferences]        /toc/0202
-	Chat, newsgroup, lists		[]                   /toc/0203
-	History 			[]                   /toc/0204
-	Humor				[]                   /toc/0205
-	People				[]                   /toc/0206
-	Tcl websites			[]                   /toc/0207
+Community                                                    /_map/02
+	Advocacy			[Advocacy]           /_map/0201
+	Conferences			[Conferences]        /_map/0202
+	Chat, newsgroup, lists		[]                   /_map/0203
+	History 			[]                   /_map/0204
+	Humor				[]                   /_map/0205
+	People				[]                   /_map/0206
+	Tcl websites			[]                   /_map/0207
 
-Reference                                                    /toc/03
-	Companies			[]                   /toc/0301
-	Getting Help			[]                   /toc/0302
-	Online books			[]                   /toc/0303
-	Online tutorials		[]                   /toc/0304
-	Manual pages			[]                   /toc/0305
-	Tcl Roadmap			[]                   /toc/0306
-	Acronyms			[Acronym collection] /toc/0307
+Reference                                                    /_map/03
+	Companies			[]                   /_map/0301
+	Getting Help			[]                   /_map/0302
+	Online books			[]                   /_map/0303
+	Online tutorials		[]                   /_map/0304
+	Manual pages			[]                   /_map/0305
+	Tcl Roadmap			[]                   /_map/0306
+	Acronyms			[Acronym collection] /_map/0307
 
-Tcl software                                                 /toc/04
-	Applications			[]                   /toc/0401
-	Core				[]                   /toc/0402
-	Development tools		[]                   /toc/0403
-	Documentation			[]                   /toc/0404
-	Extensions			[]                   /toc/0405
-	Toys and games			[]                   /toc/0406
+Tcl software                                                 /_map/04
+	Applications			[]                   /_map/0401
+	Core				[]                   /_map/0402
+	Development tools		[]                   /_map/0403
+	Documentation			[]                   /_map/0404
+	Extensions			[]                   /_map/0405
+	Toys and games			[]                   /_map/0406
 
-Tcl in the wild                                              /toc/05
-	Major applications		[]                   /toc/0501
-	Businesses			[]                   /toc/0502
-	Education			[]                   /toc/0503
-	Engineering			[]                   /toc/0504
-	Government			[]                   /toc/0505
-	Medicine			[]                   /toc/0506
-	Other                           []                   /toc/0507
+Tcl in the wild                                              /_map/05
+	Major applications		[]                   /_map/0501
+	Businesses			[]                   /_map/0502
+	Education			[]                   /_map/0503
+	Engineering			[]                   /_map/0504
+	Government			[]                   /_map/0505
+	Medicine			[]                   /_map/0506
+	Other                           []                   /_map/0507
