@@ -5,7 +5,7 @@ package provide Wikit::Format 1.1
 
 namespace eval Wikit::Format {
   namespace export TextToStream StreamToTk StreamToTcl StreamToHTML StreamToRefs \
-    StreamToUrls Expand_HTML FormatTocJavascriptDtree ShowDiffs
+    StreamToUrls Expand_HTML FormatWikiToc ShowDiffs
 
   # In this file:
   #
@@ -1429,7 +1429,11 @@ namespace eval Wikit::Format {
           append result $text
         }
         HD2 - HD3 - HD4 {
-          append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
+          if {$mode eq "HD2"} {
+            append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
+          } else {
+            append result "$html_frag($state$mode)>" 
+          }
           lappend tocpos [string index $mode 2] [string length $result]
           set state $mode
 	  set in_header 1
@@ -1530,41 +1534,29 @@ namespace eval Wikit::Format {
       append result $html_frag(${state}_)
     }
 
-    # Create page-TOC as dtree javascript
-    set toc "function page_toc() {\n"
+    # Create page-TOC
+    set toc ""
+    set toce ""
     if { [llength $tocpos] } {
-      append toc "dp = new dTree('dp');\n"
-      append toc "dp.config.useLines = 1;\n"
-      append toc "dp.config.useIcons = 0;\n"
-      append toc "dp.add(0,-1,'Page contents');\n"
-      set id 1
-      set parentl {-1 0}
-      set parentnml {"" ""}
+      append toc "<div class='toc1'>Page contents\n"
       foreach {ht tpb thdr} $tocpos {
-        if { $ht > [llength $parentl] } {
-          while { $ht > [llength $parentl] } {
-            append toc "dp.add($id,[lindex $parentl end],'');\n"
-            lappend parentl $id
-            lappend parentnml ""
-            incr id
+        if { $ht == 2 } {
+          set tkn [::crc::CksumInit]
+          ::crc::CksumUpdate $tkn $thdr
+          set cksum [::crc::CksumFinal $tkn]
+          if {[string length $toce]} {
+            append toc "<div class='toc2'>$toce</div>\n"
+            set toce ""
           }
-        } elseif { $ht < [llength $parentl] } {
-          set parentl [lrange $parentl 0 [expr {$ht-1}]]
-          set parentnml [lrange $parentnml 0 [expr {$ht-1}]]
-        } else {
+          set toce "<a class='toc' href='#pagetoc[format %08x $cksum]'>[armour_quote $thdr]</a>"
+          set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
         }
-        lappend parentnml $thdr
-        set tkn [::crc::CksumInit]
-        ::crc::CksumUpdate $tkn $parentnml
-        set cksum [::crc::CksumFinal $tkn]
-        append toc "dp.add($id,[lindex $parentl end],'[armour_quote $thdr]','#pagetoc[format %08x $cksum]');\n"
-        set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
-        lappend parentl $id
-        incr id
       }
-      append toc "document.getElementById('page_toc').innerHTML=dp;\n"
+      if {[string length $toce]} {
+        append toc "<div class='toc3'>$toce</div>\n"
+      }
+      append toc "</div>"
     }
-    append toc "}\n"
 
     # Get rid of spurious newline at start of each quoted area.
     regsub -all "<pre>\n" $result "<pre>" result
@@ -1811,90 +1803,47 @@ namespace eval Wikit::Format {
     array get urls
   }
 
-  proc FormatTocJavascriptDtree { C } {
+  proc FormatWikiToc { C } {
     variable protected
     if { [string length $C] == 0 } {
       return ""
     }
-    set parent 0
-    set first ""
-    set cnt 0
     set result ""
-    append result "d = new dTree('d');\n"
-    append result "d.clearCookie();\n"	;# temporary code to delete old cookies
-    append result "d.config.useCookies = false;\n"
-    append result "d.config.useLines = 1;\n"
-    append result "d.config.useIcons = 0;\n"
-    append result "d.add($cnt,-1,'Wiki contents');\n"
-    set toccnt $cnt
-    incr cnt
-    append result "d.add($cnt,-1,'<br>Categories');\n"
-    set catparent $cnt
-    incr cnt
+    set toce ""
+    set imtoc {}
     foreach line [split $C \n] {
+      if {[string length [string trim $line]]==0} continue
       if {[string index $line 0] eq "+"} continue
       if {[string is alnum [string index $line 0]]} {
-        if { [string index [string trim $line] end] eq "*" } {
-          # Show backreferences in toc
-          set refs [mk::select wdb.refs to [::Wikit::LookupPage $line wdb]]
-          set refList ""
-          foreach r $refs {
-            set r [mk::get wdb.refs!$r from]
-            ::Wikit::pagevars $r name
-            lappend refList [list $name $r]
+        if {[string length $result]} {
+          if {[string length $toce]} {
+            append result "<div class='toc3'>$toce</div>\n"
+            set toce ""
           }
-          append result "d.add($cnt,$toccnt,'[armour_quote [string range [string trim $line] 0 end-1]]');\n"
-          set parent $cnt
-          incr cnt
-          foreach x [lsort -dict -index 0 [lsort -dict $refList]] {
-            lassign $x name r
-            # Strip Category and * if present
-            if {[string range $name 0 8] eq "Category "} {
-              set name [string range $name 9 end]
-            }
-            if { [string index [string trim $name] end] eq "*" } {
-              set name [string range [string trim $name] 0 end-1]
-            }
-            if { [string length $name] } {
-              append result "d.add($cnt,$parent,'[armour_quote $name]', '/$r')\n"
-              incr cnt
-            }
-          }
-        } else {
-          if { [string length $line] } {
-            if { [string match "Category *" $line] } {
-              if { $catparent < 0 } {
-                append result "d.add($cnt,$toccnt,'Categories');\n"
-                set catparent $cnt
-                incr cnt
-              }
-#              append result "d.add($cnt,$catparent,'[armour_quote $line]');\n"
-              # Strip "Category "
-              set cname [string range $line 9 end]
-              append result "d.add($cnt,$catparent,'[armour_quote $cname]');\n"
-              set parent $cnt
-              incr cnt
-            } else {
-              append result "d.add($cnt,$toccnt,'[armour_quote $line]');\n"
-              set parent $cnt
-              incr cnt
-            }
-          }
+          append result "</div>\n"
         }
-      } elseif {[regexp {^\s*(.+?)(\*{0,1})\s+(\[.*\])(\*?)} $line - opt ref link rest brefs]} {
+        append result "<div class='toc1'>$line\n"
+      } elseif {[regexp {^\s*(.+?)\s+(\[.*\])\s*(.*)} $line - opt link imurl]} {
+        if {[string length $toce]} {
+          append result "<div class='toc2'>$toce</div>\n"
+        }
         set link [string trim $link {[]}]
         if { [string length $opt] } {
-          if { [string length $brefs] } {
-            append result "d.add($cnt,$parent,'[armour_quote $opt]','/_ref/[::Wikit::LookupPage $link wdb]?P=1');\n"
-          } else {
-            append result "d.add($cnt,$parent,'[armour_quote $opt]','/[::Wikit::LookupPage $link wdb]');\n"
-          }
-          incr cnt
+          set p [::Wikit::LookupPage $link wdb]
+          set toce "<a class='toc' href='/$p'>[armour_quote $opt]</a>"
+          lappend imtoc [string trim $imurl] $p
+        } else {
+          set toce ""
         }
       }
     }
-    append result "document.getElementById(containerid).innerHTML=d;\n"
-    return $result
+    if {[string length $toce]} {
+      append result "<div class='toc3'>$toce</div>\n"
+    }
+    if {[string length $result]} {
+      append result "</div>\n"
+    }
+    return [list $result $imtoc]
   }
 
   proc armour_quote { t } {
@@ -1966,3 +1915,5 @@ namespace eval Wikit::Format {
 ### tcl-continued-indent-level:2 ***
 ### indent-tabs-mode:nil ***
 ### End: ***
+
+

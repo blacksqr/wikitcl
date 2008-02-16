@@ -44,3 +44,12 @@ input#searchtxt {
 hr {
    margin: -1em 0 -1em 0;
 }
+div.toc2, div.toc3 {
+    padding-top: 0
+}
+div#page_toc a {
+    color: black;
+}
+div#page_toc a:hover {
+    color: blue;
+}

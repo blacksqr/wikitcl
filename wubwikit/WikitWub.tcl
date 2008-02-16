@@ -82,18 +82,17 @@ namespace eval WikitWub {
 		}]
 		[divID menu_area {
 		    [divID wiki_menu {[menuUL $menu]}]
-		    [searchF]
+		    [expr {[info exists gsearch]?[gsearchF $query]:[searchF]}]
 		    [div navigation {
-			[divID page_toc {[<script> $T]}]
+			[divID page_toc $T]
 		    }]
 		    [div extra {
-			[divID wiki_toc {}]
+			[divID wiki_toc $TOC]
 		    }]
 		}]
 		[div footer {
 		    [<p> id footer [variable bullet; join $footer $bullet]]
 		}]
-		[<script> {google.load('search', '1');}]
 	    }]
 	}
 
@@ -281,6 +280,8 @@ namespace eval WikitWub {
     variable motd ""
     variable TOC ""
     variable TOCchange 0
+    variable WELCOME ""
+    variable WELCOMEchange 0
 
     proc div {ids content} {
 	set divs ""
@@ -315,16 +316,19 @@ namespace eval WikitWub {
 
     # return a search form
     proc searchF {} {
-	return {<form id='searchform' action='/_search' method='get'>
+	return {<form id='searchform' action='/_gsearch' method='get'>
 	    <input type='hidden' name='_charset_'>
-	    <input id='searchtxt' name='S' type='text' value='Search titles' 
+	    <input id='searchtxt' name='S' type='text' value='Search' 
 		onfocus='clearSearch();' onblur='setSearch();'>
 	    </form>
-	    <form id='gsearchform' action='' method='get' onSubmit='return googleQuery();'>
-	    <input id='googletxt' type='text' value='Search in pages'
-	        onfocus='clearGoogle();' onblur='setGoogle();'>
-	    </form>
 	}
+    }
+
+    proc gsearchF {Q} {
+	return "<form id='searchform' action='' method='get' onSubmit='return googleQuery();'>
+	    <input id='gsearchtxt' type='text' value='$Q'>
+	    </form>
+	"
     }
 
     variable maxAge "next month"	;# maximum age of login cookie
@@ -339,13 +343,9 @@ namespace eval WikitWub {
     #<meta name='robots' content='index,nofollow' />
     variable head [subst {
 	[<style> media all "@import url(/wikit.css);"]
-	[<style> media all "@import url(/dtree.css);"]
-
-	[<script> src "http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw"]
 	[<script> src search.js]
 	[<script> src backrefs.js]
 	[<script> src /_toc/toc.js]
-	[<script> src /_toc/dtree.js]
 
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
@@ -636,7 +636,7 @@ namespace eval WikitWub {
 
 	set name "Cleared pages"
 	set Title "Cleared pages"
-	set T "function page_toc() {}"
+	set T ""
 	set N 0
 	set updated ""
 	variable menus
@@ -648,7 +648,7 @@ namespace eval WikitWub {
 	lappend footer $menus(TOC)
 
 	set C [join $results "\n"]
-	
+	variable TOC
 	return [sendPage $r]
     }
 
@@ -703,7 +703,7 @@ namespace eval WikitWub {
 	return $n
     }
 
-    proc /diff {r N {V -1} {D -1} {W 0}} {
+    proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
 	Debug.wikit {/diff $N $V $D $W}
 
 	set ext [file extension $N]	;# file extension?
@@ -719,16 +719,50 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
+	if {![string is integer -strict $T]} {
+	    set T 0
+	}
+
 	set nver [expr {1 + [mk::view size wdb.pages!$N.changes]}]
-	if { $V >= $nver || $D >= $nver } {
+	if { $V >= $nver || ($T == 0 && $D >= $nver) } {
 	    return [Http NotFound $r]
 	}
 
 	if {$V < 0} {
 	    set V [expr {$nver - 1}]	;# default
 	}
-	if {$D < 0} {
-	    set D [expr {$nver - 2}]	;# default
+
+	# If T is zero, D contains version to compare with
+	# If T is non zero, D contains a number of days and /diff must search for a version $D days older than version $V
+	set updated ""
+	if {$T == 0} {
+	    if {$D < 0} {
+		set D [expr {$nver - 2}]	;# default
+	    }
+	} else {
+	    if {$V >= ($nver-1)} {
+		set vt [mk::get wdb.pages!$N date]
+	    } else {
+		set vt [mk::get wdb.pages!$N.changes!$V date]
+	    }
+	    if {$D < 0} {
+		set D 1
+	    }
+	    if {$V == ($nver - 1)} {
+		if {$D==1} {
+		    set updated "Changes in last day"
+		} elseif {$D==7} {
+		    set updated "Changes in last week"
+		} else {
+		    set updated "Changes in last $D days"
+		}
+	    }
+	    set dt [expr {$vt-$D*86400}]
+	    set dl [mk::select wdb.pages!$N.changes -max date $dt -rsort date]
+	    if {[llength $dl]==0} {
+		set dl [mk::select wdb.pages!$N.changes -sort date]
+	    }
+	    set D [lindex $dl 0]
 	}
 
 	Wikit::pagevars $N name
@@ -830,7 +864,7 @@ namespace eval WikitWub {
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		.tk {
-		    set Title [<h1> "Difference between version $V and $D for [Ref $N]"]
+		    set Title [<h1> [Ref $N]]
 		    set name "Difference between version $V and $D for $name"
 		    set C [::Wikit::TextToStream $C]
 		    lassign [::Wikit::StreamToTk $C $N ::WikitWub::InfoProc] C U
@@ -846,7 +880,7 @@ namespace eval WikitWub {
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		default {
-		    set Title "Difference between version $V and $D for [Ref $N]"
+		    set Title [Ref $N]
 		    set name "Difference between version $V and $D for $name"
 		    if { $W } {
 			set C [::Wikit::ShowDiffs $C]
@@ -860,17 +894,23 @@ namespace eval WikitWub {
 	    }
 	}
 
-	set T "function page_toc() {}" ;# Do not show page TOC, can be one of the diffs.
 	set menu {}
 	variable menus
-	set updated ""
+	variable TOC
+	if {![string length $updated]} {
+	    set updated "Difference between version $V and $D"
+	}
 	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
+	lappend menu [Ref /_diff/$N "Last change"]
+	lappend menu [Ref /_diff/$N?T=1&D=1 "Changes in last day"]
+	lappend menu [Ref /_diff/$N?T=1&D=7 "Changes in last week"]
 	set footer $menu
 	lappend footer $menus(Search)
 	lappend footer $menus(TOC)
+	set T "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
     }
 
@@ -959,7 +999,8 @@ namespace eval WikitWub {
 
 	lappend menu [Ref /_history/$N History]
 	set updated ""
-	set T "function page_toc() {}"
+	set T ""
+	variable TOC
 	return [sendPage $r]
     }
 
@@ -1076,7 +1117,8 @@ namespace eval WikitWub {
 #	}
 
 	set updated ""
-	set T "function page_toc() {}"
+	set T ""
+	variable TOC
 	return [sendPage $r]
     }
 
@@ -1274,6 +1316,29 @@ namespace eval WikitWub {
 	return [WikitWub do $r 2]
     }
 
+    proc /gsearch {r {S ""}} {
+	set name "Search"
+	set Title "Search"
+	set updated "powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'</img>"
+	set C [<script> src "http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw"]
+	append C \n
+	append C [<script> {google.load('search', '1');}]
+	append C \n
+	set menu {}
+	variable menus
+	variable TOC
+	variable gsearch 1
+	variable query $S
+	foreach m {Home Recent Help} {
+	    lappend menu $menus($m)
+	}
+	set footer $menu
+	set T ""
+	set r [sendPage $r]
+	unset gsearch
+	return $r
+    }
+
     proc /save {r N C O save cancel} {
 	
 	if { [string is integer -strict $cancel] && $cancel } {
@@ -1456,6 +1521,8 @@ namespace eval WikitWub {
     }
 
     proc /reloadTOC {r} {
+	variable TOCchange 
+
 	set tocf [file join $::config(docroot) TOC]
 
 	set changed [file mtime $tocf]
@@ -1463,16 +1530,39 @@ namespace eval WikitWub {
 	    set R http://[dict get $r host]/4
 	    return [redir $r $R [<a> href $R "No Change"]]
 	}
-	variable TOCchange $changed
+
+	set TOCchange $changed
 
 	variable TOC
+	variable IMTOC
 	catch {set TOC [::fileutil::cat $tocf]}
 	set TOC [string trim $TOC]
+	unset -nocomplain IMTOC
 	if { [string length $TOC] } {
-	    set TOC [::Wikit::FormatTocJavascriptDtree $TOC]
+	    lassign [::Wikit::FormatWikiToc $TOC] TOC IMTOCl
+	    array set IMTOC $IMTOCl
 	}
 
-	invalidate $r _toc ;# make the new TOC show up
+	set R http://[dict get $r host]/4
+	return [redir $r $R [<a> href $R "Loaded MOTD"]]
+    }
+
+    proc /reloadWELCOME {r} {
+	variable WELCOMEchange
+
+	set wf [file join $::config(docroot) html welcome.html]
+
+	set changed [file mtime $wf]
+	if {$changed <= $WELCOMEchange} {
+	    set R http://[dict get $r host]/4
+	    return [redir $r $R [<a> href $R "No Change"]]
+	}
+	
+	set WELCOMEchange $changed
+
+	variable WELCOME
+	catch {set WELCOME [::fileutil::cat $wf]}
+	set WELCOME [string trim $WELCOME]
 
 	set R http://[dict get $r host]/4
 	return [redir $r $R [<a> href $R "Loaded MOTD"]]
@@ -1486,11 +1576,27 @@ namespace eval WikitWub {
 	return [Http Ok $r [<a> href $R "Loaded CSS"] text/html]
     }
 
-    # called to generate wiki-TOC
-    proc /toc {r} {
+    proc /welcome { r} {
 	variable TOC
-	variable TOCchange
-	return [Http CacheableContent $r $TOCchange $TOC text/javascript]
+	variable WELCOME
+	variable protected
+	variable menus
+
+	set menu {}
+	lappend menu $menus(Recent)
+	lappend menu $menus(Help)
+	set footer $menu
+	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
+
+	set Title "Welcome to the Tclers Wiki!"
+	set updated ""
+	set ro ""
+	set C $WELCOME
+	set T ""
+	set name "Welcome to the Tclers Wiki!"
+
+	return [sendPage $r]
     }
 
     # called to generate a page with references
@@ -1544,11 +1650,12 @@ namespace eval WikitWub {
 	set name "References to $N"
 	set Title "References to [Ref $N]"
 	set updated ""
-	set T "function page_toc() {}"
+	set T ""
 	set tplt page
 	if { $A } {
 	    set tplt refs_tc
 	}
+	variable TOC
 	return [sendPage $r $tplt]
     }
 
@@ -1668,7 +1775,7 @@ namespace eval WikitWub {
 	set name ""	;# no default page name
 	set who ""	;# no default editor
 	set cacheit 1	;# default is to cache
-	set T "function page_toc() {}"
+	set T ""
 	set BR {}
 
 	switch -- $N {
@@ -1706,6 +1813,9 @@ namespace eval WikitWub {
 			append C [<a> href "/_search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
 			append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
 		    }
+		    set q [string trimright $term *]
+		    append q " site:http://wiki.tcl.tk"
+		    append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
 		} else {
 		    # send a search page
 		    set search ""
@@ -1799,16 +1909,22 @@ namespace eval WikitWub {
 
 	# arrange the page's tail
 	set updated ""
-	if {$date != 0} {
-	    set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
-	    set updated "Updated $update"
-	}
+	if {$N != 4} {
+	    if {$date != 0} {
+		set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
+		set updated "Updated $update"
+	    }
 
-	if {$who ne "" &&
-	    [regexp {^(.+)[,@]} $who - who_nick]
-	    && $who_nick ne ""
-	} {
-	    append updated " by $who_nick"
+	    if {$who ne "" &&
+		[regexp {^(.+)[,@]} $who - who_nick]
+		&& $who_nick ne ""
+	    } {
+		append updated " by $who_nick"
+	    }
+	    if {[string length $updated]} {
+		variable delta
+		append updated " " [<a> class delta href /_diff/$N#diff0 $delta]
+	    }
 	}
 	set menu [list]
 
@@ -1822,7 +1938,6 @@ namespace eval WikitWub {
 		lappend menu [Ref /_edit/$N Edit]
 	    }
 	    lappend menu [Ref /_history/$N History]
-	    lappend menu [Ref "/_diff/$N#diff0" "Latest differences"]
 	    lappend menu [Ref $backRef References]
 	}
 	set footer $menu
@@ -1838,7 +1953,7 @@ namespace eval WikitWub {
 		set Title ""
 	    }
 	}
-
+	variable TOC
 	variable readonly
 	if {$readonly ne ""} {
 	    set ro "<it>(Read Only Mode: $readonly)</it>"
@@ -1881,7 +1996,7 @@ package require Commenter
 Direct init doc namespace ::Commenter prefix /_doc ctype "x-text/html-fragment"
 
 # directories of static files
-foreach {dom expiry} {css {tomorrow} images {next week} scripts {tomorrow} img {next week} html 0 bin 0} {
+foreach {dom expiry} {css {next week} images {next week} scripts {next week} img {next week} html 0 bin 0} {
     File $dom -root [file join $::config(docroot) $dom] -expires $expiry
 }
 
@@ -1901,9 +2016,15 @@ catch {
 # set table of contents (if any) to be displayed on in left column menu
 catch {
     set ::WikitWub::TOC [::fileutil::cat [file join $::config(docroot) TOC]]
+    unset -nocomplain ::WikitWub::IMTOC
     if { [string length $::WikitWub::TOC] } {
-	set ::WikitWub::TOC [::Wikit::FormatTocJavascriptDtree $::WikitWub::TOC]
+	lassign [::Wikit::FormatWikiToc $::WikitWub::TOC] ::WikitWub::TOC IMTOCl
+	array set ::WikitWub::IMTOC $IMTOCl
     }
+}
+
+catch {
+    set ::WikitWub::WELCOME [::fileutil::cat [file join $::config(docroot) html welcome.html]]
 }
 
 # Disconnected - courtesy indication that we've been disconnected
@@ -1920,8 +2041,8 @@ proc Responder::post {rsp} {
 proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
-    #set req [Cookies 4Server $req]
-    set req [Session fetch $req -path /_edit/]
+    set req [Cookies 4Server $req]
+    #set req [Session fetch $req -path /_edit/]
 
     if {[dict exists $req -session]} {
 	# do something with existing session
@@ -2087,6 +2208,15 @@ proc Incoming {req} {
 	    ::wikit do $req
 	}
 
+	/_map/* {
+	    set imp [dict get $req -path]
+	    if {[info exists ::WikitWub::IMTOC($imp)]} {
+		return [Http Redir $req "http://[dict get $req host]/$::WikitWub::IMTOC($imp)"]
+	    } else {
+		return [Http NotFound $req]
+	    }
+	}
+	
 	/_* {
 	    # These are wiki-local restful command URLs,
 	    # we process them via the ::wikit Direct domain
@@ -2106,9 +2236,8 @@ proc Incoming {req} {
 
 	/ {
 	    # need to silently redirect welcome file
-	    dict set req -suffix welcome.html
-	    dict set req -prefix ""
-	    ::html do $req
+	    dict set req -suffix /welcome
+	    ::wikit do $req
 	}
 
 	//// {
@@ -2151,8 +2280,6 @@ set ::roflag 0
 
 # initialize RSS feeder
 WikitRss init wdb "Tcler's Wiki" http://wiki.tcl.tk/
-
-Session init cpath /_edit/	;# Session cookies are in /_edit
 
 #### set up appropriate debug levels
 Debug on log 10

@@ -1,319 +1,43 @@
-+++
 Getting started
-+++
-	Tcl tutorial		[Online Tcl and Tk Tutorials]
-	Tcl wiki book		[BOOK Programming:Tcl]
-	Printed books		[Where can I find a book about Tcl]
-	Getting help		[Tcl Help]
-+++
-Events
-+++
-	Tcl 8.5 goes beta		[Tcl/Tk 8.5 Roadmap]
-	Tcl conferences		[Fourteenth Annual Tcl/Tk Conference (2007)]
-	Where to get Tcl courses		[?]
-+++
-Tcl software
-+++
-	Where to get Tcl/Tk		[?]
-	Sourceforge		[SourceForge]
-	Extensions		[Extensions for Tcl and Tk]
-+++
+	What is Tcl?			[What is Tcl]        /_map/5-1
+	What is Tk?			[What is Tk]         /_map/5-2
+	Getting Tcl/Tk			[Getting Tcl/Tk]     /_map/5-3
+	Getting help			[Getting help]       /_map/5-4
+	Learning Tcl			[Learning Tcl]       /_map/5-5
+	The Tcl Dev Xchange		[The Tcl Dev Xchange] /_map/5-6
+	About the Wiki			[About the Wiki]     /_map/5-7
+
 Community
-+++
-	www.tcl.tk		[Long live tcl.tk]
-	wiki.tcl.tk		[The Tcler's Wiki]
-	comp.lang.tcl		[The comp.lang.tcl newsgroup]
-	Tcl-URL!		[Tcl-URL!]
-	Tcler's chat		[Tcl Chatroom]
-	Tcl'ers		[Tcl'ers]
-+++
-Category AI
-+++
-	Introduction		[artificial intelligence]
-	Links		[Category AI]
-+++
-Category Acronym
-+++
-	Acronym collection		[Acronym collection]
-	Acronym		[Category Acronym]
-	Command		[Category Command]
-	Glossary		[Category Glossary]
-+++
-Category Advocacy
-+++
-	Tcl Advocacy		[Tcl Advocacy]
-	Who says Tcl rules...		[Who says Tcl rules...]
-	Who says Tcl sucks...		[Who says Tcl sucks...]
-	Links		 [Category Advocacy]
-+++
-Category Algorithm
-+++
-	Algorithm		[Category Algorithm]
-	Concept		[Category Concept]
-	Mathematics		[Category Mathematics]
-+++
-Category Animation
-+++
-	3D Graphics		[Category 3D Graphics]
-	Animation		[Category Animation]
-	Games		[Category Games]
-	Graphics		[Category Graphics]
-	Toys		[Category Toys]
-	Visualization		[Category Visualization]
-+++
-Category Applications
-+++
-	Application		[Category Application]
-	Business		[Category Business]
-	Desktop		[Category Desktop]
-	Dev. Tools		[Category Dev. Tools]
-	Editor utility		[Category Editor utility]
-	Games		[Category Games]
-	Graphics		[Category Graphics]
-	Internet		[Category Internet]
-	Multimedia		[Category Multimedia]
-	Networking		[Category Networking]
-	Plotting		[Category Plotting]
-	Science		[Category Science]
-	Toys		[Category Toys]
-	Windows		[Category Windows]
-+++
-Category Business
-+++
-	Application		[Category Application]
-	Business		[Category Business]
-	Desktop		[Category Desktop]
-	Office Automation		[Category Office Automation]
-+++
-Category Community
-+++
-	www.tcl.tk		[Long live tcl.tk]
-	wiki.tcl.tk		[The Tcler's Wiki]
-	comp.lang.tcl		[The comp.lang.tcl newsgroup]
-	Tcler's chat		[Tcl Chatroom]
-	Tcl'ers		[Tcl'ers]
-	Advocacy		[Category Advocacy]
-	Community		[Category Community]
-	Discussion		[Category Discussion]
-	Suggestions		[Category Suggestions]
-+++
-Category Company
-+++
-	Companies using Tcl		[Category Company]
-+++
-Category Database
-+++
-	A simple database		[A simple database]
-	Berkeley DB		[Berkeley DB]
-	MS SQL Server		[MS SQL Server]
-	MySQL		[MySQL]
-	ODBC		[ODBC]
-	Oracle		[Oracle]
-	PostgreSQL		[PostgreSQL]
-	SQLite		[SQLite]
-	Links		[Category Database]
-+++
-Category Deployment
-+++
-	Deployment		[Category Deployment]
-	Development		[Category Development]
-	Distribution		[Category Distribution]
-+++
-Category Development
-+++
-	3D Graphics		[Category 3D Graphics]
-	Algorithm		[Category Algorithm]
-	Binary Data		[Category Binary Data]
-	Book		[Category Book]
-	Characters		[Category Characters]
-	Command		[Category Command]
-	Community		[Category Community]
-	Concept		[Category Concept]
-	Control Structure		[Category Control Structure]
-	Data Structure		[Category Data Structure]
-	Database		[Category Database]
-	Date and Time		[Category Date and Time]
-	Debugging		[Category Debugging]
-	Deployment		[Category Deployment]
-	Design		[Category Design]
-	Dev. Tools		[Category Dev. Tools]
-	Development		[Category Development]
-	Device Control		[Category Device Control]
-	Discussion		[Category Discussion]
-	Distribution		[Category Distribution]
-	Documentation		[Category Documentation]
-	Example		[Category Example]
-	File		[Category File]
-	Foreign Interfaces		[Category Foreign Interfaces]
-	Graphics		[Category Graphics]
-	GUI		[Category GUI]
-	Image Processing		[Category Image Processing]
-	Internet		[Category Internet]
-	Introspection		[Category Introspection]
-	Language		[Category Language]
-	Local		[Category Local]
-	Networking		[Category Networking]
-	Package		[Category Package]
-	Performance		[Category Performance]
-	Plotting		[Category Plotting]
-	Porting		[Category Porting]
-	Security		[Category Security]
-	String Processing		[Category String Processing]
-	Suggestions		[Category Suggestions]
-	Syntax		[Category Syntax]
-	TclLib		[Category TclLib]
-	Testing		[Category Testing]
-	TkLib		[Category TkLib]
-	Tutorial		[Category Tutorial]
-	Visualization		[Category Visualization]
-	Widget		[Category Widget]
-	Word and Text Processing		[Category Word and Text Processing]
-	XML		[Category XML]
-+++
-Category Documentation
-+++
-	Book		[Category Book]
-	Development		[Category Development]
-	Documentation		[Category Documentation]
-+++
-Category Education
-+++
-	Place holder		[Category Place holder]
-+++
-Category Engineering
-+++
-	Engineering		[Category Engineering]
-	Physics		[Category Physics]
-	Plotting		[Category Plotting]
-	Science		[Category Science]
-+++
-Category Expect
-+++
-	Expect		[Category Expect]
-	Internet		[Category Internet]
-	Networking		[Category Networking]
-+++
-Category GUI
-+++
-	Characters		[Category Characters]
-	Dialog		[Category Dialog]
-	GUI		[Category GUI]
-	Widget		[Category Widget]
-+++
-Category Games
-+++
-	Animation		[Category Animation]
-	Application		[Category Application]
-	Games		[Category Games]
-	Toys		[Category Toys]
-	Tk Game Pack		[Tk Game Pack]
-+++
-Category Graphics
-+++
-	3D Graphics		[Category 3D Graphics]
-	Animation		[Category Animation]
-	Graphics		[Category Graphics]
-	Image Processing		[Category Image Processing]
-	Plotting		[Category Plotting]
-+++
-Category Humor
-+++
-	Tcl in a sibling of the PotterVerse		[Tcl in a sibling of the PotterVerse] 
-	RMMADWIM		[RMMADWIM]
-	Links		[Category Humor]	
-+++
-Category Licence
-+++
-	Development		[Category Development]
-	Licence		[Category Licence]
-+++
-Category Medicine
-+++
-	Biology		[Category Biology]
-	Chemistry		[Category Chemistry]
-	Medicine		[Category Medicine]
-	Science		[Category Science]
-+++
-Category Multimedia
-+++
-	3D Graphics		[Category 3D Graphics]
-	Application		[Category Application]
-	Graphics		[Category Graphics]
-	Internet		[Category Internet]
-	Multimedia		[Category Multimedia]
-	Music		[Category Music]
-	Sound		[Category Sound]
-+++
-Category Music
-+++
-	Multimedia		[Category Multimedia]
-	Music		[Category Music]
-	Sound		[Category Sound]
-	Snack		[Snack]
-	Muzic		[Muzic]
-+++
-Category Networking
-+++
-	Internet		[Category Internet]
-	Interprocess Communication		[Category Interprocess Communication]
-	Networking		[Category Networking]
-	TclHttpd		[Category TclHttpd]
-+++
-Category Performance
-+++
-	Performance		[Category Performance]
-	Testing		[Category Testing]
-+++
-Category Person
-+++
-	Home Page		[Category Home Page]
-	Person		[Category Person]
-+++
-Category Security
-+++
-	Cryptography		[Category Cryptography]
-	Security		[Category Security]
-+++
-Category Science
-+++
-	Biology		[Category Biology]
-	Chemistry		[Category Chemistry]
-	Engineering		[Category Engineering]
-	Geography		[Category Geography]
-	Mathematics		[Category Mathematics]
-	Medicine		[Category Medicine]
-	Physics		[Category Physics]
-	Science		[Category Science]
-	Statistics		[Category Statistics]
-	Visualization		[Category Visualization]
-+++
-Category Statistics
-+++
-	Mathematics		[Category Mathematics]
-	Plotting		[Category Plotting]
-	Statistics		[Category Statistics]
-	Visualization		[Category Visualization]
-+++
-Category Starkits
-+++
-	Starkit		[Starkit]
-	Build Your First Starkit		[Build Your First Starkit]
-	Starkit - How To's		[Starkit - How To's]
-	Starpack		[Starpack]
-	How to create my first Starpack		[How to create my first
-	Starpack]
-	Tclkit		[Tclkit]
-+++
-Category Toys
-+++
-	Animation		[Category Animation]
-	Application		[Category Application]
-	Games		[Category Games]
-	Toys		[Category Toys]
-+++
-Category Web
-+++
-	Networking		[Category Networking]
-	TclHttpd		[Category TclHttpd]
-	webserver		[Category webserver]
-+++
+	Advocacy			[Tcl Advocacy]       /_map/1-1
+	Conferences			[Tcl Conferences]    /_map/1-2
+	Chat, news, lists		[Chat, news, lists]  /_map/1-3
+	History 		    [History of Tcl and Tk]  /_map/1-4
+	Humor         [Humor as seen by Wikit contributors]  /_map/1-5
+	People			       [People & Community]  /_map/1-6
+	Tcl websites			[Tcl Websites]       /_map/1-7
+
+Reference
+	Companies	           [Companies that Use Tcl]  /_map/4-1
+	Getting help			[Getting help]       /_map/4-2
+	Online books			[Online books]       /_map/4-3
+	Online tutorials		[Online tutorials]   /_map/4-4
+	Manual pages			[The manual pages]   /_map/4-5
+	Tcl roadmap			[Tcl Roadmap]        /_map/4-6
+	Acronyms			[Acronym collection] /_map/4-7
+
+Tcl software
+	Applications			[Applications]       /_map/3-1
+	The Tcl core			[The Tcl core]       /_map/3-2
+	Development tools		[Development tools]  /_map/3-3
+	Documentation			[Documentation]      /_map/3-4
+	Extensions		[Extensions for Tcl and Tk]  /_map/3-5
+	Toys and games			[Toys and games]     /_map/3-6
+
+Tcl in the wild
+	Major applications		[Major applications] /_map/2-1
+	Businesses			[Businesses]         /_map/2-2
+	Education			[Education]          /_map/2-3
+	Engineering			[Engineering]        /_map/2-4
+	Government			[Government]         /_map/2-5
+	Medical				[Medical]            /_map/2-6
+	Other                           [Tcl in industry]    /_map/2-7

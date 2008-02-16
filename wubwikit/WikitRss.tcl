@@ -59,13 +59,13 @@ namespace eval WikitRss {
     # news item name in.  It's pretty easy to change.
     # See the lines I've commented out for alternate formats.
 
-    proc item {Title Time Author Url} {
+    proc item {Title Time Author Url {Description ""}} {
 	set time [clock format $Time -format "%a, %d %b %Y %T GMT" -gmt 1]
 	return "<item>
 		<title>[xmlarmour $Title]</title>
 		<link>$Url</link>
 		<pubDate>$time</pubDate>
-		<description>modified by [xmlarmour $Author]</description>
+		<description>[xmlarmour $Description] - modified by [xmlarmour $Author]</description>
 		</item>"
     }
 
@@ -132,6 +132,7 @@ namespace eval WikitRss {
 	for {set i 0} {$i < $NumItems} {incr i} {
 	    set page [lindex $PageList $i]
 	    lassign [mk::get $db.pages!$page name date who] name date who
+	    
 	    append contents [item $name $date $who $baseUrl$page] \n
 	    Debug.rss {detail $name $date $who $page} 7
 	}
