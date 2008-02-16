@@ -343,8 +343,8 @@ namespace eval WikitWub {
     #<meta name='robots' content='index,nofollow' />
     variable head [subst {
 	[<style> media all "@import url(/wikit.css);"]
-	[<script> src search.js]
-	[<script> src backrefs.js]
+	[<script> src /search.js]
+	[<script> src /backrefs.js]
 	[<script> src /_toc/toc.js]
 
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
