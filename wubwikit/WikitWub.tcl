@@ -1281,7 +1281,7 @@ namespace eval WikitWub {
 		# where AbCdEf -> *[Aa]b*[Cc]d*[Ee]f*
 		# skip this if the search has brackets (WHY?)
 		if {[string first {[} $page] < 0} {
-		    regsub -all {[A-Z]} $page {*\\[&[string tolower &]\]} temp
+		    regsub -all {[A-Z]} $page {\\[&[string tolower &]\]} temp
 		    set temp "[subst -novariable $temp]*"
 		    set N [mk::select wdb.pages -glob name $temp -min date 1]
 		}
