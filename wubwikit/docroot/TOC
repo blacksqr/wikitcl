@@ -1,43 +1,43 @@
 Getting started
 	What is Tcl?			[What is Tcl]        /_map/5-1
 	What is Tk?			[What is Tk]         /_map/5-2
-	Getting Tcl/Tk			[]                   /_map/5-3
-	Getting help			[]                   /_map/5-4
-	Learning Tcl			[]                   /_map/5-5
-	The Tcl Dev Xchange		[]                   /_map/5-6
-	About the Wiki			[]                   /_map/5-7
+	Getting Tcl/Tk			[Getting Tcl/Tk]     /_map/5-3
+	Getting help			[Getting help]       /_map/5-4
+	Learning Tcl			[Learning Tcl]       /_map/5-5
+	The Tcl Dev Xchange		[The Tcl Dev Xchange] /_map/5-6
+	About the Wiki			[About the Wiki]     /_map/5-7
 
 Community
-	Advocacy			[Advocacy]           /_map/1-1
-	Conferences			[Conferences]        /_map/1-2
-	Chat, news, lists		[]                   /_map/1-3
-	History 			[]                   /_map/1-4
-	Humor				[]                   /_map/1-5
-	People				[]                   /_map/1-6
-	Tcl websites			[]                   /_map/1-7
+	Advocacy			[Tcl Advocacy]       /_map/1-1
+	Conferences			[Tcl Conferences]    /_map/1-2
+	Chat, news, lists		[Chat, news, lists]  /_map/1-3
+	History 		    [History of Tcl and Tk]  /_map/1-4
+	Humor         [Humor as seen by Wikit contributors]  /_map/1-5
+	People			       [People & Community]  /_map/1-6
+	Tcl websites			[Tcl Websites]       /_map/1-7
 
 Reference
-	Companies			[]                   /_map/4-1
-	Getting Help			[]                   /_map/4-2
-	Online books			[]                   /_map/4-3
-	Online tutorials		[]                   /_map/4-4
-	Manual pages			[]                   /_map/4-5
-	Tcl Roadmap			[]                   /_map/4-6
+	Companies	           [Companies that Use Tcl]  /_map/4-1
+	Getting help			[Getting help]       /_map/4-2
+	Online books			[Online books]       /_map/4-3
+	Online tutorials		[Online tutorials]   /_map/4-4
+	Manual pages			[The manual pages]   /_map/4-5
+	Tcl roadmap			[Tcl Roadmap]        /_map/4-6
 	Acronyms			[Acronym collection] /_map/4-7
 
 Tcl software
-	Applications			[]                   /_map/3-1
-	The Tcl core			[]                   /_map/3-2
-	Development tools		[]                   /_map/3-3
-	Documentation			[]                   /_map/3-4
-	Extensions			[]                   /_map/3-5
-	Toys and games			[]                   /_map/3-6
+	Applications			[Applications]       /_map/3-1
+	The Tcl core			[The Tcl core]       /_map/3-2
+	Development tools		[Development tools]  /_map/3-3
+	Documentation			[Documentation]      /_map/3-4
+	Extensions		[Extensions for Tcl and Tk]  /_map/3-5
+	Toys and games			[Toys and games]     /_map/3-6
 
 Tcl in the wild
-	Major applications		[]                   /_map/2-1
-	Businesses			[]                   /_map/2-2
-	Education			[]                   /_map/2-3
-	Engineering			[]                   /_map/2-4
-	Government			[]                   /_map/2-5
-	Medicine			[]                   /_map/2-6
-	Other                           []                   /_map/2-7
+	Major applications		[Major applications] /_map/2-1
+	Businesses			[Businesses]         /_map/2-2
+	Education			[Education]          /_map/2-3
+	Engineering			[Engineering]        /_map/2-4
+	Government			[Government]         /_map/2-5
+	Medical				[Medical]            /_map/2-6
+	Other                           [Tcl in industry]    /_map/2-7
