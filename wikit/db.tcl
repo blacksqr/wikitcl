@@ -139,10 +139,10 @@ namespace eval Wikit {
       if {$msg != "" && ![string equal $msg $db]} {
         error $msg
       }
-      if {0} {
+      if {1} {
         # temporarily stop doing this - it hangs the system
         # when db is corrupt.
-        mk::view layout $db.pages	{
+        mk::view layout $db.pages {
           name
           page
           date:I
@@ -150,6 +150,7 @@ namespace eval Wikit {
           {changes {
             date:I
             who
+            delta:I
             {diffs {
               from:I to:I old
             }}
@@ -636,21 +637,27 @@ namespace eval Wikit {
 
     # Store change information in the database
     set i 0
+    set change 0	;# record magnitude of change
     foreach tuple $changes {
       foreach {action newrange oldrange} $tuple break
       switch -exact -- $action {
         deleted {
           foreach {from to} $newrange break
+          incr change [expr {abs(from-to)}]
           set old {}
         }
         added  {
           foreach {to from} $newrange break
+          incr change [expr {abs(from-to)}]
           foreach {oldfrom oldto} $oldrange break
+          incr change [expr {abs(oldfrom-oldto)}]
           set old [lrange $linesold $oldfrom $oldto]
         }
         changed  {
           foreach {from to} $newrange break
+          incr change [expr {abs(from-to)}]
           foreach {oldfrom oldto} $oldrange break
+          incr change [expr {abs(oldfrom-oldto)}]
           set old [lrange $linesold $oldfrom $oldto]
         }
       }
@@ -658,6 +665,7 @@ namespace eval Wikit {
         from $from to $to old $old
       incr i
     }
+    mk::row set $db.pages!$id.changes!$version delta $change	;# record magnitude of changes
   }
 
   # SavePage - store page $id ($who, $text, $newdate)
