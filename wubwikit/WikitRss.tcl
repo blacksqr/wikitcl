@@ -120,6 +120,7 @@ namespace eval WikitRss {
 
 	    # calculate line change
 	    set change [expr {[mk::view size wdb.pages!$page.changes] - 1}]
+	    if {$change < 0} continue
 	    set delta [mk::get wdb.pages!$page.changes!$change delta]
 
 	    Debug.rss {detail $name $date $who $page} 7
