@@ -132,7 +132,7 @@ namespace eval WikitRss {
 	for {set i 0} {$i < $NumItems} {incr i} {
 	    set page [lindex $PageList $i]
 	    lassign [mk::get $db.pages!$page name date who] name date who
-	    set changes [mk::view size wdb.pages!$N.changes![mk::view size wdb.pages!$N.changes].diffs]
+	    set changes [mk::view size wdb.pages!$page.changes![mk::view size wdb.pages!$page.changes].diffs]
 
 	    append contents [item $name $date $who $baseUrl$page "$changes lines changed"] \n
 	    Debug.rss {detail $name $date $who $page} 7
