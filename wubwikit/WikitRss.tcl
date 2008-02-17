@@ -126,7 +126,7 @@ namespace eval WikitRss {
 	    Debug.rss {detail $name $date $who $page} 7
 
 	    if {$delta > 0} {
-		append contents [item $name $date $who $baseUrl$page "$delta lines"] \n
+		append contents [item $name $date $who $baseUrl$page "($delta characters)"] \n
 		if {[incr i] > $MaxItems} break	;# limit RSS size
 	    }
 	}
