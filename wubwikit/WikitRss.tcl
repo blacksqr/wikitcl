@@ -65,7 +65,7 @@ namespace eval WikitRss {
 		<title>[xmlarmour $Title]</title>
 		<link>$Url</link>
 		<pubDate>$time</pubDate>
-		<description>[xmlarmour $Description] - modified by [xmlarmour $Author]</description>
+		<description>[xmlarmour $Description] modified by [xmlarmour $Author]</description>
 		</item>"
     }
 
@@ -132,10 +132,15 @@ namespace eval WikitRss {
 	for {set i 0} {$i < $NumItems} {incr i} {
 	    set page [lindex $PageList $i]
 	    lassign [mk::get $db.pages!$page name date who] name date who
-	    set changes [mk::view size wdb.pages!$page.changes![mk::view size wdb.pages!$page.changes].diffs]
-
-	    append contents [item $name $date $who $baseUrl$page "$changes lines changed"] \n
 	    Debug.rss {detail $name $date $who $page} 7
+
+            set change [expr {[mk::view size wdb.pages!$page.changes] -1 }] 
+	    if {$change >= 0} {
+		set changes [mk::view size wdb.pages!$page.changes!$change.diffs]  
+		append contents [item $name $date $who $baseUrl$page "$changes lines"] \n
+	    } else {
+		incr i -1
+	    }
 	}
 
 	append contents "</channel>\n"
