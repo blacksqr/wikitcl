@@ -353,6 +353,14 @@ namespace eval WikitWub {
 	}]
     }]
 
+    # protected pages
+    variable protected
+    array set protected {Search 2 Changes 4 HoneyPot 5 Something 7 TOC 8 Init 9}
+    foreach {n v} [array get protected] {
+	set protected($v) $n
+    }
+
+    # html suffix to be sent on every page
     variable htmlsuffix [Honeypot link /$protected(HoneyPot).html]
     append htmlsuffix [<script> src /search.js] \n
     append htmlsuffix [<script> src /backrefs.js] \n
@@ -1110,13 +1118,8 @@ namespace eval WikitWub {
 	return [<a> href /[string trimleft $url /] {*}$args [armour $name]]
     }
 
-    variable protected
     variable menus
     variable bullet " &bull; "
-    array set protected {Search 2 Changes 4 HoneyPot 5 Something 7 TOC 8 Init 9}
-    foreach {n v} [array get protected] {
-	set protected($v) $n
-    }
 
     # Init common menu items
     set menus(Home)             [<a> href "http://wiki.tcl.tk" Home]
