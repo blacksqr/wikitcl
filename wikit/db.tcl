@@ -652,14 +652,16 @@ namespace eval Wikit {
           foreach {oldfrom oldto} $oldrange break
           set old [lrange $linesold $oldfrom $oldto]
 
-          incr change [expr {abs([string length [lrange $linesnew $from $to]] - [string length $old])}]
+          incr change [expr {abs([string length [lrange $linesnew $to $from]] \
+                                   - [string length $old])}]
         }
         changed  {
           foreach {from to} $newrange break
           foreach {oldfrom oldto} $oldrange break
           set old [lrange $linesold $oldfrom $oldto]
 
-          incr change [expr {abs([string length [lrange $linesnew $from $to]] - [string length $old])}]
+          incr change [expr {abs([string length [lrange $linesnew $from $to]] \
+                                   - [string length $old])}]
         }
       }
       mk::row append $db.pages!$id.changes!$version.diffs \
