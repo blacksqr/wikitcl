@@ -652,7 +652,7 @@ namespace eval Wikit {
           foreach {oldfrom oldto} $oldrange break
           set old [lrange $linesold $oldfrom $oldto]
 
-          incr change [expr {abs([string length [lrange $linesnew $to $from]] \
+          incr change [expr {abs([string length [lrange $linesnew $from $to]] \
                                    - [string length $old])}]
         }
         changed  {
@@ -668,7 +668,7 @@ namespace eval Wikit {
         from $from to $to old $old
       incr i
     }
-    mk::row set $db.pages!$id.changes!$version delta $change	;# record magnitude of changes
+    mk::set $db.pages!$id.changes!$version delta $change	;# record magnitude of changes
   }
 
   # SavePage - store page $id ($who, $text, $newdate)
