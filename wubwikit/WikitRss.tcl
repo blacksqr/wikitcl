@@ -106,13 +106,6 @@ namespace eval WikitRss {
 	<description>Recent changes to $Name</description>
 	"
 
-	foreach p $exclude {
-	    set index [lsearch -exact $PageList $p]
-	    if { $index != -1 } {
-		set PageList [lreplace $PageList $index $index]
-	    }
-	}
-
 	Debug.rss {filling details} 7
 
 	# generate items for changed pages,
