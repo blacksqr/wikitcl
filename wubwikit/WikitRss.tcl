@@ -91,28 +91,6 @@ namespace eval WikitRss {
 	variable db
 	Debug.rss {rss request [clock seconds]}
 
-	# Get a list of all page numbers, ordered from most recently changed
-	# to least recently changed.
-	set PageList [mk::select $db.pages -rsort date]
-	Debug.rss {fetched [llength PageList] pages at [clock seconds]}
-
-	# Delete the "Search" and "Recent Changes" page from the page list
-	variable exclude
-	foreach p $exclude {
-	    set index [lsearch -exact $PageList $p]
-	    if { $index != -1 } {
-		set PageList [lreplace $PageList $index $index]
-	    }
-	}
-	Debug.rss {excluded pages} 7
-
-	# Determine the number of pages to include in the RSS file.
-	# At most, it can be $MaxItems, but if there aren't that many
-	# pages, it's all the pages.
-	variable MaxItems
-	set NumPages [llength $PageList]
-	set NumItems [expr {($NumPages < $MaxItems) ?$NumPages :$MaxItems}]
-
 	# Generate the XML file
 	set contents [header]
 
@@ -128,18 +106,33 @@ namespace eval WikitRss {
 	<description>Recent changes to $Name</description>
 	"
 
+	foreach p $exclude {
+	    set index [lsearch -exact $PageList $p]
+	    if { $index != -1 } {
+		set PageList [lreplace $PageList $index $index]
+	    }
+	}
+
 	Debug.rss {filling details} 7
-	for {set i 0} {$i < $NumItems} {incr i} {
-	    set page [lindex $PageList $i]
+
+	# generate items for changed pages,
+	# ordered from most recently changed to least recently changed.
+	variable exclude
+	variable MaxItems
+	set i 0
+	foreach page [mk::select $db.pages -rsort date] {
+	    if {[incr i] > $MaxItems} break	;# limit RSS size
+	    if {$page in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
+
 	    lassign [mk::get $db.pages!$page name date who] name date who
+            set change [expr {[mk::view size wdb.pages!$page.changes] -1 }] 
+
 	    Debug.rss {detail $name $date $who $page} 7
 
-            set change [expr {[mk::view size wdb.pages!$page.changes] -1 }] 
 	    if {$change >= 0} {
 		set changes [mk::view size wdb.pages!$page.changes!$change.diffs]  
 		append contents [item $name $date $who $baseUrl$page "$changes lines"] \n
-	    } else {
-		incr i -1
+		incr $i
 	    }
 	}
 
