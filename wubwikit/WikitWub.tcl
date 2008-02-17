@@ -42,8 +42,6 @@ catch {source [file join [file dirname [info script]] pest.tcl]}
 
 namespace eval WikitWub {
     variable readonly ""
-    variable templates
-    variable titles
 
     # sortable - include javascripts and CSS for sortable table.
     proc sortable {r} {
@@ -59,188 +57,13 @@ namespace eval WikitWub {
 	return [<p> {*}$args]
     }
 
-    foreach {name title template} {
-	ro {Wiki is currently Read-Only} {
-	    <!-- Page sent when Wiki is in Read-Only Mode -->
-	    [<h1> "The Wiki is currently in Maintenance Mode"]
-	    [<p> "No new edits can be accepted at the moment."]
-	    [<p> "Reason: $readonly"]
-	    [<p> [<a> href /$N "Return to the page you were reading."]]
-	}
+    variable templates
+    variable titles
 
-	page {$name} {
-	    <!-- standard page decoration -->
-	    [div container {
-		[div header {
-		    [div logo [<a> href http://wiki.tcl.tk class logo wiki.tcl.tk]]
-		    [<div> id title class title [tclarmour $Title]]
-		    [<div> id updated class updated $updated]
-		}]
-		[expr {[info exists ro]?$ro:""}]
-		[divID wrapper {
-		    [divID content {[tclarmour $C]}]
-		}]
-		[divID menu_area {
-		    [divID wiki_menu {[menuUL $menu]}]
-		    [expr {[info exists gsearch]?[gsearchF $query]:[searchF]}]
-		    [div navigation {
-			[divID page_toc $T]
-		    }]
-		    [div extra {
-			[divID wiki_toc $TOC]
-		    }]
-		}]
-		[div footer {
-		    [<p> id footer [variable bullet; join $footer $bullet]]
-		}]
-	    }]
-	}
-
-	refs {References to $N} {
-	    <!-- page sent when constructing a reference page -->
-	    [div container {
-		[div header {[<h1> "References to [Ref $N]"]}]
-		[div {wrapper content} {[tclarmour $C]}]
-		[<hr> noshade]
-		[div footer {
-		    [<p> id footer [variable bullet; join $footer $bullet]]
-		    [searchF]
-		}]
-	    }]
-	}
-
-	refs_tc {References to $N} {
-	    <!-- page sent when constructing a transcluded reference page -->
-	    [tclarmour $C]
-	}
-
-	edit {Editing $N} {
-	    <!-- page sent when editing a page -->
-	    [div edit {
-		[div header {
-		    [div logo wiki.tcl.tk]
-		    [div title "Edit [tclarmour [Ref $N]]"]
-		    [div updated "make your changes then press Save below"]
-		}]
-		[div editcontents {
-		    [set disabled [expr {$nick eq ""}]
-		     <form> edit method post action /_edit/save/$N {
-			 [<textarea> C rows 30 cols 72 style width:100% [tclarmour $C]]
-			 [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
-			 [<hidden> _charset_ {}]
-			 [<submit> save class positive disabled $disabled value 1 {Save your changes}]
-			 [<submit> cancel class button disabled 0 value 1 Cancel]
-		     }]
-		    [<hr>]
-		    Editing quick-reference:
-		    [<blockquote> [subst {
-			[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]
-			[<br>]
-			[<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line
-			[<br>]
-			[<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line
-			[<br>]
-			[<b> PARAGRAPHS] are split with empty lines,
-			[<b> "UNFORMATTED TEXT"] starts with white space
-			[<br>]
-			[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']
-			[<br>]
-			[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes
-		    }]]
-		    [<hr>]
-		    [If {$date != 0} {
-			[<i> "Last saved on [<b> [clock format $date -gmt 1 -format {%Y-%m-%d %T}]]"]
-		    }]
-		    [If {$who_nick ne ""} {
-			[<i> "by [<b> $who_nick]"]
-		    }]
-		    [If {$nick ne ""} {
-			(you are: [<b> $nick])
-		    }]
-		}]
-	    }]
-	}
-
-	login {login} {
-	    <!-- page sent to enable login -->
-	    [<p> "You must have a nickname to post here"]
-	    [<form> login method post action /_edit/login {
-		[<fieldset> login title Login {
-		    [<text> nickname title "Nickname"]
-		    [<submit> save value login "Login"]
-		}]
-		[<hidden> R [armour $R]]
-	    }]
-	}
-
-	badutf {bad UTF-8} {
-	    <!-- page sent when a browser sent bad utf8 -->
-	    [<h2> "Encoding error on page $N - [Ref $N $name]"]
-	    [<p> "[<b> "Your changes have NOT been saved"], because the content your browser sent contains bogus characters. At character number $point"]
-	    [<p> $E]
-	    [<p> [<i> "Please check your browser."]]
-	    [<hr> size 1]
-	    [<p> [<pre> [armour $C]]]
-	    [<hr> size 1]
-	}
-
-	search {} {
-	    <!-- page sent in response to a search -->
-	    [<form> search method get action /_search {
-		[<fieldset> sfield title "Construct a new search" {
-		    [<legend> "Enter a Search Phrase"]
-		    [<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
-		    [<checkbox> SC title "search page contents" value 1; set _disabled ""]
-		    [<hidden> _charset_]
-		}]
-	    }]
-	    $C
-	}
-
-	conflict {Edit Conflict on $N} {
-	    <!-- page sent when a save causes edit conflict -->
-	    [<h2> "Edit conflict on page $N - [Ref $N $name]"]
-	    [<p> "[<b> "Your changes have NOT been saved"] because someone (at IP address $who) saved a change to this page while you were editing."]
-	    [<p> [<i> "Please restart a new [Ref /_edit/$N edit] and merge your version (which is shown in full below.)"]]
-	    [<p> "Got '$O' expected '$X'"]
-	    [<hr> size 1]
-	    [<p> [<pre> [armour $C]]]
-	    [<hr> size 1]
-	}
-    } {
-	set templates($name) $template
-	set titles($name) $title
-    }
-
-    # list2table - convert list into sortable HTML table
-    proc list2table {l header {footer {}}} {
-	set row 0
-	return [<table> class sortable summary {} [subst {
-	    [<thead> [<tr> [Foreach t $header {
-		[<th> class $t  [string totitle $t]]
-	    }]]]
-	    [If {$footer ne {}} {
-		[<tfoot> [<tr> [Foreach t $footer {[<th> $t]}]]]
-	    }]
-	    [<tbody> [Foreach vl $l {
-		[<tr> class [If {[incr row] % 2} even else odd] \
-		     [Foreach th $header v $vl {
-			 [<td> class $th $v]
-		     }]]
-	    }]]
-	}]]
-    }
-
-    proc list2plaintable {l columnclasses {tag ""}} {
-	set row 0
-	return [<table> class $tag summary {} [subst {
-	    [<tbody> [Foreach vl $l {
-		[<tr> class [If {[incr row] % 2} even else odd] \
-		     [Foreach v $vl c $columnclasses {
-			 [<td> class $c $v]
-		     }]]
-	    }]]
-	}]]
+    # record a page template
+    proc template {name title template} {
+	variable templates; set templates($name) $template
+	variable titles; set titles($name) $title
     }
 
     # page - format up a page using templates
@@ -258,6 +81,154 @@ namespace eval WikitWub {
 	    set r [Http $pf $r]
 	}
 	return $r
+    }
+
+    # Page sent when Wiki is in Read-Only Mode
+    template ro {Wiki is currently Read-Only} {
+	[<h1> "The Wiki is currently in Maintenance Mode"]
+	[<p> "No new edits can be accepted at the moment."]
+	[<p> "Reason: $readonly"]
+	[<p> [<a> href /$N "Return to the page you were reading."]]
+    }
+
+    # standard page decoration
+    template page {$name} {
+	[div container {
+	    [div header {
+		[div logo [<a> href http://wiki.tcl.tk class logo wiki.tcl.tk]]
+		[<div> id title class title [tclarmour $Title]]
+		[<div> id updated class updated $updated]
+	    }]
+	    [expr {[info exists ro]?$ro:""}]
+	    [divID wrapper {
+		[divID content {[tclarmour $C]}]
+	    }]
+	    [divID menu_area {
+		[divID wiki_menu {[menuUL $menu]}]
+		[expr {[info exists gsearch]?[gsearchF $query]:[searchF]}]
+		[div navigation {
+		    [divID page_toc $T]
+		}]
+		[div extra {
+		    [divID wiki_toc $TOC]
+		}]
+	    }]
+	    [div footer {
+		[<p> id footer [variable bullet; join $footer $bullet]]
+	    }]
+	}]
+    }
+
+    # page sent when constructing a reference page
+    template refs {References to $N} {
+	[div container {
+	    [div header {[<h1> "References to [Ref $N]"]}]
+	    [div {wrapper content} {[tclarmour $C]}]
+	    [<hr> noshade]
+	    [div footer {
+		[<p> id footer [variable bullet; join $footer $bullet]]
+		[searchF]
+	    }]
+	}]
+    }
+
+    # page sent when constructing a transcluded reference page
+    template refs_tc {References to $N} {
+	[tclarmour $C]
+    }
+
+    # page sent when editing a page
+    template edit {Editing $N} {
+	[div edit {
+	    [div header {
+		[div logo wiki.tcl.tk]
+		[div title "Edit [tclarmour [Ref $N]]"]
+		[div updated "make your changes then press Save below"]
+	    }]
+	    [div editcontents {
+		[set disabled [expr {$nick eq ""}]
+		 <form> edit method post action /_edit/save/$N {
+		     [<textarea> C rows 30 cols 72 style width:100% [tclarmour $C]]
+		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
+		     [<hidden> _charset_ {}]
+		     [<submit> save class positive disabled $disabled value 1 {Save your changes}]
+		     [<submit> cancel class button disabled 0 value 1 Cancel]
+		 }]
+		[<hr>]
+		Editing quick-reference:
+		[<blockquote> [subst {
+		    [<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]
+		    [<br>]
+		    [<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line
+		    [<br>]
+		    [<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line
+		    [<br>]
+		    [<b> PARAGRAPHS] are split with empty lines,
+		    [<b> "UNFORMATTED TEXT"] starts with white space
+		    [<br>]
+		    [<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']
+		    [<br>]
+		    [<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes
+		}]]
+		[<hr>]
+		[If {$date != 0} {
+		    [<i> "Last saved on [<b> [clock format $date -gmt 1 -format {%Y-%m-%d %T}]]"]
+		}]
+		[If {$who_nick ne ""} {
+		    [<i> "by [<b> $who_nick]"]
+		}]
+		[If {$nick ne ""} {
+		    (you are: [<b> $nick])
+		}]
+	    }]
+	}]
+    }
+
+    # page sent to enable login
+    template login {login} {
+	[<p> "You must have a nickname to post here"]
+	[<form> login method post action /_edit/login {
+	    [<fieldset> login title Login {
+		[<text> nickname title "Nickname"]
+		[<submit> save value login "Login"]
+	    }]
+	    [<hidden> R [armour $R]]
+	}]
+    }
+
+    # page sent when a browser sent bad utf8
+    template badutf {bad UTF-8} {
+	[<h2> "Encoding error on page $N - [Ref $N $name]"]
+	[<p> "[<b> "Your changes have NOT been saved"], because the content your browser sent contains bogus characters. At character number $point"]
+	[<p> $E]
+	[<p> [<i> "Please check your browser."]]
+	[<hr> size 1]
+	[<p> [<pre> [armour $C]]]
+	[<hr> size 1]
+    }
+
+    # page sent in response to a search
+    template search {} {
+	[<form> search method get action /_search {
+	    [<fieldset> sfield title "Construct a new search" {
+		[<legend> "Enter a Search Phrase"]
+		[<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
+		[<checkbox> SC title "search page contents" value 1; set _disabled ""]
+		[<hidden> _charset_]
+	    }]
+	}]
+	$C
+    }
+
+    # page sent when a save causes edit conflict
+    template conflict {Edit Conflict on $N} {
+	[<h2> "Edit conflict on page $N - [Ref $N $name]"]
+	[<p> "[<b> "Your changes have NOT been saved"] because someone (at IP address $who) saved a change to this page while you were editing."]
+	[<p> [<i> "Please restart a new [Ref /_edit/$N edit] and merge your version (which is shown in full below.)"]]
+	[<p> "Got '$O' expected '$X'"]
+	[<hr> size 1]
+	[<p> [<pre> [armour $C]]]
+	[<hr> size 1]
     }
 
     # record some session information per save
@@ -519,6 +490,18 @@ namespace eval WikitWub {
 	}
 
 	return [Http NoCache [Http Ok $r $result]]
+    }
+
+    proc list2plaintable {l columnclasses {tag ""}} {
+	set row 0
+	return [<table> class $tag summary {} [subst {
+	    [<tbody> [Foreach vl $l {
+		[<tr> class [If {[incr row] % 2} even else odd] \
+		     [Foreach v $vl c $columnclasses {
+			 [<td> class $c $v]
+		     }]]
+	    }]]
+	}]]
     }
 
     # Special page: Recent Changes.
@@ -1240,18 +1223,6 @@ namespace eval WikitWub {
 	return $r
     }
 
-    proc who {r} {
-	variable cookie
-	set cdict [dict get $r -cookies]
-	set cl [Cookies match $cdict -name $cookie]
-	if {[llength $cl] != 1} {
-	    return ""
-	} else {
-	    Debug.wikit {who /edit/ $cl}
-	    return [dict get [Cookies fetch $cdict -name $cookie] -value]
-	}
-    }
-
     proc invalidate {r url} {
 	Debug.wikit {invalidating $url} 3
 	Cache delete http://[dict get $r host]/$url
@@ -1278,7 +1249,7 @@ namespace eval WikitWub {
 	    0 {
 		# no match on page name,
 		# do a glob search over names,
-		# where AbCdEf -> *[Aa]b*[Cc]d*[Ee]f*
+		# where AbCdEf -> *[Aa]b[Cc]d[Ee]f*
 		# skip this if the search has brackets (WHY?)
 		if {[string first {[} $page] < 0} {
 		    regsub -all {[A-Z]} $page "\\[&\[string tolower &\]\\]" temp
@@ -1337,6 +1308,18 @@ namespace eval WikitWub {
 	set r [sendPage $r]
 	unset gsearch
 	return $r
+    }
+
+    proc who {r} {
+	variable cookie
+	set cdict [dict get $r -cookies]
+	set cl [Cookies match $cdict -name $cookie]
+	if {[llength $cl] != 1} {
+	    return ""
+	} else {
+	    Debug.wikit {who /edit/ $cl}
+	    return [dict get [Cookies fetch $cdict -name $cookie] -value]
+	}
     }
 
     proc /save {r N C O save cancel} {
@@ -1597,6 +1580,25 @@ namespace eval WikitWub {
 	set name "Welcome to the Tclers Wiki!"
 
 	return [sendPage $r]
+    }
+
+    # list2table - convert list into sortable HTML table
+    proc list2table {l header {footer {}}} {
+	set row 0
+	return [<table> class sortable summary {} [subst {
+	    [<thead> [<tr> [Foreach t $header {
+		[<th> class $t  [string totitle $t]]
+	    }]]]
+	    [If {$footer ne {}} {
+		[<tfoot> [<tr> [Foreach t $footer {[<th> $t]}]]]
+	    }]
+	    [<tbody> [Foreach vl $l {
+		[<tr> class [If {[incr row] % 2} even else odd] \
+		     [Foreach th $header v $vl {
+			 [<td> class $th $v]
+		     }]]
+	    }]]
+	}]]
     }
 
     # called to generate a page with references
