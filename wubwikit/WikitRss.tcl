@@ -117,15 +117,21 @@ namespace eval WikitRss {
 	    if {$page in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
 
 	    lassign [mk::get $db.pages!$page name date who] name date who
-            set change [expr {[mk::view size wdb.pages!$page.changes] - 1 }] 
-	    set changes [mk::view size wdb.pages!$page.changes!$change.diffs]  
+
+	    # calculate line change
+            set change [expr {[mk::view size wdb.pages!$page.changes] - 1 }]
+	    set changes [mk::view size wdb.pages!$page.changes!$change.diffs]
+	    set delta 0
+	    for {set j 0} {$j < $changes} {incr j} {
+		set delrec [mk::get wdb.pages!$page.changes!$change.diffs!$j]
+		incr delta [expr {abs([dict $delrec from] - [dict $delrec to])}]
+	    }
 
 	    Debug.rss {detail $name $date $who $page} 7
 
-	    if {$changes > 1} {
-		append contents [item $name $date $who $baseUrl$page "$changes lines"] \n
-		incr i
-		if {$i > $MaxItems} break	;# limit RSS size
+	    if {$delta > 1} {
+		append contents [item $name $date $who $baseUrl$page "$delta lines"] \n
+		if {[incr i] > $MaxItems} break	;# limit RSS size
 	    }
 	}
 
