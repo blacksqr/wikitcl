@@ -723,7 +723,8 @@ namespace eval WikitWub {
 	}
 
 	# If T is zero, D contains version to compare with
-	# If T is non zero, D contains a number of days and /diff must search for a version $D days older than version $V
+	# If T is non zero, D contains a number of days and /diff must
+	# search for a version $D days older than version $V
 	set updated ""
 	if {$T == 0} {
 	    if {$D < 0} {
