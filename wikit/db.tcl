@@ -643,22 +643,23 @@ namespace eval Wikit {
       switch -exact -- $action {
         deleted {
           foreach {from to} $newrange break
-          incr change [expr {abs(from-to)}]
           set old {}
+
+          incr change [string length [lrange $linesnew $from $to]]
         }
         added  {
           foreach {to from} $newrange break
-          incr change [expr {abs(from-to)}]
           foreach {oldfrom oldto} $oldrange break
-          incr change [expr {abs(oldfrom-oldto)}]
           set old [lrange $linesold $oldfrom $oldto]
+
+          incr change [expr {abs([string length [lrange $linesnew $from $to]] - [string length [lrange $linesold $oldfrom $oldto]])}]
         }
         changed  {
           foreach {from to} $newrange break
-          incr change [expr {abs(from-to)}]
           foreach {oldfrom oldto} $oldrange break
-          incr change [expr {abs(oldfrom-oldto)}]
           set old [lrange $linesold $oldfrom $oldto]
+
+          incr change [expr {abs([string length [lrange $linesnew $from $to]] - [string length [lrange $linesold $oldfrom $oldto]])}]
         }
       }
       mk::row append $db.pages!$id.changes!$version.diffs \

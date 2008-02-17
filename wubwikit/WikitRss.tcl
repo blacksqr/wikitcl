@@ -119,13 +119,7 @@ namespace eval WikitRss {
 	    lassign [mk::get $db.pages!$page name date who] name date who
 
 	    # calculate line change
-            set change [expr {[mk::view size wdb.pages!$page.changes] - 1 }]
-	    set changes [mk::view size wdb.pages!$page.changes!$change.diffs]
-	    set delta 0
-	    for {set j 0} {$j < $changes} {incr j} {
-		set delrec [mk::get wdb.pages!$page.changes!$change.diffs!$j]
-		incr delta [expr {abs([dict $delrec from] - [dict $delrec to])}]
-	    }
+	    set delta [mk::view get wdb.pages!$page.changes!$change delta]
 
 	    Debug.rss {detail $name $date $who $page} 7
 
