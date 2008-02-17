@@ -396,6 +396,13 @@ namespace eval WikitWub {
 	    append content <body> \n
 	    append content $rspcontent
 	    variable htmlsuffix; append content $htmlsuffix
+
+	    if {[dict exists $rsp -postload]} {
+		dict for {n v} [dict get $rsp -postload] {
+		    append content $v \n
+		}
+	    }
+
 	    append content </body> \n
 	    append content </html> \n
 	}
@@ -1873,7 +1880,7 @@ namespace eval WikitWub {
 			    } else {
 				set brefpage $N
 			    }
-			    append C [<script> "getBackRefs($brefpage,'$containerid')"]
+			    dict set r -postload backrefs [<script> "getBackRefs($brefpage,'$containerid')"]
 			}
 		    }
 		}
