@@ -121,7 +121,6 @@ namespace eval WikitRss {
 	variable MaxItems
 	set i 0
 	foreach page [mk::select $db.pages -rsort date] {
-	    if {[incr i] > $MaxItems} break	;# limit RSS size
 	    if {$page in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
 
 	    lassign [mk::get $db.pages!$page name date who] name date who
@@ -133,6 +132,7 @@ namespace eval WikitRss {
 		set changes [mk::view size wdb.pages!$page.changes!$change.diffs]  
 		append contents [item $name $date $who $baseUrl$page "$changes lines"] \n
 		incr $i
+		if {$i > $MaxItems} break	;# limit RSS size
 	    }
 	}
 
