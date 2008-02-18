@@ -109,7 +109,7 @@ function checkTOC()
 	notocpages();
     }
     try {
-	document.getElementById("gsearchtxt").value;
+	document.getElementById("googletxt").value;
 	googleQuery();
     }
     catch (e){}
