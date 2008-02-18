@@ -1,14 +1,32 @@
 function clearSearch() {
 	var txt = document.getElementById('searchtxt');
 	txt.style.color = 'black';
-	txt.value = '';
+	if (txt.value == 'Search in titles') {
+	    txt.value = '';
+	}
 }
 
 function setSearch() {
 	var txt = document.getElementById('searchtxt');
 	txt.style.color = 'gray';
 	if (txt.value == '') {
-		txt.value = 'Search';
+		txt.value = 'Search in titles';
+	}
+}
+
+function clearGoogle() {
+	var txt = document.getElementById('googletxt');
+	txt.style.color = 'black';
+	if (txt.value == 'Search in pages') {
+	    txt.value = '';
+	}
+}
+
+function setGoogle() {
+	var txt = document.getElementById('googletxt');
+	txt.style.color = 'gray';
+	if (txt.value == '') {
+		txt.value = 'Search in pages';
 	}
 }
 
@@ -76,8 +94,6 @@ App.prototype.OnSearchComplete = function() {
 }
 
 function googleQuery() {
-    var app = new App(document.getElementById("gsearchtxt").value);
+    var app = new App(document.getElementById("googletxt").value);
     return false;
 }
-
-
