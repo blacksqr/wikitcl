@@ -2301,3 +2301,4 @@ catch {source [file join [file dirname [info script]] local.tcl]} r eo
 Debug.log {RESTART: [clock format [clock second]] '$r' ($eo)}
 
 # A test line for merging.
+# Another test line for merging.
