@@ -95,7 +95,7 @@ namespace eval WikitWub {
     template page {$name} {
 	[div container {
 	    [div header {
-		[div logo [<a> href http://wiki.tcl.tk class logo wiki.tcl.tk]]
+		[div logo [<a> href / class logo wiki.tcl.tk]]
 		[<div> id title class title [tclarmour $Title]]
 		[<div> id updated class updated $updated]
 	    }]
@@ -1141,7 +1141,7 @@ namespace eval WikitWub {
     variable bullet " &bull; "
 
     # Init common menu items
-    set menus(Home)             [<a> href "http://wiki.tcl.tk" Home]
+    set menus(Home)             [<a> href "/" Home]
     set menus(Recent) [Ref 4 "Recent changes"]
     set menus(Help)             [Ref 3 "Help"]
     set menus(Search)           [Ref 2 "Search"]
