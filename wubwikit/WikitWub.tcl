@@ -172,7 +172,7 @@ namespace eval WikitWub {
 		    [<br>]
 		    [<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line
 		    [<br>]
-		    [<b> PARAGRAPHS] are split with empty lines,
+		    [<b> PARAGRAPHS] are split with empty lines
 		    [<br>]
 		    [<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt>
 		    [<br>]
@@ -181,6 +181,8 @@ namespace eval WikitWub {
 		    [<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes
 		    [<br>]
 		    [<b> HEADERS] can be specified with lines containing **Header level 1**, ***Header level 2*** or ****Header level 3****
+		    [<br>]
+		    [<b> TABLE] rows can be specified as <tt>|data|data|data|</tt>, a <b>header</b> row as <tt>&amp;|data|data|data|&amp;</tt> and background of even and odd rows is colored differently when rows are specified as <tt>%|data|data|data|%</tt>
 		}]]
 		[<div> id previewarea_pre ""]
 		[<div> class previewarea id previewarea ""]
