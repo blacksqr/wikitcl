@@ -29,6 +29,7 @@ function ajaxpage(url, postData, containerid){
     }
     if (postData.length) {
 	page_request.open('POST', url, true);
+	page_request.setRequestHeader('Content-type', "application/xml");
 	page_request.setRequestHeader('Content-length', postData.length);
 	page_request.send(postData);
     }
@@ -53,7 +54,7 @@ function getBackRefs(page,containerid)
 
 function previewPage(page)
 {
-    document.getElementById("previewarea_pre").innerHTML = "<hr><button type='button' id='previewbutton' onclick='clearPreview();'>Clear preview</button>";
+    document.getElementById("previewarea_pre").innerHTML = "<hr><button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
     var txt = document.getElementById("editarea").value;
     ajaxpage("/_preview/" + page, "O="+URLencode(txt), "previewarea");
     return false;
