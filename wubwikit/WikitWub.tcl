@@ -137,6 +137,11 @@ namespace eval WikitWub {
 	[tclarmour $C]
     }
 
+    # page sent when constructing a transcluded reference page
+    template preview_tc {Preview of $N} {
+	[tclarmour $C]
+    }
+
     # page sent when editing a page
     template edit {Editing $N} {
 	[div edit {
@@ -148,15 +153,19 @@ namespace eval WikitWub {
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action /_edit/save/$N {
-		     [<textarea> C rows 30 cols 72 style width:100% [tclarmour $C]]
+		     [<textarea> C id editarea rows 30 cols 72 style width:100% [tclarmour $C]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
 		     [<submit> save class positive disabled $disabled value 1 {Save your changes}]
 		     [<submit> cancel class button disabled 0 value 1 Cancel]
+		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
+		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
 		 }]
-		[<hr>]
-		Editing quick-reference:
-		[<blockquote> [subst {
+		[<blockquote> id helptext [subst {
+                    [<hr>]
+		    [<br>]
+		    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
+		    [<br>]
 		    [<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]
 		    [<br>]
 		    [<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line
@@ -164,12 +173,17 @@ namespace eval WikitWub {
 		    [<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line
 		    [<br>]
 		    [<b> PARAGRAPHS] are split with empty lines,
-		    [<b> "UNFORMATTED TEXT"] starts with white space
 		    [<br>]
-		    [<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']
+		    [<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt>
+		    [<br>]
+		    [<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].
 		    [<br>]
 		    [<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes
+		    [<br>]
+		    [<b> HEADERS] can be specified with lines containing **Header level 1**, ***Header level 2*** or ****Header level 3****
 		}]]
+		[<div> id previewarea_pre ""]
+		[<div> class previewarea id previewarea ""]
 		[<hr>]
 		[If {$date != 0} {
 		    [<i> "Last saved on [<b> [clock format $date -gmt 1 -format {%Y-%m-%d %T}]]"]
@@ -1336,7 +1350,16 @@ namespace eval WikitWub {
 	}
     }
 
-    proc /save {r N C O save cancel} {
+    proc /preview { r N O } {
+	puts "N=$N, O=$O"
+	set C [::Wikit::TextToStream $O]
+	lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+	return [sendPage $r preview_tc]
+    }
+
+    proc /save {r N C O save cancel preview } {
+
+	puts "save=$save, cancel=$cancel, preview=$preview"
 
 	if { ([string tolower $cancel] eq "cancel") || ([string is integer -strict $cancel] && $cancel) } {
 	    set url http://[Url host $r]/$N
@@ -2055,6 +2078,8 @@ proc Responder::post {rsp} {
 
 # Incoming - indication of incoming request
 proc Incoming {req} {
+
+    puts "req=$req"
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
     set req [Cookies 4Server $req]

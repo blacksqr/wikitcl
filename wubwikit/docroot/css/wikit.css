@@ -442,3 +442,7 @@ A.toc {
 A:active, A:hover {
     color: blue;
 }
+div.previewarea {
+  background: white;
+}
+
