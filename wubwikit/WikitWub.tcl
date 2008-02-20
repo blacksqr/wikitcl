@@ -1337,8 +1337,8 @@ namespace eval WikitWub {
     }
 
     proc /save {r N C O save cancel} {
-	
-	if { [string is integer -strict $cancel] && $cancel } {
+
+	if { ([string tolower $cancel] eq "cancel") || ([string is integer -strict $cancel] && $cancel) } {
 	    set url http://[Url host $r]/$N
 	    return [redir $r $url [<a> href $url "Canceled page edit"]]
 	}
