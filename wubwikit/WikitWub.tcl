@@ -143,7 +143,7 @@ namespace eval WikitWub {
     }
 
     # page sent when editing a page
-    template edit {Editing $N} {
+    template edit {Editing $name} {
 	[div edit {
 	    [div header {
 		[div logo wiki.tcl.tk]
@@ -156,8 +156,8 @@ namespace eval WikitWub {
 		     [<textarea> C id editarea rows 30 cols 72 style width:100% [tclarmour $C]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
-		     [<submit> save class positive disabled $disabled value 1 {Save your changes}]
-		     [<submit> cancel class button disabled 0 value 1 Cancel]
+                     [<input> name save   type submit value "Save your changes" {}]
+		     [<input> name cancel type submit value "Cancel" {}]
 		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
 		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
 		 }]
@@ -166,7 +166,7 @@ namespace eval WikitWub {
 		    [<br>]
 		    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
 		    [<br>]
-		    [<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]
+		    [<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.
 		    [<br>]
 		    [<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line
 		    [<br>]
@@ -176,13 +176,19 @@ namespace eval WikitWub {
 		    [<br>]
 		    [<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt>
 		    [<br>]
+		    [<b> "FIXED WIDTH FORMATTED"] text is enclosed in lines containing <tt>===</tt>
+		    [<br>]
 		    [<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].
 		    [<br>]
 		    [<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes
 		    [<br>]
-		    [<b> HEADERS] can be specified with lines containing **Header level 1**, ***Header level 2*** or ****Header level 3****
+		    [<b> HEADERS] can be specified with lines containing <b>**Header level 1**</b>, <b>***Header level 2***</b> or <b>****Header level 3****</b>
 		    [<br>]
-		    [<b> TABLE] rows can be specified as <tt>|data|data|data|</tt>, a <b>header</b> row as <tt>&amp;|data|data|data|&amp;</tt> and background of even and odd rows is colored differently when rows are specified as <tt>%|data|data|data|%</tt>
+		    [<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>&amp;|data|data|data|&amp;</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>%|data|data|data|%</tt></b>
+		    [<br>]
+		    [<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b>
+		    [<br>]
+		    [<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[brefs:Wiki formatting rules\]</tt></b>
 		}]]
 		[<div> id previewarea_pre ""]
 		[<div> class previewarea id previewarea ""]
@@ -1361,9 +1367,7 @@ namespace eval WikitWub {
 
     proc /save {r N C O save cancel preview } {
 
-	puts "save=$save, cancel=$cancel, preview=$preview"
-
-	if { ([string tolower $cancel] eq "cancel") || ([string is integer -strict $cancel] && $cancel) } {
+	if { [string tolower $cancel] eq "cancel" } {
 	    set url http://[Url host $r]/$N
 	    return [redir $r $url [<a> href $url "Canceled page edit"]]
 	}
