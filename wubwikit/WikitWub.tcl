@@ -2213,6 +2213,11 @@ proc Incoming {req} {
 	    ::wikit do $req
 	}
 
+	/_edit/_s*/ {
+	    # session commands
+	    ::Session do $req
+	}
+
 	/_edit/* {
 	    # /_edit domain - wiki-local restful command URL,
 	    Debug.wikit {direct invocation1 [dict get $req -path]}
@@ -2221,8 +2226,7 @@ proc Incoming {req} {
 	    set suffix /[string trimleft [lindex $path end-1] _]
 	    dict set req -suffix $suffix
 	    dict set req -Query [Query add [Query parse $req] N $N]
-	    #::wikit do $req
-	    ::Session do $req
+	    ::wikit do $req
 	}
 
 	/_map/* {
@@ -2279,7 +2283,7 @@ package require Block
 Block init logdir $::config(docroot)
 
 #### initialize Session
-Session init cpath "/_edit/" subdomains {::WikitWub}
+Session init cpath "/_edit/"
 
 #### initialize Wikit
 package require Wikit::Format
