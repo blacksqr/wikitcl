@@ -151,8 +151,8 @@ namespace eval WikitWub {
 		     [<textarea> C rows 30 cols 72 style width:100% [tclarmour $C]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
-		     [<submit> save class positive disabled $disabled value 1 {Save your changes}]
-		     [<submit> cancel class button disabled 0 value 1 Cancel]
+                     [<input> name save   type submit value "Save your changes" {}]
+		     [<input> name cancel type submit value "Cancel" {}]
 		 }]
 		[<hr>]
 		Editing quick-reference:
@@ -1338,7 +1338,7 @@ namespace eval WikitWub {
 
     proc /save {r N C O save cancel} {
 
-	if { ([string tolower $cancel] eq "cancel") || ([string is integer -strict $cancel] && $cancel) } {
+	if { [string tolower $cancel] eq "cancel" } {
 	    set url http://[Url host $r]/$N
 	    return [redir $r $url [<a> href $url "Canceled page edit"]]
 	}
