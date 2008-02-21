@@ -2057,8 +2057,8 @@ proc Responder::post {rsp} {
 proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
-    set req [Cookies 4Server $req]
-    #set req [Session fetch $req -path /_edit/]
+    #set req [Cookies 4Server $req]
+    set req [Session fetch $req]
 
     if {[dict exists $req -session]} {
 	# do something with existing session
@@ -2221,7 +2221,8 @@ proc Incoming {req} {
 	    set suffix /[string trimleft [lindex $path end-1] _]
 	    dict set req -suffix $suffix
 	    dict set req -Query [Query add [Query parse $req] N $N]
-	    ::wikit do $req
+	    #::wikit do $req
+	    ::Session do $req
 	}
 
 	/_map/* {
@@ -2269,13 +2270,16 @@ proc Incoming {req} {
 	}
     }]
 
-    return [Session store $rsp -path /_edit/]
+    return [Session store $rsp]
     #return $rsp
 }
 
 #### initialize Block
 package require Block
 Block init logdir $::config(docroot)
+
+#### initialize Session
+Session init cpath "/_edit/" subdomains {::WikitWub}
 
 #### initialize Wikit
 package require Wikit::Format
