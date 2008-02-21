@@ -2213,7 +2213,7 @@ proc Incoming {req} {
 	    ::wikit do $req
 	}
 
-	/_edit/_s*/ {
+	/XXX_edit/_s*/ {
 	    # session commands
 	    ::Session do $req
 	}
