@@ -16,7 +16,7 @@ package require Form
 package require struct::queue
 package require Http
 package require Cookies
-package require Session
+#package require Session
 package require WikitRss
 package require Sitemap
 package require stx
@@ -1495,7 +1495,7 @@ namespace eval WikitWub {
 	    set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"
 	}
 
-	setSession $N $nick	;# set some session data
+	#setSession $N $nick	;# set some session data
 
 	return [sendPage $r edit]
     }
@@ -2057,8 +2057,8 @@ proc Responder::post {rsp} {
 proc Incoming {req} {
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
-    #set req [Cookies 4Server $req]
-    set req [Session fetch $req]
+    set req [Cookies 4Server $req]
+    #set req [Session fetch $req]
 
     if {[dict exists $req -session]} {
 	# do something with existing session
@@ -2215,7 +2215,7 @@ proc Incoming {req} {
 
 	/XXX_edit/_s*/ {
 	    # session commands
-	    ::Session do $req
+	    #::Session do $req
 	}
 
 	/_edit/* {
@@ -2274,8 +2274,8 @@ proc Incoming {req} {
 	}
     }]
 
-    return [Session store $rsp]
-    #return $rsp
+    #return [Session store $rsp]
+    return $rsp
 }
 
 #### initialize Block
@@ -2283,7 +2283,7 @@ package require Block
 Block init logdir $::config(docroot)
 
 #### initialize Session
-Session init cpath "/_edit/"
+#Session init cpath "/_edit/"
 
 #### initialize Wikit
 package require Wikit::Format
