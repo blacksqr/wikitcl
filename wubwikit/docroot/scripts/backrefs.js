@@ -54,7 +54,7 @@ function getBackRefs(page,containerid)
 
 function previewPage(page)
 {
-    document.getElementById("previewarea_pre").innerHTML = "<hr><button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
+    document.getElementById("previewarea_pre").innerHTML = "<hr><b>Preview:</b> <button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
     var txt = document.getElementById("editarea").value;
     ajaxpage("/_preview/" + page, "O="+URLencode(txt), "previewarea");
     return false;
@@ -64,19 +64,5 @@ function clearPreview()
 {
     document.getElementById("previewarea_pre").innerHTML = "";
     document.getElementById("previewarea").innerHTML = "";
-    return false;
-}
-
-function editHelp()
-{
-    document.getElementById('helptext').style.display='inline';
-    var txt = document.getElementById("editarea").rows=30;
-    return false;
-}
-
-function hideEditHelp()
-{
-    document.getElementById('helptext').style.display='none';
-    var txt = document.getElementById("editarea").rows=40;
     return false;
 }

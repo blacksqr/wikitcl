@@ -99,6 +99,12 @@ function getCookie( check_name ) {
 
 function checkTOC()
 {
+    // Hide help on edit page
+    try {
+        document.getElementById('helptext').style.display = 'none';
+	document.getElementById("editarea").rows=40;
+    } catch (e) {}
+
     inittocpages();
 
     needs_toc=getCookie('wiki_toc');
@@ -125,4 +131,18 @@ function toggleTOC()
 	tocpages();
 	setCookie('wiki_toc', 1, 30, "/_toc/");
     }
+}
+
+function editHelp()
+{
+    document.getElementById('helptext').style.display='inline';
+    document.getElementById("editarea").rows=30;
+    return false;
+}
+
+function hideEditHelp()
+{
+    document.getElementById('helptext').style.display='none';
+    document.getElementById("editarea").rows=40;
+    return false;
 }

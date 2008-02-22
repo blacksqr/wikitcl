@@ -16,7 +16,7 @@ package require Form
 package require struct::queue
 package require Http
 package require Cookies
-package require Session
+#package require Session
 package require WikitRss
 package require Sitemap
 package require stx
@@ -161,34 +161,25 @@ namespace eval WikitWub {
 		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
 		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
 		 }]
-		[<blockquote> id helptext [subst {
+		[<div> id helptext [subst {
                     [<hr>]
 		    [<br>]
 		    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
 		    [<br>]
-		    [<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.
-		    [<br>]
-		    [<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line
-		    [<br>]
-		    [<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line
-		    [<br>]
-		    [<b> PARAGRAPHS] are split with empty lines
-		    [<br>]
-		    [<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt>
-		    [<br>]
-		    [<b> "FIXED WIDTH FORMATTED"] text is enclosed in lines containing <tt>===</tt>
-		    [<br>]
-		    [<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].
-		    [<br>]
-		    [<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes
-		    [<br>]
-		    [<b> HEADERS] can be specified with lines containing <b>**Header level 1**</b>, <b>***Header level 2***</b> or <b>****Header level 3****</b>
-		    [<br>]
-		    [<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>&amp;|data|data|data|&amp;</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>%|data|data|data|%</tt></b>
-		    [<br>]
-		    [<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b>
-		    [<br>]
-		    [<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[brefs:Wiki formatting rules\]</tt></b>
+		    <ul>
+		    <li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.]</li>
+		    <li>[<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line</li>
+		    <li>[<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line</li>
+		    <li>[<b> PARAGRAPHS] are split with empty lines</li>
+		    <li>[<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt></li>
+		    <li>[<b> "FIXED WIDTH FORMATTED"] text is enclosed in lines containing <tt>===</tt></li>
+		    <li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].</li>
+		    <li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
+		    <li>[<b> HEADERS] can be specified with lines containing <b>**Header level 1**</b>, <b>***Header level 2***</b> or <b>****Header level 3****</b></li>
+		    <li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>&amp;|data|data|data|&amp;</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>%|data|data|data|%</tt></b></li>
+		    <li>[<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b></li>
+		    <li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[brefs:Wiki formatting rules\]</tt></b></li>
+		    </ul>
 		}]]
 		[<div> id previewarea_pre ""]
 		[<div> class previewarea id previewarea ""]
@@ -684,15 +675,15 @@ namespace eval WikitWub {
 		lassign $a line lineVersion time who
 		if { $lineVersion != $prevVersion } {
 		    if { $prevVersion != -1 } {
-			append C "\n<<<<<<"
+			append C "\n%%%%%%"
 		    }
-		    append C "\n>>>>>>a;$N;$lineVersion;$who;" [clock format $time -format "%Y-%m-%d %T" -gmt true]
+		    append C "\n@@@@@@a;$N;$lineVersion;$who;" [clock format $time -format "%Y-%m-%d %T" -gmt true]
 		    set prevVersion $lineVersion
 		}
 		append C "\n$line"
 	    }
 	    if { $prevVersion != -1 } {
-		append C "\n<<<<<<"
+		append C "\n%%%%%%"
 	    }
 	} elseif { $V >= 0 } {
 	    set C [::Wikit::GetPageVersion $N $V]
@@ -852,29 +843,29 @@ namespace eval WikitWub {
 		    }
 		} else {
 		    while { $p1 < $i1 } {
-			append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+			append C "@@@@@@n;$N;$V;;\n[lindex $t1 $p1]\n%%%%%%\n"
 			incr p1
 		    }
 		    while { $p2 < $i2 } {
-			append C ">>>>>>o;$N;$D;;\n[lindex $t2 $p2]\n<<<<<<\n"
+			append C "@@@@@@o;$N;$D;;\n[lindex $t2 $p2]\n%%%%%%\n"
 			incr p2
 		    }
 		}
 		if { [string equal [lindex $t1 $i1] [lindex $t2 $i2]] } {
 		    append C "[lindex $t1 $i1]\n"
 		} else {
-		    append C ">>>>>>w;$N;$V;;\n[lindex $t1 $i1]\n<<<<<<\n"
+		    append C "@@@@@@w;$N;$V;;\n[lindex $t1 $i1]\n%%%%%%\n"
 		}
 		incr p1
 		incr p2
 	    }
 	}
 	while { $p1 < [llength $t1] } {
-	    append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+	    append C "@@@@@@n;$N;$V;;\n[lindex $t1 $p1]\n%%%%%%\n"
 	    incr p1
 	}
 	while { $p2 < [llength $t2] } {
-	    append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
+	    append C "@@@@@@o;$N;$V;;\n[lindex $t2 $p2]\n%%%%%%\n"
 	    incr p2
 	}
 
@@ -1359,7 +1350,6 @@ namespace eval WikitWub {
     }
 
     proc /preview { r N O } {
-	puts "N=$N, O=$O"
 	set C [::Wikit::TextToStream $O]
 	lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 	return [sendPage $r preview_tc]
@@ -1524,15 +1514,13 @@ namespace eval WikitWub {
 	    set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"
 	}
 
-	setSession $N $nick	;# set some session data
+	#setSession $N $nick	;# set some session data
 
 	return [sendPage $r edit]
     }
 
     proc /motd {r} {
 	variable motd
-
-	puts "\n\n\n\n\nmotd: [file join $::config(docroot) motd]\n\n\n\n\n"
 
 	catch {set motd [::fileutil::cat [file join $::config(docroot) motd]]}
 	set motd [string trim $motd]
@@ -2085,11 +2073,9 @@ proc Responder::post {rsp} {
 # Incoming - indication of incoming request
 proc Incoming {req} {
 
-    puts "req=$req"
-
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
     set req [Cookies 4Server $req]
-    #set req [Session fetch $req -path /_edit/]
+    #set req [Session fetch $req]
 
     if {[dict exists $req -session]} {
 	# do something with existing session
@@ -2244,6 +2230,11 @@ proc Incoming {req} {
 	    ::wikit do $req
 	}
 
+	/XXX_edit/_s*/ {
+	    # session commands
+	    #::Session do $req
+	}
+
 	/_edit/* {
 	    # /_edit domain - wiki-local restful command URL,
 	    Debug.wikit {direct invocation1 [dict get $req -path]}
@@ -2300,13 +2291,16 @@ proc Incoming {req} {
 	}
     }]
 
-    return [Session store $rsp -path /_edit/]
-    #return $rsp
+    #return [Session store $rsp]
+    return $rsp
 }
 
 #### initialize Block
 package require Block
 Block init logdir $::config(docroot)
+
+#### initialize Session
+#Session init cpath "/_edit/"
 
 #### initialize Wikit
 package require Wikit::Format
