@@ -180,6 +180,7 @@ table {
 	border: 1px solid #DDD;
 	border-collapse: collapse;
 	font-size: 95%;
+	vertical-align: top;
 }
 
 div.centered table {
@@ -187,6 +188,10 @@ div.centered table {
 	margin-bottom: 2px;
 	margin-left:auto; 
 	margin-right:auto;
+}
+
+table td {
+    vertical-align: top;
 }
 
 thead th {
