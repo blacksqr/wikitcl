@@ -1197,9 +1197,9 @@ namespace eval WikitWub {
 
 	if {$maxAge} {
 	    #set age [list -max-age $maxAge]
-	    set then [expr {$maxAge + [clock seconds]}]
-	    set age [clock format $then -format "%a, %d-%b-%Y %H:%M:%S GMT" -gmt 1]
-	    set age [list -expires $age]
+	    #set then [expr {$maxAge + [clock seconds]}]
+	    #set age [clock format $then -format "%a, %d-%b-%Y %H:%M:%S GMT" -gmt 1]
+	    set age [list -expires $maxAge]
 	} else {
 	    set age {}
 	}
