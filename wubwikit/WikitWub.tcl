@@ -1185,7 +1185,7 @@ namespace eval WikitWub {
 
 	# include an optional expiry age
 	variable maxAge
-	if {$maxAge} {
+	if {$maxAge ne ""} {
 	    set age [list -expires $maxAge]
 	} else {
 	    set age {}
