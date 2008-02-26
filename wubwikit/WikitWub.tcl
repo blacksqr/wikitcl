@@ -2155,7 +2155,7 @@ proc Incoming {req} {
 		set toc 1
 	    }
 
-	    set c [Cookies add $c -name wiki_toc -path /_toc/ -value $toc]
+	    set c [Cookies add $c -name wiki_toc -path /_toc/ -value $toc -expires {next week}]
 	    Debug.error {toggle: $toc - $c}
 
 	    dict set req -cookies $c
@@ -2186,7 +2186,7 @@ proc Incoming {req} {
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
 		set toc [dict get $toc -value]
 	    } x eo]} {
-		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1]
+		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1 -expires {next week}]
                 dict set req -suffix [file tail [dict get $req -path]] 
                 Http NoCache [Http Ok [::scripts do $req]]
                 #Http NoCache [Http Ok $req {} text/javascript]
