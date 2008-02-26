@@ -675,15 +675,15 @@ namespace eval WikitWub {
 		lassign $a line lineVersion time who
 		if { $lineVersion != $prevVersion } {
 		    if { $prevVersion != -1 } {
-			append C "\n%%%%%%"
+			append C "\n<<<<<<"
 		    }
-		    append C "\n@@@@@@a;$N;$lineVersion;$who;" [clock format $time -format "%Y-%m-%d %T" -gmt true]
+		    append C "\n>>>>>>a;$N;$lineVersion;$who;" [clock format $time -format "%Y-%m-%d %T" -gmt true]
 		    set prevVersion $lineVersion
 		}
 		append C "\n$line"
 	    }
 	    if { $prevVersion != -1 } {
-		append C "\n%%%%%%"
+		append C "\n<<<<<<"
 	    }
 	} elseif { $V >= 0 } {
 	    set C [::Wikit::GetPageVersion $N $V]
@@ -843,29 +843,29 @@ namespace eval WikitWub {
 		    }
 		} else {
 		    while { $p1 < $i1 } {
-			append C "@@@@@@n;$N;$V;;\n[lindex $t1 $p1]\n%%%%%%\n"
+			append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
 			incr p1
 		    }
 		    while { $p2 < $i2 } {
-			append C "@@@@@@o;$N;$D;;\n[lindex $t2 $p2]\n%%%%%%\n"
+			append C ">>>>>>o;$N;$D;;\n[lindex $t2 $p2]\n<<<<<<\n"
 			incr p2
 		    }
 		}
 		if { [string equal [lindex $t1 $i1] [lindex $t2 $i2]] } {
 		    append C "[lindex $t1 $i1]\n"
 		} else {
-		    append C "@@@@@@w;$N;$V;;\n[lindex $t1 $i1]\n%%%%%%\n"
+		    append C ">>>>>>w;$N;$V;;\n[lindex $t1 $i1]\n<<<<<<\n"
 		}
 		incr p1
 		incr p2
 	    }
 	}
 	while { $p1 < [llength $t1] } {
-	    append C "@@@@@@n;$N;$V;;\n[lindex $t1 $p1]\n%%%%%%\n"
+	    append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
 	    incr p1
 	}
 	while { $p2 < [llength $t2] } {
-	    append C "@@@@@@o;$N;$V;;\n[lindex $t2 $p2]\n%%%%%%\n"
+	    append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
 	    incr p2
 	}
 
@@ -1210,9 +1210,9 @@ namespace eval WikitWub {
 
 	if {$maxAge} {
 	    #set age [list -max-age $maxAge]
-	    set then [expr {$maxAge + [clock seconds]}]
-	    set age [clock format $then -format "%a, %d-%b-%Y %H:%M:%S GMT" -gmt 1]
-	    set age [list -expires $age]
+	    #set then [expr {$maxAge + [clock seconds]}]
+	    #set age [clock format $then -format "%a, %d-%b-%Y %H:%M:%S GMT" -gmt 1]
+	    set age [list -expires $maxAge]
 	} else {
 	    set age {}
 	}
@@ -2172,7 +2172,7 @@ proc Incoming {req} {
 		set toc 1
 	    }
 
-	    set c [Cookies add $c -name wiki_toc -path /_toc/ -value $toc]
+	    set c [Cookies add $c -name wiki_toc -path /_toc/ -value $toc -expires {next week}]
 	    Debug.error {toggle: $toc - $c}
 
 	    dict set req -cookies $c
@@ -2203,7 +2203,7 @@ proc Incoming {req} {
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
 		set toc [dict get $toc -value]
 	    } x eo]} {
-		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1]
+		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1 -expires {next week}]
                 dict set req -suffix [file tail [dict get $req -path]] 
                 Http NoCache [Http Ok [::scripts do $req]]
                 #Http NoCache [Http Ok $req {} text/javascript]
