@@ -190,7 +190,7 @@ namespace eval WikitWub {
 	[<form> login method post action /_edit/login {
 	    [<fieldset> login title Login {
 		[<text> nickname title "Nickname"]
-		[<submit> save value login "Login"]
+		[<input> name save type submit value "Login" {}]
 	    }]
 	    [<hidden> R [armour $R]]
 	}]
