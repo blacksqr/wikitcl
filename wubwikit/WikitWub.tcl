@@ -1198,20 +1198,7 @@ namespace eval WikitWub {
 
 	# include an optional expiry age
 	variable maxAge
-	if {![string is integer -strict $maxAge]} {
-	    if {[catch {
-		expr {[clock scan $maxAge] - [clock seconds]}
-	    } maxAge]} {
-		set age {}
-	    } else {
-		set age [list -max-age $maxAge]
-	    }
-	}
-
-	if {$maxAge} {
-	    #set age [list -max-age $maxAge]
-	    #set then [expr {$maxAge + [clock seconds]}]
-	    #set age [clock format $then -format "%a, %d-%b-%Y %H:%M:%S GMT" -gmt 1]
+	if {$maxAge ne ""} {
 	    set age [list -expires $maxAge]
 	} else {
 	    set age {}
