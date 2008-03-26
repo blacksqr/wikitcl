@@ -432,7 +432,7 @@ if {[catch {package require gbutton}]} {
                 font create wikit_button -family $family -size $buttonsize
                 font create wikit_title -family $family -size $title -weight bold
                 font create wikit_title3 -family $family -size $title3 -slant italic -weight bold
-                font create wikit_title4 -family $family -size $title3 -slant italic
+                font create wikit_title4 -family $family -size $title4 -slant italic
                 font create wikit_edit -family $fixedfamily -size $default -weight normal
                 font create wikit_fixed -family $fixedfamily -size $default -weight normal
                 font create wikit_thin -family $fixedfamily -size $thin
