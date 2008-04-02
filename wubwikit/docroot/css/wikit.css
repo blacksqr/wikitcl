@@ -453,3 +453,11 @@ div.previewarea {
   background: white;
 }
 
+pre.wikit_options {
+    margin : 0;
+}
+
+td.wikit_options {
+	border: 1px solid #DDD;
+}
+

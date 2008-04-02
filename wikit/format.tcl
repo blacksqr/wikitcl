@@ -1863,11 +1863,11 @@ namespace eval Wikit::Format {
   vs TDEH TDH  <th>
   vs TDH  TDEH </th>
 
-  vs L F <td><pre>
-  vs V F </td></tr><tr><td><pre>
-  vs F V </pre></td><td>
+  vs L F "<td class=wikit_options><pre class=wikit_options>"
+  vs V F "</td></tr><tr><td class=wikit_options><pre class=wikit_options>"
+  vs F V "</pre></td><td class=wikit_options>"
   vs V V {}
-  vs F L </pre></td><td></td></tr>
+  vs F L "</pre></td><td class=wikit_options></td></tr>"
   vs V L </td></tr>
 
 proc l { pl t s e } { 
