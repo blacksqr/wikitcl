@@ -1544,11 +1544,7 @@ namespace eval Wikit::Format {
           append result $text
         }
         HD2 - HD3 - HD4 {
-          if {$mode eq "HD2"} {
-            append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
-          } else {
-            append result "$html_frag($state$mode)>" 
-          }
+          append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
           lappend tocpos [string index $mode 2] [string length $result]
           set state $mode
 	  set in_header 1
@@ -1651,24 +1647,92 @@ namespace eval Wikit::Format {
 
     # Create page-TOC
     set toc ""
-    set toce ""
     if { [llength $tocpos] } {
       append toc "<div class='toc1'>Page contents\n"
+      set i 0
       foreach {ht tpb thdr} $tocpos {
-        if { $ht == 2 } {
-          set tkn [::crc::CksumInit]
-          ::crc::CksumUpdate $tkn $thdr
-          set cksum [::crc::CksumFinal $tkn]
-          if {[string length $toce]} {
-            append toc "<div class='toc2'>$toce</div>\n"
-            set toce ""
+        set l [expr {$ht-2}]
+        # Init lvl
+        set img($i,0) " "
+        set img($i,1) " "
+        set img($i,2) " "
+        # Join-branch for current level
+        set img($i,$l) "+"
+        incr i
+      }      
+      # Join-end for last entry on each level
+      set cl -1
+      set act(0) 0
+      set act(1) 0
+      set act(2) 0
+      for { set j [expr {$i-1}] } { $j >= 0 } { incr j -1 } { 
+        for { set k 0 } { $k < 3 } { incr k } { 
+          if { $img($j,$k) eq "+" } {
+	    if { !$act($k) } {
+              set img($j,$k) "-"
+	    }
+	    set act($k) 1
+	    for { set l [expr {$k+1}] } { $l < 3 } { incr l } { 
+              set act($l) 0
+	    }
           }
-          set toce "<a class='toc' href='#pagetoc[format %08x $cksum]'>[armour_quote $thdr]</a>"
-          set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
+        }
+        puts "$j $img($j,0)$img($j,1)$img($j,2) $act(0) $act(1) $act(2)"
+      }
+      # Line to lower on same level
+      set act(0) 0
+      set act(1) 0
+      for { set j [expr {$i-1}] } { $j >= 0 } { incr j -1 } { 
+        for { set k 0 } { $k < 3 } { incr k } { 
+          if { $img($j,$k) eq "+" || $img($j,$k) eq "-" } { 
+	    set act($k) 1
+          }
+        }
+        if { $act(0) && $img($j,0) eq " " } { 
+          set img($j,0) "|"
+        }
+        if { $act(1) && ($img($j,0) eq " " || $img($j,0) eq "|")  && $img($j,1) eq " " } { 
+          set img($j,1) "|"
         }
       }
-      if {[string length $toce]} {
-        append toc "<div class='toc3'>$toce</div>\n"
+
+      set hdl2 {}
+      set hdl3 {}
+      set hdl4 {}
+      set i 0
+      foreach {ht tpb thdr} $tocpos {
+        if { $ht == 2 } {
+          set hdl2 $thdr
+          set hdl3 {}
+          set hdl4 {}
+        } elseif { $ht == 3 } { 
+          set hdl3 $thdr
+          set hdl4 {}
+        } elseif { $ht == 4 } { 
+          set hdl4 $thdr
+        }
+        set tkn [::crc::CksumInit]
+        ::crc::CksumUpdate $tkn $hdl2$hdl3$hdl4
+        set cksum [::crc::CksumFinal $tkn]
+        append toc "<div class='ptoc'>"
+        for { set j 0 } { $j < 3 } { incr j } { 
+          if { $img($i,$j) eq "+" } {
+            append toc "<img class='ptoc' src='join.gif'>"
+            break
+          } elseif { $img($i,$j) eq "-" } {
+            append toc "<img class='ptoc' src='joinbottom.gif'>"
+            break
+          } elseif { $img($i,$j) eq "|" } {
+            append toc "<img class='ptoc' src='line.gif'>"
+          } elseif { $img($i,$j) eq " " } {
+            append toc "<img class='ptoc' src='empty.gif'>"            
+          }
+        }
+        set ltxt [string map {\  &nbsp;} [armour_quote $thdr]]
+        append toc "&nbsp;<a class='toc' href='#pagetoc[format %08x $cksum]'>$ltxt</a>"
+        append toc "</div>\n"
+        set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
+      incr i
       }
       append toc "</div>"
     }
