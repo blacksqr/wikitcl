@@ -27,9 +27,6 @@ package provide WikitWub 1.0
 
 Honeypot init dir [file join $::config(docroot) captcha]
 
-proc pest {req} {return 0}	;# default [pest] catcher
-catch {source [file join [file dirname [info script]] pest.tcl]}
-
 # ::Wikit::GetPage {id} -
 # ::Wikit::Expand_HTML {text}
 # ::Wikit::pagevars {id args} - assign values to named vars
@@ -2267,6 +2264,10 @@ proc Incoming {req} {
     #return [Session store $rsp]
     return $rsp
 }
+
+# initialize pest preprocessor
+proc pest {req} {return 0}	;# default [pest] catcher
+catch {source [file join [file dirname [info script]] pest.tcl]}
 
 #### initialize Block
 package require Block
