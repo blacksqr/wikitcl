@@ -1739,9 +1739,11 @@ namespace eval WikitWub {
 	return [list $result $rdate $long]
     }
 
-    variable trailers {@ _edit ! _ref - _diff + _history}
-    proc do {r term} {
+    proc Filter {req term} {}
 
+    variable trailers {@ _edit ! _ref - _diff + _history}
+
+    proc do {r term} {
 	# decompose name
 	set N [file rootname $term]	;# it's a simple single page
 	set ext [file extension $term]	;# file extension?
@@ -1773,6 +1775,8 @@ namespace eval WikitWub {
 	    set url [dict get $trailers $fancy]/$N
 	    return [Http Redir $r "http://[dict get $r host]/$url"]
 	}
+
+	Filter $r $N	;# filter out selected pages
 
 	set date [clock seconds]	;# default date is now
 	set name ""	;# no default page name
@@ -2042,7 +2046,6 @@ proc Responder::post {rsp} {
 
 # Incoming - indication of incoming request
 proc Incoming {req} {
-
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
     set req [Cookies 4Server $req]
     #set req [Session fetch $req]
