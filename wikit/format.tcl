@@ -299,7 +299,7 @@ namespace eval Wikit::Format {
             set paragraph {}
             lappend irep BLE 0
           } else {
-            lappend paragraph $txt
+            lappend paragraph $line
           }
         }
         OPTION {
