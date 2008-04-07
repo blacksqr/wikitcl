@@ -307,7 +307,7 @@ namespace eval Wikit::Format {
             set paragraph {}
             lappend irep BLE 0
           } else {
-            lappend paragraph $txt
+            lappend paragraph $line
           }
         }
         OPTION {
@@ -1934,94 +1934,94 @@ namespace eval Wikit::Format {
   vs F L "</pre></td><td class=wikit_options></td></tr>"
   vs V L </td></tr>
 
-proc l { pl t s e } { 
-  variable html_frag
-  set T T
-  for { set l $s } { $l <= $e } { incr l } { 
-
-    # From other type to U/O and back
-    set sh ""
-    set eh "</li>"
-    for { set i 1} { $i <= $l } { incr i }  {
-      append sh <[string tolower $t]l>
-      append eh </[string tolower $t]l>
-    }
-    append sh <li>
-    foreach p $pl {
-      if { [info exists html_frag($p$T)] } {
-        vs $p $l$t $html_frag($p$T)$sh
-      }
-      if { [info exists html_frag($T$p)] } {
-        vs $l$t $p $eh$html_frag($T$p)
-      }
-    }
-
-    # Within same level U/O
-    vs $l$t $l$t </li><li>
-
-    # To other level U/O
-    for { set i $s } { $i < $l } { incr i } { 
+  proc l { pl t s e } { 
+    variable html_frag
+    set T T
+    for { set l $s } { $l <= $e } { incr l } { 
+      
+      # From other type to U/O and back
       set sh ""
-      for { set j $i } { $j < $l } { incr j }  {
-        append sh "<[string tolower $t]l>"
+      set eh "</li>"
+      for { set i 1} { $i <= $l } { incr i }  {
+        append sh <[string tolower $t]l>
+        append eh </[string tolower $t]l>
       }
-      append sh "<li>"
-      vs $i$t $l$t $sh
-    }
+      append sh <li>
+      foreach p $pl {
+        if { [info exists html_frag($p$T)] } {
+          vs $p $l$t $html_frag($p$T)$sh
+        }
+        if { [info exists html_frag($T$p)] } {
+          vs $l$t $p $eh$html_frag($T$p)
+        }
+      }
 
-    for { set i [expr {$l+1}] } { $i <= $e } { incr i } { 
-      set sh "</li>"
-      for { set j $i } { $j > $l } { incr j -1 }  {
-        append sh "</[string tolower $t]l>"
+      # Within same level U/O
+      vs $l$t $l$t </li><li>
+
+      # To other level U/O
+      for { set i $s } { $i < $l } { incr i } { 
+        set sh ""
+        for { set j $i } { $j < $l } { incr j }  {
+          append sh "<[string tolower $t]l>"
+        }
+        append sh "<li>"
+        vs $i$t $l$t $sh
       }
-      append sh "</li><li>"
-      vs $i$t $l$t $sh
+
+      for { set i [expr {$l+1}] } { $i <= $e } { incr i } { 
+        set sh "</li>"
+        for { set j $i } { $j > $l } { incr j -1 }  {
+          append sh "</[string tolower $t]l>"
+        }
+        append sh "</li><li>"
+        vs $i$t $l$t $sh
+      }
     }
   }
-}
 
-proc il { s e } {
-  set U U
-  set O O
-  for { set l $s } { $l <= $e } { incr l } { 
+  proc il { s e } {
+    set U U
+    set O O
+    for { set l $s } { $l <= $e } { incr l } { 
 
-    vs $l$U $l$O </li></ul><ol><li>
-    vs $l$O $l$U </li></ol><ul><li>
+      vs $l$U $l$O </li></ul><ol><li>
+      vs $l$O $l$U </li></ol><ul><li>
 
-    for { set i $s } { $i < $l } { incr i } { 
-      set ush ""
-      set osh ""
-      for { set j $i } { $j < $l } { incr j }  {
-        append ush "<ul>"
-        append osh "<ol>"
+      for { set i $s } { $i < $l } { incr i } { 
+        set ush ""
+        set osh ""
+        for { set j $i } { $j < $l } { incr j }  {
+          append ush "<ul>"
+          append osh "<ol>"
+        }
+        append ush "<li>"
+        append osh "<li>"
+        vs $i$O $l$U $ush
+        vs $i$U $l$O $osh
       }
-      append ush "<li>"
-      append osh "<li>"
-      vs $i$O $l$U $ush
-      vs $i$U $l$O $osh
-    }
 
-    for { set i [expr {$l+1}] } { $i <= $e } { incr i } { 
-      set ush "</li></ul>"
-      set osh "</li></ol>"
-      for { set j [expr {$i-1}] } { $j > $l } { incr j -1 }  {
-        append ush "</ol>"
-        append osh "</ul>"
+      for { set i [expr {$l+1}] } { $i <= $e } { incr i } { 
+        set ush "</li></ul>"
+        set osh "</li></ol>"
+        for { set j [expr {$i-1}] } { $j > $l } { incr j -1 }  {
+          append ush "</ol>"
+          append osh "</ul>"
+        }
+        append ush "</li><li>"
+        append osh "</li><li>"
+        vs $i$O $l$U $osh
+        vs $i$U $l$O $ush
       }
-      append ush "</li><li>"
-      append osh "</li><li>"
-      vs $i$O $l$U $osh
-      vs $i$U $l$O $ush
+      
     }
-    
   }
-}
 
-set pl {T Q I D H TDE TDEH FE FI L HD2 HD3 HD4 BLS BLE}
+  set pl {T Q I D H TDE TDEH TRH FE FI L HD2 HD3 HD4 BLS BLE _}
 
-l $pl O 1 5
-l $pl U 1 5
-il 1 5
+  l $pl O 1 5
+  l $pl U 1 5
+  il 1 5
 
   array set html_frag {
     a_ {<a href="}         b0 </b> f0 </tt>
