@@ -27,9 +27,6 @@ package provide WikitWub 1.0
 
 Honeypot init dir [file join $::config(docroot) captcha]
 
-proc pest {req} {return 0}	;# default [pest] catcher
-catch {source [file join [file dirname [info script]] pest.tcl]}
-
 # ::Wikit::GetPage {id} -
 # ::Wikit::Expand_HTML {text}
 # ::Wikit::pagevars {id args} - assign values to named vars
@@ -1760,9 +1757,11 @@ namespace eval WikitWub {
 	return [list $result $rdate $long]
     }
 
-    variable trailers {@ _edit ! _ref - _diff + _history}
-    proc do {r term} {
+    proc Filter {req term} {}
 
+    variable trailers {@ _edit ! _ref - _diff + _history}
+
+    proc do {r term} {
 	# decompose name
 	set N [file rootname $term]	;# it's a simple single page
 	set ext [file extension $term]	;# file extension?
@@ -1794,6 +1793,8 @@ namespace eval WikitWub {
 	    set url [dict get $trailers $fancy]/$N
 	    return [Http Redir $r "http://[dict get $r host]/$url"]
 	}
+
+	Filter $r $N	;# filter out selected pages
 
 	set date [clock seconds]	;# default date is now
 	set name ""	;# no default page name
@@ -2063,7 +2064,6 @@ proc Responder::post {rsp} {
 
 # Incoming - indication of incoming request
 proc Incoming {req} {
-
     puts $req
 
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
@@ -2287,6 +2287,10 @@ proc Incoming {req} {
     #return [Session store $rsp]
     return $rsp
 }
+
+# initialize pest preprocessor
+proc pest {req} {return 0}	;# default [pest] catcher
+catch {source [file join [file dirname [info script]] pest.tcl]}
 
 #### initialize Block
 package require Block

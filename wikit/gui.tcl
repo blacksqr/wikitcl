@@ -410,6 +410,7 @@ if {[catch {package require gbutton}]} {
             set top $win
             
             set family arial
+	    set fixedfamily courier
             set title 16
             set title3 14
             set title4 14
@@ -422,6 +423,8 @@ if {[catch {package require gbutton}]} {
                 set buttonsize 11
             }
             
+	    catch {foreach {var val} [Wikit::getFontInfo] { set $var $val }}
+
             catch {
                 font create wikit_default -family $family -size $default
                 font create wikit_underline -family $family -size $default \
@@ -429,19 +432,19 @@ if {[catch {package require gbutton}]} {
                 font create wikit_button -family $family -size $buttonsize
                 font create wikit_title -family $family -size $title -weight bold
                 font create wikit_title3 -family $family -size $title3 -slant italic -weight bold
-                font create wikit_title4 -family $family -size $title3 -slant italic
-                font create wikit_edit -family courier -size $default -weight normal
-                font create wikit_fixed -family courier -size $default -weight normal
-                font create wikit_thin -family courier -size $thin
+                font create wikit_title4 -family $family -size $title4 -slant italic
+                font create wikit_edit -family $fixedfamily -size $default -weight normal
+                font create wikit_fixed -family $fixedfamily -size $default -weight normal
+                font create wikit_thin -family $fixedfamily -size $thin
                 font create wikit_bold -family $family -size $default -weight bold
                 font create wikit_italic -family $family -size $default -slant italic
                 font create wikit_bolditalic -family $family -size $default \
                         -weight bold -slant italic
-                font create wikit_fixedbold -family courier -size $default \
+                font create wikit_fixedbold -family $fixedfamily -size $default \
                         -weight bold
-                font create wikit_fixeditalic -family courier -size $default \
+                font create wikit_fixeditalic -family $fixedfamily -size $default \
                         -weight normal -slant italic
-                font create wikit_fixedbolditalic -family courier \
+                font create wikit_fixedbolditalic -family $fixedfamily \
                         -size $default -weight bold -slant italic
                 
                 gButton::init -bg $Color::wikiBg -font wikit_button -disabledfill $Color::btnDisable

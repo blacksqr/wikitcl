@@ -89,7 +89,7 @@ namespace eval Site {
 #### Wikit Db Initialization
 
 # load Wikit packages
-lappend auto_path ../wikit/
+lappend auto_path ../wikit/ /usr/lib/tcl8.5/Mk4tcl/
 package require Mk4tcl
 package require Wikit::Format
 namespace import Wikit::Format::*
