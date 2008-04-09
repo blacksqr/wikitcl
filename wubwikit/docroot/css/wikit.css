@@ -18,13 +18,7 @@ h2 {
 */
 
 A {
-   color: blue;
    text-decoration: none;
-}
-
-A:link, A:visited, A:active, A:inactive { 
-   // color: blue;
-   // text-decoration: none;
 }
 
 pre {

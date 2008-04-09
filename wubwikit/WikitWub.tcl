@@ -1451,8 +1451,6 @@ namespace eval WikitWub {
 	Debug.wikit {save done $N}
 	set url http://[Url host $r]/$N
 
-        puts "redir $url"
-
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
@@ -2064,8 +2062,6 @@ proc Responder::post {rsp} {
 
 # Incoming - indication of incoming request
 proc Incoming {req} {
-    puts $req
-
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
     set req [Cookies 4Server $req]
     #set req [Session fetch $req]

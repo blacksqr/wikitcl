@@ -415,7 +415,6 @@ namespace eval Wikit::Format {
           # page to be displayed as code markup but still be run)
           regsub -all {(^======\n|\n======\n|\n======$)} $page {} page
           if {[catch {set txt [eval_interp eval $page]} msg]} {
-            puts "msg = $msg"
             lappend irep i 1
             lappend irep "" "Error evaluating $txt:"
             lappend irep i 0
@@ -1677,7 +1676,6 @@ namespace eval Wikit::Format {
 	    }
           }
         }
-        puts "$j $img($j,0)$img($j,1)$img($j,2) $act(0) $act(1) $act(2)"
       }
       # Line to lower on same level
       set act(0) 0
