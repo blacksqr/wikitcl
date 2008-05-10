@@ -236,7 +236,7 @@ namespace eval WikitWub {
 	}
     }
 
-    variable searchForm [string map {%S $search} [<form> search action /_search {
+    variable searchForm [string map {%S $search} [<form> search method get action /_search {
 	[<fieldset> sfield title "Construct a new search" {
 	    [<legend> "Enter a Search Phrase"]
 	    [<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
