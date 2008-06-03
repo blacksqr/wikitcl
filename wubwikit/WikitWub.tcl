@@ -1397,6 +1397,15 @@ namespace eval WikitWub {
 		return [sendPage $r badutf]
 	    }
 
+	    # save the page into the db.
+	    set who $nick@[dict get $r -ipaddr]
+	    Debug.wikit {SAVING $N}
+	    if {[catch {
+		::Wikit::SavePage $N [string map {"Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C] $who $name $when
+	    } err eo]} {
+		set readonly $err
+	    }
+
 	    # Only actually save the page if the user selected "save"
 	    invalidate $r $N
 	    invalidate $r 4
@@ -1412,17 +1421,6 @@ namespace eval WikitWub {
 		foreach from [mk::select wdb.refs to $N] {
 		    invalidate $r [mk::get wdb.refs!$from from]
 		}
-	    }
-
-	    set who $nick@[dict get $r -ipaddr]
-	    Debug.wikit {SAVING $N}
-	    if {[catch {
-		if {[string match "*Cloverfield*" $name]} {
-		    #set when [clock scan "1/1/71"]
-		}
-		::Wikit::SavePage $N [string map {"Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C] $who $name $when
-	    } err eo]} {
-		set readonly $err
 	    }
 	}
 
