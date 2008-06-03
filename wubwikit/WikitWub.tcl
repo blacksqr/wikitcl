@@ -1287,7 +1287,7 @@ namespace eval WikitWub {
 	set name "Search"
 	set Title "Search"
 	set updated "powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'</img>"
-	set C [<script> src "http://www.google.com/jsapi?key=ABQIAAAAd_WRwEznyjHoNeYTARvZfhRBhBrTIb6FwgkxOANVg_BWVEsofRRgZuiTm8-2tzH-sy6S3NIdSJANqw"]
+	set C [<script> src "http://www.google.com/jsapi?key=$::google_jsapi_key"]
 	append C \n
 	append C [<script> {google.load('search', '1');}]
 	append C \n
