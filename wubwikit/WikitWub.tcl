@@ -1235,6 +1235,12 @@ namespace eval WikitWub {
 	}
 
 	set N [mk::select wdb.pages name $page -min date 1]
+
+        # No matches, restart with decoded string
+        if {[llength $N] == 0} {
+	    set N [mk::select wdb.pages name [Query decode $page] -min date 1]
+	}
+
 	switch [llength $N] {
 	    1 {
 		# uniquely identified, done
