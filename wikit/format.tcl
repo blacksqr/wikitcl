@@ -101,7 +101,7 @@ namespace eval Wikit::Format {
   ## of text, highlighting command and links (wiki page / external). This is
   ## then added to the internal representation.
 
-  proc TextToStream {text {fixed 0} {code 0}} {
+  proc TextToStream {text {fixed 0} {code 0} {do_rlinks 1}} {
     # Based upon ideas from the kiwi renderer. One step rendering into
     # the internal representation without a script as intermediate step.
 
@@ -223,7 +223,13 @@ namespace eval Wikit::Format {
 
           if {$empty_std} {lappend irep Q 0 {} {}; set empty_std 0}
           lappend irep Q 0
-          if {$txt != {}} {rlinks $txt}
+          if {$txt != {}} {
+            if {$do_rlinks} {
+              rlinks $txt
+            } else {
+              lappend irep {} $txt
+            }
+          }
         }
         STD {
           if {$txt == {}} {

@@ -868,7 +868,7 @@ namespace eval WikitWub {
 		    append result "<p>$C"
 		}
 		.code {
-		    set C [::Wikit::TextToStream $C]
+		    set C [::Wikit::TextToStream $C 0 0 0]
 		    set C [::Wikit::StreamToTcl $C ::WikitWub::InfoProc]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
@@ -955,7 +955,7 @@ namespace eval WikitWub {
 		    append result "<p>$C"
 		}
 		.code {
-		    set C [::Wikit::TextToStream [get_page_with_version $N $V $A]]
+		    set C [::Wikit::TextToStream [get_page_with_version $N $V $A] 0 0 0]
 		    set C [::Wikit::StreamToTcl $C ::WikitWub::InfoProc]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
@@ -1869,7 +1869,7 @@ namespace eval WikitWub {
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
 		    .code {
-			set C [::Wikit::TextToStream [GetPage $N]]
+			set C [::Wikit::TextToStream [GetPage $N] 0 0 0]
 			set C [::Wikit::StreamToTcl $C]
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
