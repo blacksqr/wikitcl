@@ -2043,6 +2043,215 @@ proc Responder::post {rsp} {
     return [::Convert do $rsp]
 }
 
+proc Responder::do {req} {
+    switch -glob -- [dict get $req -path] {
+	/*.php -
+	/*.wmv -
+	/*.exe -
+	/cgi-bin/* {
+	    # block the originator by IP
+	    Block block [dict get $req -ipaddr] "Bogus URL '[dict get $req -path]'"
+	    Send [Http Forbidden $req]
+	    continue	;# process next request
+	}
+
+	/jquery/* -
+	/jquery/ {
+	    jQ do $req
+	}
+
+	/_stats -
+	/_stats/* {
+	    ::webalizer do $req
+	}
+
+	/_sinorca {
+	    Http Redir $req "http://[dict get $req host]/_sinorca/"
+	}
+
+	/_sinorca/* {
+	    # Sinorca page style demo
+	    Sinorca ram do $req
+	}
+
+	/_wub -
+	/_wub/* {
+	    # Wub documentation - via the wikit Direct domain
+	    ::wub do $req
+	}
+
+	/_dub {
+	    Http Redir $req "/_dub/"
+	}
+
+	/_dub/* {
+	    # Dub metakit toy
+	    ::dub do $req
+	}
+
+	/_doc {
+	    Http Redir $req "http://[dict get $req host]/_doc/"
+	}
+
+	/_doc/* {
+	    # Wub docs
+	    ::doc do $req
+	}
+
+	/*.jpg -
+	/*.gif -
+	/*.png -
+	/favicon.ico {
+	    # silently redirect image files - strip all but tail
+	    dict set req -suffix [file tail [dict get $req -path]]
+	    ::images do $req
+	}
+	
+	/*.css {
+	    # silently redirect css files
+	    dict set req -suffix [file tail [dict get $req -path]]
+	    ::css do $req
+	}
+
+	/*.gz {
+	    # silently redirect gz files
+	    dict set req -suffix [file tail [dict get $req -path]]
+	    ::bin do $req
+	}
+
+	/_toc/toggle {
+	    # These are wiki-local restful command URLs,
+	    # we process them via the ::wikit Direct domain
+	    Debug.wikit {toggle TOC invocation [dict get $req -path]}
+	    if {[catch {
+		set c [Dict get? $req -cookies]
+		set toc [Cookies fetch $c -name wiki_toc]
+		set toc [expr {![dict get $toc -value]}]
+	    } err eo]} {
+		Debug.error {toggle new}
+		set toc 1
+	    }
+
+	    set c [Cookies add $c -name wiki_toc -path /_toc/ -value $toc -expires {next week}]
+	    Debug.error {toggle: $toc - $c}
+
+	    dict set req -cookies $c
+	    Debug.error {Toggle Referer: [Http Referer $req] - $c}
+	    set C [subst {
+		[<h2> "Menu Toggled"]
+		[<p> [<a> href [Http Referer $req] "Return to Wiki"]]
+	    }]
+
+	    Http RedirectReferer $req
+	}
+
+	/*ie_onload.js {
+	    Http CacheableContent [Http Cache $req 100000000] 0 {init();} application/javascript
+
+	    # send out this piddling script to IE users.
+	    # See variable head above for how it's invoked.
+	    # yet another reason to hate Windows IE
+	    # see http://dean.edwards.name/weblog/2005/09/busted/
+	    # for the reason for this offence to good taste.
+	}
+
+       /_toc/*.js {
+	   # Remove if-modified-since, incorrectly sent by Opera
+	   dict unset req if-modified-since
+            # silently redirect js files
+	    if {[catch {
+		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
+		set toc [dict get $toc -value]
+	    } x eo]} {
+		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1 -expires {next week}]
+                dict set req -suffix [file tail [dict get $req -path]] 
+                Http NoCache [Http Ok [::scripts do $req]]
+                #Http NoCache [Http Ok $req {} text/javascript]
+	    } elseif {!$toc} {
+                Http NoCache [Http Ok $req {} text/javascript]
+            } else {
+                dict set req -suffix [file tail [dict get $req -path]] 
+                Http NoCache [Http Ok [::scripts do $req]]
+            }
+        }
+
+	/robots.txt -
+	/*.js {
+	    # silently redirect js files
+	    dict set req -suffix [file tail [dict get $req -path]]
+	    ::scripts do $req
+	}
+
+	/_edit/login {
+	    # These are wiki-local restful command URLs,
+	    # we process them via the ::wikit Direct domain
+	    Debug.wikit {direct login invocation [dict get $req -path]}
+	    dict set req -suffix /login
+	    ::wikit do $req
+	}
+
+	/XXX_edit/_s*/ {
+	    # session commands
+	    #::Session do $req
+	}
+
+	/_edit/* {
+	    # /_edit domain - wiki-local restful command URL,
+	    Debug.wikit {direct invocation1 [dict get $req -path]}
+	    set path [file split [dict get $req -path]]
+	    set N [lindex $path end]
+	    set suffix /[string trimleft [lindex $path end-1] _]
+	    dict set req -suffix $suffix
+	    dict set req -Query [Query add [Query parse $req] N $N]
+	    ::wikit do $req
+	}
+
+	/_map/* {
+	    set imp [dict get $req -path]
+	    if {[info exists ::WikitWub::IMTOC($imp)]} {
+		return [Http Redir $req "http://[dict get $req host]/$::WikitWub::IMTOC($imp)"]
+	    } else {
+		return [Http NotFound $req]
+	    }
+	}
+	
+	/_* {
+	    # These are wiki-local restful command URLs,
+	    # we process them via the ::wikit Direct domain
+	    Debug.wikit {direct invocation2 [dict get $req -path]}
+	    set path [file split [dict get $req -path]]
+	    set N [lindex $path end]
+	    set suffix /[string trimleft [lindex $path 1] _]
+	    dict set req -suffix $suffix
+	    dict set req -Query [Query add [Query parse $req] N $N]
+	    ::wikit do $req
+	}
+
+	/rss.xml {
+	    # generate and return RSS feed
+	    Http CacheableContent $req [clock seconds] [WikitRss rss] application/rss+xml
+	}
+
+	/ {
+	    # need to silently redirect welcome file
+	    dict set req -suffix /welcome
+	    ::wikit do $req
+	}
+
+	//// {
+	    # wikit welcome page
+	    dict set req -Query [Query parse $req]
+	    dict set req -suffix ""
+	    dict set req -prefix ""
+	    ::WikitWub do $req 0
+	}
+
+	default {
+	    ::WikitWub do $req [file tail [dict get $req -path]]
+	}
+    }]
+}
+
 # Incoming - indication of incoming request
 proc Incoming {req} {
     #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
@@ -2055,6 +2264,7 @@ proc Incoming {req} {
 	# this will create a new session on request completion
 	dict set req -session created [clock seconds]
     }
+    return [Responder Process $req]
 
     set rsp [Responder Incoming $req -glob -- [dict get $req -path] {
 	/*.php -
