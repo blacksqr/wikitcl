@@ -2012,7 +2012,7 @@ Icons init mount /_icons/
 
 #### Repo domain - file repository
 package require Repo
-Repo init repo _repo [file join $::config(base) repo] docprefix / title "TCL Half-Bakery" tar 1 upload 1	;# make a repo from the docroot
+Repo init repo _repo [file join $::config(base) repo] docprefix / title [<a> href /half+bakery "TCL Half-Bakery"] tar 1 upload 1	;# make a repo from the docroot
 set Repo::icons /_icons/
 
 if {[file exists /var/www/webalizer]} {
