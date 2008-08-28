@@ -1996,7 +1996,7 @@ Direct init dub namespace ::Dub prefix /_dub ctype "x-text/html-fragment"
 
 #### jQ - jQuery framework
 package require jQ
-jQ init prefix /jquery
+jQ init prefix /_jquery
 
 package require Commenter
 Direct init doc namespace ::Commenter prefix /_doc ctype "x-text/html-fragment"
@@ -2005,6 +2005,15 @@ Direct init doc namespace ::Commenter prefix /_doc ctype "x-text/html-fragment"
 foreach {dom expiry} {css {next week} images {next week} scripts {next week} img {next week} html 0 bin 0} {
     File $dom -root [file join $::config(docroot) $dom] -expires $expiry
 }
+
+#### Icons domain
+package require Icons
+Icons init mount /_icons/
+
+#### Repo domain - file repository
+package require Repo
+Repo init repo _repo [file join $base repo] tar 1 upload 1	;# make a repo from the docroot
+set Repo::icons /_icons/
 
 if {[file exists /var/www/webalizer]} {
     Mason webalizer -root /var/www/webalizer -url /_stats/ -auth .before -wrapper .after -dirhead {name size mtime}
@@ -2055,8 +2064,16 @@ proc Responder::do {req} {
 	    continue	;# process next request
 	}
 
-	/jquery/* -
-	/jquery/ {
+	/_repo/* {
+	    repo do $req
+	}
+
+	/_icons/* {
+	    ::Icons do $req
+	}
+
+	/_jquery/* -
+	/_jquery/ {
 	    jQ do $req
 	}
 
