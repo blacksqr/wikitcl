@@ -2064,7 +2064,8 @@ proc Responder::do {req} {
 	    continue	;# process next request
 	}
 
-	/_repo/* {
+	/_repo/* -
+	/_repo/ {
 	    repo do $req
 	}
 
