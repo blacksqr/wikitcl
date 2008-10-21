@@ -1434,6 +1434,8 @@ namespace eval WikitWub {
 
 	Debug.wikit {save done $N}
 	set url http://[Url host $r]/$N
+	# instead of redirecting, return the generated page with a Content-Location tag
+	return [do $r $N]
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
@@ -1877,6 +1879,7 @@ namespace eval WikitWub {
 		    }
 		    default {
 			set C [::Wikit::TextToStream [GetPage $N]]
+			dict set r content-location "http://[Url host $r]/$N"
 			lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 			foreach {containerid bref} $BR {
 			    if {[string length $bref]} {
