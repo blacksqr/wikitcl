@@ -1413,7 +1413,9 @@ namespace eval WikitWub {
 	    }
 
 	    # Only actually save the page if the user selected "save"
-	    invalidate $r $N
+	    if {[invalidate $r $N] < 0} {
+		Debug.error {Cache failed to invalidate $N}
+	    }
 	    invalidate $r 4
 	    invalidate $r _ref/$N
 	    invalidate $r rss.xml
