@@ -710,7 +710,7 @@ namespace eval WikitWub {
 	    || ![string is integer -strict $D]
             || $N < 0
 	    || $N >= [mk::view size wdb.pages]
-	    || $ext ni {"" .txt .tk .str .code}
+	    || $ext ni {"" .txt .tk .str .code .entitled}
 	} {
 	    return [Http NotFound $r]
 	}
