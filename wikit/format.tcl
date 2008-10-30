@@ -1256,7 +1256,7 @@ namespace eval Wikit::Format {
 
   catch {rename vs {}}
 
-  proc StreamToTcl {s {ip ""}} {
+  proc StreamToTcl {name s {ip ""}} {
     set result ""  ; # Tcl result
     set iscode 0
     set piscode 0
@@ -1265,20 +1265,33 @@ namespace eval Wikit::Format {
       switch -exact -- $mode {
         Q  { 
           if { !$piscode } { 
-            append result "\n### <code_block id=$blockid> ############################################################\n\n"
+            append result "\n\n### <code_block id=$blockid"
+            if {$blockid==0} {
+              append result " title='[armour $name]'"
+            }
+            append result "> ############################################################\n\n"
             incr blockid
           }
           set iscode 2 
         }
         FI { 
-          append result "\n### <code_block id=$blockid> ############################################################\n\n"
+          append result "\n\n### <code_block id=$blockid"
+          if {$blockid==0} {
+            append result " title='$name'"
+          }
+          append result "> ############################################################\n\n"
           incr blockid
           set iscode 1 
         }
-        FE { set iscode 0 }
+        FE { 
+          set iscode 0 
+        }
         default {
           if { $iscode } { 
-            append result "$text\n" 
+            append result $text
+            if {$mode eq ""} {
+              append result "\n"
+            }
             if { $iscode > 1 } { 
               set iscode 0
               set piscode 1

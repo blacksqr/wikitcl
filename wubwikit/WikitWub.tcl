@@ -145,27 +145,32 @@ namespace eval WikitWub {
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action /_edit/save/$N {
-		     [<textarea> C rows 30 cols 72 compact 0 style width:100% [tclarmour $C]]
+		     [<textarea> C id editarea rows 30 cols 72 compact 0 style width:100% [tclarmour $C]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
-                     [<input> name save   type submit value "Save your changes" {}]
-		     [<input> name cancel type submit value "Cancel" {}]
+                     <input name='save' type='submit' value='Save your changes'>
+		     <input name='cancel' type='submit' value='Cancel'>
+		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
 		 }]
-		[<hr>]
-		Editing quick-reference:
-		[<blockquote> [subst {
-		    [<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]
+		[<div> id helptext [subst {
+                    [<hr>]
 		    [<br>]
-		    [<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line
+		    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
 		    [<br>]
-		    [<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line
-		    [<br>]
-		    [<b> PARAGRAPHS] are split with empty lines,
-		    [<b> "UNFORMATTED TEXT"] starts with white space
-		    [<br>]
-		    [<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']
-		    [<br>]
-		    [<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes
+		    <ul>
+		    <li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.]</li>
+		    <li>[<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line</li>
+		    <li>[<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line</li>
+		    <li>[<b> PARAGRAPHS] are split with empty lines</li>
+		    <li>[<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt></li>
+		    <li>[<b> "FIXED WIDTH FORMATTED"] text is enclosed in lines containing <tt>===</tt></li>
+		    <li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].</li>
+		    <li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
+		    <li>[<b> HEADERS] can be specified with lines containing <b>**Header level 1**</b>, <b>***Header level 2***</b> or <b>****Header level 3****</b></li>
+		    <li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>&amp;|data|data|data|&amp;</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>%|data|data|data|%</tt></b></li>
+		    <li>[<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b></li>
+		    <li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[brefs:Wiki formatting rules\]</tt></b></li>
+		    </ul>
 		}]]
 		[<hr>]
 		[If {$date != 0} {
@@ -710,7 +715,7 @@ namespace eval WikitWub {
 	    || ![string is integer -strict $D]
             || $N < 0
 	    || $N >= [mk::view size wdb.pages]
-	    || $ext ni {"" .txt .tk .str .code .entitled}
+	    || $ext ni {"" .txt .tk .str .code}
 	} {
 	    return [Http NotFound $r]
 	}
@@ -869,13 +874,7 @@ namespace eval WikitWub {
 		}
 		.code {
 		    set C [::Wikit::TextToStream $C 0 0 0]
-		    set C [::Wikit::StreamToTcl $C ::WikitWub::InfoProc]
-		    return [Http NoCache [Http Ok $r $C text/plain]]
-		}
-		.entitled { # new form for Stu Cassof's scraper.
-		    set C [::Wikit::TextToStream $C 0 0 0]
-		    set C [::Wikit::StreamToTcl $C ::WikitWub::InfoProc]
-		    set C "# $name\n$C"
+		    set C [::Wikit::StreamToTcl $name $C ::WikitWub::InfoProc]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		.str {
@@ -929,7 +928,7 @@ namespace eval WikitWub {
             || $N < 0
 	    || $N >= [mk::view size wdb.pages]
 	    || $V < 0
-	    || $ext ni {"" .txt .tk .str .code .entitled}
+	    || $ext ni {"" .txt .tk .str .code}
 	} {
 	    return [Http NotFound $r]
 	}
@@ -962,13 +961,7 @@ namespace eval WikitWub {
 		}
 		.code {
 		    set C [::Wikit::TextToStream [get_page_with_version $N $V $A] 0 0 0]
-		    set C [::Wikit::StreamToTcl $C ::WikitWub::InfoProc]
-		    return [Http NoCache [Http Ok $r $C text/plain]]
-		}
-		.entitled { # new form for Stu Cassof's scraper.
-		    set C [::Wikit::TextToStream [get_page_with_version $N $V $A] 0 0 0]
-		    set C [::Wikit::StreamToTcl $C ::WikitWub::InfoProc]
-		    set C "# $name\n$C"
+		    set C [::Wikit::StreamToTcl $name $C ::WikitWub::InfoProc]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		.str {
@@ -1886,15 +1879,8 @@ namespace eval WikitWub {
 		    }
 		    .code {
 			set C [::Wikit::TextToStream [GetPage $N] 0 0 0]
-			set C [::Wikit::StreamToTcl $C]
+			set C [::Wikit::StreamToTcl $name $C]
 			return [Http NoCache [Http Ok $r $C text/plain]]
-		    }
-		    .entitled { # new form for Stu Cassof's scraper.
-			set C [::Wikit::TextToStream [GetPage $N] 0 0 0]
-			set C [::Wikit::StreamToTcl $C]
-			set C "# $name\n$C"
-			return [Http NoCache [Http Ok $r $C text/plain]]
-
 		    }
 		    default {
 			set C [::Wikit::TextToStream [GetPage $N]]
