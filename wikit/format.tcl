@@ -1265,21 +1265,14 @@ namespace eval Wikit::Format {
       switch -exact -- $mode {
         Q  { 
           if { !$piscode } { 
-            append result "\n\n### <code_block id=$blockid"
-            if {$blockid==0} {
-              append result " title='[armour $name]'"
-            }
-            append result "> ############################################################\n\n"
+            append result "\n\n### <code_block id=$blockid title='[armour $name]'> ############################################################\n"
             incr blockid
           }
+          append result \n
           set iscode 2 
         }
         FI { 
-          append result "\n\n### <code_block id=$blockid"
-          if {$blockid==0} {
-            append result " title='$name'"
-          }
-          append result "> ############################################################\n\n"
+          append result "\n\n### <code_block id=$blockid title='$name'> ############################################################\n\n"
           incr blockid
           set iscode 1 
         }
@@ -1289,9 +1282,6 @@ namespace eval Wikit::Format {
         default {
           if { $iscode } { 
             append result $text
-            if {$mode eq ""} {
-              append result "\n"
-            }
             if { $iscode > 1 } { 
               set iscode 0
               set piscode 1
