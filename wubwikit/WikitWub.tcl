@@ -929,7 +929,7 @@ namespace eval WikitWub {
             || $N < 0
 	    || $N >= [mk::view size wdb.pages]
 	    || $V < 0
-	    || $ext ni {"" .txt .tk .str .code}
+	    || $ext ni {"" .txt .tk .str .code .entitled}
 	} {
 	    return [Http NotFound $r]
 	}
@@ -963,6 +963,12 @@ namespace eval WikitWub {
 		.code {
 		    set C [::Wikit::TextToStream [get_page_with_version $N $V $A] 0 0 0]
 		    set C [::Wikit::StreamToTcl $C ::WikitWub::InfoProc]
+		    return [Http NoCache [Http Ok $r $C text/plain]]
+		}
+		.entitled { # new form for Stu Cassof's scraper.
+		    set C [::Wikit::TextToStream [get_page_with_version $N $V $A] 0 0 0]
+		    set C [::Wikit::StreamToTcl $C ::WikitWub::InfoProc]
+		    set C "# $name\n$C"
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		.str {
@@ -1882,6 +1888,13 @@ namespace eval WikitWub {
 			set C [::Wikit::TextToStream [GetPage $N] 0 0 0]
 			set C [::Wikit::StreamToTcl $C]
 			return [Http NoCache [Http Ok $r $C text/plain]]
+		    }
+		    .entitled { # new form for Stu Cassof's scraper.
+			set C [::Wikit::TextToStream [GetPage $N] 0 0 0]
+			set C [::Wikit::StreamToTcl $C]
+			set C "# $name\n$C"
+			return [Http NoCache [Http Ok $r $C text/plain]]
+
 		    }
 		    default {
 			set C [::Wikit::TextToStream [GetPage $N]]
