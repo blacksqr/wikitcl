@@ -872,7 +872,7 @@ namespace eval WikitWub {
 		    set C [::Wikit::StreamToTcl $C ::WikitWub::InfoProc]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
-		.entitled { # new form for Stu Cassof's scraper
+		.entitled { # new form for Stu Cassof's scraper.
 		    set C [::Wikit::TextToStream $C 0 0 0]
 		    set C [::Wikit::StreamToTcl $C ::WikitWub::InfoProc]
 		    set C "# $name\n$C"
