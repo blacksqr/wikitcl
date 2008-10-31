@@ -32,6 +32,7 @@ namespace eval Site {
     variable upflag ""			;# no URL syncing
 
     variable multi 0			;# we're single-threaded
+    variable coro 0
     variable globaldocroot 0		;# use the local docroot
     variable varnish {}			;# don't use varnish cache by default
     variable cache {maxsize 204800}	;# use in-RAM cache by default
