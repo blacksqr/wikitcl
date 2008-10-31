@@ -167,7 +167,7 @@ namespace eval WikitWub {
 		    <li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].</li>
 		    <li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
 		    <li>[<b> HEADERS] can be specified with lines containing <b>**Header level 1**</b>, <b>***Header level 2***</b> or <b>****Header level 3****</b></li>
-		    <li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>&amp;|data|data|data|&amp;</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>%|data|data|data|%</tt></b></li>
+		    <li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>%|data|data|data|%</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>&amp;|data|data|data|&amp;</tt></b></li>
 		    <li>[<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b></li>
 		    <li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[brefs:Wiki formatting rules\]</tt></b></li>
 		    </ul>
