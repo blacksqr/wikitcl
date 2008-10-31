@@ -102,7 +102,7 @@ function checkTOC()
     // Hide help on edit page
     try {
         document.getElementById('helptext').style.display = 'none';
-	document.getElementById("editarea").rows=40;
+	document.getElementById("editarea").rows=35;
     } catch (e) {}
 
     inittocpages();
@@ -143,6 +143,6 @@ function editHelp()
 function hideEditHelp()
 {
     document.getElementById('helptext').style.display='none';
-    document.getElementById("editarea").rows=40;
+    document.getElementById("editarea").rows=35;
     return false;
 }
