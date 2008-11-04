@@ -142,7 +142,7 @@ namespace eval Wikit::Format {
       #
 
       switch -exact -- $tag {
-        HR - UL - OL - DL {set empty_std 0}
+        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL {set empty_std 0}
         default {}
       }
 
@@ -151,7 +151,7 @@ namespace eval Wikit::Format {
       ## there is any.
       #
       switch -exact -- $tag {
-        HR - UL - OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS {
+        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS {
           if {$paragraph != {}} {
             if {$mode_fixed} {
               lappend irep FI {}
@@ -201,8 +201,16 @@ namespace eval Wikit::Format {
 
       switch -exact -- $tag {
         HR  {lappend irep H 1}
-        UL  {lappend irep U 0 ; render $txt}
-        OL  {lappend irep O 0 ; render $txt}
+        1UL {lappend irep 1U 0 ; render $txt}
+        2UL {lappend irep 2U 0 ; render $txt}
+        3UL {lappend irep 3U 0 ; render $txt}
+        4UL {lappend irep 4U 0 ; render $txt}
+        5UL {lappend irep 5U 0 ; render $txt}
+        1OL {lappend irep 1O 0 ; render $txt}
+        2OL {lappend irep 2O 0 ; render $txt}
+        3OL {lappend irep 3O 0 ; render $txt}
+        4OL {lappend irep 4O 0 ; render $txt}
+        5OL {lappend irep 5O 0 ; render $txt}
         DL  {
           lappend irep I 0 ; render $aux
           lappend irep D 0 ; render $txt
@@ -413,7 +421,6 @@ namespace eval Wikit::Format {
           # page to be displayed as code markup but still be run)
           regsub -all {(^======\n|\n======\n|\n======$)} $page {} page
           if {[catch {set txt [eval_interp eval $page]} msg]} {
-            puts "msg = $msg"
             lappend irep i 1
             lappend irep "" "Error evaluating $txt:"
             lappend irep i 0
@@ -511,12 +518,20 @@ namespace eval Wikit::Format {
     ## Keep the kiwi regexes around for future enhancements.
 
     foreach {tag re} {
-      UL	{^(   + {0,2})(\*) (\S.*)$}
-      OL	{^(   + {0,2})(\d)\. (\S.*)$}
+      1UL	{^(   + {0,2})(\*) (\S.*)$}
+      2UL	{^(   + {0,2})(\*\*) (\S.*)$}
+      3UL	{^(   + {0,2})(\*\*\*) (\S.*)$}
+      4UL	{^(   + {0,2})(\*\*\*\*) (\S.*)$}
+      5UL	{^(   + {0,2})(\*\*\*\*\*) (\S.*)$}
+      1OL	{^(   + {0,2})(\d)\. (\S.*)$}
+      2OL       {^(   + {0,2})(\d\d)\. (\S.*)$}
+      3OL       {^(   + {0,2})(\d\d\d)\. (\S.*)$}
+      4OL       {^(   + {0,2})(\d\d\d\d)\. (\S.*)$}
+      5OL       {^(   + {0,2})(\d\d\d\d\d)\. (\S.*)$}
       DL	{^(   + {0,2})([^:]+):   (\S.*)$}
 
-      UL	{^(   +)(\*) (\S.*)$}
-      OL	{^(   +)(\d)\. (\S.*)$}
+      1UL	{^(   +)(\*) (\S.*)$}
+      1OL	{^(   +)(\d)\. (\S.*)$}
       DL	{^(   +)([^:]+):   (\S.*)$}
 
       FIXED  {^()()(===)$}
@@ -841,24 +856,34 @@ namespace eval Wikit::Format {
   proc StreamToTk {s N {ip ""} {brp ""}} {
     variable tagmap ; # pre-assembled information, tags and spacing
     variable vspace ; # ....
-    #              ; # State of renderer
-    set urls   ""  ; # List of links found
-    set eims   ""  ; # List of embedded images
-    set result ""  ; # Tk result
-    set state  T   ; # Assume a virtual paragraph in front of the actual data
-    set count  0   ; # Id counter for page references
-    set xcount 0   ; # Id counter for bracketed external references
-    set number 0   ; # Counter for items in enumerated lists
-    set b      0   ; # State of bold emphasis    - 0 = off, 1 = on
-    set i      0   ; # State of italic emphasis  - 0 = off, 1 = on
-    set f      0   ; # State of fixed-width font - 0= off, 1 = on
-    set incl   0   ; # included file? (0 = no, 1 = yes)
-    set tresult {} ; # Temporary result for tables
+    #               ; # State of renderer
+    set urls   ""   ; # List of links found
+    set eims   ""   ; # List of embedded images
+    set result ""   ; # Tk result
+    set state  T    ; # Assume a virtual paragraph in front of the actual data
+    set count  0    ; # Id counter for page references
+    set xcount 0    ; # Id counter for bracketed external references
+    set number(1) 0 ; # Counter for items in enumerated lists
+    set number(2) 0 ; # Counter for items in enumerated lists
+    set number(3) 0 ; # Counter for items in enumerated lists
+    set number(4) 0 ; # Counter for items in enumerated lists
+    set number(5) 0 ; # Counter for items in enumerated lists
+    set b      0    ; # State of bold emphasis    - 0 = off, 1 = on
+    set i      0    ; # State of italic emphasis  - 0 = off, 1 = on
+    set f      0    ; # State of fixed-width font - 0= off, 1 = on
+    set incl   0    ; # included file? (0 = no, 1 = yes)
+    set tresult {}  ; # Temporary result for tables
     set cresult result
+
+    set bullet(1) \u2022
+    set bullet(2) \u25e6
+    set bullet(3) \u25fc
+    set bullet(4) \u25fb
+    set bullet(5) \u25b8
 
     foreach {mode text} $s {
       switch -exact -- $mode {
-        Q - T - I - D - C - U - O - H - L - F - V - X - FI - FE - HD2 - HD3 - HD4 - BR - NBSP {
+        Q - T - I - D - C - 1U - 2U - 3U - 4U - 5U - 1O - 2O - 3O - 4O - 5O - H - L - F - V - X - FI - FE - HD2 - HD3 - HD4 - BR - NBSP {
           if {[llength $tresult]} {
             FormatTable result $tresult
             set tresult {}
@@ -947,26 +972,29 @@ namespace eval Wikit::Format {
           }
         }
         Q {
-          set number 0 ;# reset counter for items in enumerated lists
+          set number(1) 0 ;# reset counter for items in enumerated lists
           # use the body tag for the space before a quoted string
           # so the don't get a gray background.
           lappend $cresult $vspace($state$mode) $tagmap(T000)
           set state $mode
         }
         T - I - D - C {
-          set number 0 ;# reset counter for items in enumerated lists
+          set number(1) 0 ;# reset counter for items in enumerated lists
           lappend $cresult $vspace($state$mode) $tagmap(${mode}000)
           set state $mode
         }
-        U {
+        1U - 2U - 3U - 4U - 5U {
+          set n [string index $mode 0]
           lappend $cresult \
-            "$vspace($state$mode)   \u2022  " $tagmap(${mode}000)
+            "$vspace($state$mode)[string repeat {   } $n]$bullet($n)  " $tagmap(${mode}000)
           set state $mode
         }
-        O {
+        1O - 2O - 3O - 4O - 5O {
+          set n [string index $mode 0]
           lappend $cresult \
-            "$vspace($state$mode)   [incr number].\t" \
+            "$vspace($state$mode)[string repeat {   } $n][incr number($n)].\t" \
             $tagmap(${mode}000)
+          for { set ii [expr {$n+1}] } { $ii <= 5 } { incr ii } { set number($ii) 0 }
           set state $mode
         }
         H {
@@ -1088,11 +1116,35 @@ namespace eval Wikit::Format {
     H000 thin     H010 {thin i}  H100 {thin b}  H110 {thin bi}
     H000 {thin f} H010 {thin fi} H100 {thin fb} H110 {thin fbi}
 
-    U000 ul     U010 {ul i}  U100 {ul b}  U110 {ul bi}
-    U001 {ul f} U011 {ul fi} U101 {ul fb} U111 {ul fbi}
+    1U000 ul     1U010 {ul i}  1U100 {ul b}  1U110 {ul bi}
+    1U001 {ul f} 1U011 {ul fi} 1U101 {ul fb} 1U111 {ul fbi}
 
-    O000 ol     O010 {ol i}  O100 {ol b}  O110 {ol bi}
-    O001 {ol f} O010 {ol fi} O100 {ol fb} O110 {ol fbi}
+    1O000 ol     1O010 {ol i}  1O100 {ol b}  1O110 {ol bi}
+    1O001 {ol f} 1O010 {ol fi} 1O100 {ol fb} 1O110 {ol fbi}
+
+    2U000 ul     2U010 {ul i}  2U100 {ul b}  2U110 {ul bi}
+    2U001 {ul f} 2U011 {ul fi} 2U101 {ul fb} 2U111 {ul fbi}
+
+    2O000 ol     2O010 {ol i}  2O100 {ol b}  2O110 {ol bi}
+    2O001 {ol f} 2O010 {ol fi} 2O100 {ol fb} 2O110 {ol fbi}
+
+    3U000 ul     3U010 {ul i}  3U100 {ul b}  3U110 {ul bi}
+    3U001 {ul f} 3U011 {ul fi} 3U101 {ul fb} 3U111 {ul fbi}
+
+    3O000 ol     3O010 {ol i}  3O100 {ol b}  3O110 {ol bi}
+    3O001 {ol f} 3O010 {ol fi} 3O100 {ol fb} 3O110 {ol fbi}
+
+    4U000 ul     4U010 {ul i}  4U100 {ul b}  4U110 {ul bi}
+    4U001 {ul f} 4U011 {ul fi} 4U101 {ul fb} 4U111 {ul fbi}
+
+    4O000 ol     4O010 {ol i}  4O100 {ol b}  4O110 {ol bi}
+    4O001 {ol f} 4O010 {ol fi} 4O100 {ol fb} 4O110 {ol fbi}
+
+    5U000 ul     5U010 {ul i}  5U100 {ul b}  5U110 {ul bi}
+    5U001 {ul f} 5U011 {ul fi} 5U101 {ul fb} 5U111 {ul fbi}
+
+    5O000 ol     5O010 {ol i}  5O100 {ol b}  5O110 {ol bi}
+    5O001 {ol f} 5O010 {ol fi} 5O100 {ol fb} 5O110 {ol fbi}
 
     I000 dt     I010 {dt i}  I100 {dt b}  I110 {dt bi}
     I001 {dt f} I011 {dt fi} I101 {dt fb} I111 {dt fbi}
@@ -1168,27 +1220,45 @@ namespace eval Wikit::Format {
     return
   }
 
-  vs T T --- 2 ; vs T Q --- 2 ; vs T U --- 2 ; vs T O --- 2 ; vs T I --- 2
-  vs Q T --- 2 ; vs Q Q --- 1 ; vs Q U --- 2 ; vs Q O --- 2 ; vs Q I --- 2
-  vs U T --- 2 ; vs U Q --- 2 ; vs U U --- 1 ; vs U O --- 1 ; vs U I --- 1
-  vs O T --- 2 ; vs O Q --- 2 ; vs O U --- 1 ; vs O O --- 1 ; vs O I --- 1
-  vs I T --- 2 ; vs I Q --- 2 ; vs I U --- 1 ; vs I O --- 1 ; vs I I --- 1
-  vs D T --- 2 ; vs D Q --- 2 ; vs D U --- 1 ; vs D O --- 1 ; vs D I --- 1
-  vs H T --- 1 ; vs H Q --- 1 ; vs H U --- 1 ; vs H O --- 1 ; vs H I --- 1
+  vs T T --- 2 ; vs T Q --- 2 ; vs T 1U --- 2 ; vs T 1O --- 2 ; vs T I --- 2
+  vs Q T --- 2 ; vs Q Q --- 1 ; vs Q 1U --- 2 ; vs Q 1O --- 2 ; vs Q I --- 2
+  vs 1U T --- 2 ; vs 1U Q --- 2 ; vs 1U 1U --- 1 ; vs 1U 1O --- 1 ; vs 1U I --- 1
+  vs 1O T --- 2 ; vs 1O Q --- 2 ; vs 1O 1U --- 1 ; vs 1O 1O --- 1 ; vs 1O I --- 1
+  vs 2U T --- 2 ; vs 2U Q --- 2 ; vs 2U 1U --- 1 ; vs 2U 1O --- 1 ; vs 2U I --- 1
+  vs 2O T --- 2 ; vs 2O Q --- 2 ; vs 2O 1U --- 1 ; vs 2O 1O --- 1 ; vs 2O I --- 1
+  vs 3U T --- 2 ; vs 3U Q --- 2 ; vs 3U 1U --- 1 ; vs 3U 1O --- 1 ; vs 3U I --- 1
+  vs 3O T --- 2 ; vs 3O Q --- 2 ; vs 3O 1U --- 1 ; vs 3O 1O --- 1 ; vs 3O I --- 1
+  vs 4U T --- 2 ; vs 4U Q --- 2 ; vs 4U 1U --- 1 ; vs 4U 1O --- 1 ; vs 4U I --- 1
+  vs 4O T --- 2 ; vs 4O Q --- 2 ; vs 4O 1U --- 1 ; vs 4O 1O --- 1 ; vs 4O I --- 1
+  vs 5U T --- 2 ; vs 5U Q --- 2 ; vs 5U 1U --- 1 ; vs 5U 1O --- 1 ; vs 5U I --- 1
+  vs 5O T --- 2 ; vs 5O Q --- 2 ; vs 5O 1U --- 1 ; vs 5O 1O --- 1 ; vs 5O I --- 1
+  vs I T --- 2 ; vs I Q --- 2 ; vs I 1U --- 1 ; 
+  vs I 1O --- 1 ; vs I 2O --- 1 ; vs I 3O --- 1 ; vs I 4O --- 1 ; vs I 5O --- 1 ; vs I I --- 1
+  vs D T --- 2 ; vs D Q --- 2 ; vs D 1U --- 1 ; vs D 2U --- 1 ; vs D 3U --- 1 ; vs D 4U --- 1 ; vs D 5U --- 1 ; 
+  vs D 1O --- 1 ; vs D 2O --- 1 ; vs D 3O --- 1 ; vs D 4O --- 1 ; vs D 5O --- 1 ; vs D I --- 1
+  vs H T --- 1 ; vs H Q --- 1 ; vs H 1U --- 1 ; vs H 2U --- 1 ; vs H 3U --- 1 ; vs H 4U --- 1 ; vs H 5U --- 1 ; 
+  vs H 1O --- 1 ; vs H 2O --- 1 ; vs H 3O --- 1 ; vs H 4O --- 1 ; vs H 5O --- 1 ; vs H I --- 1
 
   vs T D --- 1 ; vs T H --- 2
   vs Q D --- 1 ; vs Q H --- 3
-  vs U D --- 1 ; vs U H --- 2
-  vs O D --- 1 ; vs O H --- 2
+  vs 1U D --- 1 ; vs 2U D --- 1 ; vs 3U D --- 1 ; vs 4U D --- 1 ; vs 5U D --- 1 ; 
+  vs 1U H --- 2 ; vs 2U H --- 2 ; vs 3U H --- 2 ; vs 4U H --- 2 ; vs 5U H --- 2 ; 
+  vs 1O D --- 1 ; vs 2O D --- 1 ; vs 3O D --- 1 ; vs 4O D --- 1 ; vs 5O D --- 1 ; 
+  vs 1O H --- 2 ; vs 2O H --- 2 ; vs 3O H --- 2 ; vs 4O H --- 2 ; vs 5O H --- 2 ; 
   vs I D --- 1 ; vs I H --- 2
   vs D D --- 1 ; vs D H --- 2
   vs H D --- 1 ; vs H H --- 2
 
   # support for fixed font / code blocks
-  vs T C --- 1 ; vs Q C --- 1 ; vs U C --- 1 ; vs O C --- 1 ; vs I C --- 1
-  vs D C --- 1 ; vs H C --- 1
+  vs T C --- 1 ; vs Q C --- 1 ; 
+  vs 1U C --- 1 ; vs 2U C --- 1 ; vs 3U C --- 1 ; vs 4U C --- 1 ; vs 5U C --- 1 ; 
+  vs 1O C --- 1 ; vs 2O C --- 1 ; vs 3O C --- 1 ; vs 4O C --- 1 ; vs 5O C --- 1 ; 
+  vs I C --- 1 ; vs D C --- 1 ; vs H C --- 1
 
-  vs C T   --- 2 ; vs C Q   --- 2 ; vs C U   --- 2 ; vs C O --- 2 ; vs C I --- 2
+  vs C T --- 2 ; vs C Q   --- 2 ; 
+  vs C 1U --- 2 ; vs C 2U --- 2 ; vs C 3U --- 2 ; vs C 4U --- 2 ; vs C 5U --- 2 ; 
+  vs C 1O --- 2 ; vs C 2O --- 2 ; vs C 3O --- 2 ; vs C 4O --- 2 ; vs C 5O --- 2 ; 
+  vs C I --- 2
   vs C D   --- 1 ; vs C H   --- 3 ; vs C C   --- 1 ; vs C X --- 0 ; vs C Y --- 0
   vs C HD2 --- 2 ; vs C HD3 --- 2 ; vs C HD4 --- 2
 
@@ -1197,63 +1267,107 @@ namespace eval Wikit::Format {
   vs F T --- 1
 
   # support for included files/evals
-  vs X T   --- 0 ; vs X Q   --- 0 ; vs X U   --- 0 ; vs X O --- 0 ; vs X I --- 0
+  vs X T   --- 0 ; vs X Q   --- 0 ; 
+  vs X 1U --- 0 ; vs X 2U --- 0 ; vs X 3U --- 0 ; vs X 4U --- 0 ; vs X 5U --- 0 ; 
+  vs X 1O --- 0 ; vs X 2O --- 0 ; vs X 3O --- 0 ; vs X 4O --- 0 ; vs X 5O --- 0 ; 
+  vs X I --- 0
   vs X D   --- 0 ; vs X H   --- 1 ; vs X C   --- 0 ; vs X X --- 0 ; vs X Y --- 0
   vs X HD2 --- 0 ; vs X HD3 --- 0 ; vs X HD4 --- 0
 
   # fixed font
-  vs Y T   --- 0 ; vs Y Q   --- 0 ; vs Y U   --- 0 ; vs Y O --- 0 ; vs Y I --- 0
+  vs Y T   --- 0 ; vs Y Q   --- 0 ; 
+  vs Y 1U --- 0 ; vs Y 2U --- 0 ; vs Y 3U --- 0 ; vs Y 4U --- 0 ; vs Y 5U --- 0 ; 
+  vs Y 1O --- 0 ; vs Y 2O --- 0 ; vs Y 3O --- 0 ; vs Y 4O --- 0 ; vs Y 5O --- 0 ; 
+  vs Y I --- 0
   vs Y D   --- 0 ; vs Y H   --- 1 ; vs Y C   --- 0 ; vs Y X --- 0 ; vs Y I --- 0
   vs Y HD2 --- 0 ; vs Y HD3 --- 0 ; vs Y HD4 --- 0
 
   # support for tables
-  vs TDE T   --- 2  ;vs TDE Q --- 2  ;vs TDE U   --- 2  ;vs TDE O   --- 2
+  vs TDE T   --- 2  ;vs TDE Q --- 2  ;
+  vs TDE 1U --- 2 ; vs TDE 2U --- 2 ; vs TDE 3U --- 2 ; vs TDE 4U --- 2 ; vs TDE 5U --- 2 ; 
+  vs TDE 1O --- 2 ; vs TDE 2O --- 2 ; vs TDE 3O --- 2 ; vs TDE 4O --- 2 ; vs TDE 5O --- 2 ; 
   vs TDE I   --- 2  ;vs TDE D --- 2  ;vs TDE H   --- 3  ;vs TDE C   --- 2
   vs TDE X   --- 2  ;vs TDE Y --- 3  ;vs TDE HD2 --- 2 ; vs TDE HD3 --- 2
   vs TDE HD4 --- 2
 
-  vs TDEH T   --- 2  ;vs TDEH Q --- 2  ;vs TDEH U   --- 2  ;vs TDEH O   --- 2
+  vs TDEH T   --- 2  ;vs TDEH Q --- 2  ;
+  vs TDEH 1U --- 2 ; vs TDEH 2U --- 2 ; vs TDEH 3U --- 2 ; vs TDEH 4U --- 2 ; vs TDEH 5U --- 2 ; 
+  vs TDEH 1O --- 2 ; vs TDEH 2O --- 2 ; vs TDEH 3O --- 2 ; vs TDEH 4O --- 2 ; vs TDEH 5O --- 2 ; 
   vs TDEH I   --- 2  ;vs TDEH D --- 2  ;vs TDEH H   --- 3  ;vs TDEH C   --- 2
   vs TDEH X   --- 2  ;vs TDEH Y --- 3  ;vs TDEH HD2 --- 2 ; vs TDEH HD3 --- 2
   vs TDEH HD4 --- 2
 
-  vs T   TR --- 1  ;vs Q   TR --- 2  ;vs U    TR --- 1  ;vs O   TR --- 1
+  vs T   TR --- 1  ;vs Q   TR --- 2  ;
+  vs 1U TR --- 1 ; vs 2U TR --- 1 ; vs 3U TR --- 1 ; vs 4U TR --- 1 ; vs 5U TR --- 1 ; 
+  vs 1O TR --- 1 ; vs 2O TR --- 1 ; vs 3O TR --- 1 ; vs 4O TR --- 1 ; vs 5O TR --- 1 ; 
   vs I   TR --- 1  ;vs D   TR --- 1  ;vs H    TR --- 1  ;vs TDE TR --- 0
   vs C   TR --- 1  ;vs X   TR --- 1  ;vs Y    TR --- 1  ;vs HD2 TR --- 1
   vs HD3 TR --- 1  ;vs HD4 TR --- 1  ;vs TDEH TR --- 0
 
-  vs T   TRH --- 1  ;vs Q   TRH --- 2  ;vs U    TRH --- 1  ;vs O   TRH --- 1
+  vs T   TRH --- 1  ;vs Q   TRH --- 2  ;
+  vs 1U TRH --- 1 ; vs 2U TRH --- 1 ; vs 3U TRH --- 1 ; vs 4U TRH --- 1 ; vs 5U TRH --- 1 ; 
+  vs 1O TRH --- 1 ; vs 2O TRH --- 1 ; vs 3O TRH --- 1 ; vs 4O TRH --- 1 ; vs 5O TRH --- 1 ; 
   vs I   TRH --- 1  ;vs D   TRH --- 1  ;vs H    TRH --- 1  ;vs TDE TRH --- 0
   vs C   TRH --- 1  ;vs X   TRH --- 1  ;vs Y    TRH --- 2  ;vs HD2 TRH --- 1
   vs HD3 TRH --- 1  ;vs HD4 TRH --- 1  ;vs TDEH TRH --- 0
 
-  vs T   CTR --- 1  ;vs Q   CTR --- 2  ;vs U    CTR --- 1  ;vs O   CTR --- 1
+  vs T   CTR --- 1  ;vs Q   CTR --- 2  ;
+  vs 1U CTR --- 1 ; vs 2U CTR --- 1 ; vs 3U CTR --- 1 ; vs 4U CTR --- 1 ; vs 5U CTR --- 1 ; 
+  vs 1O CTR --- 1 ; vs 2O CTR --- 1 ; vs 3O CTR --- 1 ; vs 4O CTR --- 1 ; vs 5O CTR --- 1 ; 
   vs I   CTR --- 1  ;vs D   CTR --- 1  ;vs H    CTR --- 1  ;vs TDE CTR --- 0
   vs C   CTR --- 1  ;vs X   CTR --- 1  ;vs Y    CTR --- 2  ;vs HD2 CTR --- 1
   vs HD3 CTR --- 1  ;vs HD4 CTR --- 1  ;vs TDEH CTR --- 0
 
   # headers
-  vs HD2 T   --- 2 ; vs HD2 Q   --- 2 ; vs HD2 U --- 2 ; vs HD2 O --- 2 ; vs HD2 I --- 2
+  vs HD2 T   --- 2 ; vs HD2 Q   --- 2 ; 
+  vs HD2 1U --- 2 ; vs HD2 2U --- 2 ; vs HD2 3U --- 2 ; vs HD2 4U --- 2 ; vs HD2 5U --- 2 ; 
+  vs HD2 1O --- 2 ; vs HD2 2O --- 2 ; vs HD2 3O --- 2 ; vs HD2 4O --- 2 ; vs HD2 5O --- 2 ; 
+  vs HD2 I --- 2
   vs HD2 D   --- 2 ; vs HD2 H   --- 3 ; vs HD2 C --- 2 ; vs HD2 X --- 0 ; vs HD2 Y --- 0
   vs HD2 HD2 --- 2 ; vs HD2 HD3 --- 2 ; vs HD2 HD4 --- 2
 
-  vs HD3 T   --- 2 ; vs HD3 Q   --- 2 ; vs HD3 U   --- 2 ; vs HD3 O --- 2 ; vs HD3 I --- 2
+  vs HD3 T   --- 2 ; vs HD3 Q   --- 2 ; 
+  vs HD3 1U --- 2 ; vs HD3 2U --- 2 ; vs HD3 3U --- 2 ; vs HD3 4U --- 2 ; vs HD3 5U --- 2 ; 
+  vs HD3 1O --- 2 ; vs HD3 2O --- 2 ; vs HD3 3O --- 2 ; vs HD3 4O --- 2 ; vs HD3 5O --- 2 ; 
+  vs HD3 I --- 2
   vs HD3 D   --- 2 ; vs HD3 H   --- 3 ; vs HD3 C   --- 2 ; vs HD3 X --- 0 ; vs HD3 Y --- 0
   vs HD3 HD2 --- 2 ; vs HD3 HD3 --- 2 ; vs HD3 HD4 --- 2
 
-  vs HD4 T   --- 2 ; vs HD4 Q   --- 2 ; vs HD4 U   --- 2 ; vs HD4 O --- 2 ; vs HD4 I --- 2
+  vs HD4 T   --- 2 ; vs HD4 Q   --- 2 ; 
+  vs HD4 1U --- 2 ; vs HD4 2U --- 2 ; vs HD4 3U --- 2 ; vs HD4 4U --- 2 ; vs HD4 5U --- 2 ; 
+  vs HD4 1O --- 2 ; vs HD4 2O --- 2 ; vs HD4 3O --- 2 ; vs HD4 4O --- 2 ; vs HD4 5O --- 2 ; 
+  vs HD4 I --- 2
   vs HD4 D   --- 2 ; vs HD4 H   --- 3 ; vs HD4 C   --- 2 ; vs HD4 X --- 0 ; vs HD4 Y --- 0
   vs HD4 HD2 --- 2 ; vs HD4 HD3 --- 2 ; vs HD4 HD4 --- 2
 
-  vs T HD2 --- 2 ; vs Q HD2 --- 2 ; vs U HD2 --- 2 ; vs O HD2 --- 2 ; vs I HD2 --- 2
+  vs T HD2 --- 2 ; vs Q HD2 --- 2 ; 
+  vs 1U HD2 --- 2 ; vs 2U HD2 --- 2 ; vs 3U HD2 --- 2 ; vs 4U HD2 --- 2 ; vs 5U HD2 --- 2 ; 
+  vs 1O HD2 --- 2 ; vs 2O HD2 --- 2 ; vs 3O HD2 --- 2 ; vs 4O HD2 --- 2 ; vs 5O HD2 --- 2 ; 
+  vs I HD2 --- 2
   vs D HD2 --- 2 ; vs H HD2 --- 3 ; vs C HD2 --- 2 ; vs X HD2 --- 0 ; vs Y HD2 --- 0
 
-  vs T HD3 --- 2 ; vs Q HD3 --- 2 ; vs U HD3 --- 2 ; vs O HD3 --- 2 ; vs I HD3 --- 2
+  vs T HD3 --- 2 ; vs Q HD3 --- 2 ; 
+  vs 1U HD3 --- 2 ; vs 2U HD3 --- 2 ; vs 3U HD3 --- 2 ; vs 4U HD3 --- 2 ; vs 5U HD3 --- 2 ; 
+  vs 1O HD3 --- 2 ; vs 2O HD3 --- 2 ; vs 3O HD3 --- 2 ; vs 4O HD3 --- 2 ; vs 5O HD3 --- 2 ; 
+  vs I HD3 --- 2
   vs D HD3 --- 2 ; vs H HD3 --- 3 ; vs C HD3 --- 2 ; vs X HD3 --- 0 ; vs Y HD3 --- 0
 
-  vs T HD4 --- 2 ; vs Q HD4 --- 2 ; vs U HD4 --- 2 ; vs O HD4 --- 2 ; vs I HD4 --- 2
+  vs T HD4 --- 2 ; vs Q HD4 --- 2 ; 
+  vs 1U HD4 --- 2 ; vs 2U HD4 --- 2 ; vs 3U HD4 --- 2 ; vs 4U HD4 --- 2 ; vs 5U HD4 --- 2 ; 
+  vs 1O HD4 --- 2 ; vs 2O HD4 --- 2 ; vs 3O HD4 --- 2 ; vs 4O HD4 --- 2 ; vs 5O HD4 --- 2 ; 
+  vs I HD4 --- 2
   vs D HD4 --- 2 ; vs H HD4 --- 3 ; vs C HD4 --- 2 ; vs X HD4 --- 0 ; vs Y HD4 --- 0
 
+  set U U
+  set O O
+  for { set i 0 } { $i < 6 } { incr i } { 
+    for { set j 0 } { $j < 6 } { incr j } { 
+      vs $i$U $j$U --- 1
+      vs $i$O $j$U --- 1
+      vs $i$U $j$O --- 1
+      vs $i$O $j$O --- 1
+    }
+  }
   catch {rename vs {}}
 
   proc StreamToTcl {name s {ip ""}} {
@@ -1438,11 +1552,7 @@ namespace eval Wikit::Format {
           append result $text
         }
         HD2 - HD3 - HD4 {
-          if {$mode eq "HD2"} {
-            append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
-          } else {
-            append result "$html_frag($state$mode)>" 
-          }
+          append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
           lappend tocpos [string index $mode 2] [string length $result]
           set state $mode
 	  set in_header 1
@@ -1493,7 +1603,7 @@ namespace eval Wikit::Format {
           }
           set state $mode 
         }
-        TR - CTR - TD - TDE - TRH - TDH - TDEH - T - Q - I - D - U - O - H - FI - FE - L - F {
+        TR - CTR - TD - TDE - TRH - TDH - TDEH - T - Q - I - D - 1U - 2U - 3U - 4U - 5U - 1O - 2O - 3O - 4O - 5O - H - FI - FE - L - F {
           if { $mode eq "CTR" } { 
             set mode TR
             set oddoreven [expr {$trow % 2 ? "odd" : "even"}]
@@ -1545,24 +1655,95 @@ namespace eval Wikit::Format {
 
     # Create page-TOC
     set toc ""
-    set toce ""
     if { [llength $tocpos] } {
       append toc "<div class='toc1'>Page contents\n"
+      set i 0
       foreach {ht tpb thdr} $tocpos {
-        if { $ht == 2 } {
-          set tkn [::crc::CksumInit]
-          ::crc::CksumUpdate $tkn $thdr
-          set cksum [::crc::CksumFinal $tkn]
-          if {[string length $toce]} {
-            append toc "<div class='toc2'>$toce</div>\n"
-            set toce ""
+        set l [expr {$ht-2}]
+        # Init lvl
+        set img($i,0) " "
+        set img($i,1) " "
+        set img($i,2) " "
+        # Join-branch for current level
+        set img($i,$l) "+"
+        incr i
+      }      
+
+      # Join-end for last entry on each level
+      set cl -1
+      set act(0) 0
+      set act(1) 0
+      set act(2) 0
+      for { set j [expr {$i-1}] } { $j >= 0 } { incr j -1 } { 
+        for { set k 0 } { $k < 3 } { incr k } { 
+          if { $img($j,$k) eq "+" } {
+	    if { !$act($k) } {
+              set img($j,$k) "-"
+	    }
+	    set act($k) 1
+	    for { set l [expr {$k+1}] } { $l < 3 } { incr l } { 
+              set act($l) 0
+	    }
           }
-          set toce "<a class='toc' href='#pagetoc[format %08x $cksum]'>[armour_quote $thdr]</a>"
-          set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
         }
       }
-      if {[string length $toce]} {
-        append toc "<div class='toc3'>$toce</div>\n"
+      # Line to lower on same level
+      set act(0) 0
+      set act(1) 0
+      for { set j [expr {$i-1}] } { $j >= 0 } { incr j -1 } { 
+        for { set k 0 } { $k < 3 } { incr k } { 
+          if { $img($j,$k) eq "+" || $img($j,$k) eq "-" } { 
+	    set act($k) 1
+          }
+        }
+        if { $img($j,0) eq "+" || $img($j,0) eq "-" } {
+          set act(1) 0
+        }
+        if { $act(0) && $img($j,0) eq " " } { 
+          set img($j,0) "|"
+        }
+        if { $act(1) && ($img($j,0) eq " " || $img($j,0) eq "|")  && $img($j,1) eq " " } { 
+          set img($j,1) "|"
+        }
+      }
+
+      set hdl2 {}
+      set hdl3 {}
+      set hdl4 {}
+      set i 0
+      foreach {ht tpb thdr} $tocpos {
+        if { $ht == 2 } {
+          set hdl2 $thdr
+          set hdl3 {}
+          set hdl4 {}
+        } elseif { $ht == 3 } { 
+          set hdl3 $thdr
+          set hdl4 {}
+        } elseif { $ht == 4 } { 
+          set hdl4 $thdr
+        }
+        set tkn [::crc::CksumInit]
+        ::crc::CksumUpdate $tkn $hdl2$hdl3$hdl4
+        set cksum [::crc::CksumFinal $tkn]
+        append toc "<div class='ptoc'>"
+        for { set j 0 } { $j < 3 } { incr j } { 
+          if { $img($i,$j) eq "+" } {
+            append toc "<img class='ptoc' src='join.gif'>"
+            break
+          } elseif { $img($i,$j) eq "-" } {
+            append toc "<img class='ptoc' src='joinbottom.gif'>"
+            break
+          } elseif { $img($i,$j) eq "|" } {
+            append toc "<img class='ptoc' src='line.gif'>"
+          } elseif { $img($i,$j) eq " " } {
+            append toc "<img class='ptoc' src='empty.gif'>"            
+          }
+        }
+        set ltxt [string map {\  &nbsp;} [armour_quote $thdr]]
+        append toc "&nbsp;<a class='toc' href='#pagetoc[format %08x $cksum]'>$ltxt</a>"
+        append toc "</div>\n"
+        set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
+      incr i
       }
       append toc "</div>"
     }
@@ -1763,6 +1944,96 @@ namespace eval Wikit::Format {
   vs V V {}
   vs F L "</pre></td><td class=wikit_options></td></tr>"
   vs V L </td></tr>
+
+  proc l { pl t s e } { 
+    variable html_frag
+    set T T
+    for { set l $s } { $l <= $e } { incr l } { 
+      
+      # From other type to U/O and back
+      set sh ""
+      set eh "</li>"
+      for { set i 1} { $i <= $l } { incr i }  {
+        append sh <[string tolower $t]l>
+        append eh </[string tolower $t]l>
+      }
+      append sh <li>
+      foreach p $pl {
+        if { [info exists html_frag($p$T)] } {
+          vs $p $l$t $html_frag($p$T)$sh
+        }
+        if { [info exists html_frag($T$p)] } {
+          vs $l$t $p $eh$html_frag($T$p)
+        }
+      }
+
+      # Within same level U/O
+      vs $l$t $l$t </li><li>
+
+      # To other level U/O
+      for { set i $s } { $i < $l } { incr i } { 
+        set sh ""
+        for { set j $i } { $j < $l } { incr j }  {
+          append sh "<[string tolower $t]l>"
+        }
+        append sh "<li>"
+        vs $i$t $l$t $sh
+      }
+
+      for { set i [expr {$l+1}] } { $i <= $e } { incr i } { 
+        set sh "</li>"
+        for { set j $i } { $j > $l } { incr j -1 }  {
+          append sh "</[string tolower $t]l>"
+        }
+        append sh "</li><li>"
+        vs $i$t $l$t $sh
+      }
+    }
+  }
+
+  proc il { s e } {
+    set U U
+    set O O
+    for { set l $s } { $l <= $e } { incr l } { 
+
+      vs $l$U $l$O </li></ul><ol><li>
+      vs $l$O $l$U </li></ol><ul><li>
+
+      for { set i $s } { $i < $l } { incr i } { 
+        set ush ""
+        set osh ""
+        for { set j $i } { $j < $l } { incr j }  {
+          append ush "<ul>"
+          append osh "<ol>"
+        }
+        append ush "<li>"
+        append osh "<li>"
+        vs $i$O $l$U $ush
+        vs $i$U $l$O $osh
+      }
+
+      for { set i [expr {$l+1}] } { $i <= $e } { incr i } { 
+        set ush "</li></ul>"
+        set osh "</li></ol>"
+        for { set j [expr {$i-1}] } { $j > $l } { incr j -1 }  {
+          append ush "</ol>"
+          append osh "</ul>"
+        }
+        append ush "</li><li>"
+        append osh "</li><li>"
+        vs $i$O $l$U $osh
+        vs $i$U $l$O $ush
+      }
+      
+    }
+  }
+
+  set pl {T Q I D H TDE TDEH TRH FE FI L HD2 HD3 HD4 BLS BLE _}
+
+  l $pl O 1 5
+  l $pl U 1 5
+  il 1 5
+
   array set html_frag {
     a_ {<a href="}         b0 </b> f0 </tt>
     A_ {<a class='backreflink' href="}
