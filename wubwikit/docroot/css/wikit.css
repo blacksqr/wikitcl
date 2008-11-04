@@ -11,18 +11,8 @@ h1 {
   font-weight: normal;
 }
 
-h2 {
-  font-size: 120%;
-}
-
 A {
-   color: blue;
    text-decoration: none;
-}
-
-A:link, A:visited, A:active, A:inactive { 
-   // color: blue;
-   // text-decoration: none;
 }
 
 pre {
@@ -447,3 +437,10 @@ A.toc {
 A:active, A:hover {
     color: blue;
 }
+pre.wikit_options {
+    margin : 0;
+}
+td.wikit_options {
+	border: 1px solid #DDD;
+}
+
