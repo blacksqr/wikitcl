@@ -134,6 +134,11 @@ namespace eval WikitWub {
 	[tclarmour $C]
     }
 
+    # page sent when constructing a transcluded reference page
+    template preview_tc {Preview of $N} {
+	[tclarmour $C]
+    }
+
     # page sent when editing a page
     template edit {Editing [armour $name]} {
 	[div edit {
@@ -150,6 +155,7 @@ namespace eval WikitWub {
 		     [<hidden> _charset_ {}]
                      <input name='save' type='submit' value='Save your changes'>
 		     <input name='cancel' type='submit' value='Cancel'>
+		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
 		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
 		 }]
 		[<div> id helptext [subst {
@@ -172,6 +178,8 @@ namespace eval WikitWub {
 		    <li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[brefs:Wiki formatting rules\]</tt></b></li>
 		    </ul>
 		}]]
+		[<div> id previewarea_pre ""]
+		[<div> class previewarea id previewarea ""]
 		[<hr>]
 		[If {$date != 0} {
 		    [<i> "Last saved on [<b> [clock format $date -gmt 1 -format {%Y-%m-%d %T}]]"]
@@ -1329,7 +1337,13 @@ namespace eval WikitWub {
 	}
     }
 
-    proc /save {r N C O save cancel} {
+    proc /preview { r N O } {
+	set C [::Wikit::TextToStream $O]
+	lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+	return [sendPage $r preview_tc]
+    }
+
+    proc /save {r N C O save cancel preview } {
 
 	if { [string tolower $cancel] eq "cancel" } {
 	    set url http://[Url host $r]/$N

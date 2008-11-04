@@ -437,6 +437,10 @@ A.toc {
 A:active, A:hover {
     color: blue;
 }
+div.previewarea {
+  background: white;
+}
+
 pre.wikit_options {
     margin : 0;
 }
