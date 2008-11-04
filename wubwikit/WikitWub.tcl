@@ -135,7 +135,7 @@ namespace eval WikitWub {
     }
 
     # page sent when editing a page
-    template edit {Editing $N} {
+    template edit {Editing [armour $name]} {
 	[div edit {
 	    [div header {
 		[div logo wiki.tcl.tk]
