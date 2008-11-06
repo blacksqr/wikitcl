@@ -1740,7 +1740,7 @@ namespace eval Wikit::Format {
           }
         }
         set ltxt [string map {\  &nbsp;} [armour_quote $thdr]]
-        append toc "&nbsp;<a class='toc' href='#pagetoc[format %08x $cksum]'>$ltxt</a>"
+        append toc "&nbsp;<a class='toc' href='#pagetoc[format %08x $cksum]'>[tclarmour $ltxt]</a>"
         append toc "</div>\n"
         set result [string replace $result [expr {$tpb-10}] [expr {$tpb-3}] [format %08x $cksum]]
       incr i
