@@ -521,9 +521,9 @@ if {[catch {package require gbutton}]} {
                 grid $top.details -row 1 -column $col -sticky news
                 grid $top.hbar -row 2 -column $col -sticky news
                 grid $top.status -row 3 -column $col -sticky ew
+		grid columnconfigure $topwin $col -weight 1
                 grid $top.scroll -row 1 -column [incr col] -sticky ns
                 
-                grid columnconfigure $topwin 0 -weight 1
                 grid rowconfigure $topwin 1 -weight 1
                 grid rowconfigure $topwin 1 -weight 1
                 autoscroll::autoscroll $top.scroll
