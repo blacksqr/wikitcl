@@ -543,11 +543,18 @@ namespace eval WikitWub {
 	    set first 0
 	    if {$cdate<$edate} break
 	}
+
 	if {$first} {
-	    set activity 1.0
+	    set activity 10000
 	} else {
-	    set activity [expr {$activity*10000.0}]
+	    set activity [expr {int($activity * 10000.0)}]
 	}
+	if {$activity == 0} {
+	    set activity ""
+	} else {
+	    set activity [string repeat "*" [string length $activity]]
+	}
+	return $activity
 	return [format %4.2f $activity]
     }
 
