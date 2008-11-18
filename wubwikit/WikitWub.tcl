@@ -549,13 +549,10 @@ namespace eval WikitWub {
 	} else {
 	    set activity [expr {int($activity * 10000.0)}]
 	}
-	if {$activity == 0} {
-	    set activity ""
-	} else {
-	    set activity [string repeat "*" [string length $activity]]
-	}
+
+	variable delta
+	set activity [string repeat $delta [string length $activity]]
 	return $activity
-	return [format %4.2f $activity]
     }
 
     # Special page: Recent Changes.
@@ -606,7 +603,7 @@ namespace eval WikitWub {
 		set lastDay $day
 	    }
 
-	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta href /_diff/$id#diff0 $delta]" $who [clock format $date -gmt 1 -format %T] [edit_activity $id]]
+	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta href /_diff/$id#diff0 [edit_activity $id]]" $who [clock format $date -gmt 1 -format %T]]
 	}
 
 	if { [llength $result] } {
