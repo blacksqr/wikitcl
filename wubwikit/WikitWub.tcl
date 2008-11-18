@@ -530,6 +530,27 @@ namespace eval WikitWub {
 	}]]
     }
 
+    proc edit_activity { N } {
+	lassign [mk::get wdb.pages!$N date] pcdate
+	set edate [expr {$pcdate-10*86400}]
+	set first 1
+	set activity 0.0
+	foreach sid [mk::select wdb.pages!$N.changes -rsort date] {
+	    lassign [mk::get wdb.pages!$N.changes!$sid date delta] cdate cdelta
+	    set changes [mk::view size wdb.pages!$N.changes!$sid.diffs]
+	    set activity [expr {$activity + $changes * $cdelta / double([clock seconds] - $pcdate)}]
+	    set pcdate $cdate
+	    set first 0
+	    if {$cdate<$edate} break
+	}
+	if {$first} {
+	    set activity 1.0
+	} else {
+	    set activity [expr {$activity*10000.0}]
+	}
+	return [format %4.2f $activity]
+    }
+
     # Special page: Recent Changes.
     variable delta [subst \u0394]
     variable delta [subst \u25B2]
@@ -561,7 +582,7 @@ namespace eval WikitWub {
 	    if {$day != $lastDay} {
 
 		if { [llength $result] } {
-		    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
+		    lappend results [list2plaintable $result {rc1 rc2 rc3 rc4} rctable]
 		    set result {}
 
 		    if { !$deletesAdded } {
@@ -578,11 +599,11 @@ namespace eval WikitWub {
 		set lastDay $day
 	    }
 
-	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta href /_diff/$id#diff0 $delta]" $who [clock format $date -gmt 1 -format %T]]
+	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta href /_diff/$id#diff0 $delta]" $who [clock format $date -gmt 1 -format %T] [edit_activity $id]]
 	}
 
 	if { [llength $result] } {
-	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
+	    lappend results [list2plaintable $result {rc1 rc2 rc3 rc4} rctable]
 	    if { !$deletesAdded } {
 		lappend results [<p> [<a> href /_cleared "Cleared pages (title and/or page)"]]
 	    }
@@ -592,7 +613,9 @@ namespace eval WikitWub {
 	    lappend results [<p> "Older entries omitted..."]
 	}
 
-	return [join $results \n]
+	set R [join $results \n]
+
+	return $R
     }
 
     proc /cleared { r } {
@@ -710,6 +733,160 @@ namespace eval WikitWub {
 	    lappend n $nl
 	}
 	return $n
+    }
+
+    proc /summary {r} {
+	variable delta
+	set R ""
+
+	set n 0
+	set W 0
+	foreach id [mk::select wdb.pages -rsort date] {
+	    lassign [mk::get wdb.pages!$id date name who page] pcdate name pcwho page
+	    # these are fake pages, don't list them
+	    if {$id == 2 || $id == 4} continue
+	    # skip cleared pages
+	    if {[string length $name] == 0 || [string length $page] <= 1} continue
+	    # add active page
+	    append R [<a> href /$id [armour $name]] [<a> class delta href /_diff/$id#diff0 $delta]
+	    # get #version for this page
+	    set V [mk::view size wdb.pages!$id.changes]
+	    append R <ul>\n
+	    if {$V==0} {
+		append R [<li> "$pcwho, [clock format $pcdate], New page"] \n
+	    } else {
+		# get changes for current page in last 10 days
+		set edate [expr {$pcdate-10*86400}]
+		foreach sid [mk::select wdb.pages!$id.changes -rsort date] {
+		    lassign [mk::get wdb.pages!$id.changes!$sid date who delta] cdate cwho cdelta
+		    set changes [mk::view size wdb.pages!$id.changes!$sid.diffs]
+		    append R [<li> "$pcwho, [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
+
+		    set t1 [split [get_page_with_version $id $V 0] "\n"]
+		    set D [expr {$V-1}]
+		    set t2 [split [get_page_with_version $id $D 0] "\n"]
+		    if {!$W} { set uwt1 [unWhiteSpace $t1] } else { set uwt1 $t1 }
+		    if {!$W} { set uwt2 [unWhiteSpace $t2] } else { set uwt2 $t2 }
+		    set p1 0
+		    set p2 0
+		    set C ""
+
+		    foreach {l1 l2} [::struct::list::LlongestCommonSubsequence $uwt1 $uwt2] {
+			foreach i1 $l1 i2 $l2 {
+			    if { $W && $p1 < $i1 && $p2 < $i2 } {
+				set d1 ""
+				set d2 ""
+				set pd1 0
+				set pd2 0
+				while { $p1 < $i1 } {
+				    append d1 "[lindex $t1 $p1]\n"
+				    incr p1
+				}
+				while { $p2 < $i2 } {
+				    append d2 "[lindex $t2 $p2]\n"
+				    incr p2
+				}
+				set d1 [wordlist $d1]
+				set d2 [wordlist $d2]
+				foreach {ld1 ld2} [::struct::list::LlongestCommonSubsequence $d1 $d2] {
+				    foreach id1 $ld1 id2 $ld2 {
+					while { $pd1 < $id1 } {
+					    set w [lindex $d1 $pd1]
+					    if { [string length $w] } {
+						append C [shiftNewline $w "^^^^"]
+					    }
+					    incr pd1
+					}
+					while { $pd2 < $id2 } {
+					    set w [lindex $d2 $pd2]
+					    if { [string length $w] } {
+						append C [shiftNewline $w "~~~~"]
+					    }
+					    incr pd2
+					}
+					append C "[lindex $d1 $id1]"
+					incr pd1
+					incr pd2
+				    }
+				    while { $pd1 < [llength $d1] } {
+					set w [lindex $d1 $pd1]
+					if { [string length $w] } {
+					    append C [shiftNewline $w "^^^^"]
+					}
+					incr pd1
+				    }
+				    while { $pd2 < [llength $d2] } {
+					set w [lindex $d2 $pd2]
+					if { [string length $w] } {
+					    append C [shiftNewline $w "~~~~"]
+					}
+					incr pd2
+				    }
+				}
+			    } else {
+				while { $p1 < $i1 } {
+				    append C ">>>>>>n;$id;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+				    incr p1
+				}
+				while { $p2 < $i2 } {
+				    append C ">>>>>>o;$id;$D;;\n[lindex $t2 $p2]\n<<<<<<\n"
+				    incr p2
+				}
+			    }
+			    if { [string equal [lindex $t1 $i1] [lindex $t2 $i2]] } {
+				#append C "[lindex $t1 $i1]\n"
+			    } else {
+				append C ">>>>>>w;$id;$V;;\n[lindex $t1 $i1]\n<<<<<<\n"
+			    }
+			    incr p1
+			    incr p2
+			}
+		    }
+		    while { $p1 < [llength $t1] } {
+			append C ">>>>>>n;$id;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+			incr p1
+		    }
+		    while { $p2 < [llength $t2] } {
+			append C ">>>>>>o;$id;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
+			incr p2
+		    }
+
+		    if { $W } {
+			set C [regsub -all "\0" $C " "]
+			set C [::Wikit::ShowDiffs $C]
+		    } else {
+			lassign [::Wikit::StreamToHTML [::Wikit::TextToStream $C] / ::WikitWub::InfoProc] C U T BR
+		    }
+
+		    append R $C
+
+		    set pcdate $cdate
+		    set pcwho $cwho
+		    incr V -1
+		    if {$V < 1} break
+		    if {$cdate<$edate} break
+		}
+	    }
+	    append R </ul> \n
+	    incr n
+	    if {$n > 100} break
+	}
+	
+	set menu {}
+	variable menus
+	variable TOC
+	set updated ""
+	foreach m {Home Recent Help} {
+	    lappend menu $menus($m)
+	}
+	set footer $menu
+	lappend footer $menus(Search)
+	lappend footer $menus(TOC)
+	set T "" ;# Do not show page TOC, can be one of the diffs.
+	set C $R
+	set Title [<h1> "Edit summary"]
+	set name "Edit summary"
+	return [sendPage $r]
     }
 
     proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {

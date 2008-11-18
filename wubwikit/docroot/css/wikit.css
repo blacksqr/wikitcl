@@ -383,7 +383,7 @@ td.rc1 {
 	padding-left: 2em;
 	width: 30em;
 }
-td.rc2, td.rc3 {
+td.rc2, td.rc3, td.rc4 {
 	font-size: 90%;
 	color: #666;
 }
@@ -391,6 +391,9 @@ td.rc2 {
 	width: 15em;
 }
 td.rc3 {
+	width: 10em;
+}
+td.rc4 {
 	width: 10em;
 }
 a.cleared {
