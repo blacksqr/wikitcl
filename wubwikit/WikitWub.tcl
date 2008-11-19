@@ -883,6 +883,7 @@ namespace eval WikitWub {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
+	lappend menu [Ref /_summary/$N "Edit summary"]
 	lappend menu [Ref /_diff/$N "Last change"]
 	lappend menu [Ref /_diff/$N?T=1&D=1 "Changes in last day"]
 	lappend menu [Ref /_diff/$N?T=1&D=7 "Changes in last week"]
@@ -1098,6 +1099,7 @@ namespace eval WikitWub {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
+	lappend menu [Ref /_summary/$N "Edit summary"]
 	lappend menu [Ref /_diff/$N "Last change"]
 	lappend menu [Ref /_diff/$N?T=1&D=1 "Changes in last day"]
 	lappend menu [Ref /_diff/$N?T=1&D=7 "Changes in last week"]
@@ -2152,7 +2154,8 @@ namespace eval WikitWub {
 	    if {!$::roflag} {
 		lappend menu [Ref /_edit/$N Edit]
 	    }
-	    lappend menu [Ref /_summary/$N "Edit History"]
+	    lappend menu [Ref /_history/$N "History"]
+	    lappend menu [Ref /_summary/$N "Edit summary"]
 	    lappend menu [Ref $backRef References]
 	}
 	set footer $menu
