@@ -330,6 +330,10 @@ span.delta {
  color: #D3D3D3;
 }
 
+img.activity {
+    border: 0;
+}
+
 ins {
   background: #80ff80;
 }
