@@ -604,7 +604,7 @@ namespace eval WikitWub {
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
 
-	    lappend result [list "[<a> href /$id [armour $name]]" $who [<div> class activity [<a> class activity href /_summary/$id [string repeat $actimg [edit_activity $id]]]]]
+	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta href /_diff/$id#diff0 $delta]" $who [<div> class activity [<a> class activity href /_summary/$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
 	if { [llength $result] } {
