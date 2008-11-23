@@ -734,7 +734,7 @@ namespace eval WikitWub {
 	    # Replace all but leading white-space by single space
 	    set tl [string trimleft $l]
 	    set nl [string range $l 0 [expr {[string length $l] - [string length $tl] - 1 }]]
-	    append nl [regsub -all {\s+} $tl " "]
+	    append nl [string map {\t "        "} [regsub -all {\s+} $tl " "]]
 	    lappend n $nl
 	}
 	return $n
@@ -1612,7 +1612,7 @@ namespace eval WikitWub {
 	    set who $nick@[dict get $r -ipaddr]
 	    Debug.wikit {SAVING $N}
 	    if {[catch {
-		::Wikit::SavePage $N [string map {"Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C] $who $name $when
+		::Wikit::SavePage $N [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C] $who $name $when
 	    } err eo]} {
 		set readonly $err
 	    }
