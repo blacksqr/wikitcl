@@ -561,11 +561,11 @@ namespace eval WikitWub {
 	variable delta
 	set count 0
 	set results {}
+	set result {}
 	set lastDay 0
 	set threshold [expr {[clock seconds] - 7 * 86400}]
 	set deletesAdded 0
-
-	set result {}
+	set activityHeaderAdded 0
 
 	foreach id [mk::select wdb.pages -rsort date] {
 	    lassign [mk::get wdb.pages!$id date name who page] date name who page
@@ -585,6 +585,10 @@ namespace eval WikitWub {
 	    if {$day != $lastDay} {
 
 		if { [llength $result] } {
+		    if {!$activityHeaderAdded} {
+			set result [linsert $result 0 [list "" "" "Activity"]] 
+			set activityHeaderAdded 1
+		    }
 		    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
 		    set result {}
 
@@ -608,6 +612,9 @@ namespace eval WikitWub {
 	}
 
 	if { [llength $result] } {
+	    if {!$activityHeaderAdded} {
+		set result [linsert $result 0 [list "" "" "Activity"]] 
+	    }
 	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
 	    if { !$deletesAdded } {
 		lappend results [<p> [<a> href /_cleared "Cleared pages (title and/or page)"]]
