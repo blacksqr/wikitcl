@@ -747,6 +747,41 @@ namespace eval WikitWub {
 	return $n
     }
 
+    proc summary_diff { N V W } {
+	set t1 [split [get_page_with_version $N $V 0] "\n"]
+	set W [expr {$V-1}]
+	set t2 [split [get_page_with_version $N $W 0] "\n"]
+	set uwt1 [unWhiteSpace $t1]
+	set uwt2 [unWhiteSpace $t2]
+	set p1 0
+	set p2 0
+	set C ""
+	foreach {l1 l2} [::struct::list::LlongestCommonSubsequence $uwt1 $uwt2] {
+	    foreach i1 $l1 i2 $l2 {
+		while { $p1 < $i1 } {
+		    append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+		    incr p1
+		}
+		while { $p2 < $i2 } {
+		    append C ">>>>>>o;$N;$W;;\n[lindex $t2 $p2]\n<<<<<<\n"
+		    incr p2
+		}
+		incr p1
+		incr p2
+	    }
+	}
+	while { $p1 < [llength $t1] } {
+	    append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+	    incr p1
+	}
+	while { $p2 < [llength $t2] } {
+	    append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
+	    incr p2
+	}
+
+	return $C
+    }
+
     proc /summary {r N {D 10}} {
 	variable delta
 
@@ -760,7 +795,6 @@ namespace eval WikitWub {
 
 	set R ""
 	set n 0
-	set W 0
 	lassign [mk::get wdb.pages!$N date name who page] pcdate name pcwho page
 	# get #version for this page
 	set V [mk::view size wdb.pages!$N.changes]
@@ -774,105 +808,9 @@ namespace eval WikitWub {
 		lassign [mk::get wdb.pages!$N.changes!$sid date who delta] cdate cwho cdelta
 		set changes [mk::view size wdb.pages!$N.changes!$sid.diffs]
 		append R [<li> "$pcwho, [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
-		
-		set t1 [split [get_page_with_version $N $V 0] "\n"]
-		set D [expr {$V-1}]
-		set t2 [split [get_page_with_version $N $D 0] "\n"]
-		if {!$W} { set uwt1 [unWhiteSpace $t1] } else { set uwt1 $t1 }
-		if {!$W} { set uwt2 [unWhiteSpace $t2] } else { set uwt2 $t2 }
-		set p1 0
-		set p2 0
-		set C ""
-
-		foreach {l1 l2} [::struct::list::LlongestCommonSubsequence $uwt1 $uwt2] {
-		    foreach i1 $l1 i2 $l2 {
-			if { $W && $p1 < $i1 && $p2 < $i2 } {
-			    set d1 ""
-			    set d2 ""
-			    set pd1 0
-			    set pd2 0
-			    while { $p1 < $i1 } {
-				append d1 "[lindex $t1 $p1]\n"
-				incr p1
-			    }
-			    while { $p2 < $i2 } {
-				append d2 "[lindex $t2 $p2]\n"
-				incr p2
-			    }
-			    set d1 [wordlist $d1]
-			    set d2 [wordlist $d2]
-			    foreach {ld1 ld2} [::struct::list::LlongestCommonSubsequence $d1 $d2] {
-				foreach id1 $ld1 id2 $ld2 {
-				    while { $pd1 < $id1 } {
-					set w [lindex $d1 $pd1]
-					if { [string length $w] } {
-					    append C [shiftNewline $w "^^^^"]
-					}
-					incr pd1
-				    }
-				    while { $pd2 < $id2 } {
-					set w [lindex $d2 $pd2]
-					if { [string length $w] } {
-					    append C [shiftNewline $w "~~~~"]
-					}
-					incr pd2
-				    }
-				    append C "[lindex $d1 $id1]"
-				    incr pd1
-				    incr pd2
-				}
-				while { $pd1 < [llength $d1] } {
-				    set w [lindex $d1 $pd1]
-				    if { [string length $w] } {
-					append C [shiftNewline $w "^^^^"]
-				    }
-				    incr pd1
-				}
-				while { $pd2 < [llength $d2] } {
-				    set w [lindex $d2 $pd2]
-				    if { [string length $w] } {
-					append C [shiftNewline $w "~~~~"]
-				    }
-				    incr pd2
-				}
-			    }
-			} else {
-			    while { $p1 < $i1 } {
-				append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
-				incr p1
-			    }
-			    while { $p2 < $i2 } {
-				append C ">>>>>>o;$N;$D;;\n[lindex $t2 $p2]\n<<<<<<\n"
-				incr p2
-			    }
-			}
-			if { [string equal [lindex $t1 $i1] [lindex $t2 $i2]] } {
-			    #append C "[lindex $t1 $i1]\n"
-			} else {
-			    #append C ">>>>>>w;$N;$V;;\n[lindex $t1 $i1]\n<<<<<<\n"
-			}
-			incr p1
-			incr p2
-		    }
-		}
-		while { $p1 < [llength $t1] } {
-		    append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
-		    incr p1
-		}
-		while { $p2 < [llength $t2] } {
-		    append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
-		    incr p2
-		}
-
-		if { $W } {
-		    set C [regsub -all "\0" $C " "]
-		    set C [::Wikit::ShowDiffs $C]
-		} else {
-		    lassign [::Wikit::StreamToHTML [::Wikit::TextToStream $C] / ::WikitWub::InfoProc] C U T BR
-		}
-
+		set C [summary_diff $N $V [expr {$V-1}]]
+		lassign [::Wikit::StreamToHTML [::Wikit::TextToStream $C] / ::WikitWub::InfoProc] C U T BR
 		append R $C
-
 		set pcdate $cdate
 		set pcwho $cwho
 		incr V -1
