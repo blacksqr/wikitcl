@@ -19,7 +19,7 @@ package provide WikitRss 1.0
 namespace eval WikitRss {
     variable db
     variable baseUrl http://wiki.tcl.tk
-    variable MaxItems 25
+    variable MaxItems 100
 
     ###############################################################
     #
@@ -65,7 +65,7 @@ namespace eval WikitRss {
 		<title>[xmlarmour $Title]</title>
 		<link>$Url</link>
 		<pubDate>$time</pubDate>
-		<description>[xmlarmour $Description] modified by [xmlarmour $Author]</description>
+		<description>Modified by [xmlarmour $Author][xmlarmour $Description] </description>
 		</item>"
     }
 
@@ -96,6 +96,8 @@ namespace eval WikitRss {
 
 	variable Name
 	variable baseUrl
+	variable exclude
+	variable MaxItems
 
 	# generate the channel information for the feed.  It says
 	# what the name of the feed is (the same as the Wiki name), and where
@@ -110,24 +112,57 @@ namespace eval WikitRss {
 
 	# generate items for changed pages,
 	# ordered from most recently changed to least recently changed.
-	variable exclude
-	variable MaxItems
+
+	# look for edit dates in pages.changes!
+	# look for changes in past D days
+	set D 10
+	set edate [expr {[clock seconds]-$D*86400}]
+	set changes {}
+	foreach N [mk::select $db.pages -rsort date] {
+	    if {$N in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
+	    lassign [mk::get $db.pages!$N name date who] name date who
+	    if {$date<$edate} break
+
+	    set V [mk::view size wdb.pages!$N.changes]
+	    foreach sid [mk::select wdb.pages!$N.changes -rsort date] {
+		lassign [mk::get wdb.pages!$N.changes!$sid date who delta] cdate cwho cdelta
+		set C [WikitWub::summary_diff $N $V [expr {$V-1}] 1]
+		lappend changes [list $name $date $cdelta $who $N $V $C]
+		incr V -1
+		if {$V < 1} break
+		if {$cdate<$edate} break
+		set date $cdate
+		set who $cwho
+	    }
+	}	
+
 	set i 0
-	foreach page [mk::select $db.pages -rsort date] {
-	    if {$page in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
+	set changes [lsort -integer -decreasing -index 1 $changes]
+	foreach change $changes {
+	    lassign $change name date delta who N V C
+	    append contents [item $name $date $who $baseUrl$N " ($delta characters)\n$C"] \n
+	    if {[incr i] > $MaxItems} break	;# limit RSS size
+	    
+	}
 
-	    lassign [mk::get $db.pages!$page name date who] name date who
-
-	    # calculate line change
-	    set change [expr {[mk::view size wdb.pages!$page.changes] - 1}]
-	    if {$change < 0} continue
-	    set delta [mk::get wdb.pages!$page.changes!$change delta]
-
-	    Debug.rss {detail $name $date $who $page} 7
-
-	    if {$delta > 0} {
-		append contents [item $name $date $who $baseUrl$page "($delta characters)"] \n
-		if {[incr i] > $MaxItems} break	;# limit RSS size
+	if { 0 } {
+	    set i 0
+	    foreach page [mk::select $db.pages -rsort date] {
+		if {$page in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
+		
+		lassign [mk::get $db.pages!$page name date who] name date who
+		
+		# calculate line change
+		set change [expr {[mk::view size wdb.pages!$page.changes] - 1}]
+		if {$change < 0} continue
+		set delta [mk::get wdb.pages!$page.changes!$change delta]
+		
+		Debug.rss {detail $name $date $who $page} 7
+		
+		if {$delta > 0} {
+		    append contents [item $name $date $who $baseUrl$page "($delta characters)"] \n
+		    if {[incr i] > $MaxItems} break	;# limit RSS size
+		}
 	    }
 	}
 

@@ -747,7 +747,7 @@ namespace eval WikitWub {
 	return $n
     }
 
-    proc summary_diff { N V W } {
+    proc summary_diff { N V W {rss 0} } {
 	set t1 [split [get_page_with_version $N $V 0] "\n"]
 	set W [expr {$V-1}]
 	set t2 [split [get_page_with_version $N $W 0] "\n"]
@@ -759,11 +759,19 @@ namespace eval WikitWub {
 	foreach {l1 l2} [::struct::list::LlongestCommonSubsequence $uwt1 $uwt2] {
 	    foreach i1 $l1 i2 $l2 {
 		while { $p1 < $i1 } {
-		    append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+		    if {$rss} {
+			append C "[lindex $t1 $p1]\n"
+		    } else {
+			append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+		    }
 		    incr p1
 		}
 		while { $p2 < $i2 } {
-		    append C ">>>>>>o;$N;$W;;\n[lindex $t2 $p2]\n<<<<<<\n"
+		    if {$rss} {
+#			append C ">>>>>>o;$N;$W;;\n[lindex $t2 $p2]\n<<<<<<\n"
+		    } else {
+			append C ">>>>>>o;$N;$W;;\n[lindex $t2 $p2]\n<<<<<<\n"
+		    }
 		    incr p2
 		}
 		incr p1
@@ -771,11 +779,19 @@ namespace eval WikitWub {
 	    }
 	}
 	while { $p1 < [llength $t1] } {
-	    append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+	    if {$rss} {
+		append C "[lindex $t1 $p1]\n"
+	    } else {
+		append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+	    }
 	    incr p1
 	}
 	while { $p2 < [llength $t2] } {
-	    append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
+	    if {$rss} {
+#		append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
+	    } else {
+		append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
+	    }
 	    incr p2
 	}
 
