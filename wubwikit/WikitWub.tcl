@@ -530,28 +530,15 @@ namespace eval WikitWub {
 	}]]
     }
 
-    proc edit_activity { N vd } {
+    proc edit_activity { N } {
 	lassign [mk::get wdb.pages!$N date] pcdate
 	set edate [expr {$pcdate-10*86400}]
 	set first 1
 	set activity 0.0
-	set V [mk::view size wdb.pages!$N.changes]
 	foreach sid [mk::select wdb.pages!$N.changes -rsort date] {
 	    lassign [mk::get wdb.pages!$N.changes!$sid date delta] cdate cdelta
 	    set changes [mk::view size wdb.pages!$N.changes!$sid.diffs]
-	    if {$vd} {
-		set t1 [split [get_page_with_version $N $V 0] "\n"]
-		set D [expr {$V-1}]
-		set t2 [split [get_page_with_version $N $D 0] "\n"]
-		set t1 [unWhiteSpace $t1]
-		set t2 [unWhiteSpace $t2]
-		set VDchanges [expr {1+abs([string length $t1] - [string length $t2])}]
-		set activity [expr {$activity + $VDchanges / double([clock seconds] - $pcdate)}]
-		puts "$N/$V t1=[string length $t1], t2=[string length $t2] -> $activity"
-		incr V -1
-	    } else {
-		set activity [expr {$activity + $changes * $cdelta / double([clock seconds] - $pcdate)}]
-	    }
+	    set activity [expr {$activity + $changes * $cdelta / double([clock seconds] - $pcdate)}]
 	    set pcdate $cdate
 	    set first 0
 	    if {$cdate<$edate} break
@@ -621,7 +608,7 @@ namespace eval WikitWub {
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
 
-	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta href /_diff/$id#diff0 $delta]" $who [<div> class activity [<a> class activity href /_summary/$id [string repeat $actimg [edit_activity $id 0]]-[string repeat $actimg [edit_activity $id 1]]]]]
+	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta href /_diff/$id#diff0 $delta]" $who [<div> class activity [<a> class activity href /_summary/$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
 	if { [llength $result] } {
