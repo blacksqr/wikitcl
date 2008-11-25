@@ -180,7 +180,7 @@ namespace eval WikitRss {
 	    Debug.rss {detail $name $date $who $page} 7
 	    
 	    if {$delta > 0} {
-		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$page " ($delta characters)\n$C"] \n
+		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$page " ($delta characters)\n$changes"] \n
 		if {[incr i] > $MaxItems} break	;# limit RSS size
 	    }
 	}
