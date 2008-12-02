@@ -695,7 +695,7 @@ namespace eval WikitWub {
 	set N 0
 	set updated ""
 	variable menus
-	foreach m {Home Recent Help HR} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	set footer $menu
@@ -852,7 +852,7 @@ namespace eval WikitWub {
 	variable menus
 	variable TOC
 	set updated "Edit summary"
-	foreach m {Home Recent Help HR} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
@@ -1069,7 +1069,7 @@ namespace eval WikitWub {
 	if {![string length $updated]} {
 	    set updated "Difference between version $V and $D"
 	}
-	foreach m {Home Recent Help HR} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
@@ -1109,7 +1109,7 @@ namespace eval WikitWub {
 
 	variable menus
 	set menu {}
-	foreach m {Home Recent Help HR} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	lappend menu [Ref /_history/$N History]
@@ -1193,7 +1193,7 @@ namespace eval WikitWub {
 
 	set menu {}
 	variable menus
-	foreach m {Home Recent Help HR} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	set C ""
@@ -1479,7 +1479,7 @@ namespace eval WikitWub {
 	variable TOC
 	variable gsearch 1
 	variable query $S
-	foreach m {Home Recent Help HR} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	set footer $menu
@@ -1758,7 +1758,6 @@ namespace eval WikitWub {
 	set menu {}
 	lappend menu $menus(Recent)
 	lappend menu $menus(Help)
-	lappend menu $menus(HR)
 	set footer $menu
 	lappend footer $menus(TOC)
 	lappend footer $menus(NoTOC)
@@ -1834,7 +1833,7 @@ namespace eval WikitWub {
 	} 
 	variable menus
 	set menu {}
-	foreach m {Home Recent Help HR} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	set footer $menu
@@ -2130,7 +2129,7 @@ namespace eval WikitWub {
 
 	variable protected
 	variable menus
-	foreach m {Home Recent Help HR} {
+	foreach m {Home Recent Help} {
 	    lappend menu $menus($m)
 	}
 	if {![info exists protected($N)]} {
