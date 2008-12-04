@@ -1624,10 +1624,10 @@ namespace eval Wikit::Format {
           set mode T
           append result $html_frag($state$mode)
           if { $centered } {
-            append result "</p></div><p>"
+            append result "</div><p/>"
             set centered 0
           } else {
-            append result "</p><div class='centered'><p>"
+            append result "<div class='centered'><p/>"
             set centered 1
           }
           set state T
@@ -1784,43 +1784,43 @@ namespace eval Wikit::Format {
     return
   }
 
-  vs T    T                  </p><p> ;vs T    Q                  </p><pre> ;vs T    U                  </p><ul><li> ;vs T    O                  </p><ol><li>
-  vs Q    T                </pre><p> ;vs Q    Q                         \n ;vs Q    U                </pre><ul><li> ;vs Q    O                </pre><ol><li>
-  vs U    T                 </ul><p> ;vs U    Q                 </ul><pre> ;vs U    U                        \n<li> ;vs U    O                 </ul><ol><li>
-  vs O    T                 </ol><p> ;vs O    Q                 </ol><pre> ;vs O    U                 </ol><ul><li> ;vs O    O                        \n<li>
-  vs I    T                 </dl><p> ;vs I    Q                 </dl><pre> ;vs I    U                 </dl><ul><li> ;vs I    O                 </dl><ol><li>
-  vs D    T                 </dl><p> ;vs D    Q                 </dl><pre> ;vs D    U                 </dl><ul><li> ;vs D    O                 </dl><ol><li>
-  vs H    T                      <p> ;vs H    Q                      <pre> ;vs H    U                      <ul><li> ;vs H    O                      <ol><li>
-  vs TDE  T </tr></tbody></table><p> ;vs TDE  Q </tr></tbody></table><pre> ;vs TDE  U </tr></tbody></table><ul><li> ;vs TDE  O </tr></tbody></table><ol><li>
-  vs TDEH T </tr></thead></table><p> ;vs TDEH Q </tr></thead></table><pre> ;vs TDEH U </tr></thead></table><ul><li> ;vs TDEH O </tr></thead></table><ol><li>
-  vs FE   T                </pre><p> ;vs FE   Q                         \n ;vs FE   U                </pre><ul><li> ;vs FE   O                </pre><ol><li>
-  vs FI   T                      <p> ;vs FI   Q                      <pre> ;vs FI   U                      <ul><li> ;vs FI   O                      <ol><li>
-  vs L    T              </table><p> ;vs L    Q              </table><pre> ;vs L    U              </table><ul><li> ;vs L    O              </table><ol><li>
-  vs HD2  T                 </h2><p> ;vs HD2  Q                 </h2><pre> ;vs HD2  U                 </h2><ul><li> ;vs HD2  O                 </h2><ol><li>
-  vs HD3  T                 </h3><p> ;vs HD3  Q                 </h3><pre> ;vs HD3  U                 </h3><ul><li> ;vs HD3  O                 </h3><ol><li>
-  vs HD4  T                 </h4><p> ;vs HD4  Q                 </h4><pre> ;vs HD4  U                 </h4><ul><li> ;vs HD4  O                 </h4><ol><li>
-  vs BLS  T                    <p>\n ;vs BLS  Q                    \n<pre> ;vs BLS  U                    \n<ul><li> ;vs BLS  O                    \n<ol><li>
-  vs BLE  T                    <p>\n ;vs BLE  Q                    \n<pre> ;vs BLE  U                    \n<ul><li> ;vs BLE  O                    \n<ol><li>
+  vs T    T                      <p/> ;vs T    Q                      <pre> ;vs T    U                      <ul><li> ;vs T    O                      <ol><li>
+  vs Q    T                </pre><p/> ;vs Q    Q                         \n ;vs Q    U                </pre><ul><li> ;vs Q    O                </pre><ol><li>
+  vs U    T                 </ul><p/> ;vs U    Q                 </ul><pre> ;vs U    U                        \n<li> ;vs U    O                 </ul><ol><li>
+  vs O    T                 </ol><p/> ;vs O    Q                 </ol><pre> ;vs O    U                 </ol><ul><li> ;vs O    O                        \n<li>
+  vs I    T                 </dl><p/> ;vs I    Q                 </dl><pre> ;vs I    U                 </dl><ul><li> ;vs I    O                 </dl><ol><li>
+  vs D    T                 </dl><p/> ;vs D    Q                 </dl><pre> ;vs D    U                 </dl><ul><li> ;vs D    O                 </dl><ol><li>
+  vs H    T                      <p/> ;vs H    Q                      <pre> ;vs H    U                      <ul><li> ;vs H    O                      <ol><li>
+  vs TDE  T </tr></tbody></table><p/> ;vs TDE  Q </tr></tbody></table><pre> ;vs TDE  U </tr></tbody></table><ul><li> ;vs TDE  O </tr></tbody></table><ol><li>
+  vs TDEH T </tr></thead></table><p/> ;vs TDEH Q </tr></thead></table><pre> ;vs TDEH U </tr></thead></table><ul><li> ;vs TDEH O </tr></thead></table><ol><li>
+  vs FE   T                </pre><p/> ;vs FE   Q                         \n ;vs FE   U                </pre><ul><li> ;vs FE   O                </pre><ol><li>
+  vs FI   T                      <p/> ;vs FI   Q                      <pre> ;vs FI   U                      <ul><li> ;vs FI   O                      <ol><li>
+  vs L    T              </table><p/> ;vs L    Q              </table><pre> ;vs L    U              </table><ul><li> ;vs L    O              </table><ol><li>
+  vs HD2  T                 </h2><p/> ;vs HD2  Q                 </h2><pre> ;vs HD2  U                 </h2><ul><li> ;vs HD2  O                 </h2><ol><li>
+  vs HD3  T                 </h3><p/> ;vs HD3  Q                 </h3><pre> ;vs HD3  U                 </h3><ul><li> ;vs HD3  O                 </h3><ol><li>
+  vs HD4  T                 </h4><p/> ;vs HD4  Q                 </h4><pre> ;vs HD4  U                 </h4><ul><li> ;vs HD4  O                 </h4><ol><li>
+  vs BLS  T                    <p/>\n ;vs BLS  Q                    \n<pre> ;vs BLS  U                    \n<ul><li> ;vs BLS  O                    \n<ol><li>
+  vs BLE  T                    <p/>\n ;vs BLE  Q                    \n<pre> ;vs BLE  U                    \n<ul><li> ;vs BLE  O                    \n<ol><li>
 
-  vs T    I                  </p><dl><dt> ;vs T    D                  </p><dl><dd> ;vs T    H                         "</p><hr>" ;vs T    _                  </p>
-  vs Q    I                </pre><dl><dt> ;vs Q    D                </pre><dl><dd> ;vs Q    H                       "</pre><hr>" ;vs Q    _                </pre>
-  vs U    I                 </ul><dl><dt> ;vs U    D                 </ul><dl><dd> ;vs U    H                        "</ul><hr>" ;vs U    _                 </ul>
-  vs O    I                 </ol><dl><dt> ;vs O    D                 </ol><dl><dd> ;vs O    H                        "</ol><hr>" ;vs O    _                 </ol>
-  vs I    I                          <dt> ;vs I    D                          <dd> ;vs I    H                        "</dl><hr>" ;vs I    _                 </dl>
-  vs D    I                          <dt> ;vs D    D                          <dd> ;vs D    H                        "</dl><hr>" ;vs D    _                 </dl>
-  vs H    I                      <dl><dt> ;vs H    D                      <dl><dd> ;vs H    H                             "<hr>" ;vs H    _                    {}
-  vs TDE  I </tr></tbody></table><dl><dt> ;vs TDE  D </tr></tbody></table><dl><dd> ;vs TDE  H "</tr></tbody></table><p><hr></p>" ;vs TDE  _ </tr></tbody></table>
-  vs TDEH I </tr></thead></table><dl><dt> ;vs TDEH D </tr></thead></table><dl><dd> ;vs TDEH H "</tr></thead></table><p><hr></p>" ;vs TDEH _ </tr></thead></table>
-  vs FE   I                </pre><dl><dt> ;vs FE   D                </pre><dl><dd> ;vs FE   H                       "</pre><hr>" ;vs FE   _                </pre>
-  vs FI   I                      <dl><dt> ;vs FI   D                      <dl><dd> ;vs FI   H                             "<hr>" ;vs FI   _                    {}
-  vs L    I              </table><dl><dt> ;vs L    D              </table><dl><dd> ;vs L    H                     "</table><hr>" ;vs L    _              </table>
-  vs HD2  I                 </h2><dl><dt> ;vs HD2  D                 </h2><dl><dd> ;vs HD2  H                        "</h2><hr>" ;vs HD2  _                 </h2>
-  vs HD3  I                 </h3><dl><dt> ;vs HD3  D                 </h3><dl><dd> ;vs HD3  H                        "</h3><hr>" ;vs HD3  _                 </h3>
-  vs HD4  I                 </h4><dl><dt> ;vs HD4  D                 </h4><dl><dd> ;vs HD4  H                        "</h4><hr>" ;vs HD4  _                 </h4>
-  vs BLS  I                    \n<dl><dt> ;vs BLS  D                    \n<dl><dd> ;vs BLS  H                             \n<hr> ;vs BLS  _                    \n
-  vs BLE  I                    \n<dl><dt> ;vs BLE  D                    \n<dl><dd> ;vs BLE  H                             \n<hr> ;vs BLE  _                    \n
+  vs T    I                      <dl><dt> ;vs T    D                      <dl><dd> ;vs T    H                              "<hr>" ;vs T    _                    {}
+  vs Q    I                </pre><dl><dt> ;vs Q    D                </pre><dl><dd> ;vs Q    H                        "</pre><hr>" ;vs Q    _                </pre>
+  vs U    I                 </ul><dl><dt> ;vs U    D                 </ul><dl><dd> ;vs U    H                         "</ul><hr>" ;vs U    _                 </ul>
+  vs O    I                 </ol><dl><dt> ;vs O    D                 </ol><dl><dd> ;vs O    H                         "</ol><hr>" ;vs O    _                 </ol>
+  vs I    I                          <dt> ;vs I    D                          <dd> ;vs I    H                         "</dl><hr>" ;vs I    _                 </dl>
+  vs D    I                          <dt> ;vs D    D                          <dd> ;vs D    H                         "</dl><hr>" ;vs D    _                 </dl>
+  vs H    I                      <dl><dt> ;vs H    D                      <dl><dd> ;vs H    H                              "<hr>" ;vs H    _                    {}
+  vs TDE  I </tr></tbody></table><dl><dt> ;vs TDE  D </tr></tbody></table><dl><dd> ;vs TDE  H     "</tr></tbody></table><p/><hr>" ;vs TDE  _ </tr></tbody></table>
+  vs TDEH I </tr></thead></table><dl><dt> ;vs TDEH D </tr></thead></table><dl><dd> ;vs TDEH H     "</tr></thead></table><p/><hr>" ;vs TDEH _ </tr></thead></table>
+  vs FE   I                </pre><dl><dt> ;vs FE   D                </pre><dl><dd> ;vs FE   H                        "</pre><hr>" ;vs FE   _                </pre>
+  vs FI   I                      <dl><dt> ;vs FI   D                      <dl><dd> ;vs FI   H                              "<hr>" ;vs FI   _                    {}
+  vs L    I              </table><dl><dt> ;vs L    D              </table><dl><dd> ;vs L    H                      "</table><hr>" ;vs L    _              </table>
+  vs HD2  I                 </h2><dl><dt> ;vs HD2  D                 </h2><dl><dd> ;vs HD2  H                         "</h2><hr>" ;vs HD2  _                 </h2>
+  vs HD3  I                 </h3><dl><dt> ;vs HD3  D                 </h3><dl><dd> ;vs HD3  H                         "</h3><hr>" ;vs HD3  _                 </h3>
+  vs HD4  I                 </h4><dl><dt> ;vs HD4  D                 </h4><dl><dd> ;vs HD4  H                         "</h4><hr>" ;vs HD4  _                 </h4>
+  vs BLS  I                    \n<dl><dt> ;vs BLS  D                    \n<dl><dd> ;vs BLS  H                              \n<hr> ;vs BLS  _                    \n
+  vs BLE  I                    \n<dl><dt> ;vs BLE  D                    \n<dl><dd> ;vs BLE  H                              \n<hr> ;vs BLE  _                    \n
 
-  vs T    HD2                  </p><h2 ;vs T    HD3                  </p><h3 ;vs T    HD4                  </p><h4
+  vs T    HD2                      <h2 ;vs T    HD3                      <h3 ;vs T    HD4                      <h4
   vs Q    HD2                </pre><h2 ;vs Q    HD3                </pre><h3 ;vs Q    HD4                </pre><h4
   vs U    HD2                 </ul><h2 ;vs U    HD3                 </ul><h3 ;vs U    HD4                 </ul><h4
   vs O    HD2                 </ol><h2 ;vs O    HD3                 </ol><h3 ;vs O    HD4                 </ol><h4
@@ -1838,7 +1838,7 @@ namespace eval Wikit::Format {
   vs BLS  HD2                    \n<h2 ;vs BLS  HD3                    \n<h3 ;vs BLS  HD4                    \n<h4
   vs BLE  HD2                    \n<h2 ;vs BLE  HD3                    \n<h3 ;vs BLE  HD4                    \n<h4
 
-  vs T    BLS                  </p>\n ;vs T    BLE                  </p>\n
+  vs T    BLS                      \n ;vs T    BLE                      \n
   vs Q    BLS                </pre>\n ;vs Q    BLE                </pre>\n
   vs U    BLS                 </ul>\n ;vs U    BLE                 </ul>\n
   vs O    BLS                 </ol>\n ;vs O    BLE                 </ol>\n
@@ -1856,7 +1856,7 @@ namespace eval Wikit::Format {
   vs BLS  BLS                      \n ;vs BLS  BLE                      \n
   vs BLE  BLS                      \n ;vs BLE  BLE                      \n
 
-  vs T    L   "</p><table summary='' class=wikit_options><tr>"
+  vs T    L       "<table summary='' class=wikit_options><tr>"
   vs Q    L "</pre><table summary='' class=wikit_options><tr>"
   vs U    L  "</ul><table summary='' class=wikit_options><tr>"
   vs O    L  "</ol><table summary='' class=wikit_options><tr>"
@@ -1874,7 +1874,7 @@ namespace eval Wikit::Format {
   vs BLS  L     "\n<table summary='' class=wikit_options><tr>"
   vs BLE  L     "\n<table summary='' class=wikit_options><tr>"
 
-  vs T    TR   "</p><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
+  vs T    TR       "<table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
   vs Q    TR "</pre><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
   vs U    TR  "</ul><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
   vs O    TR  "</ol><table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
@@ -1892,7 +1892,7 @@ namespace eval Wikit::Format {
   vs BLS  TR     "\n<table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
   vs BLE  TR     "\n<table summary='' class=wikit_table><tbody><tr class='\$oddoreven'>"
   
-  vs T    TRH   "</p><table summary='' class=wikit_table><thead><tr>"
+  vs T    TRH       "<table summary='' class=wikit_table><thead><tr>"
   vs Q    TRH "</pre><table summary='' class=wikit_table><thead><tr>"
   vs U    TRH  "</ul><table summary='' class=wikit_table><thead><tr>"
   vs O    TRH  "</ol><table summary='' class=wikit_table><thead><tr>"
@@ -1910,7 +1910,7 @@ namespace eval Wikit::Format {
   vs BLS  TRH     "\n<table summary='' class=wikit_table><thead><tr>"
   vs BLE  TRH     "\n<table summary='' class=wikit_table><thead><tr>"
 
-  vs T    FI                  </p><pre> ;vs T   FE                  </p> ;
+  vs T    FI                      <pre> ;vs T   FE                    {} ;
   vs Q    FI                </pre><pre> ;vs Q   FE                </pre> ;
   vs U    FI                 </ul><pre> ;vs U   FE                 </ul> ;
   vs O    FI                 </ol><pre> ;vs O   FE                 </ol> ;

@@ -1,0 +1,30 @@
+@import url("wikit.css");
+
+div#menu_area {
+  float:left;
+  width:145px;
+  padding-left: 5px;
+  background:#DDD;
+  margin-top: 1px;
+  overflow: hidden;
+  display: inline;
+}
+
+div#wrapper {
+  float:right;
+  width:100%;
+  margin-left: -160px;
+  margin-right: 5px;
+  background: white;
+}
+
+div#content {
+  margin-left: 160px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  padding: 0 5px 0 5px;
+}
+
+span#toggle {
+  display: none;
+}
