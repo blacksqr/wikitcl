@@ -138,7 +138,7 @@ namespace eval WikitWub {
     template preview_tc {Preview of $N} {
 	[tclarmour $C]
     }
-
+    
     # page sent when editing a page
     template edit {Editing [armour $name]} {
 	[div edit {
@@ -339,13 +339,13 @@ namespace eval WikitWub {
 	[<link> rel "alternate stylesheet" href "wikit_screen_notoc.css" media "screen"   type "text/css" title "Without TOC"]
 	[<link> rel stylesheet             href "wikit_print.css"        media "print"    type "text/css"]
 	[<link> rel stylesheet             href "wikit_handheld.css"     media "handheld" type "text/css"]
-
+	
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
-		[<style> media all "@import 'ie6.css';"]
+	[<style> media all "@import 'ie6.css';"]
 	<!\[endif\]-->
 	<!--\[if gte IE 7\]>
-		[<style> media all "@import 'ie7.css';"]
+	[<style> media all "@import 'ie7.css';"]
 	<!\[endif\]-->
 	[<script> {
 	    function init() {
@@ -366,7 +366,7 @@ namespace eval WikitWub {
 	    if (document.addEventListener) {
 		document.addEventListener("DOMContentLoaded", init, false);
 	    }
-
+	    
 	    /* for Internet Explorer */
 	    /*@cc_on @*/
 	    /*@if (@_win32)
@@ -377,12 +377,12 @@ namespace eval WikitWub {
 	    window.onload = init;
 	}]
 	[<script> src styleswitch.js {
-/***********************************************
-* Style Sheet Switcher v1.1- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
-* This notice MUST stay intact for legal use
-* Visit Dynamic Drive at http://www.dynamicdrive.com/ for this script and 100s more
-***********************************************/
-        }]
+	    /***********************************************
+	    * Style Sheet Switcher v1.1- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
+	    * This notice MUST stay intact for legal use
+	    * Visit Dynamic Drive at http://www.dynamicdrive.com/ for this script and 100s more
+	    ***********************************************/
+	}]
     }]
 
     # protected pages
@@ -619,7 +619,7 @@ namespace eval WikitWub {
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
 
-	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta href /_diff/$id#diff0 $delta]" $who [<div> class activity [<a> class activity href /_summary/$id [string repeat $actimg [edit_activity $id]]]]]
+	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta rel nofollow href /_diff/$id#diff0 $delta]" $who [<div> class activity [<a> class activity rel nofollow href /_summary/$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
 	if { [llength $result] } {
@@ -694,14 +694,8 @@ namespace eval WikitWub {
 	set T ""
 	set N 0
 	set updated ""
-	variable menus
-	foreach m {Home Recent Help} {
-	    lappend menu $menus($m)
-	}
-	set footer $menu
-	lappend footer $menus(TOC)
-	lappend footer $menus(NoTOC)
-	lappend footer $menus(Search)
+        set menu [menus Home Recent Help HR]
+	set footer [menus Home Recent Help TOC NoTOC Search]
 
 	set C [join $results "\n"]
 	variable TOC
@@ -852,18 +846,13 @@ namespace eval WikitWub {
 	variable menus
 	variable TOC
 	set updated "Edit summary"
-	foreach m {Home Recent Help} {
-	    lappend menu $menus($m)
-	}
+	set mene [menus Home Recent Help HR]
 	lappend menu [Ref /_history/$N History]
 	lappend menu [Ref /_summary/$N "Edit summary"]
 	lappend menu [Ref /_diff/$N "Last change"]
 	lappend menu [Ref /_diff/$N?T=1&D=1 "Changes in last day"]
 	lappend menu [Ref /_diff/$N?T=1&D=7 "Changes in last week"]
-	set footer $menu
-	lappend footer $menus(TOC)
-	lappend footer $menus(NoTOC)
-	lappend footer $menus(Search)
+	set footer [menus Home Recent Help TOC NoTOC Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set C $R
 	set Title [Ref $N]
@@ -1063,24 +1052,18 @@ namespace eval WikitWub {
 	    }
 	}
 
-	set menu {}
 	variable menus
 	variable TOC
 	if {![string length $updated]} {
 	    set updated "Difference between version $V and $D"
 	}
-	foreach m {Home Recent Help} {
-	    lappend menu $menus($m)
-	}
+	set menu [menus Home Recent Help HR]
 	lappend menu [Ref /_history/$N History]
 	lappend menu [Ref /_summary/$N "Edit summary"]
 	lappend menu [Ref /_diff/$N "Last change"]
 	lappend menu [Ref /_diff/$N?T=1&D=1 "Changes in last day"]
 	lappend menu [Ref /_diff/$N?T=1&D=7 "Changes in last week"]
-	set footer $menu
-	lappend footer $menus(TOC)
-	lappend footer $menus(NoTOC)
-	lappend footer $menus(Search)
+	set footer [menus Home Recent Help TOC NoTOC Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
     }
@@ -1108,10 +1091,7 @@ namespace eval WikitWub {
 	}
 
 	variable menus
-	set menu {}
-	foreach m {Home Recent Help} {
-	    lappend menu $menus($m)
-	}
+	set menu [menus Home Recent Help HR]
 	lappend menu [Ref /_history/$N History]
 
 	Wikit::pagevars $N name
@@ -1163,13 +1143,10 @@ namespace eval WikitWub {
 		    }
 		}
 	    }
-	    set footer $menu
-	    lappend footer $menus(TOC)
-	    lappend footer $menus(NoTOC)
-	    lappend footer $menus(Search)
 	}
 
 	lappend menu [Ref /_history/$N History]
+	set footer [menus Home Recent Help TOC NoTOC Search]
 	set updated ""
 	set T ""
 	variable TOC
@@ -1191,11 +1168,7 @@ namespace eval WikitWub {
 	set name "Change history of [mk::get wdb.pages!$N name]"
 	set Title "Change history of [Ref $N]"
 
-	set menu {}
-	variable menus
-	foreach m {Home Recent Help} {
-	    lappend menu $menus($m)
-	}
+	set menu [menus Home Recent Help HR]
 	set C ""
 #	set links ""
 	set nver [expr {1 + [mk::view size wdb.pages!$N.changes]}]
@@ -1215,10 +1188,7 @@ namespace eval WikitWub {
 	    lappend menu [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 #	    append links [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 	}
-	set footer $menu
-	lappend footer $menus(TOC)
-	lappend footer $menus(NoTOC)
-	lappend footer $menus(Search)
+	set footer [menus Home Recent Help TOC NoTOC Search]
 #	if {$links ne {}} {
 #	    append C <p> $links </p> \n
 #	}
@@ -1315,14 +1285,23 @@ namespace eval WikitWub {
     set menus(Home)   [<a> href "/" Home]
     set menus(Recent) [Ref 4 "Recent changes"]
     set menus(Help)   [Ref 3 "Help"]
-    set menus(HR)     <hr>
+    set menus(HR)     <br>
     set menus(Search) [Ref 2 "Search"]
-    set menus(TOC)    [<a> href "javascript:chooseStyle('With TOC', 60)"    "With TOC"]
-    set menus(NoTOC)  [<a> href "javascript:chooseStyle('Without TOC', 60)" "Without TOC"]
+    set menus(TOC)    [<a> href "javascript:chooseStyle('With%20TOC',%2060)"    "With TOC"]
+    set menus(NoTOC)  [<a> href "javascript:chooseStyle('Without%20TOC',%2060)" "Without TOC"]
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
 	<h1>Redirecting to $url</h1>
 	<p>$content</p>
+    }
+
+    proc menus { args } {
+        variable menus
+	set m {}
+	foreach arg $args {
+	    lappend m $menus($arg)
+	}
+	return $m
     }
 
     proc redir {r url content} {
@@ -1474,17 +1453,11 @@ namespace eval WikitWub {
 	append C \n
 	append C [<script> {google.load('search', '1');}]
 	append C \n
-	set menu {}
-	variable menus
 	variable TOC
 	variable gsearch 1
 	variable query $S
-	foreach m {Home Recent Help} {
-	    lappend menu $menus($m)
-	}
-	set footer $menu
-	lappend footer $menus(TOC)
-	lappend footer $menus(NoTOC)
+        set menu [menus Home Recent Help HR]
+        set footer [menus Home Recent Help TOC NoTOC]
 	set T ""
 	set r [sendPage $r]
 	unset gsearch
@@ -1753,15 +1726,9 @@ namespace eval WikitWub {
 	variable TOC
 	variable WELCOME
 	variable protected
-	variable menus
 
-	set menu {}
-	lappend menu $menus(Recent)
-	lappend menu $menus(Help)
-	set footer $menu
-	lappend footer $menus(TOC)
-	lappend footer $menus(NoTOC)
-	lappend footer $menus(Search)
+        set menu [menus Recent Help HR]
+        set footer [menus Recent Help HR TOC NoTOC Search]
 
 	set Title "Welcome to the Tclers Wiki!"
 	set updated ""
@@ -1831,15 +1798,8 @@ namespace eval WikitWub {
 	    # include javascripts and CSS for sortable table.
 	    set r [sortable $r]
 	} 
-	variable menus
-	set menu {}
-	foreach m {Home Recent Help} {
-	    lappend menu $menus($m)
-	}
-	set footer $menu
-	lappend footer $menus(TOC)
-	lappend footer $menus(NoTOC)
-	lappend footer $menus(Search)
+        set menu [menus Home Recent Help HR]
+	set footer [menus Home Recent Help TOC NoTOC Search]
 
 	set name "References to $N"
 	set Title "References to [Ref $N]"
@@ -2012,7 +1972,7 @@ namespace eval WikitWub {
 			append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
 		    }
 		    set q [string trimright $term *]
-		    append q " site:http://wiki.tcl.tk"
+		    append q "%20site:http://wiki.tcl.tk"
 		    append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
 		} else {
 		    # send a search page
@@ -2125,13 +2085,10 @@ namespace eval WikitWub {
 		append updated " " [<a> class delta href /_diff/$N#diff0 $delta]
 	    }
 	}
-	set menu [list]
 
 	variable protected
-	variable menus
-	foreach m {Home Recent Help} {
-	    lappend menu $menus($m)
-	}
+
+        set menu [menus Home Recent Help HR]
 	if {![info exists protected($N)]} {
 	    if {!$::roflag} {
 		lappend menu [Ref /_edit/$N Edit]
@@ -2140,10 +2097,7 @@ namespace eval WikitWub {
 	    lappend menu [Ref /_summary/$N "Edit summary"]
 	    lappend menu [Ref $backRef References]
 	}
-	set footer $menu
-	lappend footer $menus(TOC)
-	lappend footer $menus(NoTOC)
-	lappend footer $menus(Search)
+	set footer [menus Home Recent Help TOC NoTOC Search]
 
 	#set Title "<h1 class='title'>$Title</h1>"
 	if {0} {
