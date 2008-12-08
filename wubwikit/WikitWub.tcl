@@ -1728,7 +1728,7 @@ namespace eval WikitWub {
 	variable protected
 
         set menu [menus Recent Help HR]
-        set footer [menus Recent Help HR TOC NoTOC Search]
+        set footer [menus Recent Help TOC NoTOC Search]
 
 	set Title "Welcome to the Tclers Wiki!"
 	set updated ""
