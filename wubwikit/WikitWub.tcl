@@ -2089,16 +2089,17 @@ namespace eval WikitWub {
 	variable protected
 
         set menu [menus Home Recent Help]
+	set footer [menus Home Recent Help TOC NoTOC Search]
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
 	    if {!$::roflag} {
 		lappend menu [Ref /_edit/$N Edit]
+		lappend footer [Ref /_edit/$N Edit]
 	    }
 	    lappend menu [Ref /_history/$N "History"]
 	    lappend menu [Ref /_summary/$N "Edit summary"]
 	    lappend menu [Ref $backRef References]
 	}
-	set footer [menus Home Recent Help TOC NoTOC Search]
 
 	#set Title "<h1 class='title'>$Title</h1>"
 	if {0} {
