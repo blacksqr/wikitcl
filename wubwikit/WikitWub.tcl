@@ -694,7 +694,7 @@ namespace eval WikitWub {
 	set T ""
 	set N 0
 	set updated ""
-        set menu [menus Home Recent Help HR]
+        set menu [menus Home Recent Help]
 	set footer [menus Home Recent Help TOC NoTOC Search]
 
 	set C [join $results "\n"]
@@ -1456,7 +1456,7 @@ namespace eval WikitWub {
 	variable TOC
 	variable gsearch 1
 	variable query $S
-        set menu [menus Home Recent Help HR]
+        set menu [menus Home Recent Help]
         set footer [menus Home Recent Help TOC NoTOC]
 	set T ""
 	set r [sendPage $r]
@@ -1727,7 +1727,7 @@ namespace eval WikitWub {
 	variable WELCOME
 	variable protected
 
-        set menu [menus Recent Help HR]
+        set menu [menus Recent Help]
         set footer [menus Recent Help TOC NoTOC Search]
 
 	set Title "Welcome to the Tclers Wiki!"
@@ -1798,7 +1798,7 @@ namespace eval WikitWub {
 	    # include javascripts and CSS for sortable table.
 	    set r [sortable $r]
 	} 
-        set menu [menus Home Recent Help HR]
+        set menu [menus Home Recent Help]
 	set footer [menus Home Recent Help TOC NoTOC Search]
 
 	set name "References to $N"
@@ -2088,8 +2088,9 @@ namespace eval WikitWub {
 
 	variable protected
 
-        set menu [menus Home Recent Help HR]
+        set menu [menus Home Recent Help]
 	if {![info exists protected($N)]} {
+	    lappend menu {*}[menus HR]
 	    if {!$::roflag} {
 		lappend menu [Ref /_edit/$N Edit]
 	    }
