@@ -27,7 +27,7 @@ pre.prediff {
 }
 
 div.header {
-  background: #DDD;
+  background: #ccc;
   min-height: 53px;
 }
 
@@ -39,7 +39,7 @@ div.logo {
   margin: 0 1.5em 0 0;
   height: 40px;
   font-size: 120%;
-  background: url(/images/plume.png) top right no-repeat;
+  background: #ccc url(/images/plume.png) top right no-repeat;
 }
 
 div.logo a.logo {
@@ -60,7 +60,7 @@ hr {
 div.title {
   padding: 5px 0 3px 5px;
   font-size: 160%;
-  background: #DDD;
+  background: #ccc;
   text-align: left;
   font-weight: bold;
   font-weight: normal;
@@ -119,17 +119,17 @@ form#gsearchform {
 }
 
 input#searchtxt {
-  width: 135px;
+  width: 120px;
   color: gray;
 }
 
 input#googletxt {
-  width: 135px;
+  width: 120px;
   color: gray;
 }
 
 input#gsearchtxt {
-  width: 135px;
+  width: 120px;
 }
 
 /*
