@@ -17,13 +17,13 @@ div#wiki_menu {
 div#wrapper {
   float:right;
   width:100%;
-  margin-left: -145px;
+  margin-left: -140px;
   margin-right: 5px;
   background: #ddd;
 }
 
 div#content {
-  margin-left: 145px;
+  margin-left: 140px;
   padding: 5px 5px 5px 5px;
   background: white;
 }
