@@ -1287,8 +1287,7 @@ namespace eval WikitWub {
     set menus(Help)   [Ref 3 "Help"]
     set menus(HR)     <br>
     set menus(Search) [Ref 2 "Search"]
-    set menus(TOCNoTOC) [<a> id "with_toc_footer"    href "javascript:chooseStyle('With%20TOC',%2060)"    "With TOC"]
-    append menus(TOCNoTOC) "-" [<a> id "without_toc_footer" href "javascript:chooseStyle('Without%20TOC',%2060)" "Without TOC"]
+    set menus(TOCNoTOC) [<a> href "javascript:toggleStyle(60)" "Toggle TOC"]
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
 	<h1>Redirecting to $url</h1>

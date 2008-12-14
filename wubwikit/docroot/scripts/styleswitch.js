@@ -39,23 +39,26 @@ function setStylesheet(title, randomize){ //Main stylesheet switcher function. S
 	var randomnumber=Math.floor(Math.random()*altsheets.length);
 	altsheets[randomnumber].disabled=false;
     }
-f    return (typeof randomize!="undefined" && altsheets[randomnumber]!="")? altsheets[randomnumber].getAttribute("title") : ""; //if in "random" mode, return "title" of randomly enabled alt stylesheet
+    return (typeof randomize!="undefined" && altsheets[randomnumber]!="")? altsheets[randomnumber].getAttribute("title") : ""; //if in "random" mode, return "title" of randomly enabled alt stylesheet
 }
 
 function chooseStyle(styletitle, days){ //Interface function to switch style sheets plus save "title" attr of selected stylesheet to cookie
     if (document.getElementById){
 	setStylesheet(styletitle);
 	setCookie("mysheet", styletitle, days);
-
-	if (styletitle == "With TOC") {
-	    document.getElementById("with_toc_footer").style.display='none';
-	    document.getElementById("without_toc_footer").style.display='inline';	    
-	}
-	else if (styletitle == "Without TOC") {
-	    document.getElementById("with_toc_footer").style.display='inline';
-	    document.getElementById("without_toc_footer").style.display='none';
-	}
     }
+}
+
+function toggleStyle(days) {
+    var selectedtitle=getCookie("mysheet");
+    if (document.getElementById && selectedtitle!=null) {
+	if (selectedtitle == "With TOC")
+	    chooseStyle("Without TOC", days);
+	else
+	    chooseStyle("With TOC", days);
+    }
+    else
+	chooseStyle("With TOC", days);
 }
 
 function indicateSelected(element){ //Optional function that shows which style sheet is currently selected within group of radio buttons or select menu
