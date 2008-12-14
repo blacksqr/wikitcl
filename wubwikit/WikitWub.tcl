@@ -695,7 +695,7 @@ namespace eval WikitWub {
 	set N 0
 	set updated ""
         set menu [menus Home Recent Help]
-	set footer [menus Home Recent Help TOC NoTOC Search]
+	set footer [menus Home Recent Help TOCNoTOC Search]
 
 	set C [join $results "\n"]
 	variable TOC
@@ -852,7 +852,7 @@ namespace eval WikitWub {
 	lappend menu [Ref /_diff/$N "Last change"]
 	lappend menu [Ref /_diff/$N?T=1&D=1 "Changes in last day"]
 	lappend menu [Ref /_diff/$N?T=1&D=7 "Changes in last week"]
-	set footer [menus Home Recent Help TOC NoTOC Search]
+	set footer [menus Home Recent Help TOCNoTOC Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set C $R
 	set Title [Ref $N]
@@ -1063,7 +1063,7 @@ namespace eval WikitWub {
 	lappend menu [Ref /_diff/$N "Last change"]
 	lappend menu [Ref /_diff/$N?T=1&D=1 "Changes in last day"]
 	lappend menu [Ref /_diff/$N?T=1&D=7 "Changes in last week"]
-	set footer [menus Home Recent Help TOC NoTOC Search]
+	set footer [menus Home Recent Help TOCNoTOC Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
     }
@@ -1146,7 +1146,7 @@ namespace eval WikitWub {
 	}
 
 	lappend menu [Ref /_history/$N History]
-	set footer [menus Home Recent Help TOC NoTOC Search]
+	set footer [menus Home Recent Help TOCNoTOC Search]
 	set updated ""
 	set T ""
 	variable TOC
@@ -1188,7 +1188,7 @@ namespace eval WikitWub {
 	    lappend menu [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 #	    append links [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 	}
-	set footer [menus Home Recent Help TOC NoTOC Search]
+	set footer [menus Home Recent Help TOCNoTOC Search]
 #	if {$links ne {}} {
 #	    append C <p> $links </p> \n
 #	}
@@ -1287,8 +1287,8 @@ namespace eval WikitWub {
     set menus(Help)   [Ref 3 "Help"]
     set menus(HR)     <br>
     set menus(Search) [Ref 2 "Search"]
-    set menus(TOC)    [<a> href "javascript:chooseStyle('With%20TOC',%2060)"    "With TOC"]
-    set menus(NoTOC)  [<a> href "javascript:chooseStyle('Without%20TOC',%2060)" "Without TOC"]
+    set menus(TOCNoTOC) [<a> id "with_toc_footer"    href "javascript:chooseStyle('With%20TOC',%2060)"    "With TOC"]
+    append menus(TOCNoTOC) "-" [<a> id "without_toc_footer" href "javascript:chooseStyle('Without%20TOC',%2060)" "Without TOC"]
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
 	<h1>Redirecting to $url</h1>
@@ -1457,7 +1457,7 @@ namespace eval WikitWub {
 	variable gsearch 1
 	variable query $S
         set menu [menus Home Recent Help]
-        set footer [menus Home Recent Help TOC NoTOC]
+        set footer [menus Home Recent Help TOCNoTOC]
 	set T ""
 	set r [sendPage $r]
 	unset gsearch
@@ -1728,7 +1728,7 @@ namespace eval WikitWub {
 	variable protected
 
         set menu [menus Recent Help]
-        set footer [menus Recent Help TOC NoTOC Search]
+        set footer [menus Recent Help TOCNoTOC Search]
 
 	set Title "Welcome to the Tclers Wiki!"
 	set updated ""
@@ -1799,7 +1799,7 @@ namespace eval WikitWub {
 	    set r [sortable $r]
 	} 
         set menu [menus Home Recent Help]
-	set footer [menus Home Recent Help TOC NoTOC Search]
+	set footer [menus Home Recent Help TOCNoTOC Search]
 
 	set name "References to $N"
 	set Title "References to [Ref $N]"
@@ -2089,7 +2089,7 @@ namespace eval WikitWub {
 	variable protected
 
         set menu [menus Home Recent Help]
-	set footer [menus Home Recent Help TOC NoTOC Search]
+	set footer [menus Home Recent Help TOCNoTOC Search]
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
 	    if {!$::roflag} {
