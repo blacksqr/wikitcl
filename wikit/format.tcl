@@ -447,8 +447,9 @@ namespace eval Wikit::Format {
         }
         TBLH {
           lappend irep TRH 0
+          set txt [string map {%|% %!url_name_delimiter_pipe!%} $txt]
           foreach te [lrange [split [string range $txt 1 end-1] "|"] 1 end-1] {
-            lappend irep TDH 0 ; render $te ; lappend irep TDEH 0
+            lappend irep TDH 0 ; render [string map {%!url_name_delimiter_pipe!% %|%} $te] ; lappend irep TDEH 0
           }
         }
         CTBL {
@@ -2028,7 +2029,7 @@ namespace eval Wikit::Format {
     }
   }
 
-  set pl {T Q I D H TDE TDEH TRH FE FI L HD2 HD3 HD4 BLS BLE _}
+  set pl {T Q I D H TDE TDEH TRH TR FE FI L HD2 HD3 HD4 BLS BLE _}
 
   l $pl O 1 5
   l $pl U 1 5
