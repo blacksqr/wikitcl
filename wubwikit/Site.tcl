@@ -46,20 +46,30 @@ package require Site	;# load main Site configuration
 namespace eval Site {
     variable origin $docroot ;# the original copies for priming
     variable wikitroot [file join $base data]	;# where the wikit lives
+    variable from_starkit
     set docroot [file join $base docroot]	;# where ancillary docs live
 
-    catch {file mkdir $wikitroot}
 
-    if {![file exists $docroot]} {
+    if {[info exists from_starkit] && $from_starkit} {
+	variable starkit_docroot
+	variable starkit_base
+	set docroot $starkit_docroot
+	set base $starkit_base
+	set wikitroot [file join $base data]
+	puts "Using docroot in starkit: $docroot"
+    } elseif {![file exists $docroot]} {
 	# copy the origin docroot to $base
+	catch {file mkdir $wikitroot}
 	file copy $origin [file dirname $docroot]
 	file copy [file join $home doc.sample $wikidb] $wikitroot
     } elseif {$reallyreallyoverwrite && $overwrite} {
 	# destructively overwrite the $base with the origin
+	catch {file mkdir $wikitroot}
 	file delete -force $docroot
 	file copy -force $origin [file dirname $docroot]
 	file copy -force [file join $home doc $wikidb] $wikitroot
     } else {
+	catch {file mkdir $wikitroot}
 	#puts stderr "Not overwriting existing docroot '$docroot'"
     }
     
@@ -157,5 +167,9 @@ namespace eval Site {
     }
 }
 
-Site start
-#Site start listener {-port 38080} https {-port -1}
+if {[info exists Site::from_starkit] && $Site::from_starkit} {
+    Site start listener [list -port $::port] https {-port -1} cmdport $::cmdport
+} else {
+    Site start
+    #Site start listener {-port 38080} https {-port -1}
+}
