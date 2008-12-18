@@ -1476,6 +1476,7 @@ namespace eval WikitWub {
     }
 
     proc /preview { r N O } {
+        set O [encoding convertfrom utf-8 $O]
 	set C [::Wikit::TextToStream $O]
 	lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 	return [sendPage $r preview_tc]
@@ -1594,7 +1595,7 @@ namespace eval WikitWub {
 	set url http://[Url host $r]/$N
 	# instead of redirecting, return the generated page with a Content-Location tag
 	return [do $r $N]
-	return [redir $r $url [<a> href $url "Edited Page"]]
+#	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
     proc GetPage {id} {
