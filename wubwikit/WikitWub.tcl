@@ -846,7 +846,7 @@ namespace eval WikitWub {
 	variable menus
 	variable TOC
 	set updated "Edit summary"
-	set mene [menus Home Recent Help HR]
+	set menu [menus Home Recent Help HR]
 	lappend menu [Ref /_history/$N History]
 	lappend menu [Ref /_summary/$N "Edit summary"]
 	lappend menu [Ref /_diff/$N "Last change"]
