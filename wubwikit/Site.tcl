@@ -170,6 +170,6 @@ namespace eval Site {
 if {[info exists Site::from_starkit] && $Site::from_starkit} {
     Site start listener [list -port $::port] https {-port -1} cmdport $::cmdport
 } else {
-    #Site start
-    Site start listener {-port 38080} https {-port -1}
+    Site start
+    #Site start listener {-port 38080} https {-port -1}
 }
