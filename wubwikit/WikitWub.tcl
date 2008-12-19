@@ -1476,7 +1476,7 @@ namespace eval WikitWub {
     }
 
     proc /preview { r N O } {
-        set O [encoding convertfrom utf-8 $O]
+        set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
 	set C [::Wikit::TextToStream $O]
 	lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 	return [sendPage $r preview_tc]

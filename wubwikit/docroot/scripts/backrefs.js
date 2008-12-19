@@ -62,7 +62,7 @@ var Url = {
 
     // public method for url encoding
     encode : function (string) {
-        return escape(this._utf8_encode(string));
+        return escape(this._utf8_encode(string)).replace(/\+/g, "%2B");
     },
 
     // public method for url decoding
@@ -135,7 +135,6 @@ function previewPage(page)
     document.getElementById("previewarea_pre").innerHTML = "<hr><b>Preview:</b> <button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
     var txt = document.getElementById("editarea").value;
     ajaxpage("/_preview/" + page, "O="+Url.encode(txt), "previewarea");
-/*    ajaxpage("/_preview/" + page, "O="+URLencode(txt), "previewarea"); */
     return false;
 }
 
