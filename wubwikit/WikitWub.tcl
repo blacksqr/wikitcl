@@ -2212,7 +2212,6 @@ proc Responder::do {req} {
 	    # block the originator by IP
 	    Block block [dict get $req -ipaddr] "Bogus URL '[dict get $req -path]'"
 	    Send [Http Forbidden $req]
-	    continue	;# process next request
 	}
 
 	/_repo/* -
