@@ -164,7 +164,7 @@ namespace eval WikitWub {
 		    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
 		    [<br>]
 		    <ul>
-		    <li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.]</li>
+		    <li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.</li>
 		    <li>[<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line</li>
 		    <li>[<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line</li>
 		    <li>[<b> PARAGRAPHS] are split with empty lines</li>
@@ -300,12 +300,12 @@ namespace eval WikitWub {
 	return {<form id='searchform' action='/_search' method='get'>
 	    <input type='hidden' name='_charset_'>
 	    <input id='searchtxt' name='S' type='text' value='Search in titles' 
-		onfocus='clearSearch();' onblur='setSearch();'>
+	    onfocus='clearSearch();' onblur='setSearch();'>
 	    </form>
 	    <form id='gsearchform' action='/_gsearch' method='get'>
 	    <input type='hidden' name='_charset_'>
 	    <input id='googletxt' name='S' type='text' value='Search in pages' 
-		onfocus='clearGoogle();' onblur='setGoogle();'>
+	    onfocus='clearGoogle();' onblur='setGoogle();'>
 	    </form>
 	}
     }
@@ -774,7 +774,7 @@ namespace eval WikitWub {
 		}
 		while { $p2 < $i2 } {
 		    if {$rss} {
-#			append C ">>>>>>o;$N;$W;;\n[lindex $t2 $p2]\n<<<<<<\n"
+			#			append C ">>>>>>o;$N;$W;;\n[lindex $t2 $p2]\n<<<<<<\n"
 		    } else {
 			append C ">>>>>>o;$N;$W;;\n[lindex $t2 $p2]\n<<<<<<\n"
 		    }
@@ -794,7 +794,7 @@ namespace eval WikitWub {
 	}
 	while { $p2 < [llength $t2] } {
 	    if {$rss} {
-#		append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
+		#		append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
 	    } else {
 		append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
 	    }
@@ -1170,7 +1170,7 @@ namespace eval WikitWub {
 
 	set menu [menus Home Recent Help HR]
 	set C ""
-#	set links ""
+	#	set links ""
 	set nver [expr {1 + [mk::view size wdb.pages!$N.changes]}]
 	if {$S > 0} {
 	    set pstart [expr {$S - $L}]
@@ -1178,20 +1178,20 @@ namespace eval WikitWub {
 		set pstart 0
 	    }
 	    lappend menu [<a> href "$N?S=$pstart&L=$L" "Previous $L"]
-#	    append links [<a> href "$N?S=$pstart&L=$L" "Previous $L"]
+	    #	    append links [<a> href "$N?S=$pstart&L=$L" "Previous $L"]
 	}
 	set nstart [expr {$S + $L}]
 	if {$nstart < $nver} {
-#	    if {$links ne {}} {
-#		append links { - }
-#	    }
+	    #	    if {$links ne {}} {
+	    #		append links { - }
+	    #	    }
 	    lappend menu [<a> href "$N?S=$nstart&L=$L" "Next $L"]
-#	    append links [<a> href "$N?S=$nstart&L=$L" "Next $L"]
+	    #	    append links [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 	}
 	set footer [menus Home Recent Help TOCNoTOC Search]
-#	if {$links ne {}} {
-#	    append C <p> $links </p> \n
-#	}
+	#	if {$links ne {}} {
+	#	    append C <p> $links </p> \n
+	#	}
 	if {[catch {Wikit::ListPageVersionsDB wdb $N $L $S} versions]} {
 	    append C <pre> $versions </pre>
 	} else {
@@ -1255,9 +1255,9 @@ namespace eval WikitWub {
 	    }
 	    append C </tbody></table> \n
 	}
-#	if {$links ne {}} {
-#	    append C <p> $links </p> \n
-#	}
+	#	if {$links ne {}} {
+	#	    append C <p> $links </p> \n
+	#	}
 
 	set updated ""
 	set T ""
@@ -1323,7 +1323,7 @@ namespace eval WikitWub {
 	    Debug.wikit {/login - redo with referer}
 	    set R [Http Referer $r]
 	    set r [movecookie $r]
-	    return [sendPage $r login]]]
+	    return [sendPage $r login]
 	}
 
 	if {[dict exists $r -cookies]} {
@@ -1376,7 +1376,7 @@ namespace eval WikitWub {
 
     proc invalidate {r url} {
 	Debug.wikit {invalidating $url} 3
-	Cache delete http://[dict get $r host]/$url
+	return [Cache delete http://[dict get $r host]/$url]
     }
 
     proc locate {page {exact 1}} {
@@ -1408,7 +1408,7 @@ namespace eval WikitWub {
 		# do a glob search over names,
 		# where AbCdEf -> *[Aa]b[Cc]d[Ee]f*
 		# skip this if the search has brackets (WHY?)
-		if {[string first {[} $page] < 0} {
+		if {[string first \[ $page] < 0} {
 		    regsub -all {[A-Z]} $page "\\\[&\[string tolower &\]\\\]" temp
 		    set temp "*[subst -novariable $temp]*"
 		    set N [mk::select wdb.pages -glob name $temp -min date 1]
@@ -1455,8 +1455,8 @@ namespace eval WikitWub {
 	variable TOC
 	variable gsearch 1
 	variable query $S
-        set menu [menus Home Recent Help]
-        set footer [menus Home Recent Help TOCNoTOC]
+	set menu [menus Home Recent Help]
+	set footer [menus Home Recent Help TOCNoTOC]
 	set T ""
 	set r [sendPage $r]
 	unset gsearch
@@ -1476,7 +1476,7 @@ namespace eval WikitWub {
     }
 
     proc /preview { r N O } {
-        set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
+	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
 	set C [::Wikit::TextToStream $O]
 	lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 	return [sendPage $r preview_tc]
@@ -1515,7 +1515,7 @@ namespace eval WikitWub {
 	set when [expr {[dict get $r -received] / 1000000}]
 
 	# temporary fix - move cookies under -path /_edit/
-        set r [movecookie $r]
+	set r [movecookie $r]
 
 	Debug.wikit {/edit/save N:$N [expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
 
@@ -1526,7 +1526,7 @@ namespace eval WikitWub {
 	    && ![info exists protected($N)]
 	} {
 	    # added 2002-06-13 - edit conflict detection
-            if {$O ne [list $date $who]} {
+	    if {$O ne [list $date $who]} {
 		#lassign [split [lassign $O ewhen] @] enick eip
 		if {$who eq "$nick@[dict get $r -ipaddr]"} {
 		    # this is a ghostly conflict-with-self - log and ignore
@@ -1571,9 +1571,7 @@ namespace eval WikitWub {
 	    }
 
 	    # Only actually save the page if the user selected "save"
-	    if {[invalidate $r $N] < 0} {
-		Debug.error {Cache failed to invalidate $N}
-	    }
+	    invalidate $r $N
 	    invalidate $r 4
 	    invalidate $r _ref/$N
 	    invalidate $r rss.xml
@@ -1595,7 +1593,7 @@ namespace eval WikitWub {
 	set url http://[Url host $r]/$N
 	# instead of redirecting, return the generated page with a Content-Location tag
 	return [do $r $N]
-#	return [redir $r $url [<a> href $url "Edited Page"]]
+	#	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
     proc GetPage {id} {
@@ -1606,7 +1604,7 @@ namespace eval WikitWub {
     proc /reload {r} {
 	foreach {} {}
     }
-	    
+    
     # called to generate an edit page
     proc /edit {r N args} {
 	variable readonly
@@ -1727,8 +1725,8 @@ namespace eval WikitWub {
 	variable WELCOME
 	variable protected
 
-        set menu [menus Recent Help]
-        set footer [menus Recent Help TOCNoTOC Search]
+	set menu [menus Recent Help]
+	set footer [menus Recent Help TOCNoTOC Search]
 
 	set Title "Welcome to the Tclers Wiki!"
 	set updated ""
@@ -1798,7 +1796,7 @@ namespace eval WikitWub {
 	    # include javascripts and CSS for sortable table.
 	    set r [sortable $r]
 	} 
-        set menu [menus Home Recent Help]
+	set menu [menus Home Recent Help]
 	set footer [menus Home Recent Help TOCNoTOC Search]
 
 	set name "References to $N"
@@ -2041,13 +2039,13 @@ namespace eval WikitWub {
 		}
 	    }
 	}
-		
+	
 	Debug.wikit {located: $N}
 
 	# set up backrefs
 	set refs [mk::select wdb.refs to $N]
 	Debug.wikit {[llength $refs] backrefs to $N}
-        switch -- [llength $refs] {
+	switch -- [llength $refs] {
 	    0 {
 		set backRef ""
 		set Refs ""
@@ -2088,7 +2086,7 @@ namespace eval WikitWub {
 
 	variable protected
 
-        set menu [menus Home Recent Help]
+	set menu [menus Home Recent Help]
 	set footer [menus Home Recent Help TOCNoTOC Search]
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
@@ -2297,25 +2295,25 @@ proc Responder::do {req} {
 	    # for the reason for this offence to good taste.
 	}
 
-       /_toc/*.js {
-	   # Remove if-modified-since, incorrectly sent by Opera
-	   dict unset req if-modified-since
-            # silently redirect js files
+	/_toc/*.js {
+	    # Remove if-modified-since, incorrectly sent by Opera
+	    dict unset req if-modified-since
+	    # silently redirect js files
 	    if {[catch {
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
 		set toc [dict get $toc -value]
 	    } x eo]} {
 		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1 -expires {next week}]
-                dict set req -suffix [file tail [dict get $req -path]] 
-                Http NoCache [Http Ok [::scripts do $req]]
-                #Http NoCache [Http Ok $req {} text/javascript]
+		dict set req -suffix [file tail [dict get $req -path]] 
+		Http NoCache [Http Ok [::scripts do $req]]
+		#Http NoCache [Http Ok $req {} text/javascript]
 	    } elseif {!$toc} {
-                Http NoCache [Http Ok $req {} text/javascript]
-            } else {
-                dict set req -suffix [file tail [dict get $req -path]] 
-                Http NoCache [Http Ok [::scripts do $req]]
-            }
-        }
+		Http NoCache [Http Ok $req {} text/javascript]
+	    } else {
+		dict set req -suffix [file tail [dict get $req -path]] 
+		Http NoCache [Http Ok [::scripts do $req]]
+	    }
+	}
 
 	/robots.txt -
 	/*.js {
