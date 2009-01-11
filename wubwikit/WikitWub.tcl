@@ -472,63 +472,6 @@ namespace eval WikitWub {
 	return [Http NoCache [Http Ok $r [Sitemap sitemap $map] text/xml]]
     }
 
-    proc /state {r} {
-	set state [Activity state]
-	set result [<table> summary {} class sortable [subst {
-	    [<thead> [<tr> [<th> [join {cid socket thread backend ip start end log} </th><th>]]]]
-	    [<tbody> [Foreach row $state {
-		[<tr> [<td> [join $row </td><td>]]]
-	    }]]
-	}]]
-
-	set r [sortable $r]	;# include the sortable js
-	dict set r content-type x-text/wiki
-
-	return [Http NoCache [Http Ok $r $result]]
-    }
-
-    proc /activity {r {L "current"} {F "html"} args} {
-	# generate an activity page
-	if {$L eq "log"} {
-	    set act [Activity log]
-	    set title "Activity Log"
-	    set alt [<a> href "/_activity?L=current" "Current Activity"]
-	} else {
-	    set act [Activity current]
-	    set title "Current Activity"
-	    set alt [<a> href "/_activity?L=log" "Activity Log"]
-	}
-
-	switch -- $F {
-	    csv {
-		package require csv
-		foreach a $act {
-		    append result [::csv::joinlist $a] \n
-		}
-		dict set r content-type text/plain
-	    }
-
-	    html -
-	    default {
-		set table [<table> summary {} class sortable [subst {
-		    [<thead> [<tr> [Foreach t [lindex $act 0] {
-			[<th> [string totitle $t]]
-		    }]]]
-		    [<tbody> [Foreach a [lrange $act 1 end] {
-			[<tr> class [If {[incr row] % 2} even else odd] \
-			     [<td> [join $a </td>\n<td>]]]
-		    }]]
-		}]]
-		set result "[<h1> $title]$table[<p> $alt]"
-
-		set r [sortable $r]	;# include the sortable js
-		dict set r content-type x-text/wiki
-	    }
-	}
-
-	return [Http NoCache [Http Ok $r $result]]
-    }
-
     proc list2plaintable {l columnclasses {tag ""}} {
 	set row 0
 	return [<table> class $tag summary {} [subst {
@@ -2209,7 +2152,7 @@ proc Responder::do {req} {
 	/cgi-bin/* {
 	    # block the originator by IP
 	    Block block [dict get $req -ipaddr] "Bogus URL '[dict get $req -path]'"
-	    Send [Http Forbidden $req]
+	    Http Forbidden $req
 	}
 
 	/_repo/* -
