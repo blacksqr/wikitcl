@@ -2108,11 +2108,11 @@ Repo init repo _repo [file join $::config(base) repo] docprefix / titleURL /half
 set Repo::icons /_icons/
 
 if {[file exists /var/www/webalizer]} {
-    Mason webalizer -root /var/www/webalizer -prefix /_stats/ -auth .before -wrapper .after -dirhead {name size mtime}
+    Mason create webalizer -root /var/www/webalizer -prefix /_stats/ -auth .before -wrapper .after -dirhead {name size mtime}
 }
 
 # Wub documentation directory
-Mason wub -prefix /_wub -root [file join $::config(wubdir) docs] -auth .before -wrapper .after -dirhead {name size mtime}
+Mason create wub -prefix /_wub -root [file join $::config(wubdir) docs] -auth .before -wrapper .after -dirhead {name size mtime}
 Convert Namespace ::MConvert
 
 # set message of the day (if any) to be displayed on /4
