@@ -2095,7 +2095,7 @@ Direct init doc namespace ::Commenter prefix /_doc ctype "x-text/html-fragment"
 
 # directories of static files
 foreach {dom expiry} {css {next week} images {next week} scripts {next week} img {next week} html 0 bin 0} {
-    File $dom -root [file join $::config(docroot) $dom] -expires $expiry
+    File create $dom -root [file join $::config(docroot) $dom] -expires $expiry
 }
 
 #### Icons domain
