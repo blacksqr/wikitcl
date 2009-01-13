@@ -10,3 +10,4 @@ Disallow: /_edit
 Disallow: /edit
 Disallow: /_tcl
 Disallow: /_login
+Disallow: /_summary
