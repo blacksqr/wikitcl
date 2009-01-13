@@ -20,7 +20,6 @@ package require Cookies
 package require WikitRss
 package require Sitemap
 package require stx
-package require Responder
 package require Honeypot
 
 package provide WikitWub 1.0
@@ -2134,17 +2133,12 @@ catch {
     set ::WikitWub::WELCOME [::fileutil::cat [file join $::config(docroot) html welcome.html]]
 }
 
-# Disconnected - courtesy indication that we've been disconnected
-proc Disconnected {args} {
-    # we're pretty well stateless
-}
-
 # Responder::post - postprocess response by converting
-proc Responder::post {rsp} {
+proc Httpd::post {rsp} {
     return [::Convert do $rsp]
 }
 
-proc Responder::do {req} {
+proc Httpd::do {req} {
     switch -glob -- [dict get $req -path] {
 	/*.php -
 	/*.wmv -
@@ -2333,21 +2327,6 @@ proc Responder::do {req} {
 	    ::WikitWub do $req [file tail [dict get $req -path]]
 	}
     }
-}
-
-# Incoming - indication of incoming request
-proc Incoming {req} {
-    #dict set req -cookies [Cookies parse4server [Dict get? $req cookie]]
-    set req [Cookies 4Server $req]
-    #set req [Session fetch $req]
-
-    if {[dict exists $req -session]} {
-	# do something with existing session
-    } else {
-	# this will create a new session on request completion
-	dict set req -session created [clock seconds]
-    }
-    return [Responder Process $req]
 }
 
 # initialize pest preprocessor
