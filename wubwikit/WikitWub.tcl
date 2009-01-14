@@ -2138,7 +2138,8 @@ proc Httpd::post {rsp} {
     return [::Convert do $rsp]
 }
 
-proc Httpd::do {req} {
+proc Httpd::do {op req} {
+    if {$op ne "REQUEST"} return
     switch -glob -- [dict get $req -path] {
 	/*.php -
 	/*.wmv -
