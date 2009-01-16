@@ -1832,11 +1832,15 @@ namespace eval WikitWub {
 
     proc pageXML {n} {
 	::Wikit::pagevars $n name page date who
+	lassign [::Wikit::StreamToHTML $page / ::WikitWub::InfoProc] parsed - toc backrefs
 	return [<page> [subst { 
 	    [<name> [armour $name]]
 	    [<content> [armour $page]]
-	    [<date> [armour $date]]
+	    [<date> [Httpd Date $date]]
 	    [<who> [armour $who]]
+	    [<parsed> [armour $parsed]]
+	    [<toc> [armour $toc]]
+	    [<backrefs> [armour $backrefs]]
 	}]]
     }
 
