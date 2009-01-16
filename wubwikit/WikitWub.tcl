@@ -1979,7 +1979,7 @@ namespace eval WikitWub {
 		    .xml {
 			set C "<?xml version='1.0'?>"
 			append C \n [pageXML $N]
-			return [Http NoCache [Http Ok $r C text/xml]]
+			return [Http NoCache [Http Ok $r $C text/xml]]
 		    }
 		    default {
 			set C [::Wikit::TextToStream [GetPage $N]]
