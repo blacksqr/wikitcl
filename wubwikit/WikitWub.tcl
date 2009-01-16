@@ -1832,7 +1832,8 @@ namespace eval WikitWub {
 
     proc pageXML {n} {
 	::Wikit::pagevars $n name page date who
-	lassign [::Wikit::StreamToHTML $page / ::WikitWub::InfoProc] parsed - toc backrefs
+	set stream [::Wikit::TextToStream [GetPage $N]]
+	lassign [::Wikit::StreamToHTML $stream / ::WikitWub::InfoProc] parsed - toc backrefs
 	return [<page> [subst { 
 	    [<name> [armour $name]]
 	    [<content> [armour $page]]
