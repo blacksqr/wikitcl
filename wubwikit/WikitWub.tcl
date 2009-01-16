@@ -1837,7 +1837,7 @@ namespace eval WikitWub {
 	return [<page> [subst { 
 	    [<name> [armour $name]]
 	    [<content> [armour $page]]
-	    [<date> [Httpd Date $date]]
+	    [<date> [Http Date $date]]
 	    [<who> [armour $who]]
 	    [<parsed> [armour $parsed]]
 	    [<toc> [armour $toc]]
