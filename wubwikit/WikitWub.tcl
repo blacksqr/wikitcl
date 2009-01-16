@@ -1830,6 +1830,17 @@ namespace eval WikitWub {
 	return [list $result $rdate $long]
     }
 
+    proc pageXML {n} {
+	::Wikit::pagevarsDB name page date who
+	return [<page> [subst { 
+	    [<name> [armour $name]]
+	    [<content> [armour $page]]
+	    [<date> [armour $date]]
+	    [<who> [armour $who]]
+	}]]
+    }
+
+
     proc Filter {req term} {}
 
     variable trailers {@ _edit ! _ref - _diff + _history}
@@ -1964,6 +1975,11 @@ namespace eval WikitWub {
 			set C [::Wikit::TextToStream [GetPage $N] 0 0 0]
 			set C [::Wikit::StreamToTcl $name $C]
 			return [Http NoCache [Http Ok $r $C text/plain]]
+		    }
+		    .xml {
+			set C "<?xml version='1.0'?>"
+			append C \n [pageXML $N]
+			return [Http NoCache [Http Ok $r C text/xml]]
 		    }
 		    default {
 			set C [::Wikit::TextToStream [GetPage $N]]
