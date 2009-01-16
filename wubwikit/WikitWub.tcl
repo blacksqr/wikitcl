@@ -1830,8 +1830,8 @@ namespace eval WikitWub {
 	return [list $result $rdate $long]
     }
 
-    proc pageXML {n} {
-	::Wikit::pagevars $n name page date who
+    proc pageXML {N} {
+	::Wikit::pagevars $N name page date who
 	set stream [::Wikit::TextToStream [GetPage $N]]
 	lassign [::Wikit::StreamToHTML $stream / ::WikitWub::InfoProc] parsed - toc backrefs
 	return [<page> [subst { 
