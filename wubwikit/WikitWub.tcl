@@ -1831,7 +1831,7 @@ namespace eval WikitWub {
     }
 
     proc pageXML {n} {
-	::Wikit::pagevarsDB name page date who
+	::Wikit::pagevars $n name page date who
 	return [<page> [subst { 
 	    [<name> [armour $name]]
 	    [<content> [armour $page]]
