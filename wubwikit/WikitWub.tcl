@@ -2253,8 +2253,11 @@ proc Httpd::do {op req} {
 	}
 
 	/*ie_onload.js {
-	    Http CacheableContent [Http Cache $req 100000000] 0 {init();} application/javascript
-
+	    if {[dict exists $req if-modified-since]} {
+		return [Http NotModified $req]
+	    } else {
+		return [Http CacheableContent [Http Cache $req 100000000] 0 {init();} application/javascript]
+	    }
 	    # send out this piddling script to IE users.
 	    # See variable head above for how it's invoked.
 	    # yet another reason to hate Windows IE
