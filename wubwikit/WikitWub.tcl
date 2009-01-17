@@ -354,11 +354,11 @@ namespace eval WikitWub {
 		// flag this function so we don't do the same thing twice
 		arguments.callee.done = true;
 
-		try {
-		    checkTOC();
-		} catch (err) {
-		    /* nothing */
-		}
+		//try {
+		//    checkTOC();
+		//} catch (err) {
+		//    /* nothing */
+		//}
 	    };
 
 	    /* for Mozilla */
@@ -375,6 +375,10 @@ namespace eval WikitWub {
 	    /* for other browsers */
 	    window.onload = init;
 	}]
+    }]
+
+    if {0} {
+	# taken this out
 	[<script> src styleswitch.js {
 	    /***********************************************
 	    * Style Sheet Switcher v1.1- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
@@ -382,7 +386,7 @@ namespace eval WikitWub {
 	    * Visit Dynamic Drive at http://www.dynamicdrive.com/ for this script and 100s more
 	    ***********************************************/
 	}]
-    }]
+    }
 
     # protected pages
     variable protected
