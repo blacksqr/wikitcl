@@ -395,7 +395,8 @@ namespace eval WikitWub {
     variable htmlsuffix [Honeypot link /$protected(HoneyPot).html]
     append htmlsuffix [<script> src /search.js] \n
     append htmlsuffix [<script> src /backrefs.js] \n
-    append htmlsuffix [<script> src /_toc/toc.js] \n
+    #append htmlsuffix [<script> src /_toc/toc.js] \n
+    append htmlsuffix [<script> src /toc.js] \n
 
     # convertor from wiki to html
     proc .x-text/wiki.text/html {rsp} {
@@ -1229,7 +1230,8 @@ namespace eval WikitWub {
     set menus(Help)   [Ref 3 "Help"]
     set menus(HR)     <br>
     set menus(Search) [Ref 2 "Search"]
-    set menus(TOCNoTOC) [<a> href "javascript:toggleStyle(60)" "Toggle TOC"]
+    #set menus(TOCNoTOC) [<a> href "javascript:toggleStyle(60)" "Toggle TOC"]
+    set menus(TOCNoTOC) ""
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
 	<h1>Redirecting to $url</h1>
@@ -1240,7 +1242,9 @@ namespace eval WikitWub {
         variable menus
 	set m {}
 	foreach arg $args {
-	    lappend m $menus($arg)
+	    if {$arg ne ""} {
+		lappend m $menus($arg)
+	    }
 	}
 	return $m
     }
@@ -1658,7 +1662,7 @@ namespace eval WikitWub {
 	invalidate $r wikit.css
 	invalidate $r ie6.css
 	set R [dict get $r -url]
-	Cache delete http://[dict get $r host]/_toc
+	#Cache delete http://[dict get $r host]/_toc
 	return [Http Ok $r [<a> href $R "Loaded CSS"] text/html]
     }
 
@@ -2258,7 +2262,7 @@ proc Httpd::do {op req} {
 	    # Remove if-modified-since, incorrectly sent by Opera
 	    dict unset req if-modified-since
 	    # silently redirect js files
-	    if {[catch {
+	    if {[catch {b
 		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
 		set toc [dict get $toc -value]
 	    } x eo]} {
