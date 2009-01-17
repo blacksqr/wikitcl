@@ -289,7 +289,9 @@ namespace eval WikitWub {
 	set m "<ul id='menu'>\n"
 	foreach i $l {
 	    #regsub {id='toggle_toc'} $i {id='toggle_toc_menu'} i
-	    append m "<li>$i</li>"
+	    if {$i ne ""} {
+		append m "<li>$i</li>"
+	    }
 	}
 	append m "</ul>"
     }
