@@ -356,6 +356,12 @@ namespace eval WikitWub {
 		// flag this function so we don't do the same thing twice
 		arguments.callee.done = true;
 
+		try {
+		    document.getElementById("googletxt").value;
+		    googleQuery();
+		}
+		catch (e){}
+
 		//try {
 		//    checkTOC();
 		//} catch (err) {
@@ -1788,7 +1794,8 @@ namespace eval WikitWub {
 	set search {}
 	foreach k [split $key " "] {
 	    if {$k ne ""} {
-		lappend search -keyword $fields [string map {+ " "} $k]
+#		lappend search -keyword $fields [string map {+ " "} $k]
+		lappend search -keyword $fields $k
 	    }
 	}
 	if { $date == 0 } {
