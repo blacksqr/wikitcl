@@ -644,10 +644,11 @@ namespace eval Wikit::Format {
     set bpre  {\[(brefs:)([^\]]*)]}  ; #  page back-references ; # compat
     #set lre  {\m(https?|ftp|news|mailto|file):(\S+[^\]\)\s\.,!\?;:'>"])} ; # "
     #set lre  {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])} ; # "
+    set prelre {\[\m(https?|ftp|news|mailto|file):([^\s:\]][^\s\]]*)]} ; # "
     set lre  {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ; # "
     set lre2 {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"]%\|%[^%]+%\|%)} ; # "
 
-    set blre "\\\[\0\1u\2(\[^\0\]*)\0\\\]"
+#    set blre "\\\[\0\1u\2(\[^\0\]*)\0\\\]"
 
                                                  # Order of operation:
                                                  # - Remap double brackets to avoid their interference.
@@ -675,6 +676,7 @@ namespace eval Wikit::Format {
                                                  ## puts stderr A>>$text<<*
 
                                                  # Isolate external links.
+                                                 regsub -all $prelre $text "\0\1x\2\\1\3\\2\0" text
                                                  regsub -all $lre2 $text "\0\1u\2\\1\3\\2\0" text
                                                  regsub -all $lre  $text "\0\1u\2\\1\3\\2\0" text
                                                  set text [string map {\3 :} $text]
@@ -682,7 +684,7 @@ namespace eval Wikit::Format {
 
                                                  # External links in brackets are simpler cause we know where the
                                                  # links are already.
-                                                 regsub -all $blre $text "\0\1x\2\\1\0" text
+#                                                 regsub -all $blre $text "\0\1x\2\\1\0" text
                                                  ## puts stderr D>>$text<<*
 
                                                  # Now handle wiki page (back) references
