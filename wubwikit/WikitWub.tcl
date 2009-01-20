@@ -1479,6 +1479,7 @@ namespace eval WikitWub {
 
 	# if there is new page content, save it now
 	variable protected
+	set url http://[Url host $r]/$N
 	if {$N ne ""
 	    && $C ne ""
 	    && ![info exists protected($N)]
@@ -1521,10 +1522,13 @@ namespace eval WikitWub {
 
 	    # save the page into the db.
 	    set who $nick@[dict get $r -ipaddr]
+	    set C [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C]
+	    if {$C eq [GetPage $N]} {
+		Debug.wikit {No change, not saving  $N}
+		return [redir $r $url [<a> href $url "Unchanged Page"]]
+	    }
 	    Debug.wikit {SAVING $N}
-	    if {[catch {
-		::Wikit::SavePage $N [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C] $who $name $when
-	    } err eo]} {
+	    if {[catch {::Wikit::SavePage $N $C $who $name $when} err eo]} {
 		set readonly $err
 	    }
 
@@ -1548,10 +1552,9 @@ namespace eval WikitWub {
 	}
 
 	Debug.wikit {save done $N}
-	set url http://[Url host $r]/$N
 	# instead of redirecting, return the generated page with a Content-Location tag
-	return [do $r $N]
-	#	return [redir $r $url [<a> href $url "Edited Page"]]
+	#return [do $r $N]
+	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
     proc GetPage {id} {
