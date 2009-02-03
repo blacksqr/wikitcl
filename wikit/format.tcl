@@ -644,7 +644,7 @@ namespace eval Wikit::Format {
     set bpre  {\[(brefs:)([^\]]*)]}  ; #  page back-references ; # compat
     #set lre  {\m(https?|ftp|news|mailto|file):(\S+[^\]\)\s\.,!\?;:'>"])} ; # "
     #set lre  {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])} ; # "
-    set prelre {\[\m(https?|ftp|news|mailto|file):([^\s:\]][^\s\]]*)]} ; # "
+    set prelre {\[\m(https?|ftp|news|mailto|file):([^\s:\]][^\]]*?)]} ; # "
     set lre  {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ; # "
     set lre2 {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"]%\|%[^%]+%\|%)} ; # "
 
@@ -677,6 +677,7 @@ namespace eval Wikit::Format {
 
                                                  # Isolate external links.
                                                  regsub -all $prelre $text "\0\1x\2\\1\3\\2\0" text
+                                                 ## puts stderr X>>$text<<*
                                                  regsub -all $lre2 $text "\0\1u\2\\1\3\\2\0" text
                                                  regsub -all $lre  $text "\0\1u\2\\1\3\\2\0" text
                                                  set text [string map {\3 :} $text]
@@ -1544,9 +1545,13 @@ namespace eval Wikit::Format {
           if {[regexp -nocase {\.(gif|jpg|jpeg|png)$} $link]} {
             append result $html_frag(i_) $link $html_frag(tc)
           } else {
-            append result \
-              \[ $html_frag(e_) [quote $link] $html_frag(tc) \
-              [incr count] $html_frag(_a) \]
+            append result \[ $html_frag(e_) [quote $link] $html_frag(tc) 
+            if {$text ne $link} {
+              append result [quote $text]
+            } else {
+              append result [incr count] 
+            }
+            append result $html_frag(_a) \]
           }
         }
         V {
