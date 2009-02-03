@@ -1545,13 +1545,11 @@ namespace eval Wikit::Format {
           if {[regexp -nocase {\.(gif|jpg|jpeg|png)$} $link]} {
             append result $html_frag(i_) $link $html_frag(tc)
           } else {
-            append result \[ $html_frag(e_) [quote $link] $html_frag(tc) 
             if {$text ne $link} {
-              append result [quote $text]
+              append result $html_frag(e_) [quote $link] $html_frag(tc) [quote $text] $html_frag(_a)
             } else {
-              append result [incr count] 
+              append result \[ $html_frag(e_) [quote $link] $html_frag(tc) [incr count] $html_frag(_a) \]
             }
-            append result $html_frag(_a) \]
           }
         }
         V {
