@@ -1,0 +1,71 @@
+block /*.php 
+block /*.wmv
+block /*.exe
+block /cgi-bin/
+
+domain /_repo/ Repo tar 1 upload 1 root $::Site::docroot
+domain /_icons/ Icons
+domain /_jquery/ JQ
+domain /_stats/ File root /var/www/webalizer
+domain /_sinorca/ Sinorca
+domain /_wub/ {Mason wub} auth .before wrapper .after root $::Site::docroot
+domain /_nub/ Nub
+domain /_doc/ Commenter ctype x-text/html-fragment
+literal /_illuminati {<h3>Certificate of Non-Existence</h3><p>There is no Tcl Illuminati</p><p>Signed: Null Implementation (Illuminatus Namespace Coordinator)</p>}
+
+# Useful static content directories
+domain /_icons/ Icons
+domain /_css/ {File css} root [file join $::Site::docroot css] expires tomorrow
+domain /_images/ {File images} root [file join $::Site::docroot images] expires "next week"
+domain /_scripts/ {File scripts} root [file join $::Site::docroot scripts] expires tomorrow
+domain /_html/ {File images} root [file join $::Site::docroot html]
+domain /_bin/ {File bin} root [file join $::Site::docroot bin]
+
+redirect /*.jpg /_images/
+redirect /*.gif /_images/
+redirect /*.png /_images/
+redirect /favico.ico /_images/favico.ico	;# find the icon in /images
+redirect /*.css /_css/
+redirect /*.gz /_bin/
+
+code /*ie_onload.JS {
+    if {[dict exists $r if-modified-since]} {
+	Http NotModified $r
+    } else {
+	Http CacheableContent [Http Cache $r 100000000] 0 {init();} application/javascript
+    }
+    # send out this piddling script to IE users.
+    # See variable head above for how it's invoked.
+    # yet another reason to hate Windows IE
+    # see http://dean.edwards.name/weblog/2005/09/busted/
+    # for the reason for this offence to good taste.
+}
+
+literal /robots.txt {User-agent: *
+Disallow: /5.html
+Disallow: /_ref
+Disallow: /_history
+Disallow: /_revision
+Disallow: /_diff
+Disallow: /_search
+Disallow: /_edit
+Disallow: /_tcl
+Disallow: /_login
+Disallow: /_summary
+Disallow: /_
+}
+
+redirect /*.js /_scripts/
+
+code /rss.xml {
+    # generate and return RSS feed
+    Http CacheableContent $r [clock seconds] [WikitRss rss] application/rss+xml
+}
+
+rewrite / /_/welcome	;# need to silently redirect welcome file
+
+domain /_ {WikitWub ::wikit}	;# handle direct domain within WikitWub
+
+code default {
+     return [WikitWub do $r]
+}
