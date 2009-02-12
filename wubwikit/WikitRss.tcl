@@ -76,7 +76,7 @@ namespace eval WikitRss {
     #
     ###############################################################
 
-    proc init {_db name baseurl} {
+    proc new {_db name baseurl} {
 	#mk::file open DB $File -nocommit -readonly
 	#mk::view layout DB.pages {name page date:I who}
 
