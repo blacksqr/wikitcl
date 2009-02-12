@@ -24,7 +24,17 @@ package require Honeypot
 
 package provide WikitWub 1.0
 
-Honeypot init dir [file join $::config(docroot) captcha]
+set API(WikitWub) {
+    {A Wub interface to tcl wikit}
+    base {place where wiki lives (default /tmp/wiki)}
+    wikidb {wikit's metakit DB name (default wikit.tkd)}
+    history {history directory}
+    readonly {Message which makes the wikit readonly, and explains why.  (default "")}
+    motd {message of the day (default "")}
+    maxAge {max age of login cookie (default "next month")}
+    cookie {name of login cookie (default "wikit_e")}
+    language {html natural language (default "en")}
+}
 
 # ::Wikit::GetPage {id} -
 # ::Wikit::Expand_HTML {text}
@@ -148,10 +158,11 @@ namespace eval WikitWub {
 	    }]
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
-		 <form> edit method post action /_edit/save/$N {
+		 <form> edit method post action /_/edit/save?N=$N {
 		     [<textarea> C id editarea rows 30 cols 72 compact 0 style width:100% [tclarmour $C]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
+		     [<hidden> N $N]
                      <input name='save' type='submit' value='Save your changes'>
 		     <input name='cancel' type='submit' value='Cancel'>
 		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
@@ -196,7 +207,7 @@ namespace eval WikitWub {
     # page sent to enable login
     template login {login} {
 	[<p> "You must have a nickname to post here"]
-	[<form> login method post action /_edit/login {
+	[<form> login method post action /_/edit/login {
 	    [<fieldset> login title Login {
 		[<text> nickname title "Nickname"]
 		[<input> name save type submit value "Login" {}]
@@ -218,7 +229,7 @@ namespace eval WikitWub {
 
     # page sent in response to a search
     template search {} {
-	[<form> search method get action /_search {
+	[<form> search method get action /_/search {
 	    [<fieldset> sfield title "Construct a new search" {
 		[<legend> "Enter a Search Phrase"]
 		[<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
@@ -233,7 +244,7 @@ namespace eval WikitWub {
     template conflict {Edit Conflict on $N} {
 	[<h2> "Edit conflict on page $N - [Ref $N $name]"]
 	[<p> "[<b> "Your changes have NOT been saved"] because someone (at IP address $who) saved a change to this page while you were editing."]
-	[<p> [<i> "Please restart a new [Ref /_edit/$N edit] and merge your version (which is shown in full below.)"]]
+	[<p> [<i> "Please restart a new [Ref /_/edit?N=$N edit] and merge your version (which is shown in full below.)"]]
 	[<p> "Got '$O' expected '$X'"]
 	[<hr> size 1]
 	[<p> [<pre> [armour $C]]]
@@ -248,12 +259,13 @@ namespace eval WikitWub {
 	}
     }
 
-    variable searchForm [string map {%S $search} [<form> search method get action /_search {
+    variable searchForm [string map {%S $search} [<form> search method get action /_/search {
 	[<fieldset> sfield title "Construct a new search" {
 	    [<legend> "Enter a Search Phrase"]
 	    [<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
 	    [<checkbox> SC title "search page contents" value 1; set _disabled ""]
 	    [<hidden> _charset_]
+	    [<hidden> N $N]
 	}]
     }]]
 
@@ -298,37 +310,33 @@ namespace eval WikitWub {
 
     # return a search form
     proc searchF {} {
-	return {<form id='searchform' action='/_search' method='get'>
-	    <input type='hidden' name='_charset_'>
-	    <input id='searchtxt' name='S' type='text' value='Search in titles' 
-	    onfocus='clearSearch();' onblur='setSearch();'>
-	    </form>
-	    <form id='gsearchform' action='/_gsearch' method='get'>
-	    <input type='hidden' name='_charset_'>
-	    <input id='googletxt' name='S' type='text' value='Search in pages' 
-	    onfocus='clearGoogle();' onblur='setGoogle();'>
-	    </form>
-	}
+	set result [<form> searchform action /_/search {
+	    [<text> searchtxt name S onfocus {clearSearch();} onblur {setSearch();} 'Search in titles'>]
+	    [<hidden> _charset_ ""]
+	}]
+	append result \n [<form gsearchform action /_/gsearch {
+	    [<text> googletxt name S onfocus {clearGoogle();} onblur {setGoogle();} "Search in pages"]
+	    [<hidden> _charset_ ""]
+	}] \n
+	return $result
     }
 
     proc gsearchF {Q} {
-	return "<form id='searchform' action='/_search' method='get'>
-	    <input type='hidden' name='_charset_'>
-	    <input id='searchtxt' name='S' type='text' value='Search in titles' 
-		onfocus='clearSearch();' onblur='setSearch();'>
-	    </form>
-            <form id='gsearchform' action='' method='get' onSubmit='return googleQuery();'>
-	    <input id='googletxt' type='text' value='$Q' 
-		onfocus='clearGoogle();' onblur='setGoogle();'>
-	    </form>
-	"
+	set result [<form> searchform action /_/search {
+	    [<text> searchtxt name S onfocus {clearSearch();} onblur {setSearch();} 'Search in titles'>]
+	    [<hidden> _charset_ ""]
+	}]
+	append result \n [<form gsearchform action /_/gsearch {
+	    [<text> googletxt name S onfocus {clearGoogle();} onblur {setGoogle();} $Q]
+	    [<hidden> _charset_ ""]
+	}] \n
+	return $result
     }
 
     variable maxAge "next month"	;# maximum age of login cookie
     variable cookie "wikit_e"		;# name of login cookie
     variable oldcookie "wikit"		;# name of login cookie
 
-    #variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">}
     variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">}
     variable language "en"	;# language for HTML
 
@@ -377,7 +385,7 @@ namespace eval WikitWub {
 	    /* for Internet Explorer */
 	    /*@cc_on @*/
 	    /*@if (@_win32)
-	    document.write("<script defer src='/ie_onload.js'><\/script>");
+	    document.write("<script defer src='/ie_onload.JS'><\/script>");
 	    /*@end @*/
 	    
 	    /* for other browsers */
@@ -407,7 +415,6 @@ namespace eval WikitWub {
     variable htmlsuffix [Honeypot link /$protected(HoneyPot).html]
     append htmlsuffix [<script> src /search.js] \n
     append htmlsuffix [<script> src /backrefs.js] \n
-    #append htmlsuffix [<script> src /_toc/toc.js] \n
     append htmlsuffix [<script> src /toc.js] \n
 
     # convertor from wiki to html
@@ -474,7 +481,7 @@ namespace eval WikitWub {
     proc /sitemap {r args} {
 	set p http://[Url host $r]/
 	set map {}
-	append map [Sitemap location $p "" mtime [file mtime $::config(docroot)/html/welcome.html] changefreq weekly] \n
+	append map [Sitemap location $p "" mtime [file mtime $::Site::docroot/html/welcome.html] changefreq weekly] \n
 	append map [Sitemap location $p 4 mtime [clock seconds] changefreq always priority 1.0] \n
 
 	foreach i [mk::select wdb.pages -first 11 -min date 1 -sort date] {
@@ -559,7 +566,7 @@ namespace eval WikitWub {
 		    set result {}
 
 		    if { !$deletesAdded } {
-			lappend results [<p> [<a> class cleared href /_cleared "Cleared pages (title and/or page)"]]
+			lappend results [<p> [<a> class cleared href /_/cleared "Cleared pages (title and/or page)"]]
 			set deletesAdded 1
 		    }
 		}
@@ -574,7 +581,7 @@ namespace eval WikitWub {
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
 
-	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta rel nofollow href /_diff/$id#diff0 $delta]" $who [<div> class activity [<a> class activity rel nofollow href /_summary/$id [string repeat $actimg [edit_activity $id]]]]]
+	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta rel nofollow href /_/diff?N=$id#diff0 $delta]" $who [<div> class activity [<a> class activity rel nofollow href /_/summary?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
 	if { [llength $result] } {
@@ -583,7 +590,7 @@ namespace eval WikitWub {
 	    }
 	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
 	    if { !$deletesAdded } {
-		lappend results [<p> [<a> href /_cleared "Cleared pages (title and/or page)"]]
+		lappend results [<p> [<a> href /_/cleared "Cleared pages (title and/or page)"]]
 	    }
 	}
 
@@ -633,7 +640,7 @@ namespace eval WikitWub {
 	    append link [<span> class dots ". . ."]
 	    append link [<span> class nick [clock format $date -gmt 1 -format %T]]
 	    append link [<span> class dots ". . ."]
-	    append link [<a> class delta href /_history/$id history]
+	    append link [<a> class delta href /_/history?N=$id history]
 	    lappend results [<li> $link]
 	    incr count
 	    if { $count >= 100 } {
@@ -802,11 +809,11 @@ namespace eval WikitWub {
 	variable TOC
 	set updated "Edit summary"
 	set menu [menus Home Recent Help HR]
-	lappend menu [Ref /_history/$N History]
-	lappend menu [Ref /_summary/$N "Edit summary"]
-	lappend menu [Ref /_diff/$N "Last change"]
-	lappend menu [Ref /_diff/$N?T=1&D=1 "Changes in last day"]
-	lappend menu [Ref /_diff/$N?T=1&D=7 "Changes in last week"]
+	lappend menu [Ref /_/history?N=$N History]
+	lappend menu [Ref /_/summary?N=$N "Edit summary"]
+	lappend menu [Ref /_/diff?N=$N "Last change"]
+	lappend menu [Ref /_/diff?N=$N&T=1&D=1 "Changes in last day"]
+	lappend menu [Ref /_/diff?N=$N&T=1&D=7 "Changes in last week"]
 	set footer [menus Home Recent Help TOCNoTOC Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set C $R
@@ -1013,11 +1020,11 @@ namespace eval WikitWub {
 	    set updated "Difference between version $V and $D"
 	}
 	set menu [menus Home Recent Help HR]
-	lappend menu [Ref /_history/$N History]
-	lappend menu [Ref /_summary/$N "Edit summary"]
-	lappend menu [Ref /_diff/$N "Last change"]
-	lappend menu [Ref /_diff/$N?T=1&D=1 "Changes in last day"]
-	lappend menu [Ref /_diff/$N?T=1&D=7 "Changes in last week"]
+	lappend menu [Ref /_/history?N=$N History]
+	lappend menu [Ref /_/summary?N=$N "Edit summary"]
+	lappend menu [Ref /_/diff?N=$N "Last change"]
+	lappend menu [Ref /_/diff?N=$N&T=1&D=1 "Changes in last day"]
+	lappend menu [Ref /_/diff?N=$N&T=1&D=7 "Changes in last week"]
 	set footer [menus Home Recent Help TOCNoTOC Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
@@ -1047,7 +1054,7 @@ namespace eval WikitWub {
 
 	variable menus
 	set menu [menus Home Recent Help HR]
-	lappend menu [Ref /_history/$N History]
+	lappend menu [Ref /_/history?N=$N History]
 
 	Wikit::pagevars $N name
 	if {$V >= 0} {
@@ -1085,22 +1092,22 @@ namespace eval WikitWub {
 			}
 			lassign [::Wikit::StreamToHTML [::Wikit::TextToStream $C] / ::WikitWub::InfoProc] C U T BR
 			if { $V > 0 } {
-			    lappend menu [Ref "/_revision/$N?V=[expr {$V-1}]&A=$A" "Previous version"]
+			    lappend menu [Ref "/_/revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
 			}
 			if { $V < ($nver-1) } {
-			    lappend menu [Ref "/_revision/$N?V=[expr {$V+1}]&A=$A" "Next version"]
+			    lappend menu [Ref "/_/revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
 			}
 			if { $A } {
-			    lappend menu [Ref "/_revision/$N?V=$V&A=0" "Not annotated"]
+			    lappend menu [Ref "/_/revision?N=$N&V=$V&A=0" "Not annotated"]
 			} else {
-			    lappend menu [Ref "/_revision/$N?V=$V&A=1" "Annotated"]
+			    lappend menu [Ref "/_/revision?N=$N&V=$V&A=1" "Annotated"]
 			}
 		    }
 		}
 	    }
 	}
 
-	lappend menu [Ref /_history/$N History]
+	lappend menu [Ref /_/history?N=$N History]
 	set footer [menus Home Recent Help TOCNoTOC Search]
 	set updated ""
 	set T ""
@@ -1167,44 +1174,44 @@ namespace eval WikitWub {
 		} else {
 		    append C "<tr class='even'>"
 		}
-		append C [<td> class Rev [<a> href "/_revision/$N?V=$vn" rel nofollow $vn]]
+		append C [<td> class Rev [<a> href "/_/revision?N=$N&V=$vn" rel nofollow $vn]]
 		append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
 		append C [<td> class Who $who]
 
 		if { $prev >= 0 } {
-		    append C [<td> class Line1 [<a> href "/_diff/$N?V=$vn&D=$prev#diff0" $prev]]
+		    append C [<td> class Line1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
 		} else {
 		    append C <td></td>
 		}
 		if { $next < $nver } {
-		    append C [<td> class Line2 [<a> href "/_diff/$N?V=$vn&D=$next#diff0" $next]]
+		    append C [<td> class Line2 [<a> href "/_/diff?N=$N&V=$vn&D=$next#diff0" $next]]
 		} else {
 		    append C <td></td>
 		}
 		if { $vn != $curr } {
-		    append C [<td> class Line3 [<a> href "/_diff/$N?V=$curr&D=$vn#diff0" Current]]
+		    append C [<td> class Line3 [<a> href "/_/diff?N=$N&V=$curr&D=$vn#diff0" Current]]
 		} else {
 		    append C <td></td>
 		}
 
 		if { $prev >= 0 } {
-		    append C [<td> class Word1 [<a> href "/_diff/$N?V=$vn&D=$prev&W=1#diff0" $prev]]
+		    append C [<td> class Word1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
 		} else {
 		    append C <td></td>
 		}
 		if { $next < $nver } {
-		    append C [<td> class Word2 [<a> href "/_diff/$N?V=$vn&D=$next&W=1#diff0" $next]]
+		    append C [<td> class Word2 [<a> href "/_/diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
 		} else {
 		    append C <td></td>
 		}
 		if { $vn != $curr } {
-		    append C [<td> class Word3 [<a> href "/_diff/$N?V=$curr&D=$vn&W=1#diff0" Current]]
+		    append C [<td> class Word3 [<a> href "/_/diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
 		} else {
 		    append C <td></td>
 		}
 
-		append C [<td> class Annotated [<a> href "/_revision/$N?V=$vn&A=1" $vn]]
-		append C [<td> class WikiText [<a> href "/_revision/$N.txt?V=$vn" $vn]]
+		append C [<td> class Annotated [<a> href "/_/revision?N=$N&V=$vn&A=1" $vn]]
+		append C [<td> class WikiText [<a> href "/_/revision?N=$N.txt&V=$vn" $vn]]
 		append C </tr> \n
 		incr rowcnt
 	    }
@@ -1271,7 +1278,13 @@ namespace eval WikitWub {
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
     }
 
-    proc /login {r {nickname ""} {R ""}} {
+    proc /edit/login {r {nickname ""} {R ""}} {
+	set path [file split [dict get $r -path]]
+	set N [lindex $path end]
+	set suffix /[string trimleft [lindex $path end-1] _]
+	dict set r -suffix $suffix
+	dict set r -Query [Query add [Query parse $r] N $N]
+
 	# cleanse nickname
 	regsub -all {[^A-Za-z0-0_]} $nickname {} nickname
 
@@ -1301,7 +1314,7 @@ namespace eval WikitWub {
 
 	variable cookie
 	Debug.wikit {/login - created cookie $nickname with R $R}
-	set cdict [Cookies add $cdict -path /_edit/ -name $cookie -value $nickname {*}$age]
+	set cdict [Cookies add $cdict -path /_/edit/ -name $cookie -value $nickname {*}$age]
 
 	dict set r -cookies $cdict
 	if {$R eq ""} {
@@ -1314,7 +1327,7 @@ namespace eval WikitWub {
 	return [redir $r $R [<a> href $R "Created Account"]]
     }
 
-    # move old cookies from path / to path /_edit/
+    # move old cookies from path / to path /_/edit/
     proc movecookie {r} {
 	variable oldcookie
 	set cdict [dict get $r -cookies]
@@ -1440,8 +1453,7 @@ namespace eval WikitWub {
 	return [sendPage $r preview_tc]
     }
 
-    proc /save {r N C O save cancel preview } {
-
+    proc /edit/save {r N C O save cancel preview } {
 	if { [string tolower $cancel] eq "cancel" } {
 	    set url http://[Url host $r]/$N
 	    return [redir $r $url [<a> href $url "Canceled page edit"]]
@@ -1472,7 +1484,7 @@ namespace eval WikitWub {
 	set nick [who $r]
 	set when [expr {[dict get $r -received] / 1000000}]
 
-	# temporary fix - move cookies under -path /_edit/
+	# temporary fix - move cookies under -path /_/edit/
 	set r [movecookie $r]
 
 	Debug.wikit {/edit/save N:$N [expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
@@ -1561,6 +1573,14 @@ namespace eval WikitWub {
 	return [mk::get wdb.pages!$id page]
     }
 
+    proc /map {r imp args} {
+	if {[info exists ::WikitWub::IMTOC($imp)]} {
+	    return [Http Redir $req "http://[dict get $req host]/$::WikitWub::IMTOC($imp)"]
+	} else {
+	    return [Http NotFound $req]
+	}
+    }
+
     # /reload - direct url to reload numbered pages from fs
     proc /reload {r} {
 	foreach {} {}
@@ -1611,9 +1631,9 @@ namespace eval WikitWub {
     proc /motd {r} {
 	variable motd
 
-	puts "\n\n\n\n\nmotd: [file join $::config(docroot) motd]\n\n\n\n\n"
+	puts "\n\n\n\n\nmotd: [file join $::Site::docroot motd]\n\n\n\n\n"
 
-	catch {set motd [::fileutil::cat [file join $::config(docroot) motd]]}
+	catch {set motd [::fileutil::cat [file join $::Site::docroot motd]]}
 	set motd [string trim $motd]
 
 	invalidate $r 4	;# make the new motd show up
@@ -1628,7 +1648,7 @@ namespace eval WikitWub {
     proc /reloadTOC {r} {
 	variable TOCchange 
 
-	set tocf [file join $::config(docroot) TOC]
+	set tocf [file join $::Site::docroot TOC]
 
 	set changed [file mtime $tocf]
 	if {$changed <= $TOCchange} {
@@ -1655,7 +1675,7 @@ namespace eval WikitWub {
     proc /reloadWELCOME {r} {
 	variable WELCOMEchange
 
-	set wf [file join $::config(docroot) html welcome.html]
+	set wf [file join $::Site::docroot html welcome.html]
 
 	set changed [file mtime $wf]
 	if {$changed <= $WELCOMEchange} {
@@ -1677,7 +1697,6 @@ namespace eval WikitWub {
 	invalidate $r wikit.css
 	invalidate $r ie6.css
 	set R [dict get $r -url]
-	#Cache delete http://[dict get $r host]/_toc
 	return [Http Ok $r [<a> href $R "Loaded CSS"] text/html]
     }
 
@@ -1870,8 +1889,9 @@ namespace eval WikitWub {
 
     variable trailers {@ _edit ! _ref - _diff + _history}
 
-    proc do {r term} {
+    proc do {r} {
 	# decompose name
+	set term [file tail [dict get $r -path]]
 	set N [file rootname $term]	;# it's a simple single page
 	set ext [file extension $term]	;# file extension?
 
@@ -1888,7 +1908,7 @@ namespace eval WikitWub {
 	    set N [locate $term]
 	    if {$N == "2"} {
 		# locate has given up - can't find a page - go to search
-		return [Http Redir $r "http://[dict get $r host]/_search" S [Query decode $term$fancy]]
+		return [Http Redir $r "http://[dict get $r host]/_/search" S [Query decode $term$fancy]]
 	    } elseif {$N ne $term} {
 		# we really should redirect
 		return [Http Redir $r "http://[dict get $r host]/$N"]
@@ -1936,15 +1956,15 @@ namespace eval WikitWub {
 		    set C [::Wikit::TextToStream $C]
 		    lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 		    if { $nqdate } {
-			append C [<p> [<a> href "/_search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
+			append C [<p> [<a> href "/_/search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
 		    }
 		    if { $long } {
 			append C <p> 
-			append C [<a> href "/_search?S=[armour [string trimright $term *]]&_charset_=utf-8" "Repeat search in titles only"]
+			append C [<a> href "/_/search?S=[armour [string trimright $term *]]&_charset_=utf-8" "Repeat search in titles only"]
 			append C ", or remove trailing asterisks from the search string to search the titles only.</p>"
 		    } else {
 			append C <p> 
-			append C [<a> href "/_search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
+			append C [<a> href "/_/search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
 			append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
 		    }
 		    set q [string trimright $term *]
@@ -2035,12 +2055,12 @@ namespace eval WikitWub {
 		set Title [armour $name]
 	    }
 	    1 {
-		set backRef /_ref/$N
+		set backRef /_/ref?N=$N
 		set Refs "[Ref $backRef Reference] - "
 		set Title [Ref $backRef $name title "click to see reference to this page"]
 	    }
 	    default {
-		set backRef /_ref/$N
+		set backRef /_/ref?N=$N
 		set Refs "[llength $refs] [Ref $backRef {References to this page}]"
 		set Title [Ref $backRef $name title "click to see [llength $refs] references to this page"]
 		Debug.wikit {backrefs: backRef:'$backRef' Refs:'$Refs' Title:'$Title'} 10
@@ -2063,7 +2083,7 @@ namespace eval WikitWub {
 	    }
 	    if {[string length $updated]} {
 		variable delta
-		append updated " " [<a> class delta href /_diff/$N#diff0 $delta]
+		append updated " " [<a> class delta href /_/diff?N=$N#diff0 $delta]
 	    }
 	}
 
@@ -2074,11 +2094,11 @@ namespace eval WikitWub {
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
 	    if {!$::roflag} {
-		lappend menu [Ref /_edit/$N Edit]
-		lappend footer [Ref /_edit/$N Edit]
+		lappend menu [Ref /_/edit?N=$N Edit]
+		lappend footer [Ref /_/edit?N=$N Edit]
 	    }
-	    lappend menu [Ref /_history/$N "History"]
-	    lappend menu [Ref /_summary/$N "Edit summary"]
+	    lappend menu [Ref /_/history?N=$N "History"]
+	    lappend menu [Ref /_/summary?N=$N "Edit summary"]
 	    lappend menu [Ref $backRef References]
 	}
 
@@ -2106,315 +2126,213 @@ namespace eval WikitWub {
 	}
     }
 
+    proc cleanseUTF {} {
+	set size [mk::view size wdb.pages]
+	set bad 0
+	set bogus 0
+	set incr 1
+	for {set i 0} {$i < $size} {incr i $incr} {
+	    set incr 1
+	    foreach f {name page} {
+		set d [mk::get wdb.pages!$i $f]
+		if {$d eq ""} continue
+		set point [::utf8::findbad $d]
+		if {$point < [string length $d] - 1} {
+		    if {$point < 0} {
+			puts stderr "$f $i bogus $point"
+			mk::set wdb.pages!$i $f "bogus [incr bogus]"
+		    } else {
+			incr bad
+			incr point
+			#utf8::reportTrouble $i $data $point
+			puts stderr "$f $i bad"
+			::utf8::fixBadUtf8 $d
+			if {0} {
+			    set incr -1
+			    puts stderr "$f $i bad at $point"
+			    mk::set wdb.pages!$i $f [string replace $d $point $point " badutf "]
+			}
+		    }
+		    mk::file commit wdb
+		}
+	    }
+	}
+	puts stderr "BAD: $bad / $size"
+    }
+
+    # Site WikitWub-specific defaults
+    # These may be overwritten by command line, or by vars.tcl
+    variable base "/tmp/wiki"		;# default place for wiki to live
+	
+    variable overwrite 0		;# set both to overwrite
+    variable reallyreallyoverwrite 0	;# set both to overwrite
+
+    variable wikidb wikit.tkd		;# wikit's Metakit DB name
+    variable history history		;# history directory
+    variable readonly ""		;# the wiki is not readonly
+    variable prime 0			;# we do not wish to prime the wikit
+    variable utf8clean 0		;# we do not want utf8 cleansing
+    variable upflag ""			;# no URL syncing
+    variable roflag 0
+
+    proc init {args} {
+	variable {*}$args
+
+	Convert Namespace ::WikitWub	;# add wiki-local conversions
+
+	Honeypot new dir [file join $::Site::docroot captcha]
+
+	variable base
+	set origin $::Site::docroot ;# the original copies for priming
+	set wikitroot [file join $base data]	;# where the wikit lives
+	set docroot [file join $base docroot]	;# where ancillary docs live
+
+	if {[info exists ::starkit::topdir]} {
+	    # configure for starkit delivery
+	    Variable topdir $::starkit::topdir
+	    Variable docroot [file join $topdir docroot]
+	    set wikitroot [file join $base data]
+	} elseif {![file exists $docroot]} {
+	    # new install copy the origin docroot to $base
+	    catch {file mkdir $wikitroot}
+	    file copy $origin [file dirname $docroot]
+	    file copy [file join $home doc.sample $wikidb] $wikitroot
+	} elseif {$reallyreallyoverwrite && $overwrite} {
+	    # destructively overwrite the $base with the origin
+	    catch {file mkdir $wikitroot}
+	    file delete -force $docroot
+	    file copy -force $origin [file dirname $docroot]
+	    file copy -force [file join $home doc $wikidb] $wikitroot
+	} else {
+	    # normal start, existing db
+	    catch {file mkdir $wikitroot}
+	    #puts stderr "Not overwriting existing docroot '$docroot'"
+	}
+    
+	# clean up any symlinks in docroot
+	package require functional
+	package require fileutil
+	foreach file [::fileutil::find $docroot [lambda {file} {
+	    return [expr {[file type [file join [pwd] $file]] eq "link"}]
+	}]] {
+	    set dfile [file join [pwd] $file]
+	    file copy [file join $drdir [K [file link $dfile] [file delete $dfile]]] $dfile
+	}
+	
+	# create history directory
+	if {![info exists ::env(WIKIT_HIST)]} {
+	    if {$history ne ""} {
+		if {[file pathtype $history] ne "absolute"} {
+		    set history [file join $wikitroot $history]
+		}
+		set ::env(WIKIT_HIST) $history
+		catch {file mkdir $history}
+	    }
+	} else {
+	    catch {file mkdir $::env(WIKIT_HIST)}
+	}
+
+	# initialize wikit DB
+	Wikit::WikiDatabase [file join $wikitroot $wikidb] wdb 1
+
+	# prime wikit db if needed
+	variable prime
+	if {$prime && [mk::view size wdb.pages] == 0} {
+	    # copy first 10 pages of the default datafile 
+	    set fd [open [file join $home doc wikidoc.tkd]]
+	    mk::file load wdb $fd
+	    close $fd
+	    mk::view size wdb.pages 10
+	    mk::view size wdb.archive 0
+	    Wikit::FixPageRefs
+	}
+
+	package require utf8
+	variable utf8re [::utf8::makeUtf8Regexp]
+	if {$utf8clean} {
+	    # cleanse bad utf8 characters if requested
+	    cleanseUTF
+	}
+
+	# move utf8 regexp into utf8 package
+	# utf8 package is loaded by Query
+	set ::utf8::utf8re $utf8re
+
+	# set message of the day (if any) to be displayed on /4
+	catch {
+	    set ::WikitWub::motd [::fileutil::cat [file join $::Site::docroot motd]]
+	}
+
+	# set table of contents (if any) to be displayed on in left column menu
+	catch {
+	    set ::WikitWub::TOC [::fileutil::cat [file join $::Site::docroot TOC]]
+	    unset -nocomplain ::WikitWub::IMTOC
+	    if { [string length $::WikitWub::TOC] } {
+		lassign [::Wikit::FormatWikiToc $::WikitWub::TOC] ::WikitWub::TOC IMTOCl
+		array set ::WikitWub::IMTOC $IMTOCl
+	    }
+	}
+
+	# set welcome message, if any
+	catch {
+	    set ::WikitWub::WELCOME [::fileutil::cat [file join $::Site::docroot html welcome.html]]
+	}
+
+	# do wiki URL sync, if required (not tested)
+	variable upflag
+	if {$upflag ne ""} {
+	    Wikit::DoSync $upflag
+	}
+
+	Wikit::BuildTitleCache
+
+	catch {[mk::get wdb.pages!9 page]}
+
+	variable roflag 
+	set ::roflag $roflag
+
+	# initialize RSS feeder
+	WikitRss init wdb "Tcler's Wiki" http://wiki.tcl.tk/
+	
+	proc init {args} {}	;# we can't be called twice
+    }
+
+    proc new {args} {
+	init {*}$args
+	return [Direct new namespace ::WikitWub prefix /_ ctype "x-text/wiki"]
+    }
+
+    proc create {name args} {
+	init {*}$args
+	return [Direct create $name namespace ::WikitWub prefix /_ ctype "x-text/wiki"]
+    }
+
     namespace export -clear *
     namespace ensemble create -subcommands {}
 }
 
-Convert init
-
-# initialize wikit specific Direct domain and Convert domain
-Direct init wikit namespace ::WikitWub prefix /_wub ctype "x-text/wiki"
-Convert Namespace ::WikitWub
-
-#### Sinorca package
-# provides a page-level conversion
-package require Sinorca
-Sinorca init path /_sinorca/
-Convert Namespace ::Sinorca
-
-package require Dub
-Dub init prefix /_dub/
-Direct init dub namespace ::Dub prefix /_dub ctype "x-text/html-fragment"
-
-#### jQ - jQuery framework
-package require jQ
-jQ init prefix /_jquery
-
-package require Commenter
-Direct init doc namespace ::Commenter prefix /_doc ctype "x-text/html-fragment"
-
-# directories of static files
-foreach {dom expiry} {css {next week} images {next week} scripts {next week} img {next week} html 0 bin 0} {
-    File create $dom -root [file join $::config(docroot) $dom] -expires $expiry
-}
-
-#### Icons domain
-package require Icons
-Icons init mount /_icons/
-
-#### Repo domain - file repository
-package require Repo
-Repo init repo _repo [file join $::config(base) repo] docprefix / titleURL /half+bakery title "TCL Half-Bakery" tar 1 upload 1	;# make a repo from the docroot
-set Repo::icons /_icons/
-
-if {[file exists /var/www/webalizer]} {
-    Mason create webalizer -root /var/www/webalizer -prefix /_stats/ -auth .before -wrapper .after -dirhead {name size mtime}
-}
-
-# Wub documentation directory
-Mason create wub -prefix /_wub -root [file join $::config(wubdir) docs] -auth .before -wrapper .after -dirhead {name size mtime}
-Convert Namespace ::MConvert
-
-# set message of the day (if any) to be displayed on /4
-catch {
-    set ::WikitWub::motd [::fileutil::cat [file join $::config(docroot) motd]]
-}
-
-# set table of contents (if any) to be displayed on in left column menu
-catch {
-    set ::WikitWub::TOC [::fileutil::cat [file join $::config(docroot) TOC]]
-    unset -nocomplain ::WikitWub::IMTOC
-    if { [string length $::WikitWub::TOC] } {
-	lassign [::Wikit::FormatWikiToc $::WikitWub::TOC] ::WikitWub::TOC IMTOCl
-	array set ::WikitWub::IMTOC $IMTOCl
-    }
-}
-
-catch {
-    set ::WikitWub::WELCOME [::fileutil::cat [file join $::config(docroot) html welcome.html]]
-}
-
-# Responder::post - postprocess response by converting
-proc Httpd::post {rsp} {
-    return [::Convert do $rsp]
-}
-
-proc Httpd::do {op req} {
-    if {$op ne "REQUEST"} return
-    switch -glob -- [dict get $req -path] {
-	/*.php -
-	/*.wmv -
-	/*.exe -
-	/cgi-bin/* {
-	    # block the originator by IP
-	    Block block [dict get $req -ipaddr] "Bogus URL '[dict get $req -path]'"
-	    Http Forbidden $req
-	}
-
-	/_repo/* -
-	/_repo/ {
-	    repo do $req
-	}
-
-	/_icons/* {
-	    ::Icons do $req
-	}
-
-	/_jquery/* -
-	/_jquery/ {
-	    jQ do $req
-	}
-
-	/_stats -
-	/_stats/* {
-	    ::webalizer do $req
-	}
-
-	/_sinorca {
-	    Http Redir $req "http://[dict get $req host]/_sinorca/"
-	}
-
-	/_sinorca/* {
-	    # Sinorca page style demo
-	    Sinorca ram do $req
-	}
-
-	/_wub -
-	/_wub/* {
-	    # Wub documentation - via the wikit Direct domain
-	    ::wub do $req
-	}
-
-	/_dub {
-	    Http Redir $req "/_dub/"
-	}
-
-	/_dub/* {
-	    # Dub metakit toy
-	    ::dub do $req
-	}
-
-	/_doc {
-	    Http Redir $req "http://[dict get $req host]/_doc/"
-	}
-
-	/_doc/* {
-	    # Wub docs
-	    ::doc do $req
-	}
-
-	/*.jpg -
-	/*.gif -
-	/*.png -
-	/favicon.ico {
-	    # silently redirect image files - strip all but tail
-	    dict set req -suffix [file tail [dict get $req -path]]
-	    ::images do $req
-	}
-	
-	/*.css {
-	    # silently redirect css files
-	    dict set req -suffix [file tail [dict get $req -path]]
-	    ::css do $req
-	}
-
-	/*.gz {
-	    # silently redirect gz files
-	    dict set req -suffix [file tail [dict get $req -path]]
-	    ::bin do $req
-	}
-
-	/*ie_onload.js {
-	    if {[dict exists $req if-modified-since]} {
-		return [Http NotModified $req]
-	    } else {
-		return [Http CacheableContent [Http Cache $req 100000000] 0 {init();} application/javascript]
-	    }
-	    # send out this piddling script to IE users.
-	    # See variable head above for how it's invoked.
-	    # yet another reason to hate Windows IE
-	    # see http://dean.edwards.name/weblog/2005/09/busted/
-	    # for the reason for this offence to good taste.
-	}
-
-	/_toc/*.js {
-	    # Remove if-modified-since, incorrectly sent by Opera
-	    dict unset req if-modified-since
-	    # silently redirect js files
-	    if {[catch {b
-		set toc [Cookies fetch [Dict get? $req -cookies] -name wiki_toc]
-		set toc [dict get $toc -value]
-	    } x eo]} {
-		dict set req -cookies [Cookies add [Dict get? $req -cookies] -name wiki_toc -path /_toc/ -value 1 -expires {next week}]
-		dict set req -suffix [file tail [dict get $req -path]] 
-		Http NoCache [Http Ok [::scripts do $req]]
-		#Http NoCache [Http Ok $req {} text/javascript]
-	    } elseif {!$toc} {
-		Http NoCache [Http Ok $req {} text/javascript]
-	    } else {
-		dict set req -suffix [file tail [dict get $req -path]] 
-		Http NoCache [Http Ok [::scripts do $req]]
-	    }
-	}
-
-	/robots.txt -
-	/*.js {
-	    # silently redirect js files
-	    dict set req -suffix [file tail [dict get $req -path]]
-	    ::scripts do $req
-	}
-
-	/_edit/login {
-	    # These are wiki-local restful command URLs,
-	    # we process them via the ::wikit Direct domain
-	    Debug.wikit {direct login invocation [dict get $req -path]}
-	    dict set req -suffix /login
-	    ::wikit do $req
-	}
-
-	/XXX_edit/_s*/ {
-	    # session commands
-	    #::Session do $req
-	}
-
-	/_edit/* {
-	    # /_edit domain - wiki-local restful command URL,
-	    Debug.wikit {direct invocation1 [dict get $req -path]}
-	    set path [file split [dict get $req -path]]
-	    set N [lindex $path end]
-	    set suffix /[string trimleft [lindex $path end-1] _]
-	    dict set req -suffix $suffix
-	    dict set req -Query [Query add [Query parse $req] N $N]
-	    ::wikit do $req
-	}
-
-	/_map/* {
-	    set imp [dict get $req -path]
-	    if {[info exists ::WikitWub::IMTOC($imp)]} {
-		return [Http Redir $req "http://[dict get $req host]/$::WikitWub::IMTOC($imp)"]
-	    } else {
-		return [Http NotFound $req]
-	    }
-	}
-	
-	/_* {
-	    # These are wiki-local restful command URLs,
-	    # we process them via the ::wikit Direct domain
-	    Debug.wikit {direct invocation2 [dict get $req -path]}
-	    set path [file split [dict get $req -path]]
-	    set N [lindex $path end]
-	    set suffix /[string trimleft [lindex $path 1] _]
-	    dict set req -suffix $suffix
-	    dict set req -Query [Query add [Query parse $req] N $N]
-	    ::wikit do $req
-	}
-
-	/rss.xml {
-	    # generate and return RSS feed
-	    Http CacheableContent $req [clock seconds] [WikitRss rss] application/rss+xml
-	}
-
-	/ {
-	    # need to silently redirect welcome file
-	    dict set req -suffix /welcome
-	    ::wikit do $req
-	}
-
-	//// {
-	    # wikit welcome page
-	    dict set req -Query [Query parse $req]
-	    dict set req -suffix ""
-	    dict set req -prefix ""
-	    ::WikitWub do $req 0
-	}
-
-	default {
-	    ::WikitWub do $req [file tail [dict get $req -path]]
-	}
-    }
-}
+# env handling - copy and remove the C-linked env
+# we use ::env to communicate with the old wiki code,
+# but the original carries serious performance penalties.
+array set _env [array get ::env]; unset ::env
+array set ::env [array get _env]; unset _env
 
 # initialize pest preprocessor
 proc pest {req} {return 0}	;# default [pest] catcher
 catch {source [file join [file dirname [info script]] pest.tcl]}
-
-#### initialize Block
-package require Block
-Block init logdir $::config(docroot)
-
-#### initialize Session
-#Session init cpath "/_edit/"
 
 #### initialize Wikit
 package require Wikit::Format
 package require Wikit::Db
 package require Wikit::Cache
 
-if {[info exists ::config(mkmutex)]} {
-    set Wikit::mutex $::config(mkmutex)	;# set mutex for wikit writes
-}
-Wikit::BuildTitleCache
+Site init application WikitWub home [file normalize [file dirname [info script]]] ini wikit.ini
 
-catch {[mk::get wdb.pages!9 page]}
-
-# move utf8 regexp into utf8 package
-# utf8 package is loaded by Query
-set ::utf8::utf8re $::config(utf8re); unset ::config(utf8re)
-set ::roflag 0
-
-# initialize RSS feeder
-WikitRss init wdb "Tcler's Wiki" http://wiki.tcl.tk/
-
-#### set up appropriate debug levels
-Debug on log 10
-Debug on error 10
-Debug off query 10
-Debug off wikit 10
-Debug off direct 10
-Debug off convert 10
-Debug off cookies 10
-Debug off socket 10
+#### set up appropriate debug levels (negative means off)
+Debug setting log 10 error 10 query -10 wikit -10 direct -10 convert -10 cookies -10 socket -10
 
 #### Source local config script (not under version control)
 catch {source [file join [file dirname [info script]] local.tcl]} r eo
 Debug.log {RESTART: [clock format [clock second]] '$r' ($eo)}
+
+Site start
