@@ -25,7 +25,8 @@ domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 rewrite {/} /_/welcome	;# need to silently redirect welcome page
 rewrite {/[^/]+.(jpg|png|ico)} {/_images/[file tail [dict get $r -path]]}
 rewrite {/[^/]+.css} {/_css/[file tail [dict get $r -path]]}
-rewrite {/[^/]+..gz} {/_bin/[file tail [dict get $r -path]]}
+rewrite {/[^/]+.gz} {/_bin/[file tail [dict get $r -path]]}
+rewrite {/[^/]+.js} {/_scripts/[file tail [dict get $r -path]]}
 
 code /*ie_onload.JS {
     if {[dict exists $r if-modified-since]} {
@@ -53,8 +54,6 @@ Disallow: /_login
 Disallow: /_summary
 Disallow: /_
 }
-
-redirect /*.js /_scripts/
 
 code /rss.xml {
     # generate and return RSS feed
