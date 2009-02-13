@@ -21,8 +21,10 @@ package provide WikitWub 1.0
 
 set API(WikitWub) {
     {A Wub interface to tcl wikit}
-    base {place where wiki lives (default /tmp/wiki)}
-    wikidb {wikit's metakit DB name (default wikit.tkd)}
+    base {place where wiki lives (default: same directory as WikitWub.tcl, or parent of starkit mountpoint}
+    wikitroot {where the wikit lives (default: $base/data}
+    docroot {where ancillary documents live (default: $base/docroot)}
+    wikidb {wikit's metakit DB name (default wikit.tkd) - no obvious need to change this.}
     history {history directory}
     readonly {Message which makes the wikit readonly, and explains why.  (default "")}
     motd {message of the day (default "")}
@@ -2164,8 +2166,10 @@ namespace eval WikitWub {
 
     # Site WikitWub-specific defaults
     # These may be overwritten by command line, or by vars.tcl
-    variable base "/tmp/wiki"		;# default place for wiki to live
-    
+    variable home [file dirname [info script]]
+    variable base ""		;# default place for wiki to live
+    variable wikitroot ""	;# where the wikit lives
+    variable docroot ""		;# where ancillary docs live
     variable overwrite 0		;# set both to overwrite
     variable reallyreallyoverwrite 0	;# set both to overwrite
     variable wikidb wikit.tkd		;# wikit's Metakit DB name
@@ -2181,38 +2185,64 @@ namespace eval WikitWub {
 
 	Convert Namespace ::WikitWub	;# add wiki-local conversions
 
-	Honeypot new dir [file join $::Site::docroot captcha]
-
 	variable base
-	set origin $::Site::docroot ;# the original copies for priming
-	set wikitroot [file join $base data]	;# where the wikit lives
-	set docroot [file join $base docroot]	;# where ancillary docs live
+	variable wikitroot	;# where the wikit lives
+	variable docroot	;# where ancillary docs live
 
 	variable overwrite		;# set both to overwrite
 	variable reallyreallyoverwrite	;# set both to overwrite
 	variable wikidb
+	
 	if {[info exists ::starkit::topdir]} {
 	    # configure for starkit delivery
-	    Variable topdir $::starkit::topdir
-	    Variable docroot [file join $topdir docroot]
-	    set wikitroot [file join $base data]
-	} elseif {![file exists $docroot]} {
-	    # new install copy the origin docroot to $base
+	    if {$base eq ""} {
+		variable home
+		set base [file dirname $::starkit::topdir]
+		# if not otherwise specified, everything lives in the sibling of $::starkit::topdir
+	    }
+	    if {$wikitroot eq ""} {
+		set wikitroot [file join $base data]
+	    }
+	    if {$docroot eq ""} {
+		set docroot [file join $base docroot]
+	    }
+	} else {
+	    if {$base eq ""} {
+		variable home
+		set base $home
+		# if not otherwise specified, everything lives in this directory
+	    }
+	    if {$wikitroot eq ""} {
+		set wikitroot [file join $base data]
+	    }
+	    if {$docroot eq ""} {
+		set docroot [file join $base docroot]
+	    }
+	}
+
+	Debug.log {WikitWub base:$base docroot:$docroot wikitroot:$wikitroot}
+
+	set origin [file join $home docroot]	;# all the originals live here
+	if {![file exists $docroot]} {
+	    # new install. copy the origin docroot to $base
 	    catch {file mkdir $wikitroot}
 	    file copy $origin [file dirname $docroot]
 	    file copy [file join $home doc.sample $wikidb] $wikitroot
-	} elseif {$reallyreallyoverwrite && $overwrite} {
-	    # destructively overwrite the $base with the origin
+	} elseif {$overwrite
+		  && $reallyreallyoverwrite
+		  && $docroot ne $origin
+	      } {
+	    # destructively overwrite the docroot and wikiroot contents with the origin
 	    catch {file mkdir $wikitroot}
 	    file delete -force $docroot
 	    file copy -force $origin [file dirname $docroot]
 	    file copy -force [file join $home doc $wikidb] $wikitroot
 	} else {
 	    # normal start, existing db
-	    catch {file mkdir $wikitroot}
-	    #puts stderr "Not overwriting existing docroot '$docroot'"
 	}
-	
+
+	Honeypot new dir [file join $docroot captcha]
+
 	# clean up any symlinks in docroot
 	package require functional
 	package require fileutil
