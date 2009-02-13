@@ -308,11 +308,11 @@ namespace eval WikitWub {
     # return a search form
     proc searchF {} {
 	set result [<form> searchform action /_/search {
-	    [<text> searchtxt name S onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
+	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
 	    [<hidden> _charset_ ""]
 	}]
 	append result \n [<form> gsearchform action /_/gsearch {
-	    [<text> googletxt name S onfocus {clearGoogle();} onblur {setGoogle();} "Search in pages"]
+	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} "Search in pages"]
 	    [<hidden> _charset_ ""]
 	}] \n
 	return $result
@@ -320,11 +320,11 @@ namespace eval WikitWub {
 
     proc gsearchF {Q} {
 	set result [<form> searchform action /_/search {
-	    [<text> searchtxt name S onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
+	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
 	    [<hidden> _charset_ ""]
 	}]
 	append result \n [<form> gsearchform action /_/gsearch {
-	    [<text> googletxt name S onfocus {clearGoogle();} onblur {setGoogle();} $Q]
+	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} $Q]
 	    [<hidden> _charset_ ""]
 	}] \n
 	return $result
@@ -389,17 +389,6 @@ namespace eval WikitWub {
 	    window.onload = init;
 	}]
     }]
-
-    if {0} {
-	# taken this out
-	[<script> src styleswitch.js {
-	    /***********************************************
-	    * Style Sheet Switcher v1.1- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
-	    * This notice MUST stay intact for legal use
-	    * Visit Dynamic Drive at http://www.dynamicdrive.com/ for this script and 100s more
-	    ***********************************************/
-	}]
-    }
 
     # protected pages
     variable protected
