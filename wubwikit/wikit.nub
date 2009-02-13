@@ -8,7 +8,6 @@ domain /_icons/ Icons
 domain /_jquery/ JQ
 domain /_stats/ File root /var/www/webalizer
 domain /_sinorca/ Sinorca
-domain /_wub/ {Mason wub} auth .before wrapper .after root $::Site::docroot
 domain /_nub/ Nub
 domain /_doc/ Commenter ctype x-text/html-fragment
 literal /_illuminati {<h3>Certificate of Non-Existence</h3><p>There is no Tcl Illuminati</p><p>Signed: Null Implementation (Illuminatus Namespace Coordinator)</p>}
@@ -18,15 +17,15 @@ domain /_icons/ Icons
 domain /_css/ {File css} root [file join $::Site::docroot css] expires tomorrow
 domain /_images/ {File images} root [file join $::Site::docroot images] expires "next week"
 domain /_scripts/ {File scripts} root [file join $::Site::docroot scripts] expires tomorrow
-domain /_html/ {File images} root [file join $::Site::docroot html]
+domain /_html/ {File html} root [file join $::Site::docroot html]
 domain /_bin/ {File bin} root [file join $::Site::docroot bin]
 
-redirect /*.jpg /_images/
-redirect /*.gif /_images/
-redirect /*.png /_images/
-redirect /favico.ico /_images/favico.ico	;# find the icon in /images
-redirect /*.css /_css/
-redirect /*.gz /_bin/
+domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
+
+rewrite {/} /_/welcome	;# need to silently redirect welcome page
+rewrite {/[^/]+.(jpg|png|ico)} {/_images/[file tail [dict get $r -path]]}
+rewrite {/[^/]+.css} {/_css/[file tail [dict get $r -path]]}
+rewrite {/[^/]+..gz} {/_bin/[file tail [dict get $r -path]]}
 
 code /*ie_onload.JS {
     if {[dict exists $r if-modified-since]} {
@@ -61,10 +60,6 @@ code /rss.xml {
     # generate and return RSS feed
     Http CacheableContent $r [clock seconds] [WikitRss rss] application/rss+xml
 }
-
-rewrite / /_/welcome	;# need to silently redirect welcome file
-
-domain /_ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 
 code default {
      return [WikitWub do $r]
