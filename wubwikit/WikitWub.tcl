@@ -1,21 +1,18 @@
 package require Mk4tcl
-package require File
-package require Mason
-package require Convert
-package require Direct
-package require Html
 package require fileutil
-package require Form
-
-package require Debug
-package require Url
-package require Query
-package require Form
 package require struct::queue
-package require Http
-package require Cookies
-#package require Session
+
+#### initialize Wikit
+package require Site	;# assume Wub/ is already on the path, or in /usr/lib
+
+lappend auto_path [file dirname [info script]]
 package require WikitRss
+package require Wikit::Format
+package require Wikit::Db
+package require Wikit::Search
+package require Wikit::Cache
+
+
 package require Sitemap
 package require stx
 package require Honeypot
@@ -257,13 +254,13 @@ namespace eval WikitWub {
 	}
     }
 
-    variable searchForm [string map {%S $search} [<form> search method get action /_/search {
+    variable searchForm [string map {%S $search %N $N} [<form> search method get action /_/search {
 	[<fieldset> sfield title "Construct a new search" {
 	    [<legend> "Enter a Search Phrase"]
-	    [<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
+	    [<text> S title "Append an asterisk (*) to search page contents" [armour %S]]
 	    [<checkbox> SC title "search page contents" value 1; set _disabled ""]
 	    [<hidden> _charset_]
-	    [<hidden> N $N]
+	    [<hidden> N %N]
 	}]
     }]]
 
@@ -309,10 +306,10 @@ namespace eval WikitWub {
     # return a search form
     proc searchF {} {
 	set result [<form> searchform action /_/search {
-	    [<text> searchtxt name S onfocus {clearSearch();} onblur {setSearch();} 'Search in titles'>]
+	    [<text> searchtxt name S onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
 	    [<hidden> _charset_ ""]
 	}]
-	append result \n [<form gsearchform action /_/gsearch {
+	append result \n [<form> gsearchform action /_/gsearch {
 	    [<text> googletxt name S onfocus {clearGoogle();} onblur {setGoogle();} "Search in pages"]
 	    [<hidden> _charset_ ""]
 	}] \n
@@ -321,10 +318,10 @@ namespace eval WikitWub {
 
     proc gsearchF {Q} {
 	set result [<form> searchform action /_/search {
-	    [<text> searchtxt name S onfocus {clearSearch();} onblur {setSearch();} 'Search in titles'>]
+	    [<text> searchtxt name S onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
 	    [<hidden> _charset_ ""]
 	}]
-	append result \n [<form gsearchform action /_/gsearch {
+	append result \n [<form> gsearchform action /_/gsearch {
 	    [<text> googletxt name S onfocus {clearGoogle();} onblur {setGoogle();} $Q]
 	    [<hidden> _charset_ ""]
 	}] \n
@@ -342,17 +339,17 @@ namespace eval WikitWub {
     #<meta name='robots' content='index,nofollow' />
     variable head [subst {
 
-	[<link> rel stylesheet             href "wikit_screen.css"       media "screen"   type "text/css" title "With TOC"]
-	[<link> rel "alternate stylesheet" href "wikit_screen_notoc.css" media "screen"   type "text/css" title "Without TOC"]
-	[<link> rel stylesheet             href "wikit_print.css"        media "print"    type "text/css"]
-	[<link> rel stylesheet             href "wikit_handheld.css"     media "handheld" type "text/css"]
+	[<link> rel stylesheet             href "/wikit_screen.css"       media "screen"   type "text/css" title "With TOC"]
+	[<link> rel "alternate stylesheet" href "/wikit_screen_notoc.css" media "screen"   type "text/css" title "Without TOC"]
+	[<link> rel stylesheet             href "/wikit_print.css"        media "print"    type "text/css"]
+	[<link> rel stylesheet             href "/wikit_handheld.css"     media "handheld" type "text/css"]
 	
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
-	[<style> media all "@import 'ie6.css';"]
+	[<style> media all "@import '/ie6.css';"]
 	<!\[endif\]-->
 	<!--\[if gte IE 7\]>
-	[<style> media all "@import 'ie7.css';"]
+	[<style> media all "@import '/ie7.css';"]
 	<!\[endif\]-->
 	[<script> {
 	    function init() {
@@ -369,10 +366,10 @@ namespace eval WikitWub {
 		catch (e){}
 
 		//try {
-		//    checkTOC();
-		//} catch (err) {
-		//    /* nothing */
-		//}
+		    //    checkTOC();
+		    //} catch (err) {
+			//    /* nothing */
+			//}
 	    };
 
 	    /* for Mozilla */
@@ -822,7 +819,7 @@ namespace eval WikitWub {
 
     proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
 	Debug.wikit {/diff $N $V $D $W}
-
+    
 	set ext [file extension $N]	;# file extension?
 	set N [file rootname $N]	;# it's a simple single page
 
@@ -848,7 +845,7 @@ namespace eval WikitWub {
 	if {$V < 0} {
 	    set V [expr {$nver - 1}]	;# default
 	}
-
+    
 	# If T is zero, D contains version to compare with
 	# If T is non zero, D contains a number of days and /diff must
 	# search for a version $D days older than version $V
@@ -886,12 +883,15 @@ namespace eval WikitWub {
 	Wikit::pagevars $N name
 
 	set t1 [split [get_page_with_version $N $V 0] "\n"]
+
 	if {!$W} { set uwt1 [unWhiteSpace $t1] } else { set uwt1 $t1 }
+
 	set t2 [split [get_page_with_version $N $D 0] "\n"]
 	if {!$W} { set uwt2 [unWhiteSpace $t2] } else { set uwt2 $t2 }
 	set p1 0
 	set p2 0
 	set C ""
+
 	foreach {l1 l2} [::struct::list::LlongestCommonSubsequence $uwt1 $uwt2] {
 	    foreach i1 $l1 i2 $l2 {
 		if { $W && $p1 < $i1 && $p2 < $i2 } {
@@ -1005,13 +1005,16 @@ namespace eval WikitWub {
 		    } else {
 			lassign [::Wikit::StreamToHTML [::Wikit::TextToStream $C] / ::WikitWub::InfoProc] C U T BR
 		    }
-		    set tC "<span class='newwikiline'>Text added in version $V is highlighted like this</span>, <span class='oldwikiline'>text deleted from version $D is highlighted like this</span>"
-		    if {!$W} { append tC ", <span class='whitespacediff'>text with only white-space differences is highlighted like this</span>" }
+		    set tC [<span> class newwikiline "Text added in version $V is highlighted like this"]
+		    append tC , [<span> class oldwikiline "text deleted from version $D is highlighted like this"]
+		    if {!$W} {
+			append tC , [<span> class whitespacediff "text with only white-space differences is highlighted like this"]
+		    }
 		    set C "$tC<hr>$C"
 		}
 	    }
 	}
-
+    
 	variable menus
 	variable TOC
 	if {![string length $updated]} {
@@ -1410,7 +1413,8 @@ namespace eval WikitWub {
 	dict set r -suffix $S
 
 	set ::Wikit::searchLong [regexp {^(.*)\*$} $S x ::Wikit::searchKey]
-	return [WikitWub do $r 2]
+	dict append r -path /2
+	return [WikitWub do $r]
     }
 
     proc /gsearch {r {S ""}} {
@@ -1573,9 +1577,9 @@ namespace eval WikitWub {
 
     proc /map {r imp args} {
 	if {[info exists ::WikitWub::IMTOC($imp)]} {
-	    return [Http Redir $req "http://[dict get $req host]/$::WikitWub::IMTOC($imp)"]
+	    return [Http Redir $r "http://[dict get $r host]/$::WikitWub::IMTOC($imp)"]
 	} else {
-	    return [Http NotFound $req]
+	    return [Http NotFound $r]
 	}
     }
 
@@ -1698,7 +1702,7 @@ namespace eval WikitWub {
 	return [Http Ok $r [<a> href $R "Loaded CSS"] text/html]
     }
 
-    proc /welcome { r} {
+    proc /welcome {r} {
 	variable TOC
 	variable WELCOME
 	variable protected
@@ -1814,7 +1818,7 @@ namespace eval WikitWub {
 	set search {}
 	foreach k [split $key " "] {
 	    if {$k ne ""} {
-#		lappend search -keyword $fields [string map {+ " "} $k]
+		#		lappend search -keyword $fields [string map {+ " "} $k]
 		lappend search -keyword $fields $k
 	    }
 	}
@@ -2161,10 +2165,9 @@ namespace eval WikitWub {
     # Site WikitWub-specific defaults
     # These may be overwritten by command line, or by vars.tcl
     variable base "/tmp/wiki"		;# default place for wiki to live
-	
+    
     variable overwrite 0		;# set both to overwrite
     variable reallyreallyoverwrite 0	;# set both to overwrite
-
     variable wikidb wikit.tkd		;# wikit's Metakit DB name
     variable history history		;# history directory
     variable readonly ""		;# the wiki is not readonly
@@ -2185,6 +2188,9 @@ namespace eval WikitWub {
 	set wikitroot [file join $base data]	;# where the wikit lives
 	set docroot [file join $base docroot]	;# where ancillary docs live
 
+	variable overwrite		;# set both to overwrite
+	variable reallyreallyoverwrite	;# set both to overwrite
+	variable wikidb
 	if {[info exists ::starkit::topdir]} {
 	    # configure for starkit delivery
 	    Variable topdir $::starkit::topdir
@@ -2206,7 +2212,7 @@ namespace eval WikitWub {
 	    catch {file mkdir $wikitroot}
 	    #puts stderr "Not overwriting existing docroot '$docroot'"
 	}
-    
+	
 	# clean up any symlinks in docroot
 	package require functional
 	package require fileutil
@@ -2219,6 +2225,7 @@ namespace eval WikitWub {
 	
 	# create history directory
 	if {![info exists ::env(WIKIT_HIST)]} {
+	    variable history
 	    if {$history ne ""} {
 		if {[file pathtype $history] ne "absolute"} {
 		    set history [file join $wikitroot $history]
@@ -2247,6 +2254,7 @@ namespace eval WikitWub {
 
 	package require utf8
 	variable utf8re [::utf8::makeUtf8Regexp]
+	variable utf8clean
 	if {$utf8clean} {
 	    # cleanse bad utf8 characters if requested
 	    cleanseUTF
@@ -2290,19 +2298,19 @@ namespace eval WikitWub {
 	set ::roflag $roflag
 
 	# initialize RSS feeder
-	WikitRss init wdb "Tcler's Wiki" http://wiki.tcl.tk/
+	WikitRss new wdb "Tcler's Wiki" http://wiki.tcl.tk/
 	
 	proc init {args} {}	;# we can't be called twice
     }
 
     proc new {args} {
 	init {*}$args
-	return [Direct new namespace ::WikitWub prefix /_ ctype "x-text/wiki"]
+	return [Direct new {*}$args namespace ::WikitWub ctype "x-text/wiki"]
     }
 
     proc create {name args} {
 	init {*}$args
-	return [Direct create $name namespace ::WikitWub prefix /_ ctype "x-text/wiki"]
+	return [Direct create $name {*}$args namespace ::WikitWub ctype "x-text/wiki"]
     }
 
     namespace export -clear *
@@ -2319,15 +2327,6 @@ array set ::env [array get _env]; unset _env
 proc pest {req} {return 0}	;# default [pest] catcher
 catch {source [file join [file dirname [info script]] pest.tcl]}
 
-#### initialize Wikit
-lappend auto_path [file dirname [info script]]
-package require Wikit::Format
-package require Wikit::Db
-package require Wikit::Search
-package require Wikit::Cache
-
-Site init application WikitWub home [file normalize [file dirname [info script]]] ini wikit.ini
-
 #### set up appropriate debug levels (negative means off)
 Debug setting log 10 error 10 query -10 wikit -10 direct -10 convert -10 cookies -10 socket -10
 
@@ -2335,4 +2334,5 @@ Debug setting log 10 error 10 query -10 wikit -10 direct -10 convert -10 cookies
 catch {source [file join [file dirname [info script]] local.tcl]} r eo
 Debug.log {RESTART: [clock format [clock second]] '$r' ($eo)}
 
+Site init application WikitWub nubs wikit.nub home [file normalize [file dirname [info script]]] ini wikit.ini
 Site start
