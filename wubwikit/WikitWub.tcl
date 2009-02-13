@@ -2322,6 +2322,7 @@ proc pest {req} {return 0}	;# default [pest] catcher
 catch {source [file join [file dirname [info script]] pest.tcl]}
 
 #### initialize Wikit
+lappend auto_path [file dirname [info script]]
 package require Wikit::Format
 package require Wikit::Db
 package require Wikit::Cache
