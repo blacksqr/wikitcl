@@ -1,6 +1,4 @@
 package require Mk4tcl
-package require Wikit::Db
-package require Wikit::Search
 package require File
 package require Mason
 package require Convert
@@ -2325,6 +2323,7 @@ catch {source [file join [file dirname [info script]] pest.tcl]}
 lappend auto_path [file dirname [info script]]
 package require Wikit::Format
 package require Wikit::Db
+package require Wikit::Search
 package require Wikit::Cache
 
 Site init application WikitWub home [file normalize [file dirname [info script]]] ini wikit.ini
