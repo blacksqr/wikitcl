@@ -134,7 +134,7 @@ function previewPage(page)
 {
     document.getElementById("previewarea_pre").innerHTML = "<hr><b>Preview:</b> <button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
     var txt = document.getElementById("editarea").value;
-    ajaxpage("/_preview/" + page, "O="+Url.encode(txt), "previewarea");
+    ajaxpage("/_preview/", "N=" + page + " O="+Url.encode(txt), "previewarea");
     return false;
 }
 
