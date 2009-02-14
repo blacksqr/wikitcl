@@ -10,7 +10,7 @@ domain /_stats/ File root /var/www/webalizer
 domain /_sinorca/ Sinorca
 domain /_nub/ Nub
 domain /_doc/ Commenter ctype x-text/html-fragment
-literal /_illuminati {<h3>Certificate of Non-Existence</h3><p>There is no Tcl Illuminati</p><p>Signed: Null Implementation (Illuminatus Namespace Coordinator)</p>}
+literal /_illuminati {<h3>Certificate of Non-Existence</h3><p>There is no Tcl Illuminati</p><p>Signed: Illuminatus Namespace Coordinator</p>}
 
 # Useful static content directories
 domain /_icons/ Icons
