@@ -324,7 +324,6 @@ namespace eval WikitWub {
 
     variable maxAge "next month"	;# maximum age of login cookie
     variable cookie "wikit_e"		;# name of login cookie
-    variable oldcookie "wikit"		;# name of login cookie
 
     variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">}
     variable language "en"	;# language for HTML
@@ -1276,7 +1275,6 @@ namespace eval WikitWub {
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
 	    set R [Http Referer $r]
-	    set r [movecookie $r]
 	    return [sendPage $r login]
 	}
 
@@ -1297,7 +1295,7 @@ namespace eval WikitWub {
 
 	variable cookie
 	Debug.wikit {/login - created cookie $nickname with R $R}
-	set cdict [Cookies add $cdict -path /_/edit/ -name $cookie -value $nickname {*}$age]
+	set cdict [Cookies add $cdict -path /_/ -name $cookie -value $nickname {*}$age]
 
 	dict set r -cookies $cdict
 	if {$R eq ""} {
@@ -1308,24 +1306,6 @@ namespace eval WikitWub {
 	}
 
 	return [redir $r $R [<a> href $R "Created Account"]]
-    }
-
-    # move old cookies from path / to path /_/edit/
-    proc movecookie {r} {
-	variable oldcookie
-	set cdict [dict get $r -cookies]
-
-        set cl [Cookies match $cdict -name $oldcookie]
-	if {[llength $cl] != 1} {
-	    Debug.wikit {no old cookie}
-	    return $r
-	}
-
-	set cdict [Cookies clear $cdict -name $oldcookie]
-	dict set r cookies $cdict
-	Debug.wikit {Cookie CLEAR}
-
-	return $r
     }
 
     proc invalidate {r url} {
@@ -1468,9 +1448,6 @@ namespace eval WikitWub {
 	# is the caller logged in?
 	set nick [who $r]
 	set when [expr {[dict get $r -received] / 1000000}]
-
-	# temporary fix - move cookies under -path /_/edit/
-	set r [movecookie $r]
 
 	Debug.wikit {/edit/save N:$N [expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
 
