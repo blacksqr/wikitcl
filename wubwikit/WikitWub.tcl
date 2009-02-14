@@ -2173,10 +2173,10 @@ namespace eval WikitWub {
 	variable reallyreallyoverwrite	;# set both to overwrite
 	variable wikidb
 	
+	variable home
 	if {[info exists ::starkit::topdir]} {
 	    # configure for starkit delivery
 	    if {$base eq ""} {
-		variable home
 		set base [file dirname $::starkit::topdir]
 		# if not otherwise specified, everything lives in the sibling of $::starkit::topdir
 	    }
@@ -2188,7 +2188,6 @@ namespace eval WikitWub {
 	    }
 	} else {
 	    if {$base eq ""} {
-		variable home
 		set base $home
 		# if not otherwise specified, everything lives in this directory
 	    }
