@@ -13,6 +13,7 @@ domain /_doc/ Commenter ctype x-text/html-fragment
 literal /_illuminati {<h3>Certificate of Non-Existence</h3><p>There is no Tcl Illuminati</p><p>Signed: Illuminatus Namespace Coordinator</p>}
 
 # Useful static content directories
+domain /wub/ {Mason wub} auth .before wrapper .after root [file join [file dirname $::Site::home] docroot]
 domain /_icons/ Icons
 domain /_css/ {File css} root [file join $::Site::docroot css] expires tomorrow
 domain /_images/ {File images} root [file join $::Site::docroot images] expires "next week"
@@ -22,11 +23,12 @@ domain /_bin/ {File bin} root [file join $::Site::docroot bin]
 
 domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 
- rewrite {/} /_/welcome	;# need to silently redirect welcome page
- rewrite {/[^/]+.(jpg|gif|png|ico)} {/_images/[file tail [dict get $r -path]]}
- rewrite {/[^/]+.css} {/_css/[file tail [dict get $r -path]]}
- rewrite {/[^/]+.gz} {/_bin/[file tail [dict get $r -path]]}
- rewrite {/[^/]+.js} {/_scripts/[file tail [dict get $r -path]]}
+rewrite {/} /_/welcome	;# need to silently redirect welcome page
+rewrite {/[^/]+.(jpg|gif|png|ico)} {/_images/[file tail [dict get $r -path]]}
+rewrite {/[^/]+.css} {/_css/[file tail [dict get $r -path]]}
+rewrite {/[^/]+.gz} {/_bin/[file tail [dict get $r -path]]}
+rewrite {/[^/]+.js} {/_scripts/[file tail [dict get $r -path]]}
+rewrite {/doc/.*} {/_docs/[file join {*}[lrange [file split [dict get $r -path]] 1 end]]}
 
  code /*ie_onload.JS {
      if {[dict exists $r if-modified-since]} {
