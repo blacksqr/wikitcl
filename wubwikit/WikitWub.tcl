@@ -248,14 +248,6 @@ namespace eval WikitWub {
 	[<hr> size 1]
     }
 
-    # record some session information per save
-    proc setSession {page nick} {
-	dict set r -session who $nick
-	Session with r {
-	    lappend edit [clock second] $page
-	}
-    }
-
     variable searchForm [string map {%S $search %N $N} [<form> search method get action /_/search {
 	[<fieldset> sfield title "Construct a new search" {
 	    [<legend> "Enter a Search Phrase"]
@@ -1615,8 +1607,6 @@ namespace eval WikitWub {
 	if {$C eq ""} {
 	    set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"
 	}
-
-	#setSession $N $nick	;# set some session data
 
 	return [sendPage $r edit]
     }
