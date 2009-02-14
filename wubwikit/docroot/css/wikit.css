@@ -39,7 +39,7 @@ div.logo {
   margin: 0 1.5em 0 0;
   height: 40px;
   font-size: 120%;
-  background: #ccc url(/images/plume.png) top right no-repeat;
+  background: #ccc url(/_images/plume.png) top right no-repeat;
 }
 
 div.logo a.logo {
