@@ -465,9 +465,10 @@ namespace eval WikitWub {
 
     # generate site map
     proc /sitemap {r args} {
+	variable docroot
 	set p http://[Url host $r]/
 	set map {}
-	append map [Sitemap location $p "" mtime [file mtime $::Site::docroot/html/welcome.html] changefreq weekly] \n
+	append map [Sitemap location $p "" mtime [file mtime $docroot/html/welcome.html] changefreq weekly] \n
 	append map [Sitemap location $p 4 mtime [clock seconds] changefreq always priority 1.0] \n
 
 	foreach i [mk::select wdb.pages -first 11 -min date 1 -sort date] {
@@ -1623,9 +1624,9 @@ namespace eval WikitWub {
     proc /motd {r} {
 	variable motd
 
-	puts "\n\n\n\n\nmotd: [file join $::Site::docroot motd]\n\n\n\n\n"
+	puts "\n\n\n\n\nmotd: [file join $docroot motd]\n\n\n\n\n"
 
-	catch {set motd [::fileutil::cat [file join $::Site::docroot motd]]}
+	catch {set motd [::fileutil::cat [file join $docroot motd]]}
 	set motd [string trim $motd]
 
 	invalidate $r 4	;# make the new motd show up
@@ -1639,8 +1640,9 @@ namespace eval WikitWub {
 
     proc /reloadTOC {r} {
 	variable TOCchange 
+	variable docroot
 
-	set tocf [file join $::Site::docroot TOC]
+	set tocf [file join $docroot TOC]
 
 	set changed [file mtime $tocf]
 	if {$changed <= $TOCchange} {
@@ -1666,8 +1668,8 @@ namespace eval WikitWub {
 
     proc /reloadWELCOME {r} {
 	variable WELCOMEchange
-
-	set wf [file join $::Site::docroot html welcome.html]
+	variable docroot
+	set wf [file join $docroot html welcome.html]
 
 	set changed [file mtime $wf]
 	if {$changed <= $WELCOMEchange} {
@@ -2284,12 +2286,12 @@ namespace eval WikitWub {
 
 	# set message of the day (if any) to be displayed on /4
 	catch {
-	    set ::WikitWub::motd [::fileutil::cat [file join $::Site::docroot motd]]
+	    set ::WikitWub::motd [::fileutil::cat [file join $docroot motd]]
 	}
 
 	# set table of contents (if any) to be displayed on in left column menu
 	catch {
-	    set ::WikitWub::TOC [::fileutil::cat [file join $::Site::docroot TOC]]
+	    set ::WikitWub::TOC [::fileutil::cat [file join $docroot TOC]]
 	    unset -nocomplain ::WikitWub::IMTOC
 	    if { [string length $::WikitWub::TOC] } {
 		lassign [::Wikit::FormatWikiToc $::WikitWub::TOC] ::WikitWub::TOC IMTOCl
@@ -2299,7 +2301,7 @@ namespace eval WikitWub {
 
 	# set welcome message, if any
 	catch {
-	    set ::WikitWub::WELCOME [::fileutil::cat [file join $::Site::docroot html welcome.html]]
+	    set ::WikitWub::WELCOME [::fileutil::cat [file join $docroot html welcome.html]]
 	}
 
 	# do wiki URL sync, if required (not tested)
