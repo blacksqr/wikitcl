@@ -1100,7 +1100,7 @@ namespace eval WikitWub {
 	}
 
 	lappend menu [Ref /_/history?N=$N History]
-	set footer [menus Home Recent Help TOCNoTOC Search]
+	set footer [menus Home Recent Help Search]
 	set updated ""
 	set T ""
 	variable TOC
@@ -1142,7 +1142,7 @@ namespace eval WikitWub {
 	    lappend menu [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 	    #	    append links [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 	}
-	set footer [menus Home Recent Help TOCNoTOC Search]
+	set footer [menus Home Recent Help Search]
 	#	if {$links ne {}} {
 	#	    append C <p> $links </p> \n
 	#	}
@@ -1241,8 +1241,6 @@ namespace eval WikitWub {
     set menus(Help)   [Ref 3 "Help"]
     set menus(HR)     <br>
     set menus(Search) [Ref 2 "Search"]
-    #set menus(TOCNoTOC) [<a> href "javascript:toggleStyle(60)" "Toggle TOC"]
-    set menus(TOCNoTOC) ""
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
 	<h1>Redirecting to $url</h1>
@@ -1420,7 +1418,7 @@ namespace eval WikitWub {
 	variable gsearch 1
 	variable query $S
 	set menu [menus Home Recent Help]
-	set footer [menus Home Recent Help TOCNoTOC]
+	set footer [menus Home Recent Help]
 	set T ""
 	set r [sendPage $r]
 	unset gsearch
@@ -1700,7 +1698,7 @@ namespace eval WikitWub {
 	variable protected
 
 	set menu [menus Recent Help]
-	set footer [menus Recent Help TOCNoTOC Search]
+	set footer [menus Recent Help Search]
 
 	set Title "Welcome to the Tclers Wiki!"
 	set updated ""
@@ -1771,7 +1769,7 @@ namespace eval WikitWub {
 	    set r [sortable $r]
 	} 
 	set menu [menus Home Recent Help]
-	set footer [menus Home Recent Help TOCNoTOC Search]
+	set footer [menus Home Recent Help Search]
 
 	set name "References to $N"
 	set Title "References to [Ref $N]"
@@ -2084,7 +2082,7 @@ namespace eval WikitWub {
 	variable protected
 
 	set menu [menus Home Recent Help]
-	set footer [menus Home Recent Help TOCNoTOC Search]
+	set footer [menus Home Recent Help Search]
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
 	    if {!$::roflag} {
