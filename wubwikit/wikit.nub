@@ -30,9 +30,9 @@ domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 
  code /*ie_onload.JS {
      if {[dict exists $r if-modified-since]} {
-	 Http NotModified $r
+	 return [Http NotModified $r]
      } else {
-	 Http CacheableContent [Http Cache $r 100000000] 0 {init();} application/javascript
+	 return [Http CacheableContent [Http Cache $r 100000000] 0 {init();} application/javascript]
      }
      # send out this piddling script to IE users.
      # See variable head above for how it's invoked.
