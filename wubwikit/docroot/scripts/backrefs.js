@@ -49,7 +49,7 @@ function loadpage(page_request, containerid){
 
 function getBackRefs(page,containerid)
 {
-    ajaxpage("/_/ref/", "N=" + page + " A=1", "", containerid)
+    ajaxpage("/_/ref", "N=" + page + " A=1", "", containerid)
 }
 /**
 *
