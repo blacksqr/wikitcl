@@ -24,6 +24,7 @@ function ajaxpage(url, postData, containerid){
     }
     else
         return false
+
     page_request.onreadystatechange=function(){
 	loadpage(page_request, containerid)
     }
@@ -129,7 +130,7 @@ var Url = {
     }
 
 }
-    
+
 function previewPage(page)
 {
     document.getElementById("previewarea_pre").innerHTML = "<hr><b>Preview:</b> <button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
