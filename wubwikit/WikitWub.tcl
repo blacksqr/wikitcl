@@ -2354,5 +2354,4 @@ Debug setting log 10 error 10 query -10 wikit -10 direct -10 convert -10 cookies
 catch {source [file join [file dirname [info script]] local.tcl]} r eo
 Debug.log {RESTART: [clock format [clock second]] '$r' ($eo)}
 
-Site init application WikitWub nubs wikit.nub home [file normalize [file dirname [info script]]] ini wikit.ini
-Site start
+Site start application WikitWub nubs wikit.nub home [file normalize [file dirname [info script]]] ini wikit.ini
