@@ -22,42 +22,42 @@ domain /_bin/ {File bin} root [file join $::Site::docroot bin]
 
 domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 
-rewrite {/} /_/welcome	;# need to silently redirect welcome page
-rewrite {/[^/]+.(jpg|png|ico)} {/_images/[file tail [dict get $r -path]]}
-rewrite {/[^/]+.css} {/_css/[file tail [dict get $r -path]]}
-rewrite {/[^/]+.gz} {/_bin/[file tail [dict get $r -path]]}
-rewrite {/[^/]+.js} {/_scripts/[file tail [dict get $r -path]]}
+ rewrite {/} /_/welcome	;# need to silently redirect welcome page
+ rewrite {/[^/]+.(jpg|png|ico)} {/_images/[file tail [dict get $r -path]]}
+ rewrite {/[^/]+.css} {/_css/[file tail [dict get $r -path]]}
+ rewrite {/[^/]+.gz} {/_bin/[file tail [dict get $r -path]]}
+ rewrite {/[^/]+.js} {/_scripts/[file tail [dict get $r -path]]}
 
-code /*ie_onload.JS {
-    if {[dict exists $r if-modified-since]} {
-	Http NotModified $r
-    } else {
-	Http CacheableContent [Http Cache $r 100000000] 0 {init();} application/javascript
-    }
-    # send out this piddling script to IE users.
-    # See variable head above for how it's invoked.
-    # yet another reason to hate Windows IE
-    # see http://dean.edwards.name/weblog/2005/09/busted/
-    # for the reason for this offence to good taste.
-}
+ code /*ie_onload.JS {
+     if {[dict exists $r if-modified-since]} {
+	 Http NotModified $r
+     } else {
+	 Http CacheableContent [Http Cache $r 100000000] 0 {init();} application/javascript
+     }
+     # send out this piddling script to IE users.
+     # See variable head above for how it's invoked.
+     # yet another reason to hate Windows IE
+     # see http://dean.edwards.name/weblog/2005/09/busted/
+     # for the reason for this offence to good taste.
+ }
 
-literal /robots.txt {User-agent: *
-Disallow: /5.html
-Disallow: /_ref
-Disallow: /_history
-Disallow: /_revision
-Disallow: /_diff
-Disallow: /_search
-Disallow: /_edit
-Disallow: /_tcl
-Disallow: /_login
-Disallow: /_summary
-Disallow: /_
-}
+ literal /robots.txt {User-agent: *
+ Disallow: /5.html
+ Disallow: /_ref
+ Disallow: /_history
+ Disallow: /_revision
+ Disallow: /_diff
+ Disallow: /_search
+ Disallow: /_edit
+ Disallow: /_tcl
+ Disallow: /_login
+ Disallow: /_summary
+ Disallow: /_
+ }
 
-code /rss.xml {
-    # generate and return RSS feed
-    Http CacheableContent $r [clock seconds] [WikitRss rss] application/rss+xml
+ code /rss.xml {
+     # generate and return RSS feed
+     return [Http CacheableContent $r [clock seconds] [WikitRss rss] application/rss+xml]
 }
 
 code default {
