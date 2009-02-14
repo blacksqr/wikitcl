@@ -643,7 +643,7 @@ namespace eval WikitWub {
 	set N 0
 	set updated ""
         set menu [menus Home Recent Help]
-	set footer [menus Home Recent Help TOCNoTOC Search]
+	set footer [menus Home Recent Help Search]
 
 	set C [join $results "\n"]
 	variable TOC
@@ -800,7 +800,7 @@ namespace eval WikitWub {
 	lappend menu [Ref /_/diff?N=$N "Last change"]
 	lappend menu [Ref /_/diff?N=$N&T=1&D=1 "Changes in last day"]
 	lappend menu [Ref /_/diff?N=$N&T=1&D=7 "Changes in last week"]
-	set footer [menus Home Recent Help TOCNoTOC Search]
+	set footer [menus Home Recent Help Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set C $R
 	set Title [Ref $N]
@@ -1017,7 +1017,7 @@ namespace eval WikitWub {
 	lappend menu [Ref /_/diff?N=$N "Last change"]
 	lappend menu [Ref /_/diff?N=$N&T=1&D=1 "Changes in last day"]
 	lappend menu [Ref /_/diff?N=$N&T=1&D=7 "Changes in last week"]
-	set footer [menus Home Recent Help TOCNoTOC Search]
+	set footer [menus Home Recent Help Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
     }
