@@ -155,7 +155,7 @@ namespace eval WikitWub {
 	    }]
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
-		 <form> edit method post action /_/edit/save?N=$N {
+		 <form> edit method post action /_/edit/save {
 		     [<textarea> C id editarea rows 30 cols 72 compact 0 style width:100% [tclarmour $C]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
@@ -1447,6 +1447,7 @@ namespace eval WikitWub {
     }
 
     proc /edit/save {r N C O save cancel preview } {
+	Debug.wikit {/edit/save $N}
 	if { [string tolower $cancel] eq "cancel" } {
 	    set url http://[Url host $r]/$N
 	    return [redir $r $url [<a> href $url "Canceled page edit"]]
