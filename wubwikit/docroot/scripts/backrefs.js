@@ -50,7 +50,7 @@ function loadpage(page_request, containerid){
 
 function getBackRefs(page,containerid)
 {
-    ajaxpage("/_/ref", "N=" + page + " A=1", "", containerid)
+    ajaxpage("/_/ref", "N=" + page + "&A=1", containerid)
 }
 /**
 *
@@ -135,7 +135,7 @@ function previewPage(page)
 {
     document.getElementById("previewarea_pre").innerHTML = "<hr><b>Preview:</b> <button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
     var txt = document.getElementById("editarea").value;
-    ajaxpage("/_/preview", "N=" + page + " O="+Url.encode(txt), "previewarea");
+    ajaxpage("/_/preview", "N=" + page + "&O="+Url.encode(txt), "previewarea");
     return false;
 }
 
