@@ -2154,7 +2154,7 @@ namespace eval WikitWub {
 	if {[info exists ::starkit::topdir]} {
 	    # configure for starkit delivery
 	    if {$base eq ""} {
-		set base [file dirname $::starkit::topdir]
+		set base [file join $::starkit::topdir lib wikitcl wubwikit]
 		# if not otherwise specified, everything lives in the sibling of $::starkit::topdir
 	    }
 	    if {$wikitroot eq ""} {
@@ -2178,7 +2178,8 @@ namespace eval WikitWub {
 
 	Debug.log {WikitWub base:$base docroot:$docroot wikitroot:$wikitroot}
 
-	set origin [file join $home docroot]	;# all the originals live here
+	set origin [file normalize [file join $home docroot]]	;# all the originals live here
+
 	if {![file exists $docroot]} {
 	    # new install. copy the origin docroot to $base
 	    catch {file mkdir $wikitroot}
@@ -2224,7 +2225,13 @@ namespace eval WikitWub {
 	}
 
 	# initialize wikit DB
-	Wikit::WikiDatabase [file join $wikitroot $wikidb] wdb 1
+	if {[info exists ::starkit_wikitdbpath]} {
+	    set wikitdbpath $::starkit_wikitdbpath
+	} else {
+	    set wikitdbpath [file join $wikitroot $wikidb]
+	}
+
+	Wikit::WikiDatabase $wikitdbpath wdb 1
 
 	# prime wikit db if needed
 	variable prime
