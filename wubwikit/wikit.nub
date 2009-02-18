@@ -3,7 +3,7 @@ block /*.wmv
 block /*.exe
 block /cgi-bin/
 
-domain /_repo/ Repo tar 1 upload 1 root $::Site::docroot
+domain /_repo/ Repo tar 1 upload 1 root [file join $::WubWikit::base repo]
 domain /_icons/ Icons
 domain /_jquery/ JQ
 domain /_stats/ File root /var/www/webalizer
