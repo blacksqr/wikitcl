@@ -24,11 +24,11 @@ domain /_bin/ {File bin} root [file join $::Site::docroot bin]
 domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 
 rewrite {/} /_/welcome	;# need to silently redirect welcome page
-rewrite {/[^/]+.(jpg|gif|png|ico)} {/_images/[file tail [dict get $r -path]]}
-rewrite {/[^/]+.css} {/_css/[file tail [dict get $r -path]]}
-rewrite {/[^/]+.gz} {/_bin/[file tail [dict get $r -path]]}
-rewrite {/[^/]+.js} {/_scripts/[file tail [dict get $r -path]]}
-rewrite {/doc/.*} {/_docs/[file join {*}[lrange [file split [dict get $r -path]] 1 end]]}
+rewrite {/[^/]+[.](jpg|gif|png|ico)} {/_images/[file tail [dict get $r -path]]}
+rewrite {/[^/]+[.]css} {/_css/[file tail [dict get $r -path]]}
+rewrite {/[^/]+[.]gz} {/_bin/[file tail [dict get $r -path]]}
+rewrite {/[^/]+[.]js} {/_scripts/[file tail [dict get $r -path]]}
+rewrite {/doc/[.]*} {/_docs/[file join {*}[lrange [file split [dict get $r -path]] 1 end]]}
 
  code /*ie_onload.JS {
      if {[dict exists $r if-modified-since]} {
