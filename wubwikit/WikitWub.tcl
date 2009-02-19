@@ -1666,7 +1666,7 @@ namespace eval WikitWub {
 	variable WELCOME
 	variable protected
 
-	if {[info exists ::starkit_welcomeone] && $::starkit_welcomeone} {
+	if {[info exists ::starkit_welcomezero] && $::starkit_welcomezero} {
 	    return [Http Redir $r "http://[dict get $r host]/1"]
 	}
 	
