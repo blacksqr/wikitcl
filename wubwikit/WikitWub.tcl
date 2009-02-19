@@ -1669,12 +1669,18 @@ namespace eval WikitWub {
 	set menu [menus Recent Help]
 	set footer [menus Recent Help Search]
 
-	set Title "Welcome to the Tclers Wiki!"
+	if {[info exists ::starkit_wikittitle]} {
+	    set Title $::starkit_wikittitle
+	    set name $::starkit_wikittitle
+	} else {
+	    set Title "Welcome to the Tclers Wiki!"
+	    set name "Welcome to the Tclers Wiki!"
+	}
+
 	set updated ""
 	set ro ""
 	set C $WELCOME
 	set T ""
-	set name "Welcome to the Tclers Wiki!"
 
 	return [sendPage $r]
     }
