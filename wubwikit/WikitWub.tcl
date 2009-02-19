@@ -1667,7 +1667,7 @@ namespace eval WikitWub {
 	variable protected
 
 	if {[info exists ::starkit_welcomezero] && $::starkit_welcomezero} {
-	    return [Http Redir $r "http://[dict get $r host]/1"]
+	    return [Http Redir $r "http://[dict get $r host]/0"]
 	}
 	
 	set menu [menus Recent Help]
