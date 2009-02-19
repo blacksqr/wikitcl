@@ -1666,6 +1666,10 @@ namespace eval WikitWub {
 	variable WELCOME
 	variable protected
 
+	if {[info exists ::starkit_welcomeone] && $::starkit_welcomeone} {
+	    return [Http Redir $r "http://[dict get $r host]/1"]
+	}
+	
 	set menu [menus Recent Help]
 	set footer [menus Recent Help Search]
 
