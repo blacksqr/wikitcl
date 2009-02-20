@@ -203,7 +203,8 @@ namespace eval WikitWub {
 
     # page sent to enable login
     template login {login} {
-	[<p> "You must have a nickname to post here"]
+	[<p> "Please choose a nickname that your edit will be identified by."]
+	if {0} {[<p> "You can optionally enter a password that will reserve that nickname for you."]}
 	[<form> login method post action /_/edit/login {
 	    [<fieldset> login title Login {
 		[<text> nickname title "Nickname"]
