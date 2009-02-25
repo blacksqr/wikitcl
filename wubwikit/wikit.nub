@@ -63,5 +63,5 @@ rewrite {/doc/[.]*} {/_docs/[file join {*}[lrange [file split [dict get $r -path
 }
 
 code default {
-     return [WikitWub do $r]
+     WikitWub do $r; dict get $r -content
 }
