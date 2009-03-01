@@ -32,7 +32,7 @@ case "$1" in
 		--respawn --inherit --core \
 		--verbose=1 --debug=1 \
 		--errlog=/var/log/wub/wub.err --output=/var/log/wub/wub.out \
-		--command="$TCLSH -- $DAEMON $DAEMON_OPTS"
+		--command="$TCLSH $DAEMON $DAEMON_OPTS"
 	else
 	    start-stop-daemon --start --quiet --background \
 		--chuid www-data:www-data \
