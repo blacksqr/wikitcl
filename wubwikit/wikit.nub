@@ -30,7 +30,7 @@ rewrite {/[^/]+[.]gz} {/_bin/[file tail [dict get $r -path]]}
 rewrite {/[^/]+[.]js} {/_scripts/[file tail [dict get $r -path]]}
 rewrite {/doc/[.]*} {/_docs/[file join {*}[lrange [file split [dict get $r -path]] 1 end]]}
 
-code /noie_onload.JS {
+code /ie_onload.JS {
     if {[dict exists $r if-modified-since]} {
 	return [Http NotModified $r]
     } else {
