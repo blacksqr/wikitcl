@@ -55,7 +55,7 @@ Disallow: /_tcl
 Disallow: /_login
 Disallow: /_summary
 Disallow: /_
-}
+} text/plain
 
 code /rss.xml {
     # generate and return RSS feed
