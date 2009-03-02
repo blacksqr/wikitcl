@@ -374,7 +374,7 @@ namespace eval WikitWub {
 	    /* for Internet Explorer */
 	    /*@cc_on @*/
 	    /*@if (@_win32)
-	    /*document.write("<script defer src='/ie_onload.JS'><\/script>");*/
+	    document.write("<script defer src='/ie_onload.JS'><\/script>");
 	    /*@end @*/
 	    
 	    /* for other browsers */
