@@ -57,7 +57,7 @@ Disallow: /_edit
 Disallow: /_tcl
 Disallow: /_login
 Disallow: /_summary
-Disallow: /_
+Disallow: /_/
 } text/plain
 
 code /rss.xml {
