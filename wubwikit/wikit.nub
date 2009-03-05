@@ -31,7 +31,7 @@ rewrite {/[^/]+[.]js} {/_scripts/[file tail [dict get $r -path]]}
 rewrite {/doc/[.]*} {/_docs/[file join {*}[lrange [file split [dict get $r -path]] 1 end]]}
 rewrite {/_sitemap.xml} {/_/sitemap}
 rewrite {/_sitemap} {/_/sitemap}
-rewrite {/google[0-9a-d].html} {/_html/[file tail [dict get $r -path]]}	;# for google validation
+
 code /ie_onload.JS {
     if {[dict exists $r if-modified-since]} {
 	return [Http NotModified $r]
