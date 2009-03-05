@@ -29,6 +29,7 @@ rewrite {/[^/]+[.]css} {/_css/[file tail [dict get $r -path]]}
 rewrite {/[^/]+[.]gz} {/_bin/[file tail [dict get $r -path]]}
 rewrite {/[^/]+[.]js} {/_scripts/[file tail [dict get $r -path]]}
 rewrite {/doc/[.]*} {/_docs/[file join {*}[lrange [file split [dict get $r -path]] 1 end]]}
+rewrite {/_sitemap.xml} {/_/sitemap}
 
 code /ie_onload.JS {
     if {[dict exists $r if-modified-since]} {
@@ -44,6 +45,7 @@ code /ie_onload.JS {
 }
 
 literal /robots.txt {User-agent: *
+Sitemap: http://wiki.tcl.tk/_sitemap.xml
 Disallow: /5.html
 Disallow: /_ref
 Disallow: /_history
