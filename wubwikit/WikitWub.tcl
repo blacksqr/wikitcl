@@ -300,11 +300,11 @@ namespace eval WikitWub {
 
     # return a search form
     proc searchF {} {
-	set result [<form> searchform action /_/search {
+	set result [<form> searchform method get action /_/search {
 	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
 	    [<hidden> _charset_ ""]
 	}]
-	append result \n [<form> gsearchform action /_/gsearch {
+	append result \n [<form> gsearchform method get action /_/gsearch {
 	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} "Search in pages"]
 	    [<hidden> _charset_ ""]
 	}] \n
