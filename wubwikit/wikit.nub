@@ -58,6 +58,9 @@ Disallow: /_tcl
 Disallow: /_login
 Disallow: /_summary
 Disallow: /_/
+User-agent: Twiceler
+Disallow: /
+Crawl-delay: 120
 } text/plain
 
 code /rss.xml {
