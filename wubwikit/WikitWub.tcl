@@ -1584,7 +1584,11 @@ namespace eval WikitWub {
 	regexp {^(.+)[,@]} $who - who_nick
 	set C [armour [GetPage $N]]
 	if {$C eq ""} {
-	    set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"
+	    if {[info exists ::starkit_edit_template]} {
+		set C $::starkit_edit_template
+	    } else {
+		set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"
+	    }
 	}
 
 	return [sendPage $r edit]
