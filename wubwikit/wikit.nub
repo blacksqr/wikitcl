@@ -62,6 +62,12 @@ Disallow: /_/
 User-agent: Slurp
 Disallow: /
 
+User-agent: YahooSeeker
+Disallow: /
+
+User-agent: Yahoo-MMCrawler
+Disallow: /
+
 User-agent: Twiceler
 Disallow: /
 } text/plain
