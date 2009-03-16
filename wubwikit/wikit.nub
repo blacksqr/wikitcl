@@ -48,15 +48,15 @@ code /ie_onload.JS {
 literal /robots.txt {User-agent: *
 Sitemap: http://wiki.tcl.tk/_sitemap.xml
 Disallow: /5.html
-Disallow: /_ref
-Disallow: /_history
-Disallow: /_revision
-Disallow: /_diff
-Disallow: /_search
-Disallow: /_edit
-Disallow: /_tcl
-Disallow: /_login
-Disallow: /_summary
+Disallow: /_ref/
+Disallow: /_history/
+Disallow: /_revision/
+Disallow: /_diff/
+Disallow: /_search/
+Disallow: /_edit/
+Disallow: /_tcl/
+Disallow: /_login/
+Disallow: /_summary/
 Disallow: /_/
 
 User-agent: Slurp
