@@ -546,6 +546,7 @@ namespace eval Wikit::Format {
       BLAME_END   {^(<<<<<<)$}
       CENTERED {^()()(!!!!!!)$}
       BACKREFS {^(<<backrefs>>)()(.*)$}
+      BACKREFS {^(<<backrefs:)()(.*)>>$}
       INLINETOC {^<<TOC>>$}
     } {
       # Compat: Remove restriction to multiples of 3 spaces.
@@ -645,7 +646,7 @@ namespace eval Wikit::Format {
 
     # Complex RE's used to process the string
     set pre  {\[([^\]]*)]}  ; #  page references ; # compat
-    set bpre  {\[(brefs:)([^\]]*)]}  ; #  page back-references ; # compat
+    set bpre  {\[(brefs:|backrefs:)([^\]]*)]}  ; #  page back-references ; # compat
     #set lre  {\m(https?|ftp|news|mailto|file):(\S+[^\]\)\s\.,!\?;:'>"])} ; # "
     #set lre  {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])} ; # "
     set prelre {\[\m(https?|ftp|news|mailto|file):([^\s:\]][^\]]*?)]} ; # "
@@ -1514,7 +1515,7 @@ namespace eval Wikit::Format {
           if {$date > 0} {
             # exists, use ID
             if { $mode eq "G" } {
-              append result $html_frag(A_) /_ref/$id
+              append result $html_frag(A_) /_/ref?N=$id
             } else {
               append result $html_frag(a_) /$id
             }
