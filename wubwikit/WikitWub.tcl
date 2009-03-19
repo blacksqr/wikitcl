@@ -98,7 +98,7 @@ namespace eval WikitWub {
     template page {$name} {
 	[div container {
 	    [div header {
-		[div logo [<a> href / class logo wiki.tcl.tk]]
+		[div logo [<a> href / class logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]]
 		[<div> id title class title [tclarmour $Title]]
 		[<div> id updated class updated $updated]
 	    }]
@@ -149,7 +149,7 @@ namespace eval WikitWub {
     template edit {Editing [armour $name]} {
 	[div edit {
 	    [div header {
-		[div logo wiki.tcl.tk]
+		[div logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]
 		[div title "Edit [tclarmour [Ref $N]]"]
 		[div updated "make your changes then press Save below"]
 	    }]
@@ -1959,7 +1959,7 @@ namespace eval WikitWub {
 			append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
 		    }
 		    set q [string trimright $term *]
-		    append q "%20site:http://wiki.tcl.tk"
+		    append q "%20site:" [expr {[info exists ::starkit_url]?"http://$::starkit_url":"http://wiki.tcl.tk"}]
 		    append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
 		} else {
 		    # send a search page
@@ -2322,7 +2322,7 @@ namespace eval WikitWub {
 	set ::roflag $roflag
 
 	# initialize RSS feeder
-	WikitRss new wdb "Tcler's Wiki" http://wiki.tcl.tk/
+	WikitRss new wdb "Tcler's Wiki" [expr {[info exists ::starkit_url]?"http://$::starkit_url/":"http://wiki.tcl.tk/"}]
 	
 	proc init {args} {}	;# we can't be called twice
     }
