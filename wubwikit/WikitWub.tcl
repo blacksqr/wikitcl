@@ -1429,6 +1429,7 @@ namespace eval WikitWub {
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
 	set C [::Wikit::TextToStream $O]
 	lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+	set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
 	return [sendPage $r preview_tc]
     }
 
@@ -2028,6 +2029,7 @@ namespace eval WikitWub {
 			    }
 			    dict lappend r -postload [<script> "getBackRefs($brefpage,'$containerid')"]
 			}
+			set C [string map [list <<TOC>> $T] $C]
 		    }
 		}
 	    }

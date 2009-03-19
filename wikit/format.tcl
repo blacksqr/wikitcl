@@ -151,7 +151,7 @@ namespace eval Wikit::Format {
       ## there is any.
       #
       switch -exact -- $tag {
-        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS {
+        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS - INLINETOC {
           if {$paragraph != {}} {
             if {$mode_fixed} {
               lappend irep FI {}
@@ -473,6 +473,9 @@ namespace eval Wikit::Format {
         CENTERED {
           lappend irep CT 0
         }
+        INLINETOC {
+          lappend irep INLINETOC 0
+        }
         BACKREFS {
           lappend irep BACKREFS $txt
         }
@@ -543,6 +546,7 @@ namespace eval Wikit::Format {
       BLAME_END   {^(<<<<<<)$}
       CENTERED {^()()(!!!!!!)$}
       BACKREFS {^(<<backrefs>>)()(.*)$}
+      INLINETOC {^<<TOC>>$}
     } {
       # Compat: Remove restriction to multiples of 3 spaces.
       if {[regexp $re $line - pfx aux txt]} {
@@ -1071,6 +1075,9 @@ namespace eval Wikit::Format {
         }
         CT {
           lappend $cresult "\n" body
+        }
+        INLINETOC {
+          lappend $cresult "\nInline table-of-contents not supported in Tk mode\n" body
         }
         BACKREFS {
           if { $brp eq "" } {
@@ -1637,6 +1644,9 @@ namespace eval Wikit::Format {
             set centered 1
           }
           set state T
+        }
+        INLINETOC {
+          append result "\n<<TOC>>\n"
         }
         BACKREFS {
           set mode T
