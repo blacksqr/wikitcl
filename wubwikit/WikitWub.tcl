@@ -507,6 +507,19 @@ namespace eval WikitWub {
 	return $activity
     }
 
+    proc WhoUrl { who {ip 1} } {
+	if {$who ne "" &&
+	    [regexp {^(.+)[,@](.*)} $who - who_nick who_ip]
+	    && $who_nick ne ""
+	} {
+	    set who "[<a> href /[::Wikit::LookupPage $who_nick wdb] $who_nick]"
+	    if {$ip} {
+		append who @[<a> rel nofollow target _blank href http://ip-lookup.net/index.php?ip=$who_ip $who_ip]
+	    }
+	}
+	return $who
+    }
+
     # Special page: Recent Changes.
     variable delta [subst \u0394]
     variable delta [subst \u25B2]
@@ -561,7 +574,7 @@ namespace eval WikitWub {
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
 
-	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta rel nofollow href /_/diff?N=$id#diff0 $delta]" $who [<div> class activity [<a> class activity rel nofollow href /_/summary?N=$id [string repeat $actimg [edit_activity $id]]]]]
+	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta rel nofollow href /_/diff?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href /_/summary?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
 	if { [llength $result] } {
@@ -616,7 +629,7 @@ namespace eval WikitWub {
 		set link [<a> href /$id $id]
 	    }
 	    append link [<span> class dots ". . ."]
-	    append link [<span> class nick $who]
+	    append link [<span> class nick [WhoUrl $who]]
 	    append link [<span> class dots ". . ."]
 	    append link [<span> class nick [clock format $date -gmt 1 -format %T]]
 	    append link [<span> class dots ". . ."]
@@ -771,7 +784,7 @@ namespace eval WikitWub {
 	    foreach sid [mk::select wdb.pages!$N.changes -rsort date] {
 		lassign [mk::get wdb.pages!$N.changes!$sid date who delta] cdate cwho cdelta
 		set changes [mk::view size wdb.pages!$N.changes!$sid.diffs]
-		append R [<li> "$pcwho, [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
+		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
 		lassign [::Wikit::StreamToHTML [::Wikit::TextToStream $C] / ::WikitWub::InfoProc] C U T BR
 		append R $C
@@ -1162,7 +1175,7 @@ namespace eval WikitWub {
 		}
 		append C [<td> class Rev [<a> href "/_/revision?N=$N&V=$vn" rel nofollow $vn]]
 		append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
-		append C [<td> class Who $who]
+		append C [<td> class Who [WhoUrl $who]]
 
 		if { $prev >= 0 } {
 		    append C [<td> class Line1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
@@ -2056,7 +2069,7 @@ namespace eval WikitWub {
 		[regexp {^(.+)[,@]} $who - who_nick]
 		&& $who_nick ne ""
 	    } {
-		append updated " by $who_nick"
+		append updated " by [<a> href /[::Wikit::LookupPage $who_nick wdb] $who_nick]"
 	    }
 	    if {[string length $updated]} {
 		variable delta
