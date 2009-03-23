@@ -1610,6 +1610,7 @@ namespace eval WikitWub {
 
     proc /motd {r} {
 	variable motd
+	variable docroot
 
 	puts "\n\n\n\n\nmotd: [file join $docroot motd]\n\n\n\n\n"
 
