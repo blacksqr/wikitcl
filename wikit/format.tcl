@@ -454,14 +454,16 @@ namespace eval Wikit::Format {
         }
         CTBL {
           lappend irep CTR 0
+          set txt [string map {%|% %!url_name_delimiter_pipe!%} $txt]
           foreach te [lrange [split [string range $txt 1 end-1] "|"] 1 end-1] {
-            lappend irep TD 0 ; render $te ; lappend irep TDE 0
+            lappend irep TD 0 ; render [string map {%!url_name_delimiter_pipe!% %|%} $te] ; lappend irep TDE 0
           }
         }
         TBL {
           lappend irep TR 0
+          set txt [string map {%|% %!url_name_delimiter_pipe!%} $txt]
           foreach te [lrange [split $txt "|"] 1 end-1] {
-            lappend irep TD 0 ; render $te ; lappend irep TDE 0
+            lappend irep TD 0 ; render [string map {%!url_name_delimiter_pipe!% %|%} $te] ; lappend irep TDE 0
           }
         }
         BLAME_START {
