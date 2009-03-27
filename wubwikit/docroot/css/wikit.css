@@ -323,6 +323,11 @@ div.editcontents {
   margin-right: 5px;
 }
 
+button.editbutton {
+    margin: 0;
+    padding: 0;
+}
+
 form#edit button {
    width: 5em;
    margin: 0 1em 0 1em;

@@ -1,3 +1,5 @@
+lappend auto_path /home/decoster/www/mk4tcl /home/decoster/www/tcllib-1.11.1/modules /home/decoster/www/wub ..
+
 package require Mk4tcl
 package require fileutil
 package require struct::queue
@@ -67,6 +69,10 @@ namespace eval WikitWub {
     proc template {name title template} {
 	variable templates; set templates($name) $template
 	variable titles; set titles($name) $title
+    }
+
+    proc toolbar_button {action img alt} {
+	return [format {<button class='editbutton' onClick='%1$s("editarea")' onmouseout='popUp(event,"tip_%1$s")' onmouseover='popUp(event,"tip_%1$s")'><img src='/%3$s' alt='%2$s'></button><span id='tip_%1$s' class='tip'>%2$s</span>} $action $alt $img]
     }
 
     # page - format up a page using templates
@@ -151,7 +157,24 @@ namespace eval WikitWub {
 	    [div header {
 		[div logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]
 		[div title "Edit [tclarmour [Ref $N]]"]
-		[div updated "make your changes then press Save below"]
+		[div updated "Make your changes, then press Save below"]
+		<div id='toolbar'>
+		[toolbar_button bold         text_bold.png           "Bold"]
+		[toolbar_button italic       text_italic.png         "Italic"]
+		[toolbar_button teletype     text_teletype.png       "TeleType"]
+		[toolbar_button heading1     text_heading_1.png      "Heading 1"]
+		[toolbar_button heading2     text_heading_2.png      "Heading 2"]
+		[toolbar_button heading3     text_heading_3.png      "Heading 3"]
+		[toolbar_button hruler       text_horizontalrule.png "Horizontal Rule"]
+		[toolbar_button list_bullets text_list_bullets.png   "List with Bullets"]
+		[toolbar_button list_numbers text_list_numbers.png   "Numbered list"]
+		[toolbar_button align_center text_align_center.png   "Center"]
+		[toolbar_button wiki_link    link.png                "Wiki link"]
+		[toolbar_button url_link     world_link.png          "World link"]
+		[toolbar_button img_link     photo_link.png          "Image link"]
+		[toolbar_button code         script_code.png         "Script"]
+		[toolbar_button table        table.png               "Table"]
+	        </div>
 	    }]
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
@@ -337,6 +360,7 @@ namespace eval WikitWub {
 	[<link> rel "alternate stylesheet" href "/wikit_screen_notoc.css" media "screen"   type "text/css" title "Without TOC"]
 	[<link> rel stylesheet             href "/wikit_print.css"        media "print"    type "text/css"]
 	[<link> rel stylesheet             href "/wikit_handheld.css"     media "handheld" type "text/css"]
+	[<link> rel stylesheet             href "/tooltips.css"                            type "text/css"]
 	
 	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
@@ -395,6 +419,8 @@ namespace eval WikitWub {
     append htmlsuffix [<script> src /search.js] \n
     append htmlsuffix [<script> src /backrefs.js] \n
     append htmlsuffix [<script> src /toc.js] \n
+    append htmlsuffix [<script> src /edit.js] \n
+    append htmlsuffix [<script> src /tooltips.js] \n
 
     # convertor from wiki to html
     proc .x-text/wiki.text/html {rsp} {
