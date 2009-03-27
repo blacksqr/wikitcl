@@ -1,19 +1,32 @@
+// the following code is based on the toolbar in MediaWiki
+
+var clientPC = navigator.userAgent.toLowerCase(); // Get client info
+var is_gecko = ((clientPC.indexOf('gecko')!=-1) && (clientPC.indexOf('spoofer')==-1)
+                && (clientPC.indexOf('khtml') == -1) && (clientPC.indexOf('netscape/7.0')==-1));
 
 function before_selection_after(txtareaid, before_markup, after_markup, defvalue){
     var txtarea = document.getElementById(txtareaid);
-    var sel_start = txtarea.selectionStart;
-    var sel_end = txtarea.selectionEnd;
-    var before = txtarea.value.substring(0, sel_start);
-    var within = txtarea.value.substring(sel_start, sel_end);
-    var scroll_pos = txtarea.scrollTop;
-    if (within.length == 0)
-	within = defvalue;
-    var after  = txtarea.value.substring(sel_end);
-    txtarea.value = before + before_markup + within + after_markup + after;
-    txtarea.selectionStart = sel_start + before_markup.length;
-    txtarea.selectionEnd = sel_start + before_markup.length + within.length;
-    txtarea.focus();
-    txtarea.scrollTop = scroll_pos;
+    if (!is_gecko) {
+	var within = document.selection.createRange().text;
+	if (within.length == 0)
+	    within = defvalue;
+	txtarea.focus();
+	document.selection.createRange().text = before_markup + within + after_markup;
+    } else {
+	var sel_start = txtarea.selectionStart;
+	var sel_end = txtarea.selectionEnd;
+	var before = txtarea.value.substring(0, sel_start);
+	var within = txtarea.value.substring(sel_start, sel_end);
+	var scroll_pos = txtarea.scrollTop;
+	if (within.length == 0)
+	    within = defvalue;
+	var after  = txtarea.value.substring(sel_end);
+	txtarea.value = before + before_markup + within + after_markup + after;
+	txtarea.selectionStart = sel_start + before_markup.length;
+	txtarea.selectionEnd = sel_start + before_markup.length + within.length;
+	txtarea.focus();
+	txtarea.scrollTop = scroll_pos;
+    }
 }
 
 function surround_selection(txtareaid, markup, defvalue){
