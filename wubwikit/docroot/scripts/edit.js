@@ -1,10 +1,8 @@
-// the following code is based on the toolbar in MediaWiki
-
-var clientPC = navigator.userAgent.toLowerCase(); // Get client info
-var is_gecko = ((clientPC.indexOf('gecko')!=-1) && (clientPC.indexOf('spoofer')==-1)
-                && (clientPC.indexOf('khtml') == -1) && (clientPC.indexOf('netscape/7.0')==-1));
-
 function before_selection_after(txtareaid, before_markup, after_markup, defvalue){
+
+    var useragent = navigator.userAgent.toLowerCase();
+    var is_gecko = useragent.indexOf('gecko')!=-1;
+
     var txtarea = document.getElementById(txtareaid);
     if (!is_gecko) {
 	var within = document.selection.createRange().text;
