@@ -402,7 +402,7 @@ namespace eval WikitWub {
 	    /* for other browsers */
 	    window.onload = init;
 	}]
-	<meta name="verify-v1" content="89v39Uh9xwxtWiYmK2JcYDszlGjUVT1Tq0QX+7H8AD0=" />
+	<meta name="verify-v1" content="89v39Uh9xwxtWiYmK2JcYDszlGjUVT1Tq0QX+7H8AD0=">
     }]
 
     # protected pages

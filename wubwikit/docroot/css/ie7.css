@@ -1,4 +1,7 @@
-* {zoom: 1.0;}
+/** {zoom: 1.0;}*/
+
+/* Line above causes bullets of <ul> list to disappear */
+
 div#menu_area ul {
   margin: 1em 5px 1em 3px;
 }
