@@ -30,8 +30,8 @@ rewrite {/[^/]+[.]css} {/_css/[file tail [dict get $r -path]]}
 rewrite {/css/[^/]+[.]css} {/_css/[file tail [dict get $r -path]]}
 rewrite {/[^/]+[.]gz} {/_bin/[file tail [dict get $r -path]]}
 rewrite {/[^/]+[.]js} {/_scripts/[file tail [dict get $r -path]]}
-rewrite {/doc/.*} {/_docs/[file join {*}[lrange [file split [dict get $r -path]] 1 end]]}
-rewrite {/nub/.*} {/_nub/[file join {*}[lrange [file split [dict get $r -path]] 1 end]]}
+rewrite {/doc/.*} {/_docs/[file join {*}[lrange [file split [dict get $r -path]] 2 end]]}
+rewrite {/nub/.*} {/_nub/[file join {*}[lrange [file split [dict get $r -path]] 2 end]]}
 rewrite {/_sitemap.xml} {/_/sitemap}
 rewrite {/_sitemap} {/_/sitemap}
 
