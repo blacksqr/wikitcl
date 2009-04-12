@@ -27,6 +27,7 @@ domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 rewrite {/} /_/welcome	;# need to silently redirect welcome page
 rewrite {/[^/]+[.](jpg|gif|png|ico)} {/_images/[file tail [dict get $r -path]]}
 rewrite {/[^/]+[.]css} {/_css/[file tail [dict get $r -path]]}
+rewrite {/css/[^/]+[.]css} {/_css/[file tail [dict get $r -path]]}
 rewrite {/[^/]+[.]gz} {/_bin/[file tail [dict get $r -path]]}
 rewrite {/[^/]+[.]js} {/_scripts/[file tail [dict get $r -path]]}
 rewrite {/doc/[.]*} {/_docs/[file join {*}[lrange [file split [dict get $r -path]] 1 end]]}
