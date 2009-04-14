@@ -1469,10 +1469,22 @@ namespace eval Wikit::Format {
     set brefs {}
     set in_header 0
     set tocheader ""
+    set uol {}
 
     variable html_frag
 
     foreach {mode text} $s {
+      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR TD TDE TRH TDH TDEH T Q I D H FI FE L F _}} {
+#        append result "Should unwind $uol here"
+        append result </li>
+        foreach uo [lreverse $uol] {
+          switch -glob -- $uo {
+            *U { append result </ul> }
+            *O { append result </ol> }
+          }
+        }
+        set uol {}
+      }
       switch -exact -- $mode {
         {}    {
 	  if { $in_header } {
@@ -1619,7 +1631,39 @@ namespace eval Wikit::Format {
           }
           set state $mode 
         }
-        TR - CTR - TD - TDE - TRH - TDH - TDEH - T - Q - I - D - 1U - 2U - 3U - 4U - 5U - 1O - 2O - 3O - 4O - 5O - H - FI - FE - L - F {
+        1U - 2U - 3U - 4U - 5U - 1O - 2O - 3O - 4O - 5O {
+          append result [subst $html_frag($state$mode)]
+          set n [string index $mode 0]
+          if {$n == [llength $uol]} {
+            append result </li>
+            set up [string index [lindex $uol end] 1]
+            set un [string index $mode 1]
+            if {$up ne $un} {
+              append result </$up l><$un l>
+            }
+            lset uol end $mode
+          } elseif {$n <  [llength $uol]} {
+            append result </li>\n
+            while {[llength $uol] >= $n } {
+              set uo [lindex $uol end]
+              switch -glob -- $uo {
+                *U { append result </ul>\n }
+                *O { append result </ol>\n }
+              }
+              set uol [lrange $uol 0 end-1]
+            }
+          }
+          while {[llength $uol] < $n} {
+            switch -glob -- $mode {
+              *U { append result <ul>\n }
+              *O { append result <ol>\n }
+            }
+            lappend uol $mode
+          }
+          append result <li>\n
+          set state $mode
+        }
+        TR - CTR - TD - TDE - TRH - TDH - TDEH - T - Q - I - D - H - FI - FE - L - F {
           if { $mode eq "CTR" } { 
             set mode TR
             set oddoreven [expr {$trow % 2 ? "odd" : "even"}]
@@ -1970,42 +2014,25 @@ namespace eval Wikit::Format {
     for { set l $s } { $l <= $e } { incr l } { 
       
       # From other type to U/O and back
-      set sh ""
-      set eh "</li>"
-      for { set i 1} { $i <= $l } { incr i }  {
-        append sh <[string tolower $t]l>
-        append eh </[string tolower $t]l>
-      }
-      append sh <li>
       foreach p $pl {
         if { [info exists html_frag($p$T)] } {
-          vs $p $l$t $html_frag($p$T)$sh
+          vs $p $l$t $html_frag($p$T)
         }
         if { [info exists html_frag($T$p)] } {
-          vs $l$t $p $eh$html_frag($T$p)
+          vs $l$t $p $html_frag($T$p)
         }
       }
 
       # Within same level U/O
-      vs $l$t $l$t </li><li>
+      vs $l$t $l$t ""
 
       # To other level U/O
       for { set i $s } { $i < $l } { incr i } { 
-        set sh ""
-        for { set j $i } { $j < $l } { incr j }  {
-          append sh "<[string tolower $t]l>"
-        }
-        append sh "<li>"
-        vs $i$t $l$t $sh
+        vs $i$t $l$t ""
       }
 
       for { set i [expr {$l+1}] } { $i <= $e } { incr i } { 
-        set sh "</li>"
-        for { set j $i } { $j > $l } { incr j -1 }  {
-          append sh "</[string tolower $t]l>"
-        }
-        append sh "</li><li>"
-        vs $i$t $l$t $sh
+        vs $i$t $l$t ""
       }
     }
   }
@@ -2019,29 +2046,13 @@ namespace eval Wikit::Format {
       vs $l$O $l$U </li></ol><ul><li>
 
       for { set i $s } { $i < $l } { incr i } { 
-        set ush ""
-        set osh ""
-        for { set j $i } { $j < $l } { incr j }  {
-          append ush "<ul>"
-          append osh "<ol>"
-        }
-        append ush "<li>"
-        append osh "<li>"
-        vs $i$O $l$U $ush
-        vs $i$U $l$O $osh
+        vs $i$O $l$U ""
+        vs $i$U $l$O ""
       }
 
       for { set i [expr {$l+1}] } { $i <= $e } { incr i } { 
-        set ush "</li></ul>"
-        set osh "</li></ol>"
-        for { set j [expr {$i-1}] } { $j > $l } { incr j -1 }  {
-          append ush "</ol>"
-          append osh "</ul>"
-        }
-        append ush "</li><li>"
-        append osh "</li><li>"
-        vs $i$O $l$U $osh
-        vs $i$U $l$O $ush
+        vs $i$O $l$U ""
+        vs $i$U $l$O ""
       }
       
     }
