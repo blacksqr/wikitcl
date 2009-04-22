@@ -26,6 +26,10 @@ pre.prediff {
    font-family: monospace;
 }
 
+div#helptext {
+   display: none;
+}
+
 div.header {
   background: #ccc;
   min-height: 53px;
@@ -40,6 +44,10 @@ div.logo {
   height: 40px;
   font-size: 120%;
   background: #ccc url(/_images/plume.png) top right no-repeat;
+}
+
+div.toolbar {
+    padding: 3px 0px 0px 0px;
 }
 
 div.logo a.logo {
@@ -322,15 +330,15 @@ div.editcontents {
   margin-left: 5px;
   margin-right: 5px;
 }
-
-button.editbutton {
-    margin: 0;
-    padding: 0;
-}
-
+/*
 form#edit button {
    width: 5em;
    margin: 0 1em 0 1em;
+}
+*/
+button.editbutton {
+    margin: 0;
+    padding: 0;
 }
 
 a.button {
@@ -432,6 +440,13 @@ A:active, A:hover {
 }
 div.previewarea {
   background: white;
+  padding: 0px 0px 0px 0px; 
+}
+div.previewarea_post {
+  padding: 0px 0px 0px 0px; 
+}
+div.previewarea_pre {
+  padding: 0px 0px 0px 0px; 
 }
 
 pre.wikit_options {

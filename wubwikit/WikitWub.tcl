@@ -1,3 +1,5 @@
+lappend auto_path /home/decoster/www/tcllib-1.11.1/modules /home/decoster/www/wub
+
 package require Mk4tcl
 package require fileutil
 package require struct::queue
@@ -69,8 +71,8 @@ namespace eval WikitWub {
 	variable titles; set titles($name) $title
     }
 
-    proc toolbar_button {action img alt} {
-	return [format {<button class='editbutton' onClick='%1$s("editarea")' onmouseout='popUp(event,"tip_%1$s")' onmouseover='popUp(event,"tip_%1$s")'><img src='/%3$s' alt='%2$s'></button><span id='tip_%1$s' class='tip'>%2$s</span>} $action $alt $img]
+    proc toolbar_edit_button {action img alt} {
+	return [format {<button type='button' class='editbutton' onClick='%1$s("editarea");' onmouseout='popUp(event,"tip_%1$s")' onmouseover='popUp(event,"tip_%1$s")'><img src='/%3$s' alt='%2$s'></button><span id='tip_%1$s' class='tip'>%2$s</span>} $action $alt $img]
     }
 
     # page - format up a page using templates
@@ -148,6 +150,9 @@ namespace eval WikitWub {
     template preview_tc {Preview of $N} {
 	[tclarmour $C]
     }
+
+#		<button type='button' class='editbutton' id='savebutton' onclick='' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png' alt='Save'></button><span id='tip_save' class='tip'>Save</span>
+#		<button type='button' class='editbutton' id='cancelbutton' onclick='editCancel();' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png' alt='Cancel'></button><span id='tip_cancel' class='tip'>Cancel</span>
     
     # page sent when editing a page
     template edit {Editing [armour $name]} {
@@ -156,36 +161,32 @@ namespace eval WikitWub {
 		[div logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]
 		[div title "Edit [tclarmour [Ref $N]]"]
 		[div updated "Make your changes, then press Save below"]
-		<div id='toolbar'>
-		[toolbar_button bold         text_bold.png           "Bold"]
-		[toolbar_button italic       text_italic.png         "Italic"]
-		[toolbar_button teletype     text_teletype.png       "TeleType"]
-		[toolbar_button heading1     text_heading_1.png      "Heading 1"]
-		[toolbar_button heading2     text_heading_2.png      "Heading 2"]
-		[toolbar_button heading3     text_heading_3.png      "Heading 3"]
-		[toolbar_button hruler       text_horizontalrule.png "Horizontal Rule"]
-		[toolbar_button list_bullets text_list_bullets.png   "List with Bullets"]
-		[toolbar_button list_numbers text_list_numbers.png   "Numbered list"]
-		[toolbar_button align_center text_align_center.png   "Center"]
-		[toolbar_button wiki_link    link.png                "Wiki link"]
-		[toolbar_button url_link     world_link.png          "World link"]
-		[toolbar_button img_link     photo_link.png          "Image link"]
-		[toolbar_button code         script_code.png         "Script"]
-		[toolbar_button table        table.png               "Table"]
-	        </div>
 	    }]
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action /_/edit/save {
-		     [<textarea> C id editarea rows 30 cols 72 compact 0 style width:100% [tclarmour $C]]
-		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
-		     [<hidden> _charset_ {}]
-		     [<hidden> N $N]
-                     <input name='save' type='submit' value='Save your changes'>
-		     <input name='cancel' type='submit' value='Cancel'>
-		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
-		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
-		 }]
+		<div class='toolbar'>
+		<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png' alt='Save'></button><span id='tip_save' class='tip'>Save</span>
+		<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png' alt='Preview'></button><span id='tip_preview' class='tip'>Preview</span>
+		<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png' alt='Cancel'></button><span id='tip_cancel' class='tip'>Cancel</span>
+   	        &nbsp; &nbsp; &nbsp;
+		[toolbar_edit_button bold            text_bold.png           "Bold"]
+		[toolbar_edit_button italic          text_italic.png         "Italic"]
+		[toolbar_edit_button teletype        text_teletype.png       "TeleType"]
+		[toolbar_edit_button heading1        text_heading_1.png      "Heading 1"]
+		[toolbar_edit_button heading2        text_heading_2.png      "Heading 2"]
+		[toolbar_edit_button heading3        text_heading_3.png      "Heading 3"]
+		[toolbar_edit_button hruler          text_horizontalrule.png "Horizontal Rule"]
+		[toolbar_edit_button list_bullets    text_list_bullets.png   "List with Bullets"]
+		[toolbar_edit_button list_numbers    text_list_numbers.png   "Numbered list"]
+		[toolbar_edit_button align_center    text_align_center.png   "Center"]
+		[toolbar_edit_button wiki_link       link.png                "Wiki link"]
+		[toolbar_edit_button url_link        world_link.png          "World link"]
+		[toolbar_edit_button img_link        photo_link.png          "Image link"]
+		[toolbar_edit_button code            script_code.png         "Script"]
+		[toolbar_edit_button table           table.png               "Table"]
+		&nbsp; &nbsp; &nbsp;
+		<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png' alt='Help'></button><span id='tip_help' class='tip'>Help</span>
 		[<div> id helptext [subst {
                     [<hr>]
 		    [<br>]
@@ -206,8 +207,19 @@ namespace eval WikitWub {
 		    <li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, back references to any page can be included with a line containing <b><tt>&lt;&lt;backrefs:Wiki formatting rules&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[backrefs:Wiki formatting rules\]</tt></b></li>
 		    </ul>
 		}]]
-		[<div> id previewarea_pre ""]
+		[<div> class previewarea_pre id previewarea_pre ""]
 		[<div> class previewarea id previewarea ""]
+		[<div> class previewarea_post id previewarea_post ""]
+	        </div>
+		     [<textarea> C id editarea rows 30 cols 72 compact 0 style width:100% [tclarmour $C]]
+		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
+		     [<hidden> _charset_ {}]
+		     [<hidden> N $N]
+                     <input name='save' type='submit' value='Save your changes'>
+		     <input name='cancel' type='submit' value='Cancel'>
+		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
+		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
+		 }]
 		[<hr>]
 		[If {$date != 0} {
 		    [<i> "Last saved on [<b> [clock format $date -gmt 1 -format {%Y-%m-%d %T}]]"]
@@ -1458,6 +1470,7 @@ namespace eval WikitWub {
     }
 
     proc /edit/save {r N C O save cancel preview } {
+
 	Debug.wikit {/edit/save $N}
 	if { [string tolower $cancel] eq "cancel" } {
 	    set url http://[Url host $r]/$N

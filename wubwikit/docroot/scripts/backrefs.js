@@ -134,6 +134,7 @@ var Url = {
 function previewPage(page)
 {
     document.getElementById("previewarea_pre").innerHTML = "<hr><b>Preview:</b> <button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
+    document.getElementById("previewarea_post").innerHTML = "<b>Preview:</b> <button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
     var txt = document.getElementById("editarea").value;
     ajaxpage("/_/preview", "N=" + page + "&O="+Url.encode(txt), "previewarea");
     return false;
@@ -143,5 +144,6 @@ function clearPreview()
 {
     document.getElementById("previewarea_pre").innerHTML = "";
     document.getElementById("previewarea").innerHTML = "";
+    document.getElementById("previewarea_post").innerHTML = "";
     return false;
 }

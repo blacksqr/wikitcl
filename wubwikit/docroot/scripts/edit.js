@@ -35,25 +35,25 @@ function insert_at_selection(txtareaid, markup){
     before_selection_after(txtareaid, markup, "", "");
 }
 
-function bold(txtareaid)     { surround_selection(txtareaid, "'''",  "bold text"); }
-function italic(txtareaid)   { surround_selection(txtareaid, "''",   "italic text"); }
-function teletype(txtareaid) { surround_selection(txtareaid, "`",    "teletype text"); }
+function bold(txtareaid)     { surround_selection(txtareaid, "'''",  "bold text"); return false; }
+function italic(txtareaid)   { surround_selection(txtareaid, "''",   "italic text"); return false; }
+function teletype(txtareaid) { surround_selection(txtareaid, "`",    "teletype text"); return false; }
 
-function heading1(txtareaid) { before_selection_after(txtareaid, "\n**",   "**\n",   "your heading1"); }
-function heading2(txtareaid) { before_selection_after(txtareaid, "\n***" , "***\n",  "your heading2"); }
-function heading3(txtareaid) { before_selection_after(txtareaid, "\n****", "****\n", "your heading3"); }
+function heading1(txtareaid) { before_selection_after(txtareaid, "\n**",   "**\n",   "your heading1"); return false; }
+function heading2(txtareaid) { before_selection_after(txtareaid, "\n***" , "***\n",  "your heading2"); return false; }
+function heading3(txtareaid) { before_selection_after(txtareaid, "\n****", "****\n", "your heading3"); return false; }
 
-function hruler(txtareaid)   { insert_at_selection(txtareaid, "\n----\n"); }
+function hruler(txtareaid)   { insert_at_selection(txtareaid, "\n----\n"); return false; }
 
-function list_bullets(txtareaid) { before_selection_after(txtareaid, "\n   * ",  "\n", "your bullet item");   }
-function list_numbers(txtareaid) { before_selection_after(txtareaid, "\n   1. ", "\n", "your numbered item"); }
+function list_bullets(txtareaid) { before_selection_after(txtareaid, "\n   * ",  "\n", "your bullet item"); return false; }
+function list_numbers(txtareaid) { before_selection_after(txtareaid, "\n   1. ", "\n", "your numbered item"); return false; }
 
-function align_center(txtareaid) { surround_selection(txtareaid, "\n!!!!!!\n", "your centered text"); }
+function align_center(txtareaid) { surround_selection(txtareaid, "\n!!!!!!\n", "your centered text"); return false; }
 
-function wiki_link(txtareaid) { before_selection_after(txtareaid, "[", "]", "your wiki page name"); }
-function url_link(txtareaid)  { insert_at_selection(txtareaid, "http://here.com/what.html%|%link name%|%"); }
-function img_link(txtareaid)  { insert_at_selection(txtareaid, "http://here.com/photo.gif|png|jpg"); }
+function wiki_link(txtareaid) { before_selection_after(txtareaid, "[", "]", "your wiki page name"); return false; return false; }
+function url_link(txtareaid)  { insert_at_selection(txtareaid, "http://here.com/what.html%|%link name%|%"); return false; }
+function img_link(txtareaid)  { insert_at_selection(txtareaid, "http://here.com/photo.gif|png|jpg"); return false; }
 
-function code(txtareaid)  { surround_selection(txtareaid, "\n======\n", "your script"); }
+function code(txtareaid)  { surround_selection(txtareaid, "\n======\n", "your script"); return false; }
 
-function table(txtareaid)  { insert_at_selection(txtareaid, "\n%|header|row|%\n&|data|row|&\n&|data|row|&\n&|data|row|&\n"); }
+function table(txtareaid)  { insert_at_selection(txtareaid, "\n%|header|row|%\n&|data|row|&\n&|data|row|&\n&|data|row|&\n"); return false; }
