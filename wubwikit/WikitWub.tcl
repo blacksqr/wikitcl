@@ -72,7 +72,7 @@ namespace eval WikitWub {
     }
 
     proc toolbar_edit_button {action img alt} {
-	return [format {<button type='button' class='editbutton' onClick='%1$s("editarea");' onmouseout='popUp(event,"tip_%1$s")' onmouseover='popUp(event,"tip_%1$s")'><img src='/%3$s' alt='%2$s'></button><span id='tip_%1$s' class='tip'>%2$s</span>} $action $alt $img]
+	return [format {<button type='button' class='editbutton' onClick='%1$s("editarea");' onmouseout='popUp(event,"tip_%1$s")' onmouseover='popUp(event,"tip_%1$s")'><img src='/%3$s'></button><span id='tip_%1$s' class='tip'>%2$s</span>} $action $alt $img]
     }
 
     # page - format up a page using templates
@@ -166,9 +166,9 @@ namespace eval WikitWub {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action /_/edit/save {
 		<div class='toolbar'>
-		<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png' alt='Save'></button><span id='tip_save' class='tip'>Save</span>
-		<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png' alt='Preview'></button><span id='tip_preview' class='tip'>Preview</span>
-		<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png' alt='Cancel'></button><span id='tip_cancel' class='tip'>Cancel</span>
+		<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
+		<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
+		<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
    	        &nbsp; &nbsp; &nbsp;
 		[toolbar_edit_button bold            text_bold.png           "Bold"]
 		[toolbar_edit_button italic          text_italic.png         "Italic"]
@@ -186,7 +186,7 @@ namespace eval WikitWub {
 		[toolbar_edit_button code            script_code.png         "Script"]
 		[toolbar_edit_button table           table.png               "Table"]
 		&nbsp; &nbsp; &nbsp;
-		<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png' alt='Help'></button><span id='tip_help' class='tip'>Help</span>
+		<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
 		[<div> id helptext [subst {
                     [<hr>]
 		    [<br>]
