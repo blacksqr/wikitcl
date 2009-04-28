@@ -52,7 +52,7 @@ function align_center(txtareaid) { surround_selection(txtareaid, "\n!!!!!!\n", "
 
 function wiki_link(txtareaid) { before_selection_after(txtareaid, "[", "]", "your wiki page name"); return false; return false; }
 function url_link(txtareaid)  { insert_at_selection(txtareaid, "http://here.com/what.html%|%link name%|%"); return false; }
-function img_link(txtareaid)  { insert_at_selection(txtareaid, "http://here.com/photo.gif|png|jpg"); return false; }
+function img_link(txtareaid)  { insert_at_selection(txtareaid, "[http://here.com/photo.gif|png|jpg]"); return false; }
 
 function code(txtareaid)  { surround_selection(txtareaid, "\n======\n", "your script"); return false; }
 
