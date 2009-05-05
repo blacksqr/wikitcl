@@ -350,7 +350,7 @@ namespace eval WikitWub {
 	    [<hidden> _charset_ ""]
 	}]
 	append result \n [<form> gsearchform action /_/gsearch {
-	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} $Q]
+	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} [tclarmour $Q]]
 	    [<hidden> _charset_ ""]
 	}] \n
 	return $result
