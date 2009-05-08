@@ -848,7 +848,8 @@ namespace eval WikitWub {
 	set C $R
 	set Title [Ref $N]
 	set name "Edit summary for $name"
-	return [sendPage [Http CacheableContent $r [clock seconds]] page DCache]
+	return [sendPage $r page]
+	#return [sendPage [Http CacheableContent $r [clock seconds]] page DCache]
     }
 
     proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
