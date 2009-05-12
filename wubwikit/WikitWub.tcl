@@ -1361,9 +1361,10 @@ namespace eval WikitWub {
     }
 
     proc invalidate {r url} {
+	set url [Url url -host [dict get $r host] -port [dict get $r -port] -path /$url]
 	Debug.wikit {invalidating $url} 3
-	#return [Cache delete http://[dict get $r host]/$url]
-	return [Cache delete /$url]
+	return [Cache delete $url]
+	#return [Cache delete /$url]
     }
 
     proc locate {page {exact 1}} {
