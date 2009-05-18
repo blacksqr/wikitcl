@@ -1597,7 +1597,7 @@ namespace eval Wikit::Format {
             a {
               append result "\n<div class='annotated'>\n"
               append result "  <span class='versioninfo'>\n"
-              append result "    <span class='versionnum'><a href='[quote /_revision/$page?V=$version&A=1]'>$version</a></span>\n"
+              append result "    <span class='versionnum'><a href='[quote /_/revision?N=$page&V=$version&A=1]'>$version</a></span>\n"
               append result "    <span class='versionwho'>$who</span><br>\n"
               append result "    <span class='versiondate'>$when</span>\n"
               append result "  </span>\n"
