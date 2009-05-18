@@ -166,28 +166,7 @@ namespace eval WikitWub {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action /_/edit/save {
 		<div class='toolbar'>
-		<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
-		<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
-		<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
-   	        &nbsp; &nbsp; &nbsp;
-		[toolbar_edit_button bold            text_bold.png           "Bold"]
-		[toolbar_edit_button italic          text_italic.png         "Italic"]
-		[toolbar_edit_button teletype        text_teletype.png       "TeleType"]
-		[toolbar_edit_button heading1        text_heading_1.png      "Heading 1"]
-		[toolbar_edit_button heading2        text_heading_2.png      "Heading 2"]
-		[toolbar_edit_button heading3        text_heading_3.png      "Heading 3"]
-		[toolbar_edit_button hruler          text_horizontalrule.png "Horizontal Rule"]
-		[toolbar_edit_button list_bullets    text_list_bullets.png   "List with Bullets"]
-		[toolbar_edit_button list_numbers    text_list_numbers.png   "Numbered list"]
-		[toolbar_edit_button align_center    text_align_center.png   "Center"]
-		[toolbar_edit_button wiki_link       link.png                "Wiki link"]
-		[toolbar_edit_button url_link        world_link.png          "World link"]
-		[toolbar_edit_button img_link        photo_link.png          "Image link"]
-		[toolbar_edit_button code            script_code.png         "Script"]
-		[toolbar_edit_button table           table.png               "Table"]
-		&nbsp; &nbsp; &nbsp;
-		<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
-		[<div> id helptext [subst {
+		  [<div> id helptext [subst {
                     [<hr>]
 		    [<br>]
 		    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
@@ -206,10 +185,31 @@ namespace eval WikitWub {
 		    <li>[<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b></li>
 		    <li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, back references to any page can be included with a line containing <b><tt>&lt;&lt;backrefs:Wiki formatting rules&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[backrefs:Wiki formatting rules\]</tt></b></li>
 		    </ul>
-		}]]
-		[<div> class previewarea_pre id previewarea_pre ""]
-		[<div> class previewarea id previewarea ""]
-		[<div> class previewarea_post id previewarea_post ""]
+		  }]]
+		  [<div> class previewarea_pre id previewarea_pre ""]
+		  [<div> class previewarea id previewarea ""]
+		  [<div> class previewarea_post id previewarea_post ""]
+  		  <button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
+		  <button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
+		  <button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
+   	          &nbsp; &nbsp; &nbsp;
+		  [toolbar_edit_button bold            text_bold.png           "Bold"]
+		  [toolbar_edit_button italic          text_italic.png         "Italic"]
+	  	  [toolbar_edit_button teletype        text_teletype.png       "TeleType"]
+		  [toolbar_edit_button heading1        text_heading_1.png      "Heading 1"]
+	  	  [toolbar_edit_button heading2        text_heading_2.png      "Heading 2"]
+		  [toolbar_edit_button heading3        text_heading_3.png      "Heading 3"]
+		  [toolbar_edit_button hruler          text_horizontalrule.png "Horizontal Rule"]
+		  [toolbar_edit_button list_bullets    text_list_bullets.png   "List with Bullets"]
+		  [toolbar_edit_button list_numbers    text_list_numbers.png   "Numbered list"]
+		  [toolbar_edit_button align_center    text_align_center.png   "Center"]
+		  [toolbar_edit_button wiki_link       link.png                "Wiki link"]
+		  [toolbar_edit_button url_link        world_link.png          "World link"]
+		  [toolbar_edit_button img_link        photo_link.png          "Image link"]
+		  [toolbar_edit_button code            script_code.png         "Script"]
+		  [toolbar_edit_button table           table.png               "Table"]
+		  &nbsp; &nbsp; &nbsp;
+		  <button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
 	        </div>
 		     [<textarea> C id editarea rows 30 cols 72 compact 0 style width:100% [tclarmour $C]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
