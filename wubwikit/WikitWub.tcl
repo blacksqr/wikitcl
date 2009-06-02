@@ -1361,7 +1361,8 @@ namespace eval WikitWub {
     }
 
     proc invalidate {r url} {
-	set url [Url url -host [dict get $r host] -port [dict get $r -port] -path /$url]
+	#set url [Url url -host [dict get $r host] -port [dict get $r -port] -path /$url]
+	set url [Url url $r]
 	Debug.wikit {invalidating $url} 3
 	return [Cache delete $url]
 	#return [Cache delete /$url]
