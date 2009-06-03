@@ -626,7 +626,7 @@ namespace eval WikitWub {
 	if {$count > 100 && $date < $threshold} {
 	    lappend results [<p> "Older entries omitted..."]
 	}
-
+	lappend results [<p> "generated [clock format [clock seconds]]"]
 	set R [join $results \n]
 
 	return $R
