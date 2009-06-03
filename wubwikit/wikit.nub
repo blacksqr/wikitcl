@@ -16,9 +16,9 @@ literal /_illuminati {<h3>Certificate of Non-Existence</h3><p>There is no Tcl Il
 
 # Useful static content directories
 domain /_icons/ Icons
-domain /_css/ {File css} root [file join $::Site::docroot css] expires tomorrow
+domain /_css/ {File css} root [file join $::Site::docroot css] expires "next week"
 domain /_images/ {File images} root [file join $::Site::docroot images] expires "next week"
-domain /_scripts/ {File scripts} root [file join $::Site::docroot scripts] expires tomorrow
+domain /_scripts/ {File scripts} root [file join $::Site::docroot scripts] expires "next week"
 domain /_html/ {File html} root [file join $::Site::docroot html]
 domain /_bin/ {File bin} root [file join $::Site::docroot bin]
 
