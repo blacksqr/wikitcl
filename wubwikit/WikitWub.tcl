@@ -165,7 +165,6 @@ namespace eval WikitWub {
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action /_/edit/save {
-		<div class='toolbar'>
 		  [<div> id helptext [subst {
                     [<hr>]
 		    [<br>]
@@ -189,6 +188,7 @@ namespace eval WikitWub {
 		  [<div> class previewarea_pre id previewarea_pre ""]
 		  [<div> class previewarea id previewarea ""]
 		  [<div> class previewarea_post id previewarea_post ""]
+  		  <div class='toolbar'>
   		  <button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
 		  <button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
 		  <button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
