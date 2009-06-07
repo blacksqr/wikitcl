@@ -587,10 +587,6 @@ namespace eval WikitWub {
 	    if {$day != $lastDay} {
 
 		if { [llength $result] } {
-		    if {!$activityHeaderAdded} {
-			set result [linsert $result 0 [list "" "" "Activity"]] 
-			set activityHeaderAdded 1
-		    }
 		    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
 		    set result {}
 
@@ -604,7 +600,15 @@ namespace eval WikitWub {
 		if {$count > 100 && $date < $threshold} {
 		    break
 		}
-		lappend results [<p> "[<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]] [<span> class day [clock format $date -gmt 1 -format %A]]"]
+		lappend results [<p> ""]
+		set datel [list "[<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]] [<span> class day [clock format $date -gmt 1 -format %A]]" ""]
+		if {!$activityHeaderAdded} {
+		    lappend datel "Activity"
+		    set activityHeaderAdded 1
+		} else {
+		    lappend datel ""
+		}
+		lappend result $datel
 		set lastDay $day
 	    }
 
@@ -614,9 +618,6 @@ namespace eval WikitWub {
 	}
 
 	if { [llength $result] } {
-	    if {!$activityHeaderAdded} {
-		set result [linsert $result 0 [list "" "" "Activity"]] 
-	    }
 	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
 	    if { !$deletesAdded } {
 		lappend results [<p> [<a> href /_/cleared "Cleared pages (title and/or page)"]]
@@ -1828,7 +1829,7 @@ namespace eval WikitWub {
 	::Wikit::pagevars $id date name
 
 	if {$date == 0} {
-	    set id _edit/$id ;# enter edit mode for missing links
+	    set id _/edit?N=$id ;# enter edit mode for missing links
 	} else {
 	    set id /$id	;# add a leading / which format.tcl will strip
 	}
