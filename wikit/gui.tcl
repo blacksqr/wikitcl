@@ -619,7 +619,9 @@ if {[catch {package require gbutton}]} {
             variable D
             variable toc
             eval $D yview $args
-            eval $toc yview $args
+	    if {$toc ne ""} {
+		eval $toc yview $args
+	    }
         }
         
         proc max args {lindex [lsort -real $args] end}
