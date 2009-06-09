@@ -2364,7 +2364,9 @@ namespace eval WikitWub {
 	set ::roflag $roflag
 
 	# initialize RSS feeder
-	WikitRss new wdb "Tcler's Wiki" [expr {[info exists ::starkit_url]?"http://$::starkit_url/":"http://wiki.tcl.tk/"}]
+	WikitRss new wdb \
+	    [expr {[info exists ::starkit_wikittitle]?$::starkit_wikittitle:"Tcler's Wiki"}] \
+	    [expr {[info exists ::starkit_url]?"http://$::starkit_url/":"http://wiki.tcl.tk/"}]
 	
 	proc init {args} {}	;# we can't be called twice
     }
