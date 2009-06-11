@@ -3,6 +3,7 @@ lappend auto_path /home/decoster/www/tcllib-1.11.1/modules /home/decoster/www/wu
 package require Mk4tcl
 package require fileutil
 package require struct::queue
+package require struct::tree
 
 #### initialize Wikit
 package require Site	;# assume Wub/ is already on the path, or in /usr/lib
@@ -154,6 +155,27 @@ namespace eval WikitWub {
 #		<button type='button' class='editbutton' id='savebutton' onclick='' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png' alt='Save'></button><span id='tip_save' class='tip'>Save</span>
 #		<button type='button' class='editbutton' id='cancelbutton' onclick='editCancel();' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png' alt='Cancel'></button><span id='tip_cancel' class='tip'>Cancel</span>
     
+    # page sent to add comment
+    template comment {Comment on [armour $name]} {
+	[div edit {
+	    [div header {
+		[div logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]
+		[div title "Comment on [tclarmour [Ref $N]]"]
+		[div updated "Enter you comment, then press Save below"]
+	    }]
+	    [div editcontents {
+		[<form> edit method post action /_/post_comment {
+		    [<textarea> C id editarea rows 20 cols 72 compact 0 style width:100% {}]
+		    [<hidden> N $N]
+		    [<hidden> P $P]
+		    [<hidden> _charset_ {}]
+		    <input name='save' type='submit' value='Save your comment'>
+		    <input name='cancel' type='submit' value='Cancel'>
+		}]
+	    }]
+	}]
+    }
+
     # page sent when editing a page
     template edit {Editing [armour $name]} {
 	[div edit {
@@ -569,8 +591,8 @@ namespace eval WikitWub {
 	set deletesAdded 0
 	set activityHeaderAdded 0
 
-	foreach id [mk::select wdb.pages -rsort date] {
-	    lassign [mk::get wdb.pages!$id date name who page] date name who page
+	foreach id [mk::select wdb.pages -rsort mod_date] {
+	    lassign [mk::get wdb.pages!$id date mod_date name who page] date mod_date name who page
 
 	    # these are fake pages, don't list them
 	    if {$id == 2 || $id == 4} continue
@@ -580,7 +602,7 @@ namespace eval WikitWub {
 		|| [string length $page] <= 1} continue
 
 	    # only report last change to a page on each day
-	    set day [expr {$date/86400}]
+	    set day [expr {$mod_date/86400}]
 
 	    #insert a header for each new date
 	    incr count
@@ -597,11 +619,11 @@ namespace eval WikitWub {
 		}
 
 		# only cut off on day changes and if over 7 days reported
-		if {$count > 100 && $date < $threshold} {
+		if {$count > 100 && $mod_date < $threshold} {
 		    break
 		}
 		lappend results [<p> ""]
-		set datel [list "[<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]] [<span> class day [clock format $date -gmt 1 -format %A]]" ""]
+		set datel [list "[<b> [clock format $mod_date -gmt 1 -format {%Y-%m-%d}]] [<span> class day [clock format $mod_date -gmt 1 -format %A]]" ""]
 		if {!$activityHeaderAdded} {
 		    lappend datel "Activity"
 		    set activityHeaderAdded 1
@@ -614,7 +636,19 @@ namespace eval WikitWub {
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
 
-	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta rel nofollow href /_/diff?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href /_/summary?N=$id [string repeat $actimg [edit_activity $id]]]]]
+	    set disc ""
+	    foreach comment_id [mk::select wdb.pages!$id.discussion -rsort date] {
+		lassign [mk::get wdb.pages!$id.discussion!$comment_id date who] comment_date comment_who
+		if {$mod_date==$comment_date} {
+		    set who $comment_who
+		}
+		if {$comment_date > ($mod_date-86400)} {
+		    set disc "&nbsp;([<a> href /_/discussion?N=$id discussion])"
+		}
+		break
+	    }
+
+	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta rel nofollow href /_/diff?N=$id#diff0 $delta]$disc" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href /_/summary?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
 	if { [llength $result] } {
@@ -624,7 +658,7 @@ namespace eval WikitWub {
 	    }
 	}
 
-	if {$count > 100 && $date < $threshold} {
+	if {$count > 100 && $mod_date < $threshold} {
 	    lappend results [<p> "Older entries omitted..."]
 	}
 	lappend results [<p> "generated [clock format [clock seconds]]"]
@@ -1649,6 +1683,161 @@ namespace eval WikitWub {
 	return [sendPage $r edit]
     }
 
+    proc /discussion { r N } {
+
+	# Check N
+	if {![string is integer -strict $N]} {
+	    return [Http NotFound $r]
+	}
+	if {$N >= [mk::view size wdb.pages]} {
+	    return [Http NotFound $r]
+	}
+
+	# Create tree
+	struct::tree dtree
+	foreach i [mk::select wdb.pages!$N.discussion] {
+	    set d($i) [dict create {*}[mk::get wdb.pages!$N.discussion!$i]]
+	    dtree insert [dict get $d($i) comment_to] end $i
+	}
+	dtree walk root -order both {a c} {
+	    if {$a eq "enter"} {
+		if {$c eq "root"} {
+		    append C ""
+		} else {
+		    append C "<li class='comment'><div class='comment'>\n"
+
+		    set who [dict get $d($c) who]
+		    if {$who ne "" && [regexp {^(.+)[,@]} $who - who_nick] && $who_nick ne ""} {
+			set who [<a> href /[::Wikit::LookupPage $who_nick wdb] $who_nick]
+		    }
+
+		    append C "<div class='comment_header'>Comment by $who, made on [clock format [dict get $d($c) date]] <a href='/_/comment?N=$N&P=$c'>Respond</a></div>\n"
+		    set comment [::Wikit::TextToStream [dict get $d($c) comment]]
+		    lassign [::Wikit::StreamToHTML $comment / ::WikitWub::InfoProc] comment U T BR
+		    append C "<div class='comment_body'>$comment<p></p></div></div>\n"
+		}
+		if {[llength [dtree children $c]]} {
+		    append C "<ul class='comment'>\n"
+		} else {
+		    append C "</li>\n"
+		}
+	    } elseif {$a eq "leave"} {
+		if {[llength [dtree children $c]]} {
+		    append C "</ul>\n</li>\n"
+		}
+	    }
+	}
+	dtree destroy
+	append C "<a href='/_/comment?N=$N&P=root'>Start new thread</a>"
+
+	# Return contents
+	set menu [menus Home Recent Help]
+	set footer [menus Home Recent Help Search]
+
+	set name "Discussion on $N"
+	set Title "Discussion on [Ref $N]"
+	set updated ""
+	set T ""
+	variable TOC
+	return [sendPage $r]
+    }
+
+    proc /comment {r N P} {
+
+	# Check N
+	if {![string is integer -strict $N]} {
+	    return [Http NotFound $r]
+	}
+	if {$N >= [mk::view size wdb.pages]} {
+	    return [Http NotFound $r]
+	}
+
+	# Check P
+	if {$P ne "root" && ![string is integer -strict $P]} {
+	    return [Http NotFound $r]
+	}
+	if {$P ne "root" && $P >= [mk::view size wdb.pages!$N.discussion]} {
+	    return [Http NotFound $r]
+	}
+
+	# is the caller logged in?
+	set nick [who $r]
+	
+	if {$nick eq ""} {
+	    set R "" ;# Return here
+	    return [sendPage $r login]
+	}
+
+	::Wikit::pagevars $N name
+	return [sendPage $r comment]
+    }
+
+    proc /post_comment {r N P C save cancel} {
+
+	# User clicked cancel
+	if { [string tolower $cancel] eq "cancel" } {
+	    set url http://[Url host $r]/_/discussion?N=$N
+	    return [redir $r $url [<a> href $url "Canceled page comment"]]
+	}
+
+	# Check N
+	if {![string is integer -strict $N]} {
+	    return [Http NotFound $r]
+	}
+	if {$N >= [mk::view size wdb.pages]} {
+	    return [Http NotFound $r]
+	}
+
+	# Check P
+	if {$P ne "root" && ![string is integer -strict $P]} {
+	    return [Http NotFound $r]
+	}
+	if {$P ne "root" && $P >= [mk::view size wdb.pages!$N.discussion]} {
+	    return [Http NotFound $r]
+	}
+
+	# Check user
+	set nick [who $r]
+	if {$nick eq ""} {
+	    set R "" ;# Return here
+	    return [sendPage $r login]
+	}
+	
+	## newline-normalize content
+	set C [string map {\r\n \n \r \n} $C]
+	## check utf8
+	set point [Dict get? [Query metadata [dict get $r -Query] C] -bad]
+	if {$point ne "" && $point < [string length $C] - 1} {
+	    if {$point >= 0} {
+		incr point
+		binary scan [string index $C $point] H* bogus
+		set C [string replace $C $point $point "<BOGUS 0x$bogus>"]
+		set E [string range $C [expr {$point-50}] [expr {$point-1}]]
+	    } else {
+		set E ""
+	    }
+	    Debug.wikit {badutf $N}
+	    return [sendPage $r badutf]
+	}
+
+	# Save comment and mark pages as updated by settings it's comment_date
+	set who $nick@[dict get $r -ipaddr]
+	set when [expr {[dict get $r -received] / 1000000}]
+	mk::row append wdb.pages!$N.discussion comment_to $P who $who date $when comment $C
+	mk::set wdb.pages!$N mod_date $when
+	mk::file commit wdb
+
+	# Clear cache
+	invalidate $r _discussion/$N
+	invalidate $r _/discussion?N=$N
+	invalidate $r 4
+
+	# Redirect
+	set url http://[Url host $r]/_/discussion?N=$N
+	return [redir $r $url [<a> href $url "Page comment saved"]]
+	
+    }
+
     proc /motd {r} {
 	variable motd
 	variable docroot
@@ -2129,7 +2318,9 @@ namespace eval WikitWub {
 	    lappend menu {*}[menus HR]
 	    if {!$::roflag} {
 		lappend menu [Ref /_/edit?N=$N Edit]
+		lappend menu [Ref /_/discussion?N=$N Discussion]
 		lappend footer [Ref /_/edit?N=$N Edit]
+		lappend footer [Ref /_/discussion?N=$N Discussion]
 	    }
 	    lappend menu [Ref /_/history?N=$N "History"]
 	    lappend menu [Ref /_/summary?N=$N "Edit summary"]

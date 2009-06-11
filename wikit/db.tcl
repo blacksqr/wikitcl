@@ -146,6 +146,7 @@ namespace eval Wikit {
           name
           page
           date:I
+          mod_date:I
           who
           {changes {
             date:I
@@ -154,6 +155,12 @@ namespace eval Wikit {
             {diffs {
               from:I to:I old
             }}
+          }}
+          {discussion {
+            comment_to
+            comment
+            date:I
+            who
           }}
         }
         
@@ -554,7 +561,7 @@ namespace eval Wikit {
 
       if {$newdate != ""} {
         # change the date if requested
-        mk::set $db.pages!$id date $newdate
+        mk::set $db.pages!$id date $newdate mod_date $newdate
       }
 
       # avoid creating a log entry and committing if nothing changed
@@ -578,7 +585,7 @@ namespace eval Wikit {
         }
 
         if {$newdate == ""} {
-          mk::set $db.pages!$id date [clock seconds]
+          mk::set $db.pages!$id date [clock seconds] mod_date [clock seconds]
           set commit 1
         }
 
