@@ -24,6 +24,7 @@ domain /_bin/ {File bin} root [file join $::Site::docroot bin]
 
 domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 
+
 rewrite {/} /_/welcome	;# need to silently redirect welcome page
 rewrite {/[^/]+[.](jpg|gif|png|ico)} {/_images/[file tail [dict get $r -path]]}
 rewrite {/[^/]+[.]css} {/_css/[file tail [dict get $r -path]]}

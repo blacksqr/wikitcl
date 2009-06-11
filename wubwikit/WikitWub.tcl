@@ -19,6 +19,7 @@ package require Wikit::Cache
 package require Sitemap
 package require stx
 package require Honeypot
+package require jQ
 
 package provide WikitWub 1.0
 
@@ -478,6 +479,10 @@ namespace eval WikitWub {
 	    variable head
 	    variable protected
 	    append content $head
+
+	    if {[dict exists $rsp -preload]} {
+		append content [join [dict get $rsp -preload] \n]
+	    }
 
 	    append content </head> \n
 
@@ -1693,6 +1698,17 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
+#	dict set r -preload [<script> src /jquery/scripts/jquery.js {}]
+	dict set r -postload [list [<script>  src /_jquery/scripts/jquery.js {}] [<script> {
+	    $(document).ready(function(){
+		$(".comment_header").toggle(function(){
+		    $(this).next(".comment_body").slideUp(100);
+		}, function(){
+		    $(this).next(".comment_body").slideDown(100);
+		});
+	    });
+	}]]
+
 	# Create tree
 	struct::tree dtree
 	foreach i [mk::select wdb.pages!$N.discussion] {
@@ -1704,8 +1720,6 @@ namespace eval WikitWub {
 		if {$c eq "root"} {
 		    append C ""
 		} else {
-		    append C "<li class='comment'><div class='comment'>\n"
-
 		    set who [dict get $d($c) who]
 		    if {$who ne "" && [regexp {^(.+)[,@]} $who - who_nick] && $who_nick ne ""} {
 			set who [<a> href /[::Wikit::LookupPage $who_nick wdb] $who_nick]
@@ -1714,21 +1728,16 @@ namespace eval WikitWub {
 		    append C "<div class='comment_header'>Comment by $who, made on [clock format [dict get $d($c) date]] <a href='/_/comment?N=$N&P=$c'>Respond</a></div>\n"
 		    set comment [::Wikit::TextToStream [dict get $d($c) comment]]
 		    lassign [::Wikit::StreamToHTML $comment / ::WikitWub::InfoProc] comment U T BR
-		    append C "<div class='comment_body'>$comment<p></p></div></div>\n"
-		}
-		if {[llength [dtree children $c]]} {
-		    append C "<ul class='comment'>\n"
-		} else {
-		    append C "</li>\n"
+		    append C "<div class='comment_body'>$comment\n"
 		}
 	    } elseif {$a eq "leave"} {
-		if {[llength [dtree children $c]]} {
-		    append C "</ul>\n</li>\n"
+		if {$c ne "root"} {
+		    append C "</div>\n"
 		}
 	    }
 	}
 	dtree destroy
-	append C "<a href='/_/comment?N=$N&P=root'>Start new thread</a>"
+	append C [<p> [<a> href /_/comment?N=$N&P=root "Start new thread"]]
 
 	# Return contents
 	set menu [menus Home Recent Help]

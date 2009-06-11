@@ -58,27 +58,27 @@ div.centered {
   text-align: center;
 }
 
-ul.comment {
-  padding-left: 1em;
-  list-style: none;
-}
-
 div.comment_header {
+    margin-top: 0.5em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    padding-right: 1px;
+    padding-left: 1em;
     background: #ccc;
-    border-top: 1px solid;
-    border-left: 1px solid;
-    border-right: 1px solid;
-}
-
-div.comment_body {
     border-top: 1px solid;
     border-left: 1px solid;
     border-right: 1px solid;
     border-bottom: 1px solid;
 }
 
-div.comment {
-    padding: 1px;
+div.comment_body {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    padding-right: 1px;
+    padding-left: 1em;
+    border-left: 1px solid;
+    border-right: 1px solid;
+    border-bottom: 1px solid;
 }
 
 hr {
