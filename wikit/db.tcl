@@ -156,15 +156,17 @@ namespace eval Wikit {
               from:I to:I old
             }}
           }}
-          {discussion {
-            comment_to
-            comment
-            date:I
-            who
-          }}
         }
         
         mk::view layout $db.refs	{from:I to:I}
+
+        mk::view layout $db.discussions {
+          pageid
+          comment_to
+          comment
+          date:I
+          who
+        }
       }
 
       # if there are no references, probably it's the first time, so recalc

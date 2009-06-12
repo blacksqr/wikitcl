@@ -327,6 +327,11 @@ a.delta {
  margin-left: 0.5em;
 }
 
+a.discussion {
+ font-size: 70%;
+ color: #A3A3A3;
+}
+
 span.delta {
  font-size: 70%;
  color: #D3D3D3;

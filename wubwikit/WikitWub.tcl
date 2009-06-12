@@ -650,13 +650,13 @@ namespace eval WikitWub {
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
 
 	    set disc ""
-	    foreach comment_id [mk::select wdb.pages!$id.discussion -rsort date] {
-		lassign [mk::get wdb.pages!$id.discussion!$comment_id date who] comment_date comment_who
+	    foreach comment_id [mk::select wdb.discussions pageid $id -rsort date] {
+		lassign [mk::get wdb.discussions!$comment_id date who] comment_date comment_who
 		if {$mod_date==$comment_date} {
 		    set who $comment_who
 		}
 		if {$comment_date > ($mod_date-86400)} {
-		    set disc "&nbsp;([<a> href /_/discussion?N=$id discussion])"
+		    set disc "&nbsp;[<a> class discussion href /_/discussion?N=$id discussion]"
 		}
 		break
 	    }
@@ -1719,8 +1719,8 @@ namespace eval WikitWub {
 
 	# Create tree
 	struct::tree dtree
-	foreach i [mk::select wdb.pages!$N.discussion] {
-	    set d($i) [dict create {*}[mk::get wdb.pages!$N.discussion!$i]]
+	foreach i [mk::select wdb.discussions pageid $N] {
+	    set d($i) [dict create {*}[mk::get wdb.discussions!$i]]
 	    dtree insert [dict get $d($i) comment_to] end $i
 	}
 	dtree walk root -order both {a c} {
@@ -1768,8 +1768,14 @@ namespace eval WikitWub {
 	if {$P ne "root" && ![string is integer -strict $P]} {
 	    return [Http NotFound $r]
 	}
-	if {$P ne "root" && $P >= [mk::view size wdb.pages!$N.discussion]} {
+	if {$P ne "root" && $P >= [mk::view size wdb.discussions]} {
 	    return [Http NotFound $r]
+	}
+	if {$P ne "root"} {
+	    lassign [mk::get wdb.discussions!$P pageid] comment_pageid
+	    if {$N != $comment_pageid} {
+		return [Http NotFound $r]
+	    }
 	}
 
 	# is the caller logged in?
@@ -1781,8 +1787,8 @@ namespace eval WikitWub {
 	}
 
 	set C ""
-	if {[string is integer -strict $Q] && $Q} {
-	    set C [mk::get wdb.pages!$N.discussion!$P comment]
+	if {[string is integer -strict $Q] && $Q && $P ne "root"} {
+	    set C [mk::get wdb.discussions!$P comment]
 	}
 
 	::Wikit::pagevars $N name
@@ -1814,6 +1820,12 @@ namespace eval WikitWub {
 	if {$P ne "root" && $P >= [mk::view size wdb.pages!$N.discussion]} {
 	    return [Http NotFound $r]
 	}
+	if {$P ne "root"} {
+	    set comment_pageid [mk::get wdb.discussions!$P pageid]
+	    if {$N != $comment_pageid} {
+		return [Http NotFound $r]
+	    }
+	}
 
 	# Check user
 	set nick [who $r]
@@ -1842,7 +1854,7 @@ namespace eval WikitWub {
 	# Save comment and mark pages as updated by settings it's comment_date
 	set who $nick@[dict get $r -ipaddr]
 	set when [expr {[dict get $r -received] / 1000000}]
-	mk::row append wdb.pages!$N.discussion comment_to $P who $who date $when comment $C
+	mk::row append wdb.discussions pageid $N comment_to $P who $who date $when comment $C
 	mk::set wdb.pages!$N mod_date $when
 	mk::file commit wdb
 
