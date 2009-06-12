@@ -59,11 +59,11 @@ div.centered {
 }
 
 div.comment_header {
-    margin-top: 0.5em;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
+    margin-top: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
     padding-right: 1px;
-    padding-left: 1em;
+    padding-left: 10px;
     background: #ccc;
     border-top: 1px solid;
     border-left: 1px solid;
@@ -72,10 +72,10 @@ div.comment_header {
 }
 
 div.comment_body {
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
+    padding-top: 5px;
+    padding-bottom: 5px;
     padding-right: 1px;
-    padding-left: 1em;
+    padding-left: 10px;
     border-left: 1px solid;
     border-right: 1px solid;
     border-bottom: 1px solid;
