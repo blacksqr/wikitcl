@@ -166,7 +166,7 @@ namespace eval WikitWub {
 	    }]
 	    [div editcontents {
 		[<form> edit method post action /_/post_comment {
-		    [<textarea> C id editarea rows 20 cols 72 compact 0 style width:100% {}]
+		    [<textarea> C id editarea rows 20 cols 72 compact 0 style width:100% [tclarmour $C]]
 		    [<hidden> N $N]
 		    [<hidden> P $P]
 		    [<hidden> _charset_ {}]
@@ -1700,10 +1700,9 @@ namespace eval WikitWub {
 
 	dict set r -postload [list [<script>  src /_jquery/scripts/jquery.js {}] [<script> {
 	    $(document).ready(function(){
-		$(".comment_header").toggle(function(){
-		    $(this).next(".comment_body").slideUp(100);
-		}, function(){
-		    $(this).next(".comment_body").slideDown(100);
+		/*$(".comment_body").hide(); */
+		$(".comment_header").click(function(){
+		    $(this).next(".comment_body").slideToggle(100);
 		});
 	    });
 	}]]
@@ -1719,11 +1718,7 @@ namespace eval WikitWub {
 		if {$c eq "root"} {
 		    append C ""
 		} else {
-		    set who [dict get $d($c) who]
-		    if {$who ne "" && [regexp {^(.+)[,@]} $who - who_nick] && $who_nick ne ""} {
-			set who [<a> href /[::Wikit::LookupPage $who_nick wdb] $who_nick]
-		    }
-		    append C "<div class='comment_header'>Comment by $who, made on [clock format [dict get $d($c) date]] <a href='/_/comment?N=$N&P=$c'>Respond</a></div>\n"
+		    append C "<div class='comment_header'>Comment by [WhoUrl [dict get $d($c) who]], made on [clock format [dict get $d($c) date]]&nbsp;&nbsp;<a href='/_/comment?N=$N&P=$c&Q=0'>Respond</a>&nbsp;&nbsp;<a href='/_/comment?N=$N&P=$c&Q=1'>Respond and Quote</a></div>\n"
 		    set comment [::Wikit::TextToStream [dict get $d($c) comment]]
 		    lassign [::Wikit::StreamToHTML $comment / ::WikitWub::InfoProc] comment U T BR
 		    append C "<div class='comment_body'>$comment\n"
@@ -1749,7 +1744,7 @@ namespace eval WikitWub {
 	return [sendPage $r]
     }
 
-    proc /comment {r N P} {
+    proc /comment {r N P Q} {
 
 	# Check N
 	if {![string is integer -strict $N]} {
@@ -1773,6 +1768,11 @@ namespace eval WikitWub {
 	if {$nick eq ""} {
 	    set R "" ;# Return here
 	    return [sendPage $r login]
+	}
+
+	set C ""
+	if {[string is integer -strict $Q] && $Q} {
+	    set C [mk::get wdb.pages!$N.discussion!$P comment]
 	}
 
 	::Wikit::pagevars $N name
