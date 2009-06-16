@@ -1568,7 +1568,7 @@ namespace eval WikitWub {
 	    # save the page into the db.
 	    set who $nick@[dict get $r -ipaddr]
 	    if {[string is integer -strict $A] && $A} {
-		set C "[GetPage $N]\n\n$C"
+		set C "[GetPage $N]\n\n----\n'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''\n\n$C"
 	    }
 	    set C [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C]
 	    if {$C eq [GetPage $N]} {
@@ -1657,7 +1657,7 @@ namespace eval WikitWub {
 	variable as_comment 0
 	if {[string is integer -strict $A] && $A} {
 	    set as_comment 1
-	    set C [armour "----\n'''Comment by \[$nick\] entered at [clock format [clock seconds] -format {%Y-%m-%d %T}]'''\n\n<enter your comment here>"]
+	    set C [armour "<enter your comment here, a header with nick-name and timestamp will be insert for you>"]
 	} else {
 	    set C [armour [GetPage $N]]
 	    if {$C eq ""} {
