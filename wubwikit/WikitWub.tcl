@@ -154,67 +154,81 @@ namespace eval WikitWub {
 #		<button type='button' class='editbutton' id='savebutton' onclick='' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png' alt='Save'></button><span id='tip_save' class='tip'>Save</span>
 #		<button type='button' class='editbutton' id='cancelbutton' onclick='editCancel();' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png' alt='Cancel'></button><span id='tip_cancel' class='tip'>Cancel</span>
     
+    set quick_reference {
+	[<br>]
+	[<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
+	[<br>]
+	<ul>
+	<li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.</li>
+	<li>[<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line</li>
+	<li>[<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line</li>
+	<li>[<b> PARAGRAPHS] are split with empty lines</li>
+	<li>[<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt></li>
+	<li>[<b> "FIXED WIDTH FORMATTED"] text is enclosed in lines containing <tt>===</tt></li>
+	<li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].</li>
+	<li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
+	<li>[<b> HEADERS] can be specified with lines containing <b>**Header level 1**</b>, <b>***Header level 2***</b> or <b>****Header level 3****</b></li>
+	<li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>%|data|data|data|%</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>&amp;|data|data|data|&amp;</tt></b></li>
+	<li>[<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b></li>
+	<li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, back references to any page can be included with a line containing <b><tt>&lt;&lt;backrefs:Wiki formatting rules&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[backrefs:Wiki formatting rules\]</tt></b></li>
+	</ul>
+    }
+
+    set edit_toolbar {
+	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
+	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
+	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
+	&nbsp; &nbsp; &nbsp;
+	[toolbar_edit_button bold            text_bold.png           "Bold"]
+	[toolbar_edit_button italic          text_italic.png         "Italic"]
+	[toolbar_edit_button teletype        text_teletype.png       "TeleType"]
+	[toolbar_edit_button heading1        text_heading_1.png      "Heading 1"]
+	[toolbar_edit_button heading2        text_heading_2.png      "Heading 2"]
+	[toolbar_edit_button heading3        text_heading_3.png      "Heading 3"]
+	[toolbar_edit_button hruler          text_horizontalrule.png "Horizontal Rule"]
+	[toolbar_edit_button list_bullets    text_list_bullets.png   "List with Bullets"]
+	[toolbar_edit_button list_numbers    text_list_numbers.png   "Numbered list"]
+	[toolbar_edit_button align_center    text_align_center.png   "Center"]
+	[toolbar_edit_button wiki_link       link.png                "Wiki link"]
+	[toolbar_edit_button url_link        world_link.png          "World link"]
+	[toolbar_edit_button img_link        photo_link.png          "Image link"]
+	[toolbar_edit_button code            script_code.png         "Script"]
+	[toolbar_edit_button table           table.png               "Table"]
+	&nbsp; &nbsp; &nbsp;
+	<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
+    }
+
     # page sent when editing a page
     template edit {Editing [armour $name]} {
 	[div edit {
 	    [div header {
 		[div logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]
-		[div title "Edit [tclarmour [Ref $N]]"]
-		[div updated "Make your changes, then press Save below"]
+		[If {$as_comment} {
+		    [div title "Comment on [tclarmour [Ref $N]]"]
+		}]
+		[If {!$as_comment} {
+		    [div title "Edit [tclarmour [Ref $N]]"]
+		}]
+		[If {$as_comment} {
+		    [div updated "Enter you comment, then press Save below"]
+		}]
+		[If {!$as_comment} {
+		    [div updated "Make your changes, then press Save below"]
+		}]
 	    }]
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action /_/edit/save {
-		  [<div> id helptext [subst {
-                    [<hr>]
-		    [<br>]
-		    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
-		    [<br>]
-		    <ul>
-		    <li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.</li>
-		    <li>[<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line</li>
-		    <li>[<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line</li>
-		    <li>[<b> PARAGRAPHS] are split with empty lines</li>
-		    <li>[<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt></li>
-		    <li>[<b> "FIXED WIDTH FORMATTED"] text is enclosed in lines containing <tt>===</tt></li>
-		    <li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].</li>
-		    <li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
-		    <li>[<b> HEADERS] can be specified with lines containing <b>**Header level 1**</b>, <b>***Header level 2***</b> or <b>****Header level 3****</b></li>
-		    <li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>%|data|data|data|%</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>&amp;|data|data|data|&amp;</tt></b></li>
-		    <li>[<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b></li>
-		    <li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, back references to any page can be included with a line containing <b><tt>&lt;&lt;backrefs:Wiki formatting rules&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[backrefs:Wiki formatting rules\]</tt></b></li>
-		    </ul>
-		  }]]
-		  [<div> class previewarea_pre id previewarea_pre ""]
-		  [<div> class previewarea id previewarea ""]
-		  [<div> class previewarea_post id previewarea_post ""]
-  		  <div class='toolbar'>
-  		  <button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
-		  <button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
-		  <button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
-   	          &nbsp; &nbsp; &nbsp;
-		  [toolbar_edit_button bold            text_bold.png           "Bold"]
-		  [toolbar_edit_button italic          text_italic.png         "Italic"]
-	  	  [toolbar_edit_button teletype        text_teletype.png       "TeleType"]
-		  [toolbar_edit_button heading1        text_heading_1.png      "Heading 1"]
-	  	  [toolbar_edit_button heading2        text_heading_2.png      "Heading 2"]
-		  [toolbar_edit_button heading3        text_heading_3.png      "Heading 3"]
-		  [toolbar_edit_button hruler          text_horizontalrule.png "Horizontal Rule"]
-		  [toolbar_edit_button list_bullets    text_list_bullets.png   "List with Bullets"]
-		  [toolbar_edit_button list_numbers    text_list_numbers.png   "Numbered list"]
-		  [toolbar_edit_button align_center    text_align_center.png   "Center"]
-		  [toolbar_edit_button wiki_link       link.png                "Wiki link"]
-		  [toolbar_edit_button url_link        world_link.png          "World link"]
-		  [toolbar_edit_button img_link        photo_link.png          "Image link"]
-		  [toolbar_edit_button code            script_code.png         "Script"]
-		  [toolbar_edit_button table           table.png               "Table"]
-		  &nbsp; &nbsp; &nbsp;
-		  <button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
-	        </div>
-		     [<textarea> C id editarea rows 30 cols 72 compact 0 style width:100% [tclarmour $C]]
+		     [<div> id helptext "[<hr>] [subst $quick_reference]"]
+		     [<div> class previewarea_pre id previewarea_pre ""]
+		     [<div> class previewarea id previewarea ""]
+		     [<div> class previewarea_post id previewarea_post ""]
+		     [<div> class toolbar [subst $edit_toolbar]]
+		     [<textarea> C id editarea rows 35 cols 72 compact 0 style width:100% [tclarmour $C]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
 		     [<hidden> N $N]
+		     [<hidden> A $as_comment]
                      <input name='save' type='submit' value='Save your changes'>
 		     <input name='cancel' type='submit' value='Cancel'>
 		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
@@ -1473,7 +1487,7 @@ namespace eval WikitWub {
 	return [sendPage $r preview_tc]
     }
 
-    proc /edit/save {r N C O save cancel preview } {
+    proc /edit/save {r N C O A save cancel preview } {
 
 	Debug.wikit {/edit/save $N}
 	if { [string tolower $cancel] eq "cancel" } {
@@ -1494,7 +1508,7 @@ namespace eval WikitWub {
 	}
 
 	if {[catch {
-	    ::Wikit::pagevars $N name date who
+	    ::Wikit::pagevars $N name date who page
 	} er eo]} {
 	    return [Http NotFound $er [subst {
 		[<h2> "$N is not a valid page."]
@@ -1553,6 +1567,9 @@ namespace eval WikitWub {
 
 	    # save the page into the db.
 	    set who $nick@[dict get $r -ipaddr]
+	    if {[string is integer -strict $A] && $A} {
+		set C "[GetPage $N]\n\n----\n'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''\n\n$C"
+	    }
 	    set C [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C]
 	    if {$C eq [GetPage $N]} {
 		Debug.wikit {No change, not saving  $N}
@@ -1606,7 +1623,7 @@ namespace eval WikitWub {
     }
     
     # called to generate an edit page
-    proc /edit {r N args} {
+    proc /edit {r N A args} {
 	variable readonly
 	variable protected
 	if {$readonly ne ""} {
@@ -1637,15 +1654,23 @@ namespace eval WikitWub {
 
 	set who_nick ""
 	regexp {^(.+)[,@]} $who - who_nick
-	set C [armour [GetPage $N]]
-	if {$C eq ""} {
-	    if {[info exists ::starkit_edit_template]} {
-		set C $::starkit_edit_template
-	    } else {
-		set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"
+	variable as_comment 0
+	if {[string is integer -strict $A] && $A} {
+	    set as_comment 1
+	    set C [armour "<enter your comment here, a header with nick-name and timestamp will be insert for you>"]
+	} else {
+	    set C [armour [GetPage $N]]
+	    if {$C eq ""} {
+		if {[info exists ::starkit_edit_template]} {
+		    set C $::starkit_edit_template
+		} else {
+		    set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n----\n!!!!!!\n%| enter categories here |%\n!!!!!!\n"
+		}
 	    }
 	}
 
+	variable quick_reference
+	variable edit_toolbar
 	return [sendPage $r edit]
     }
 
@@ -2128,6 +2153,8 @@ namespace eval WikitWub {
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
 	    if {!$::roflag} {
+		lappend menu [Ref /_/edit?N=$N&A=1 "Add comments"]
+		lappend footer [Ref /_/edit?N=$N&A=1 "Add comments"]
 		lappend menu [Ref /_/edit?N=$N Edit]
 		lappend footer [Ref /_/edit?N=$N Edit]
 	    }
