@@ -210,7 +210,7 @@ namespace eval WikitWub {
 		    [div title "Edit [tclarmour [Ref $N]]"]
 		}]
 		[If {$as_comment} {
-		    [div updated "Enter you comment, then press Save below"]
+		    [div updated "Enter your comment, then press Save below"]
 		}]
 		[If {!$as_comment} {
 		    [div updated "Make your changes, then press Save below"]
