@@ -1568,7 +1568,16 @@ namespace eval WikitWub {
 	    # save the page into the db.
 	    set who $nick@[dict get $r -ipaddr]
 	    if {[string is integer -strict $A] && $A} {
-		set C "[GetPage $N]\n\n----\n'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''\n\n$C"
+		# Look for category at end of page using following styles:
+		# ----\n[Category ...]
+		# ----\n!!!!!!\n%|Category...|%\n!!!!!!
+		set Cl [split [string trimright [GetPage $N] \n] \n]
+		if {[lindex $Cl end] eq "!!!!!!" && [lindex $Cl end-2] eq "!!!!!!" && [lindex $Cl end-3] eq "----" && [string match "%|*Category*|%" [lindex $Cl end-1]]} {
+		    set Cl [linsert $Cl end-4 {} {} ---- {} "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} {} $C {} {}]
+		} else {
+		    lappend Cl {} {} ---- {} "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} {} $C
+		}
+		set C [join $Cl \n]
 	    }
 	    set C [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C]
 	    if {$C eq [GetPage $N]} {
