@@ -151,7 +151,7 @@ namespace eval Wikit::Format {
       ## there is any.
       #
       switch -exact -- $tag {
-        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS - INLINETOC {
+        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS - CATEGORY - INLINETOC {
           if {$paragraph != {}} {
             if {$mode_fixed} {
               lappend irep FI {}
@@ -481,6 +481,9 @@ namespace eval Wikit::Format {
         BACKREFS {
           lappend irep BACKREFS $txt
         }
+        CATEGORY {
+          lappend irep CATEGORY $txt
+        }
         default {
           error "Unknown linetype $tag"
         }
@@ -550,6 +553,7 @@ namespace eval Wikit::Format {
       BACKREFS {^(<<backrefs>>)()(.*)$}
       BACKREFS {^(<<backrefs:)()(.*)>>$}
       INLINETOC {^<<TOC>>$}
+      CATEGORY {^(<<categories>>)()(.*)$}
     } {
       # Compat: Remove restriction to multiples of 3 spaces.
       if {[regexp $re $line - pfx aux txt]} {
@@ -1106,6 +1110,9 @@ namespace eval Wikit::Format {
             lappend $cresult "\n" body
 #            lappend $cresult $text body
           }
+        }
+        CATEGORY {
+          lappend $cresult "\n" body "Categories: $text" body
         }
       }
     }
@@ -1709,6 +1716,61 @@ namespace eval Wikit::Format {
           set state T
           incr backrefid
         }
+        CATEGORY {
+          append result "<hr>"
+          append result "<div class='centered'><p></p><table summary='' class='wikit_table'><thead><tr>"
+          set text [string map [list "%|%" \1] $text]
+          foreach cat [split $text |] {
+            append result "<th>"
+            set cat  [string map [list \1 "%|%"] $cat]
+            lassign [split_url_link_text $cat] link linktext
+            set link [string trim $link]
+            set linktext [string trim $linktext]
+            if {$ip == ""} {
+              # no lookup, turn into a searchreference
+              append result \
+                $html_frag(a_) $cgi$linktext $html_frag(tc) \
+                [quote $linktext] $html_frag(_a)
+              append result "</th>"
+              continue
+            }
+            set info [eval $ip [list $link]]
+            foreach {id name date} $info break
+            if {$id == ""} {
+              # not found, don't turn into an URL
+              append result "\[[quote $linktext]\]"
+              append result "</th>"
+              continue
+            }
+            #regsub {^/} $id {} id
+            set id [string trim $id /]
+            if {$date > 0} {
+              # exists, use ID
+              if { $mode eq "G" } {
+                append result $html_frag(A_) /_/ref?N=$id
+              } else {
+                append result $html_frag(a_) /$id
+              }
+              append result $html_frag(tc) \
+                [quote $linktext] $html_frag(_a)
+              append result "</th>"
+              continue
+            }
+            # missing, 
+            if { $mode eq "G" } {
+              # Insert a plain linktext
+              append result [quote $linktext]
+            } else {
+              # use ID -- editor link on the brackets.
+              append result \
+                $html_frag(a_) /$id $html_frag(tc) \[ $html_frag(_a) \
+                [quote $linktext] \
+                $html_frag(a_) /$id $html_frag(tc) \] $html_frag(_a) \
+            }
+            append result "</th>"
+          }
+          append result "</tr></thead></table></div><p></p>"
+        }
       }
     }
     # Close off the last section.
@@ -2088,14 +2150,30 @@ namespace eval Wikit::Format {
     array set pages {}
 
     foreach {mode text} $s {
-      if {![string equal $mode g]} {continue}
+      if {[string equal $mode g]} {
 
-      set info [eval $ip [list $text]]
-      foreach {id name date} $info break
-      if {$id == ""} {continue}
+        set info [eval $ip [list $text]]
+        foreach {id name date} $info break
+        if {$id == ""} {continue}
+        
+        regexp {[0-9]+} $id id
+        set pages($id) ""
+      } elseif {[string equal $mode "CATEGORY"]} {
+        set text [string map [list "%|%" \1] $text]
+        foreach cat [split $text |] {
+          set cat  [string map [list \1 "%|%"] $cat]
+          lassign [split_url_link_text $cat] link linktext
+          set link [string trim $link]
+          set linktext [string trim $linktext]
 
-      regexp {[0-9]+} $id id
-      set pages($id) ""
+          set info [eval $ip [list $link]]
+          foreach {id name date} $info break
+          if {$id == ""} {continue}
+          
+          regexp {[0-9]+} $id id
+          set pages($id) ""          
+        }
+      }
     }
 
     array names pages
