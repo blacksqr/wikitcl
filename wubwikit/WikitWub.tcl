@@ -1572,8 +1572,10 @@ namespace eval WikitWub {
 		# ----\n[Category ...]
 		# ----\n!!!!!!\n%|Category...|%\n!!!!!!
 		set Cl [split [string trimright [GetPage $N] \n] \n]
-		if {[lindex $Cl end] eq "!!!!!!" && [lindex $Cl end-2] eq "!!!!!!" && [lindex $Cl end-3] eq "----" && [string match "%|*Category*|%" [lindex $Cl end-1]]} {
+		if {[lindex $Cl end] eq "!!!!!!" && [lindex $Cl end-2] eq "!!!!!!" && [string match "----*" [lindex $Cl end-3]] && [string match "%|*Category*|%" [lindex $Cl end-1]]} {
 		    set Cl [linsert $Cl end-4 {} {} ---- {} "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} {} $C {} {}]
+		} elseif {[string match "<<categories>>*" [lindex $Cl end]]} {
+		    set Cl [linsert $Cl end-1 {} {} ---- {} "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} {} $C {} {}]
 		} else {
 		    lappend Cl {} {} ---- {} "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} {} $C
 		}
