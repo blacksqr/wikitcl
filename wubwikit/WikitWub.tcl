@@ -675,7 +675,7 @@ namespace eval WikitWub {
 	    }
 
 	    if { [string length $name] } {
-		set link [<a> href /$id $name]
+		set link [<a> href /$id [armour $name]]
 	    } else {
 		set link [<a> href /$id $id]
 	    }
