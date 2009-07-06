@@ -1518,7 +1518,11 @@ namespace eval Wikit::Format {
           if {$ip == ""} {
             # no lookup, turn into a searchreference
             append result \
-              $html_frag(a_) $cgi$text $html_frag(tc) \
+              $html_frag(a_) $cgi$text
+            if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+              append result "\" target=\"_blank"
+            }
+            append result $html_frag(tc) \
               [quote $text] $html_frag(_a)
             continue
           }
@@ -1541,6 +1545,9 @@ namespace eval Wikit::Format {
             } else {
               append result $html_frag(a_) /$id
             }
+            if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+              append result "\" target=\"_blank"
+            }
             append result $html_frag(tc) \
               [quote $text] $html_frag(_a)
             continue
@@ -1553,9 +1560,17 @@ namespace eval Wikit::Format {
           } else {
             # use ID -- editor link on the brackets.
             append result \
-              $html_frag(a_) /$id $html_frag(tc) \[ $html_frag(_a) \
+              $html_frag(a_) /$id 
+            if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+              append result "\" target=\"_blank"
+            }
+            append result $html_frag(tc) \[ $html_frag(_a) \
               [quote $text] \
-              $html_frag(a_) /$id $html_frag(tc) \] $html_frag(_a) \
+              $html_frag(a_) /$id 
+            if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+              append result "\" target=\"_blank"
+            }
+            append result $html_frag(tc) \] $html_frag(_a) \
             }
           }
         u {
@@ -1564,7 +1579,11 @@ namespace eval Wikit::Format {
 	    append tocheader [quote $text]
 	  }
           append result \
-            $html_frag(e_) [quote $link] $html_frag(tc) \
+            $html_frag(e_) [quote $link] 
+          if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+            append result "\" target=\"_blank"
+          }
+          append result $html_frag(tc) \
             [quote $text] $html_frag(_a)
         }
         x {
@@ -1576,9 +1595,17 @@ namespace eval Wikit::Format {
             append result $html_frag(i_) $link $html_frag(tc)
           } else {
             if {$text ne $link} {
-              append result $html_frag(e_) [quote $link] $html_frag(tc) [quote $text] $html_frag(_a)
+              append result $html_frag(e_) [quote $link] 
+              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+                append result "\" target=\"_blank"
+              }
+              append result $html_frag(tc) [quote $text] $html_frag(_a)
             } else {
-              append result \[ $html_frag(e_) [quote $link] $html_frag(tc) [incr count] $html_frag(_a) \]
+              append result \[ $html_frag(e_) [quote $link] 
+              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+                append result "\" target=\"_blank"
+              }
+              append result $html_frag(tc) [incr count] $html_frag(_a) \]
             }
           }
         }
@@ -1743,7 +1770,11 @@ namespace eval Wikit::Format {
             if {$ip == ""} {
               # no lookup, turn into a searchreference
               append result \
-                $html_frag(a_) $cgi$linktext $html_frag(tc) \
+                $html_frag(a_) $cgi$linktext 
+              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+                append result "\" target=\"_blank"
+              }
+              append result $html_frag(tc) \
                 [quote $linktext] $html_frag(_a)
               append result "</th>"
               continue
@@ -1765,6 +1796,9 @@ namespace eval Wikit::Format {
               } else {
                 append result $html_frag(a_) /$id
               }
+              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+                append result "\" target=\"_blank"
+              }
               append result $html_frag(tc) \
                 [quote $linktext] $html_frag(_a)
               append result "</th>"
@@ -1777,9 +1811,17 @@ namespace eval Wikit::Format {
             } else {
               # use ID -- editor link on the brackets.
               append result \
-                $html_frag(a_) /$id $html_frag(tc) \[ $html_frag(_a) \
+                $html_frag(a_) /$id 
+              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+                append result "\" target=\"_blank"
+              }
+              append result $html_frag(tc) \[ $html_frag(_a) \
                 [quote $linktext] \
-                $html_frag(a_) /$id $html_frag(tc) \] $html_frag(_a) \
+                $html_frag(a_) /$id 
+              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+                append result "\" target=\"_blank"
+              }
+              append result $html_frag(tc) \] $html_frag(_a) \
             }
             append result "</th>"
           }
