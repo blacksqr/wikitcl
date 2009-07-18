@@ -65,6 +65,9 @@ Disallow: /_
 
 User-agent: Twiceler
 Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
 } text/plain
 
 code /rss.xml {
