@@ -6,16 +6,17 @@ package require struct::queue
 package require Site	;# assume Wub/ is already on the path, or in /usr/lib
 
 lappend auto_path [file dirname [info script]]
+package require Sitemap
+package require stx
+package require Honeypot
+package require Form
+
 package require WikitRss
 package require Wikit::Format
 package require Wikit::Db
 package require Wikit::Search
 package require Wikit::Cache
 
-
-package require Sitemap
-package require stx
-package require Honeypot
 
 package provide WikitWub 1.0
 
