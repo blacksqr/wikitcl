@@ -2439,12 +2439,15 @@ namespace eval WikitWub {
 	    # initialize page cache
 	    package require View	;# for page caching
 	    ::mk::file open pagecache
+
 	    [View new pagecache.page layout {
 		id:I	;# page number
 		content:S	;# generated content
 		ct:S		;# content-type
 		when:I		;# date/time generated
 	    }] as pagecache
+
+	    puts stderr "PAGECACHE: $pagecache"
 	}
 	proc init {args} {}	;# we can't be called twice
     }
