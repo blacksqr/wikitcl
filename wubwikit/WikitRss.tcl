@@ -20,6 +20,7 @@ namespace eval WikitRss {
     variable db
     variable baseUrl http://wiki.tcl.tk
     variable MaxItems 25
+    variable cache
 
     ###############################################################
     #
@@ -85,11 +86,22 @@ namespace eval WikitRss {
 	variable wikiName $name
 	variable baseUrl $baseurl
 	variable Name [mk::get $db.pages!0 name]
+	variable cache ""
     }
 
+    # clear the cached RSS
+    proc clear {} {
+	variable cache ""
+    }
+    
     proc rss {} {
 	variable db
 	Debug.rss {rss request [clock seconds]}
+
+	variable cache
+	if {$cache ne ""} {
+	    return $cache
+	}
 
 	# Generate the XML file
 	set contents [header]
