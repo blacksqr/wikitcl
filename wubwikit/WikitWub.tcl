@@ -1597,7 +1597,7 @@ namespace eval WikitWub {
 	    invalidate $r $N
 	    invalidate $r 4
 	    invalidate $r _ref/$N
-	    invalidate $r rss.xml
+	    invalidate $r rss.xml; WikitRss clear
 	    invalidate $r _summary/$N
 
 	    # if this page did not exist before:
