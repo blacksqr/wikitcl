@@ -2440,7 +2440,7 @@ namespace eval WikitWub {
 	    package require View	;# for page caching
 	    ::mk::file open pagecache
 
-	    [View new ::WikitWub::pagecache db pagecache layout {
+	    [View create pagecache db pagecache layout {
 		id:I	;# page number
 		content:S	;# generated content
 		ct:S		;# content-type
