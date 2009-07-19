@@ -46,6 +46,7 @@ set API(WikitWub) {
 
 namespace eval WikitWub {
     variable readonly ""
+    variable pagecaching 1
 
     # sortable - include javascripts and CSS for sortable table.
     proc sortable {r} {
@@ -2066,6 +2067,19 @@ namespace eval WikitWub {
 		    return [Http NotFound $r]
 		}
 
+		variable pagecaching
+		if {$pagecaching && $ext eq ""} {
+		    variable pagecache
+		    set p [$pagecache fetch id $N]
+		    if {[dict size $p]} {
+			dict with p {
+			    dict set r -content $content
+			    dict set r content-type $ct
+			}
+			return [Http DCache $r]
+		    }
+		}
+
 		# set up a few standard URLs an strings
 		if {[catch {::Wikit::pagevars $N name date who}]} {
 		    return [Http NotFound $r]
@@ -2117,7 +2131,8 @@ namespace eval WikitWub {
 	Debug.wikit {located: $N}
 
 	# set up backrefs
-	set refs [mk::select wdb.refs to $N]
+	#set refs [mk::select wdb.refs to $N]	;# this is bloody expensive!
+	set refs {1}
 	Debug.wikit {[llength $refs] backrefs to $N}
 	switch -- [llength $refs] {
 	    0 {
@@ -2175,15 +2190,6 @@ namespace eval WikitWub {
 	    lappend menu [Ref $backRef References]
 	}
 
-	#set Title "<h1 class='title'>$Title</h1>"
-	if {0} {
-	    # get the page title
-	    if {![regsub {^<p>(<img src=".*?")>} $C [Ref 0 $backRef] C]} {
-		set Title "<h1 class='title'>$Title</h1>"
-	    } else {
-		set Title ""
-	    }
-	}
 	variable TOC
 	variable readonly
 	if {$readonly ne ""} {
@@ -2193,7 +2199,17 @@ namespace eval WikitWub {
 	}
 
 	if {$cacheit} {
-	    return [sendPage [Http CacheableContent $r $date] page DCache]
+	    set result [sendPage [Http CacheableContent $r $date] page DCache]
+	    variable pagecaching
+	    if {$pagecaching} {
+		variable pagecache
+		if {[$pagecache exists id $N]} {
+		    $pagecache set [$pagecache find id $N] content [dict get $result -content] ct [dict get $result content-type] when [clock milliseconds]
+		} else {
+		    $pagecache append id $N content $result when [clock milliseconds]
+		}
+	    }
+	    return $result
 	} else {
 	    return [sendPage $r]
 	}
@@ -2406,7 +2422,20 @@ namespace eval WikitWub {
 	WikitRss new wdb \
 	    [expr {[info exists ::starkit_wikittitle]?$::starkit_wikittitle:"Tcler's Wiki"}] \
 	    [expr {[info exists ::starkit_url]?"http://$::starkit_url/":"http://wiki.tcl.tk/"}]
-	
+
+	variable pagecaching
+	variable pagecache
+	if {$pagecaching} {
+	    # initialize page cache
+	    package require View	;# for page caching
+	    ::mk::file open pagecache
+	    View new pagecache.page layout {
+		pagenum:I	;# page number
+		content:S	;# generated content
+		ct:S		;# content-type
+		when:I		;# date/time generated
+	    } as pagecache
+	}
 	proc init {args} {}	;# we can't be called twice
     }
 
