@@ -2444,7 +2444,7 @@ namespace eval WikitWub {
 		id:I	;# page number
 		content:S	;# generated content
 		ct:S		;# content-type
-		when:I		;# date/time generated
+		when:L		;# date/time generated
 	    }] as pagecache
 
 	    puts stderr "PAGECACHE: $pagecache"
