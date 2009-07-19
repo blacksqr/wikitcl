@@ -1592,6 +1592,16 @@ namespace eval WikitWub {
 	    if {[catch {::Wikit::SavePage $N $C $who $name $when} err eo]} {
 		set readonly $err
 	    }
+	    variable pagecaching
+	    if {$pagecaching} {
+		variable pagecache
+		if {[$pagecache exists id $N]} {
+		    $pagecache delete [$pagecache find id $N]
+		}
+		if {[$pagecache exists id 4]} {
+		    $pagecache delete [$pagecache find id 4]
+		}
+	    }
 
 	    # Only actually save the page if the user selected "save"
 	    invalidate $r $N
@@ -2430,7 +2440,7 @@ namespace eval WikitWub {
 	    package require View	;# for page caching
 	    ::mk::file open pagecache
 	    View new pagecache.page layout {
-		pagenum:I	;# page number
+		id:I	;# page number
 		content:S	;# generated content
 		ct:S		;# content-type
 		when:I		;# date/time generated
