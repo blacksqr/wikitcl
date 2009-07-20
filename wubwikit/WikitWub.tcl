@@ -1965,6 +1965,19 @@ namespace eval WikitWub {
 	}]]
     }
 
+    proc fromCache {r N ext} {
+	variable pagecaching
+	if {$pagecaching && $ext eq ""} {
+	    variable pagecache
+	    set p [$pagecache fetch id $N]
+	    if {[dict size $p]} {
+		dict with p {
+		    return [list 1 [Http Ok [Http DCache $r] $content $ct]]
+		}
+	    }
+	}
+	return 0
+    }
 
     proc Filter {req term} {}
 
@@ -2068,6 +2081,12 @@ namespace eval WikitWub {
 		variable motd
 		set C "${motd}[RecentChanges]"
 		set name "Recent Changes"
+
+		# try cached version
+		lassign [fromCache $r $N $ext] cached result
+		if {$cached} {
+		    return $r
+		}
 	    }
 
 	    default {
@@ -2077,15 +2096,10 @@ namespace eval WikitWub {
 		    return [Http NotFound $r]
 		}
 
-		variable pagecaching
-		if {$pagecaching && $ext eq ""} {
-		    variable pagecache
-		    set p [$pagecache fetch id $N]
-		    if {[dict size $p]} {
-			dict with p {
-			    return [Http Ok [Http DCache $r] $content $ct]
-			}
-		    }
+		# try cached version
+		lassign [fromCache $r $N $ext] cached result
+		if {$cached} {
+		    return $r
 		}
 
 		# set up a few standard URLs an strings
