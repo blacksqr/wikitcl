@@ -1,3 +1,5 @@
+lappend auto_path /home/decoster/www/tcllib-1.11.1/modules /home/decoster/www/wub
+
 package require Mk4tcl
 package require fileutil
 package require struct::queue
@@ -50,9 +52,9 @@ namespace eval WikitWub {
 
     # sortable - include javascripts and CSS for sortable table.
     proc sortable {r} {
-	foreach js {common css standardista-table-sorting} {
-	    dict lappend r -headers [<script> src /$js.js]
-	}
+#	foreach js {common css standardista-table-sorting} {
+#	    dict lappend r -headers [<script> src /$js.js]
+#	}
 	dict lappend r -headers [<style> media all "@import url(/sorttable.css);"]
 	return $r
     }
@@ -440,11 +442,7 @@ namespace eval WikitWub {
 
     # html suffix to be sent on every page
     variable htmlsuffix [Honeypot link /$protected(HoneyPot).html]
-    append htmlsuffix [<script> src /search.js] \n
-    append htmlsuffix [<script> src /backrefs.js] \n
-    append htmlsuffix [<script> src /toc.js] \n
-    append htmlsuffix [<script> src /edit.js] \n
-    append htmlsuffix [<script> src /tooltips.js] \n
+    append htmlsuffix [<script> src /wiki.js] \n
 
     # convertor from wiki to html
     proc .x-text/wiki.text/html {rsp} {
@@ -2027,6 +2025,21 @@ namespace eval WikitWub {
 	set BR {}
 
 	switch -- $N {
+	    999999 {
+		set M [mk::view size wdb.pages]
+		set ts [clock seconds]
+		for {set N 10} {$N < $M} {incr N} {
+		    puts "$N/$M"
+		    set C [::Wikit::TextToStream [GetPage $N]]
+		    lassign [::Wikit::StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+		    set f [open /home/decoster/tmp/wp/$N.html w]
+		    puts $f $C
+		    close $f
+		}
+		set te [clock seconds]
+		puts "Elapsed: [expr {$te-$ts}]"
+		return [Http NotFound $r]
+	    }
 	    2 {
 		# search page
 		set qd [Dict get? $r -Query]
