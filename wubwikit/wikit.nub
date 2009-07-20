@@ -52,6 +52,9 @@ literal /robots.txt {User-agent: *
 Sitemap: http://wiki.tcl.tk/_sitemap.xml
 Disallow: /5.html
 Disallow: /_/
+Disallow: /_edit/
+Disallow: /_ref/
+Disallow: /_summary/
 
 User-agent: Twiceler
 Disallow: /
