@@ -2214,7 +2214,7 @@ namespace eval WikitWub {
 		if {[$pagecache exists id $N]} {
 		    $pagecache set [$pagecache find id $N] content [dict get $result -content] ct [dict get $result content-type] when [clock milliseconds]
 		} else {
-		    $pagecache append id $N content $result when [clock milliseconds]
+		    $pagecache append id $N content [dict get $result -content] ct [dict get $result content-type] when [clock milliseconds]
 		}
 	    }
 	    return $result
@@ -2444,8 +2444,6 @@ namespace eval WikitWub {
 		ct:S		;# content-type
 		when:L		;# date/time generated
 	    }] as pagecache
-
-	    puts stderr "PAGECACHE: $pagecache"
 	}
 	proc init {args} {}	;# we can't be called twice
     }
