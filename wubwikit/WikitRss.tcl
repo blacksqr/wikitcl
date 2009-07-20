@@ -161,6 +161,7 @@ namespace eval WikitRss {
 	}
 
 	set i 0
+	set edate [expr {[clock seconds]-$D*86400}]
 	set pages [mk::select $db.pages -rsort date]
 	foreach page $pages {
 	    if {$page in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
