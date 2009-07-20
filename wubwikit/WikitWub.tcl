@@ -1614,7 +1614,7 @@ namespace eval WikitWub {
 	    # this makes sure that cache entries point to a filled-in page
 	    # from now on, instead of a "[...]" link to a first-time edit page
 	    if {$date == 0} {
-		foreach from [mk::select wdb.refs to $N] {
+		foreach from [mk::select wdb.refs -exact to $N] {
 		    invalidate $r [mk::get wdb.refs!$from from]
 		}
 	    }
@@ -1831,7 +1831,7 @@ namespace eval WikitWub {
 	}
 
 	set refList ""
-	foreach from [mk::select wdb.refs to $N] {
+	foreach from [mk::select wdb.refs -exact to $N] {
 	    set from [mk::get wdb.refs!$from from]
 	    ::Wikit::pagevars $from name who date
 	    lappend refList [list [::Wikit::GetTimeStamp $date] $name $who $from]
