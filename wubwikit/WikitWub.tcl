@@ -2085,7 +2085,7 @@ namespace eval WikitWub {
 		# try cached version
 		lassign [fromCache $r $N $ext] cached result
 		if {$cached} {
-		    return $r
+		    return $result
 		}
 	    }
 
@@ -2099,7 +2099,7 @@ namespace eval WikitWub {
 		# try cached version
 		lassign [fromCache $r $N $ext] cached result
 		if {$cached} {
-		    return $r
+		    return $result
 		}
 
 		# set up a few standard URLs an strings
