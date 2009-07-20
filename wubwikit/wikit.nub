@@ -55,6 +55,7 @@ Disallow: /_/
 Disallow: /_edit/
 Disallow: /_ref/
 Disallow: /_summary/
+Disallow: /_diff/
 
 User-agent: Twiceler
 Disallow: /
