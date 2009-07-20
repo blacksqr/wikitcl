@@ -2083,7 +2083,7 @@ namespace eval WikitWub {
 		    set p [$pagecache fetch id $N]
 		    if {[dict size $p]} {
 			dict with p {
-			    return [Http DCache [Http Ok $r $content $ct]]
+			    return [Http Ok [Http DCache $r] $content $ct]
 			}
 		    }
 		}
