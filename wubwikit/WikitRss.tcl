@@ -122,8 +122,6 @@ namespace eval WikitRss {
 	
 	Debug.rss {filling details} 7
 	
-	set pages [mk::select $db.pages -rsort date]
-
 	if {0} {
 	    # generate items for changed pages,
 	    # ordered from most recently changed to least recently changed.
@@ -133,6 +131,8 @@ namespace eval WikitRss {
 	    set D 10
 	    set edate [expr {[clock seconds]-$D*86400}]
 	    set changes {}
+
+	    set pages [mk::select $db.pages -rsort date]
 	    foreach N $pages {
 		if {$N in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
 		lassign [mk::get $db.pages!$N name date who] name date who
@@ -161,6 +161,7 @@ namespace eval WikitRss {
 	}
 
 	set i 0
+	set pages [mk::select $db.pages -rsort date]
 	foreach page $pages {
 	    if {$page in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
 	    
