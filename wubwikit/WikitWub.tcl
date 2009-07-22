@@ -1979,7 +1979,7 @@ namespace eval WikitWub {
 
     proc Filter {req term} {}
 
-    variable trailers {@ _edit ! _ref - _diff + _history}
+    variable trailers {@ /_/edit ! /_/ref - /_/diff + /_/history}
 
     proc do {r} {
 	# decompose name
