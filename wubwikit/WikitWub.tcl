@@ -1465,6 +1465,39 @@ namespace eval WikitWub {
 	return $r
     }
 
+    proc human {r} {
+	# try to find the human cookie
+	set cdict [dict get $r -cookies]
+	set cl [Cookies match $cdict -name who]
+	if {[llength $cl]} {
+	    return $r
+	}
+
+	# add a cookie to every page request
+	if {[dict exists $r -cookies]} {
+	    set cdict [dict get $r -cookies]
+	} else {
+	    set cdict [dict create]
+	}
+	set dom [dict get $r -host]
+
+	# include an optional expiry age
+	variable maxAge
+	if {$maxAge ne ""} {
+	    set age [list -expires $maxAge]
+	} else {
+	    set age {}
+	}
+
+	# add a cookie
+	set value [clock microseconds]
+	Debug.wikit {created human cookie $value}
+	set cdict [Cookies add $cdict -path / -name who -value $value]
+
+	dict set r -cookies $cdict
+	return $r
+    }
+
     proc who {r} {
 	variable cookie
 	set cdict [dict get $r -cookies]
@@ -1982,6 +2015,8 @@ namespace eval WikitWub {
     variable trailers {@ /_/edit ! /_/ref - /_/diff + /_/history}
 
     proc do {r} {
+	set r [human $r]
+
 	# decompose name
 	set term [file tail [dict get $r -path]]
 	set N [file rootname $term]	;# it's a simple single page
