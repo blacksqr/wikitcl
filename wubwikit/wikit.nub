@@ -50,6 +50,7 @@ code /_/ie_onload1.JS {
 
 literal /robots.txt {User-agent: *
 Sitemap: http://wiki.tcl.tk/_sitemap.xml
+Disallow: /2
 Disallow: /5.html
 Disallow: /_/
 Disallow: /_edit/
