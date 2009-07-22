@@ -35,11 +35,11 @@ rewrite {/nub/.*} {/_nub/[file join {*}[lrange [file split [dict get $r -path]] 
 rewrite {/_sitemap.xml} {/_/sitemap}
 rewrite {/_sitemap} {/_/sitemap}
 
-code /ie_onload.JS {
+code /_/ie_onload1.JS {
     if {[dict exists $r if-modified-since]} {
 	return [Http NotModified $r]
     } else {
-	return [Http CacheableContent [Http Cache $r 100000000] 0 {init();} application/javascript]
+	return [Http Ok $r {init();} application/javascript]
     }
     # send out this piddling script to IE users.
     # See variable head above for how it's invoked.
