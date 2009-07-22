@@ -1470,6 +1470,7 @@ namespace eval WikitWub {
 	set cdict [dict get $r -cookies]
 	set cl [Cookies match $cdict -name who]
 	if {[llength $cl]} {
+	    dict set r -human [dict get [Cookies fetch $cdict -name who] -value]
 	    return $r
 	}
 
