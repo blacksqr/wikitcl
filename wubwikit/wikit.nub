@@ -57,6 +57,9 @@ Disallow: /_ref/
 Disallow: /_summary/
 Disallow: /_diff/
 Disallow: /_search/
+Disallow: /_history/
+Disallow: /_repo/
+Disallow: /_stats/
 
 User-agent: Twiceler
 Disallow: /
