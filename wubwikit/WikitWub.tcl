@@ -2029,6 +2029,7 @@ namespace eval WikitWub {
 		# robot?
 		switch -- [dict get $r -ua_class] {
 		    browser {
+			dict set r -ua_class browser
 		    }
 		    default {
 			dict set r -ua_class robot
