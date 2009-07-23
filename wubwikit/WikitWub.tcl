@@ -2016,10 +2016,8 @@ namespace eval WikitWub {
     variable trailers {@ /_/edit ! /_/ref - /_/diff + /_/history}
 
     variable tracker
-
-    proc do {r} {
-	set r [human $r]
-
+    proc track {r} {
+	variable tracker
 	set ipaddr [dict get $r -ipaddr]
 	if {[info exists tracker($ipaddr)]} {
 	    if {$tracker($ipaddr)} {
@@ -2040,6 +2038,12 @@ namespace eval WikitWub {
 	} else {
 	    set tracker($ipaddr) 0	;# remember that we've seen them once
 	}
+	return $r
+    }
+
+    proc do {r} {
+	set r [human $r]
+	set r [track $r]
 
 	# decompose name
 	set term [file tail [dict get $r -path]]
