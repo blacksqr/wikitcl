@@ -2065,6 +2065,10 @@ namespace eval WikitWub {
     variable tracker
     proc track {r} {
 	variable tracker
+	if {[dict exists $r -human]} {
+	    dict set r -ua_class browserH
+	    return $r
+	}
 	set ipaddr [dict get $r -ipaddr]
 	if {[info exists tracker($ipaddr)]} {
 	    if {[dict exists $r -human]} {
