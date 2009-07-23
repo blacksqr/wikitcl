@@ -2067,30 +2067,37 @@ namespace eval WikitWub {
     variable tracker
     proc track {r} {
 	variable tracker
+	set ipaddr [dict get $r -ipaddr]
+
 	if {[dict exists $r -human]} {
-	    dict set r -ua_class browserH
+	    # they returned our cookie - browser
+	    set human [dict get $r -human]
+
+	    # record human's ip addresses
+	    if {[lsearch -exact $tracker($human) $ipaddr] < 0} {
+		lappend tracker($human) $ipaddr	;# only add new ipaddrs
+	    }
+	    set tracker($ipaddr) $human	;# set tracker to human's id
+
+	    dict set r -ua_class browser	;# classify the agent
 	    return $r
 	}
-	set ipaddr [dict get $r -ipaddr]
+
 	if {[info exists tracker($ipaddr)]} {
-	    if {[dict exists $r -human]} {
-		if {[lsearch -exact $tracker($ipaddr) $ipaddr] < 0} {
-		    lappend tracker($ipaddr) $ipaddr
+	    # we've seen them, and they haven't returned the cookie
+	    # robot?
+	    switch -- [dict get? $r -ua_class] {
+		browser {
+		    # known to be a browser
 		}
-		dict set r -ua_class browser
-	    } else {
-		# we've seen them, and they haven't returned the cookie
-		# robot?
-		switch -- [dict get? $r -ua_class] {
-		    browser {}
-		    default {
-			dict set r -ua_class robot
-		    }
+		default {
+		    dict set r -ua_class robot
 		}
 	    }
 	} else {
 	    set tracker($ipaddr) 0	;# remember that we've seen them once
 	}
+
 	return $r
     }
 
