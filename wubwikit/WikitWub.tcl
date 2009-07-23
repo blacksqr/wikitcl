@@ -2074,7 +2074,7 @@ namespace eval WikitWub {
 	    set human [dict get $r -human]
 
 	    # record human's ip addresses
-	    if {[info exists tracker($human) && 
+	    if {[info exists tracker($human)] && 
 		 [lsearch -exact $tracker($human) $ipaddr] < 0
 	     } {
 		lappend tracker($human) $ipaddr	;# only add new ipaddrs
