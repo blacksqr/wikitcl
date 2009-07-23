@@ -2024,6 +2024,7 @@ namespace eval WikitWub {
 		if {[lsearch -exact $tracker($ipaddr) $ipaddr] < 0} {
 		    lappend tracker($ipaddr) $ipaddr
 		}
+		dict set r -ua_class browser
 	    } else {
 		# we've seen them, and they haven't returned the cookie
 		# robot?
