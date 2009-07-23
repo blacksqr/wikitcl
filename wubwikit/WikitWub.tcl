@@ -2015,8 +2015,31 @@ namespace eval WikitWub {
 
     variable trailers {@ /_/edit ! /_/ref - /_/diff + /_/history}
 
+    variable tracker
+
     proc do {r} {
 	set r [human $r]
+
+	set ipaddr [dict get $r -ipaddr]
+	if {[info exists tracker($ipaddr)]} {
+	    if {$tracker($ipaddr)} {
+		if {[lsearch -exact $tracker($ipaddr) $ipaddr] < 0} {
+		    lappend tracker($ipaddr) $ipaddr
+		}
+	    } else {
+		# we've seen them, and they haven't returned the cookie
+		# robot?
+		switch -- [dict get $r -ua_class] {
+		    browser {
+		    }
+		    default {
+			dict set r -ua_class robot
+		    }
+		}
+	    }
+	} else {
+	    set tracker($ipaddr) 0	;# remember that we've seen them once
+	}
 
 	# decompose name
 	set term [file tail [dict get $r -path]]
