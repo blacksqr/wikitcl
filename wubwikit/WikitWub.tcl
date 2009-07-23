@@ -2074,9 +2074,13 @@ namespace eval WikitWub {
 	    set human [dict get $r -human]
 
 	    # record human's ip addresses
-	    if {[lsearch -exact $tracker($human) $ipaddr] < 0} {
+	    if {[info exists tracker($human) && 
+		 [lsearch -exact $tracker($human) $ipaddr] < 0
+	     } {
 		lappend tracker($human) $ipaddr	;# only add new ipaddrs
-	    }
+	     } else {
+		 set tracker($human) $ipaddr
+	     }
 	    set tracker($ipaddr) $human	;# set tracker to human's id
 
 	    dict set r -ua_class browser	;# classify the agent
