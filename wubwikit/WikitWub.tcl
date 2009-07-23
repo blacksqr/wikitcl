@@ -2067,7 +2067,7 @@ namespace eval WikitWub {
 	variable tracker
 	set ipaddr [dict get $r -ipaddr]
 	if {[info exists tracker($ipaddr)]} {
-	    if {$tracker($ipaddr)} {
+	    if {[dict exists $r -human]} {
 		if {[lsearch -exact $tracker($ipaddr) $ipaddr] < 0} {
 		    lappend tracker($ipaddr) $ipaddr
 		}
