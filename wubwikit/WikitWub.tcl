@@ -646,6 +646,9 @@ namespace eval WikitWub {
     }
 
     proc /cleared { r } {
+	if {[dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
 	set results ""
 	set count 0
 	set lastDay 0
@@ -808,7 +811,19 @@ namespace eval WikitWub {
 	return $C
     }
 
+    proc robot {r} {
+	set content [<h1> "We think you're a robot"]
+	append content [<p> "If we're mistaken, please accept our apologies.  We don't permit robots to access our more computationally expensive pages."]
+	append content [<p> "We also require cookies to be enabled on your browser to access these pages."]
+
+	return [Http Forbidden $r $content]
+    }
+
     proc /summary {r N {D 10}} {
+	if {[dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
 	variable delta
 
 	set N [file rootname $N]	;# it's a simple single page
@@ -867,6 +882,10 @@ namespace eval WikitWub {
 
     proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
 	Debug.wikit {/diff $N $V $D $W}
+
+	if {[dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
     
 	set ext [file extension $N]	;# file extension?
 	set N [file rootname $N]	;# it's a simple single page
@@ -1082,6 +1101,10 @@ namespace eval WikitWub {
     proc /revision {r N {V -1} {A 0}} {
 	Debug.wikit {/page $args}
 
+	if {[dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
 	set ext [file extension $N]	;# file extension?
 	set N [file rootname $N]	;# it's a simple single page
 
@@ -1167,6 +1190,11 @@ namespace eval WikitWub {
     # /history - revision history
     proc /history {r N {S 0} {L 25}} {
 	Debug.wikit {/history $N $S $L}
+
+	if {[dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
 	if {![string is integer -strict $N]
 	    || ![string is integer -strict $S]
 	    || ![string is integer -strict $L]
@@ -1433,6 +1461,10 @@ namespace eval WikitWub {
     }
 
     proc /search {r {S ""} args} {
+	if {[dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
 	if {$S eq "" && [llength $args] > 0} {
 	    set S [lindex $args 0]
 	}
@@ -1465,40 +1497,6 @@ namespace eval WikitWub {
 	return $r
     }
 
-    proc human {r} {
-	# try to find the human cookie
-	set cdict [dict get $r -cookies]
-	set cl [Cookies match $cdict -name who]
-	if {[llength $cl]} {
-	    dict set r -human [dict get [Cookies fetch $cdict -name who] -value]
-	    return $r
-	}
-
-	# add a cookie to every page request
-	if {[dict exists $r -cookies]} {
-	    set cdict [dict get $r -cookies]
-	} else {
-	    set cdict [dict create]
-	}
-	set dom [dict get $r -host]
-
-	# include an optional expiry age
-	variable maxAge
-	if {$maxAge ne ""} {
-	    set age [list -expires $maxAge]
-	} else {
-	    set age {}
-	}
-
-	# add a cookie
-	set value [clock microseconds]
-	Debug.wikit {created human cookie $value}
-	set cdict [Cookies add $cdict -path / -name who -value $value]
-
-	dict set r -cookies $cdict
-	return $r
-    }
-
     proc who {r} {
 	variable cookie
 	set cdict [dict get $r -cookies]
@@ -1512,6 +1510,10 @@ namespace eval WikitWub {
     }
 
     proc /preview { r N O } {
+	if {[dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
 	set C [::Wikit::TextToStream $O]
 	set ::Wikit::creating_preview 1
@@ -1522,6 +1524,9 @@ namespace eval WikitWub {
     }
 
     proc /edit/save {r N C O A save cancel preview } {
+	if {[dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
 
 	Debug.wikit {/edit/save $N}
 	if { [string tolower $cancel] eq "cancel" } {
@@ -1679,6 +1684,10 @@ namespace eval WikitWub {
     
     # called to generate an edit page
     proc /edit {r N A args} {
+	if {[dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
 	variable readonly
 	variable protected
 	if {$readonly ne ""} {
@@ -1852,6 +1861,10 @@ namespace eval WikitWub {
 
     # called to generate a page with references
     proc /ref {r N A} {
+	if {[dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
 	if { ![string is integer -strict $A] } {
 	    set A 0
 	}
@@ -2015,6 +2028,40 @@ namespace eval WikitWub {
 
     variable trailers {@ /_/edit ! /_/ref - /_/diff + /_/history}
 
+    proc human {r} {
+	# try to find the human cookie
+	set cdict [dict get $r -cookies]
+	set cl [Cookies match $cdict -name who]
+	if {[llength $cl]} {
+	    dict set r -human [dict get [Cookies fetch $cdict -name who] -value]
+	    return $r
+	}
+
+	# add a cookie to every page request
+	if {[dict exists $r -cookies]} {
+	    set cdict [dict get $r -cookies]
+	} else {
+	    set cdict [dict create]
+	}
+	set dom [dict get $r -host]
+
+	# include an optional expiry age
+	variable maxAge
+	if {$maxAge ne ""} {
+	    set age [list -expires $maxAge]
+	} else {
+	    set age {}
+	}
+
+	# add a cookie
+	set value [clock microseconds]
+	Debug.wikit {created human cookie $value}
+	set cdict [Cookies add $cdict -path / -name who -value $value]
+
+	dict set r -cookies $cdict
+	return $r
+    }
+
     variable tracker
     proc track {r} {
 	variable tracker
@@ -2028,10 +2075,8 @@ namespace eval WikitWub {
 	    } else {
 		# we've seen them, and they haven't returned the cookie
 		# robot?
-		switch -- [dict get $r -ua_class] {
-		    browser {
-			dict set r -ua_class browser
-		    }
+		switch -- [dict get? $r -ua_class] {
+		    browser {}
 		    default {
 			dict set r -ua_class robot
 		    }
@@ -2068,7 +2113,12 @@ namespace eval WikitWub {
 		return [Http Redir $r "http://[dict get $r host]/_/search" S [Query decode $term$fancy]]
 	    } elseif {$N ne $term} {
 		# we really should redirect
-		return [Http Redir $r "http://[dict get $r host]/$N"]
+		if {[dict get? $r -ua_class] eq "robot"} {
+		    # try to make robots always use the canonical form
+		    return [Http Moved $r "http://[dict get $r host]/$N"]
+		} else {
+		    return [Http Redir $r "http://[dict get $r host]/$N"]
+		}
 	    }
 	}
 
