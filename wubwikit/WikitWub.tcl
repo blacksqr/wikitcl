@@ -10,7 +10,6 @@ package require Site	;# assume Wub/ is already on the path, or in /usr/lib
 lappend auto_path [file dirname [info script]]
 package require Sitemap
 package require stx
-package require Honeypot
 package require Form
 
 package require WikitRss
@@ -441,8 +440,7 @@ namespace eval WikitWub {
     }
 
     # html suffix to be sent on every page
-    variable htmlsuffix [Honeypot link /$protected(HoneyPot).html]
-    append htmlsuffix [<script> src /wiki.js] \n
+    variable htmlsuffix [<script> src /wiki.js] \n
 
     # convertor from wiki to html
     proc .x-text/wiki.text/html {rsp} {
@@ -2492,8 +2490,6 @@ namespace eval WikitWub {
 	} else {
 	    # normal start, existing db
 	}
-
-	Honeypot new dir [file join $docroot captcha]
 
 	# clean up any symlinks in docroot
 	package require functional
