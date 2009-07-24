@@ -2106,8 +2106,8 @@ namespace eval WikitWub {
     }
 
     proc do {r} {
-	set r [human $r]
-	set r [track $r]
+	#set r [human $r]
+	#set r [track $r]
 
 	# decompose name
 	set term [file tail [dict get $r -path]]
