@@ -1,5 +1,3 @@
-lappend auto_path /home/decoster/www/tcllib-1.11.1/modules /home/decoster/www/wub
-
 package require Mk4tcl
 package require fileutil
 package require struct::queue
@@ -2015,6 +2013,7 @@ namespace eval WikitWub {
 	    set p [$pagecache fetch id $N]
 	    if {[dict size $p]} {
 		dict with p {
+		    dict set r -title $title
 		    return [list 1 [Http Ok [Http DCache $r] $content $ct]]
 		}
 	    }
@@ -2026,87 +2025,7 @@ namespace eval WikitWub {
 
     variable trailers {@ /_/edit ! /_/ref - /_/diff + /_/history}
 
-    proc human {r} {
-	# try to find the human cookie
-	set cdict [dict get $r -cookies]
-	set cl [Cookies match $cdict -name who]
-	if {[llength $cl]} {
-	    set human [dict get [Cookies fetch $cdict -name who] -value]
-	    set human [lindex [split $human =] end]
-	    dict set r -human $human
-	    return $r
-	}
-
-	# add a cookie to every page request
-	if {[dict exists $r -cookies]} {
-	    set cdict [dict get $r -cookies]
-	} else {
-	    set cdict [dict create]
-	}
-	set dom [dict get $r -host]
-
-	# include an optional expiry age
-	variable maxAge
-	if {$maxAge ne ""} {
-	    set age [list -expires $maxAge]
-	} else {
-	    set age {}
-	}
-
-	# add a cookie
-	set value [clock microseconds]
-	Debug.wikit {created human cookie $value}
-	set cdict [Cookies add $cdict -path / -name who -value $value]
-
-	dict set r -cookies $cdict
-	return $r
-    }
-
-    variable tracker
-    proc track {r} {
-	variable tracker
-	set ipaddr [dict get $r -ipaddr]
-
-	if {[dict exists $r -human]} {
-	    # they returned our cookie - browser
-	    set human [dict get $r -human]
-
-	    # record human's ip addresses
-	    if {[info exists tracker($human)] && 
-		 [lsearch -exact $tracker($human) $ipaddr] < 0
-	     } {
-		lappend tracker($human) $ipaddr	;# only add new ipaddrs
-	     } else {
-		 set tracker($human) $ipaddr
-	     }
-	    set tracker($ipaddr) $human	;# set tracker to human's id
-
-	    dict set r -ua_class browser	;# classify the agent
-	    return $r
-	}
-
-	if {[info exists tracker($ipaddr)]} {
-	    # we've seen them, and they haven't returned the cookie
-	    # robot?
-	    switch -- [dict get? $r -ua_class] {
-		browser {
-		    # known to be a browser
-		}
-		default {
-		    dict set r -ua_class robot
-		}
-	    }
-	} else {
-	    set tracker($ipaddr) 0	;# remember that we've seen them once
-	}
-
-	return $r
-    }
-
     proc do {r} {
-	#set r [human $r]
-	#set r [track $r]
-
 	# decompose name
 	set term [file tail [dict get $r -path]]
 	set N [file rootname $term]	;# it's a simple single page
@@ -2369,9 +2288,9 @@ namespace eval WikitWub {
 	    if {$pagecaching} {
 		variable pagecache
 		if {[$pagecache exists id $N]} {
-		    $pagecache set [$pagecache find id $N] content [dict get $result -content] ct [dict get $result content-type] when [clock milliseconds]
+		    $pagecache set [$pagecache find id $N] content [dict get $result -content] ct [dict get $result content-type] when [clock milliseconds] title [dict get? $result -title]
 		} else {
-		    $pagecache append id $N content [dict get $result -content] ct [dict get $result content-type] when [clock milliseconds]
+		    $pagecache append id $N content [dict get $result -content] ct [dict get $result content-type] when [clock milliseconds] title [dict get? $result -title]
 		}
 	    }
 	    return $result
@@ -2597,6 +2516,7 @@ namespace eval WikitWub {
 		id:I	;# page number
 		content:S	;# generated content
 		ct:S		;# content-type
+		title:S		;# page title
 		when:L		;# date/time generated
 	    }] as pagecache
 	}
