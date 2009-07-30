@@ -367,6 +367,11 @@ table.rctable tbody td {
 	border: 0;
 	vertical-align: top;
 }
+
+table.wikit_options {
+    margin: 10px;
+}
+
 td.rc1 {
 	width: 30em;
 }
