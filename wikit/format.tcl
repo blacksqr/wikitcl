@@ -1481,7 +1481,7 @@ namespace eval Wikit::Format {
     variable html_frag
 
     foreach {mode text} $s {
-      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _}} {
+      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY}} {
         # Unwind uol
         append result </li>
         foreach uo [lreverse $uol] {
