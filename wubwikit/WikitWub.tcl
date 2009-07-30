@@ -79,7 +79,7 @@ namespace eval WikitWub {
 	variable templates
 	variable titles
 	if {$titles($tname) ne ""} {
-	    dict set r -title [<title> [uplevel 1 subst [list $titles($tname)]]]
+	    dict set r -title [uplevel 1 subst [list $titles($tname)]]
 	}
 	dict set r -content [uplevel 1 subst [list $templates($tname)]]
 	dict set r content-type x-text/wiki
