@@ -79,7 +79,7 @@ namespace eval WikitWub {
 	variable templates
 	variable titles
 	if {$titles($tname) ne ""} {
-	    dict lappend r -headers [<title> [uplevel 1 subst [list $titles($tname)]]]
+	    dict set r -title [<title> [uplevel 1 subst [list $titles($tname)]]]
 	}
 	dict set r -content [uplevel 1 subst [list $templates($tname)]]
 	dict set r content-type x-text/wiki
@@ -458,6 +458,10 @@ namespace eval WikitWub {
 	    if {[dict exists $rsp -headers]} {
 		append content [join [dict get $rsp -headers] \n] \n
 		dict unset rsp -headers
+	    }
+	    set title [dict get? $rsp -title]
+	    if {$title ne ""} {
+		append content [<title> $title] \n
 	    }
 
 	    # add in some wikit-wide headers
