@@ -9,7 +9,7 @@ domain /_jquery/ JQ
 domain /_stats/ File root /var/www/webalizer
 domain /_sinorca/ Sinorca
 domain /_nub/ Nub docurl /_wub/docs/
-domain /_wub/ {Mason wub} auth .before wrapper .after root [file join $::Site::wubdir docs]
+domain /_wub/ {Mason wub} auth .before wrapper .after root [file join $::Site::wubdir docroot]
 domain /_wub/docs/ About
 domain /_doc/ Commenter ctype x-text/html-fragment
 literal /_illuminati {<h3>Certificate of Non-Existence</h3><p>There is no Tcl Illuminati</p><p>Signed: Illuminatus Namespace Coordinator</p><p>Issued under the great seal.<br><img src='http://www.etoyoc.com/images/tcl-illuminati.jpg'></p>}
