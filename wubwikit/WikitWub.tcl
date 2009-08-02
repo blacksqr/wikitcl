@@ -2018,6 +2018,7 @@ namespace eval WikitWub {
 	    if {[dict size $p]} {
 		dict with p {
 		    dict set r -title $title
+		    dict set r -caching Wiki_inserted
 		    return [list 1 [Http Ok [Http DCache $r] $content $ct]]
 		}
 	    }
