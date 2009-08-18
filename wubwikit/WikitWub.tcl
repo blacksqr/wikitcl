@@ -1216,7 +1216,7 @@ namespace eval WikitWub {
 	    if {$pstart < 0} {
 		set pstart 0
 	    }
-	    lappend menu [<a> href "$N?S=$pstart&L=$L" "Previous $L"]
+	    lappend menu [<a> href "history/$N?S=$pstart&L=$L" "Previous $L"]
 	    #	    append links [<a> href "$N?S=$pstart&L=$L" "Previous $L"]
 	}
 	set nstart [expr {$S + $L}]
@@ -1224,7 +1224,7 @@ namespace eval WikitWub {
 	    #	    if {$links ne {}} {
 	    #		append links { - }
 	    #	    }
-	    lappend menu [<a> href "$N?S=$nstart&L=$L" "Next $L"]
+	    lappend menu [<a> href "history/$N?S=$nstart&L=$L" "Next $L"]
 	    #	    append links [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 	}
 	set footer [menus Home Recent Help Search]
