@@ -2,9 +2,9 @@
 #
 #	handle the tclhttpd web server
 #
-
+set -x
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/local/wikitcl/wubwikit/WikitWub.tcl
+DAEMON=/var/www/wikitcl/wubwikit/WikitWub.tcl
 DAEMON_OPTS=""
 NAME=wub
 DESC="Wub Web Server"
@@ -25,8 +25,7 @@ case "$1" in
   start)
 	echo -n "Starting $DESC with $STARTER: "
 	if [ $STARTER = "daemon" ]; then
-	    echo /usr/bin/daemon --name=wub --chdir=/usr/local/wikitcl/wikit --dbglog=/var/log/wub/wub.daemon --user=www-data.www-data --umask=005 --respawn --inherit --core --verbose=1 --debug=1 --errlog=/var/log/wub/wub.err --output=/var/log/wub/wub.out --command="$TCLSH $DAEMON $DAEMON_OPTS"
-	    /usr/bin/daemon --name=wub --chdir=/usr/local/wikitcl/wikit --dbglog=/var/log/wub/wub.daemon --user=www-data.www-data --umask=005 --respawn --inherit --core --verbose=1 --debug=1 --errlog=/var/log/wub/wub.err --output=/var/log/wub/wub.out --command="$TCLSH $DAEMON $DAEMON_OPTS"
+	    /usr/bin/daemon --name=wub --chdir=/var/www/wikitcl/wubwikit --dbglog=/var/log/wub/wub.daemon --user=www-data.www-data --umask=005 --respawn --inherit --core --verbose=1 --debug=1 --errlog=/var/log/wub/wub.err --output=/var/log/wub/wub.out --command="$TCLSH $DAEMON $DAEMON_OPTS"
 	else
 	    start-stop-daemon --start --quiet --background \
 		--chuid www-data:www-data \
