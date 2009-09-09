@@ -172,35 +172,38 @@ namespace eval WikitRss {
 	    if {$date<$edate} break
 
 	    # calculate line change
-	    set change [expr {[mk::view size wdb.pages!$page.changes] - 1}]
-	    if {$change < 0} continue
+#	    set change [expr {[mk::view size wdb.pages!$page.changes] - 1}]
+#	    if {$change < 0} continue
 
 	    # look for changes in past D days
-	    set D 3
-	    set edate [expr {[clock seconds]-$D*86400}]
-	    set changes {}
-	    set V [mk::view size wdb.pages!$page.changes]
-	    set delta 0
-	    set whol {}
-	    foreach sid [mk::select wdb.pages!$page.changes -rsort date] {
-		lassign [mk::get wdb.pages!$page.changes!$sid date who delta] cdate cwho cdelta
-		incr delta [expr {int(abs($cdelta))}]
-		set C [WikitWub::summary_diff $page $V [expr {$V-1}] 1]
-		append changes $C\n
-		lappend whol $who
-		incr V -1
-		if {$V < 1} break
-		if {$cdate<$edate} break
-		set date $cdate
-		set who $cwho
-	    }
+#	    set D 3
+#	    set edate [expr {[clock seconds]-$D*86400}]
+#	    set changes {}
+#	    set V [mk::view size wdb.pages!$page.changes]
+#	    set delta 0
+#	    set whol {}
+#	    foreach sid [mk::select wdb.pages!$page.changes -rsort date] {
+#		lassign [mk::get wdb.pages!$page.changes!$sid date who delta] cdate cwho cdelta
+#		incr delta [expr {int(abs($cdelta))}]
+#		set C [WikitWub::summary_diff $page $V [expr {$V-1}] 1]
+#		append changes $C\n
+#		lappend whol $who
+#		incr V -1
+#		if {$V < 1} break
+#		if {$cdate<$edate} break
+#		set date $cdate
+#		set who $cwho
+#	    }
 	    
 	    Debug.rss {detail $name $date $who $page} 7
 	    
-	    if {$delta > 0} {
-		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$page " ($delta characters)\n$changes"] \n
+	    puts "$name $date $who $page"
+
+#	    if {$delta > 0} {
+#		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$page " ($delta characters)\n$changes"] \n
+		append contents [item $name $date $who $baseUrl$page ""] \n
 		if {[incr i] > $MaxItems} break	;# limit RSS size
-	    }
+#	    }
 	}
 
 	append contents "</channel>\n"
