@@ -1,5 +1,3 @@
-lappend auto_path /home/decoster/www/tcllib-1.11.1/modules /home/decoster/www/wub /home/decoster/www/mk4tcl
-
 package require Mk4tcl
 package require fileutil
 package require struct::queue

@@ -91,15 +91,20 @@ namespace eval WikitRss {
 
     # clear the cached RSS
     proc clear {} {
+	puts "rss clear @ [clock seconds]"
 	variable cache ""
     }
     
     proc rss {} {
+
+	puts "rss starts @ [clock seconds]"
+
 	variable db
 	Debug.rss {rss request [clock seconds]}
 
 	variable cache
 	if {$cache ne ""} {
+	    puts "rss from cache @ [clock seconds]"
 	    return $cache
 	}
 
@@ -169,6 +174,8 @@ namespace eval WikitRss {
 	    
 	    lassign [mk::get $db.pages!$page name date who] name date who
 	    
+	    puts "$page @ [clock seconds] $name $date $who "
+	    
 	    if {$date<$edate} break
 
 	    # calculate line change
@@ -176,39 +183,44 @@ namespace eval WikitRss {
 #	    if {$change < 0} continue
 
 	    # look for changes in past D days
-#	    set D 3
-#	    set edate [expr {[clock seconds]-$D*86400}]
-#	    set changes {}
-#	    set V [mk::view size wdb.pages!$page.changes]
-#	    set delta 0
-#	    set whol {}
-#	    foreach sid [mk::select wdb.pages!$page.changes -rsort date] {
-#		lassign [mk::get wdb.pages!$page.changes!$sid date who delta] cdate cwho cdelta
-#		incr delta [expr {int(abs($cdelta))}]
-#		set C [WikitWub::summary_diff $page $V [expr {$V-1}] 1]
-#		append changes $C\n
-#		lappend whol $who
-#		incr V -1
-#		if {$V < 1} break
-#		if {$cdate<$edate} break
-#		set date $cdate
-#		set who $cwho
-#	    }
+	    set D 3
+	    set edate [expr {[clock seconds]-$D*86400}]
+	    set changes {}
+	    set V [mk::view size wdb.pages!$page.changes]
+	    set delta 0
+	    set whol {}
+	    foreach sid [mk::select wdb.pages!$page.changes -rsort date] {
+		lassign [mk::get wdb.pages!$page.changes!$sid date who delta] cdate cwho cdelta
+		incr delta [expr {int(abs($cdelta))}]
+		set C [WikitWub::summary_diff $page $V [expr {$V-1}] 1]
+		append changes $C\n
+		lappend whol $who
+		incr V -1
+		if {$V < 1} break
+		if {$cdate<$edate} break
+		set date $cdate
+		set who $cwho
+	    }
+	    
+	    puts "$page # [clock seconds] $name $date $who "
 	    
 	    Debug.rss {detail $name $date $who $page} 7
-	    
-	    puts "$name $date $who $page"
 
-#	    if {$delta > 0} {
-#		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$page " ($delta characters)\n$changes"] \n
-		append contents [item $name $date $who $baseUrl$page ""] \n
+	    if {$delta > 0} {
+		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$page " ($delta characters)\n$changes"] \n
+#		append contents [item $name $date $who $baseUrl$page ""] \n
 		if {[incr i] > $MaxItems} break	;# limit RSS size
-#	    }
+	    }
 	}
 
 	append contents "</channel>\n"
 	append contents "</rss>\n"
 	Debug.rss {completed}
+	    
+	puts "rss done @ [clock seconds]"
+
+	set cache $contents
+
 	return $contents
     }
 
