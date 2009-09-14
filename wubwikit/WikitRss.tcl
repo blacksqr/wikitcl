@@ -91,20 +91,16 @@ namespace eval WikitRss {
 
     # clear the cached RSS
     proc clear {} {
-	puts "rss clear @ [clock seconds]"
 	variable cache ""
     }
     
     proc rss {} {
-
-	puts "rss starts @ [clock seconds]"
 
 	variable db
 	Debug.rss {rss request [clock seconds]}
 
 	variable cache
 	if {$cache ne ""} {
-	    puts "rss from cache @ [clock seconds]"
 	    return $cache
 	}
 
@@ -174,8 +170,6 @@ namespace eval WikitRss {
 	    
 	    lassign [mk::get $db.pages!$page name date who] name date who
 	    
-	    puts "$page @ [clock seconds] $name $date $who "
-	    
 	    if {$date<$edate} break
 
 	    # calculate line change
@@ -202,8 +196,6 @@ namespace eval WikitRss {
 		set who $cwho
 	    }
 	    
-	    puts "$page # [clock seconds] $name $date $who "
-	    
 	    Debug.rss {detail $name $date $who $page} 7
 
 	    if {$delta > 0} {
@@ -217,8 +209,6 @@ namespace eval WikitRss {
 	append contents "</rss>\n"
 	Debug.rss {completed}
 	    
-	puts "rss done @ [clock seconds]"
-
 	set cache $contents
 
 	return $contents
