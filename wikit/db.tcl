@@ -522,16 +522,23 @@ namespace eval Wikit {
 
   # SavePageDB - store page $id ($who, $text, $newdate)
   proc SavePageDB {db id text newWho newName {newdate ""} {commit 1}} {
+
+    puts "SavePageDB@[clock seconds] start"
+
     set changed 0
 
     variable mutex;
     if {$mutex ne ""} {
+      puts "SavePageDB@[clock seconds] lock"
       ::thread::mutex lock $mutex	;# lock for update
     }
     if {[catch {
+
+      puts "SavePageDB@[clock seconds] pagevarsDB"
       pagevarsDB $db $id name date page who
 
       if {$newName != $name} {
+        puts "SavePageDB@[clock seconds] new name"
         set changed 1
 
         # rewrite all pages referencing $id changing old name to new
@@ -553,6 +560,7 @@ namespace eval Wikit {
       }
 
       if {$newdate != ""} {
+        puts "SavePageDB@[clock seconds] set date"
         # change the date if requested
         mk::set $db.pages!$id date $newdate
       }
@@ -560,9 +568,12 @@ namespace eval Wikit {
       # avoid creating a log entry and committing if nothing changed
       set text [string trimright $text]
       if {$changed || $text != $page} {
+        puts "SavePageDB@[clock seconds] parse"
         # make sure it parses before deleting old references
         set newRefs [StreamToRefs [TextToStream $text] [list ::Wikit::InfoProc $db]]
+        puts "SavePageDB@[clock seconds] delRefs"
         delRefs $id $db
+        puts "SavePageDB@[clock seconds] addRefs"
         addRefs $id $db $newRefs
 
         if {$id == 3} {
@@ -572,16 +583,20 @@ namespace eval Wikit {
         # If this isn't the first time that the given page has been stored
         # in the databse, make a change log entry for rollback.
 
+        puts "SavePageDB@[clock seconds] log change"
         mk::set $db.pages!$id page $text who $newWho
         if {$page ne {} || [mk::view size $db.pages!$id.changes]} {
+          puts "SavePageDB@[clock seconds] update change log"
           UpdateChangeLog $db $id $name $date $who $page $text
         }
 
         if {$newdate == ""} {
+          puts "SavePageDB@[clock seconds] set date"
           mk::set $db.pages!$id date [clock seconds]
           set commit 1
         }
 
+        puts "SavePageDB@[clock seconds] done"
       }
     } r]} {
       Debug.error "SavePageDb: '$r'"
