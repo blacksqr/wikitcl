@@ -596,20 +596,24 @@ namespace eval Wikit {
           set commit 1
         }
 
-        puts "SavePageDB@[clock seconds] done"
+        puts "SavePageDB@[clock seconds] done saving"
       }
     } r]} {
       Debug.error "SavePageDb: '$r'"
     }
 
     if {$commit} {
+        puts "SavePageDB@[clock seconds] add log entry"
       AddLogEntry $id $db
+        puts "SavePageDB@[clock seconds] commit"
       DoCommit $db
     }
 
     if {$mutex ne ""} {
+        puts "SavePageDB@[clock seconds] unlock mutex"
       ::thread::mutex unlock $mutex	;# unlock for db update
     }
+        puts "SavePageDB@[clock seconds] done."
   }
 
   #----------------------------------------------------------------------------
