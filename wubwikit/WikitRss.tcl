@@ -78,14 +78,11 @@ namespace eval WikitRss {
     ###############################################################
 
     proc new {_db name baseurl} {
-	#mk::file open DB $File -nocommit -readonly
-	#mk::view layout DB.pages {name page date:I who}
-
 	# The Wikit implementation has the Wiki name as the name of page 0.
 	variable db $_db
 	variable wikiName $name
 	variable baseUrl $baseurl
-	variable Name [mk::get $db.pages!0 name]
+	variable Name [Db getpage 0 name]
 	variable cache ""
     }
 
@@ -136,13 +133,13 @@ namespace eval WikitRss {
 	    set pages [mk::select $db.pages -rsort date]
 	    foreach N $pages {
 		if {$N in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
-		lassign [mk::get $db.pages!$N name date who] name date who
+		lassign [Db getpage $N name date who] name date who
 		if {$date<$edate} break
-		
-		set V [mk::view size wdb.pages!$N.changes]
+
+		set V [Db versions $N]
 		foreach sid [mk::select wdb.pages!$N.changes -rsort date] {
-		    lassign [mk::get wdb.pages!$N.changes!$sid date who delta] cdate cwho cdelta
-		    set C [WikitWub::summary_diff $N $V [expr {$V-1}] 1]
+		    lassign [Db getversion $N $sid date who delta] cdate cwho cdelta
+		    set C [::WikitWub::summary_diff $N $V [expr {$V-1}] 1]
 		    lappend changes [list $name $date $cdelta $who $N $V $C]
 		    incr V -1
 		    if {$V < 1} break
@@ -150,7 +147,7 @@ namespace eval WikitRss {
 		    set date $cdate
 		    set who $cwho
 		}
-	    }	
+	    }
 	    
 	    set i 0
 	    set changes [lsort -integer -decreasing -index 1 $changes]
@@ -168,9 +165,10 @@ namespace eval WikitRss {
 	foreach page $pages {
 	    if {$page in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
 	    
-	    lassign [mk::get $db.pages!$page name date who] name date who
+	    lassign [getpage $page name date who] name date who
 	    
 	    if {$date<$edate} break
+	    set changes ""
 
 	    # calculate line change
 #	    set change [expr {[mk::view size wdb.pages!$page.changes] - 1}]
@@ -183,8 +181,8 @@ namespace eval WikitRss {
 	    set V [mk::view size wdb.pages!$page.changes]
 	    set delta 0
 	    set whol {}
-	    foreach sid [mk::select wdb.pages!$page.changes -rsort date] {
-		lassign [mk::get wdb.pages!$page.changes!$sid date who delta] cdate cwho cdelta
+	    foreach sid [Db changesSince $page $edate] {
+		lassign [Db getchange $page $sid date who delta] cdate cwho cdelta
 		incr delta [expr {int(abs($cdelta))}]
 		set C [WikitWub::summary_diff $page $V [expr {$V-1}] 1]
 		append changes $C\n
