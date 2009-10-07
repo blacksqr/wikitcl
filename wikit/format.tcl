@@ -2314,6 +2314,8 @@ namespace eval Wikit::Format {
     return $result
   }
 
+    namespace export -clear *
+    namespace ensemble create -subcommands {}
 } ;# end of namespace
 
 ### Local Variables: ***
