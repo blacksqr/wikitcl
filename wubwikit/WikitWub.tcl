@@ -810,7 +810,8 @@ namespace eval WikitWub {
 
 	set R ""
 	set n 0
-	lassign [WDB GetPage $N date name who page] pcdate name pcwho page
+	lassign [WDB GetPage $N date name who page] pcdate name pcwho
+	set page [WDB GetContent $N]
 	set V [WDB Versions $N]	;# get #version for this page
 
 	append R <ul>\n
@@ -819,7 +820,7 @@ namespace eval WikitWub {
 	} else {
 	    # get changes for current page in last D days
 	    set edate [expr {$pcdate-$D*86400}]
-	    foreach record [WDB ChangesSince $N $edate] {
+	    foreach record [WDB Changes $N $edate] {
 		dict update record date cdate who cwho delta cdelta id sid {}
 		set changes [WDB ChangeSetSize $N $sid]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
@@ -1522,7 +1523,8 @@ namespace eval WikitWub {
 	}
 
 	if {[catch {
-	    WDB GetPageVars $N name date who page
+	    WDB GetPageVars $N name date who
+	    set page [WDB GetContent $N]
 	} er eo]} {
 	    puts "edit-save@[clock seconds] $N not a valid page"
 	    return [Http NotFound $er [subst {
@@ -1968,7 +1970,8 @@ namespace eval WikitWub {
     }
 
     proc pageXML {N} {
-	WDB GetPageVars $N name page date who
+	WDB GetPageVars $N name date who
+	set page [WDB GetContent $N]
 	set stream [::Wikit TextToStream [WDB GetContent $N]]
 	lassign [::Wikit StreamToHTML $stream / ::WikitWub::InfoProc] parsed - toc backrefs
 	return [<page> [subst { 
@@ -2341,7 +2344,10 @@ namespace eval WikitWub {
 	    # new install. copy the origin docroot to $base
 	    catch {file mkdir $wikitroot}
 	    file copy $origin [file dirname $docroot]
-	    file copy [file join $home doc.sample $wikidb] $wikitroot
+	    if {![file exists [file join $wikitroot $wikidb]]} {
+		# don't overwrite an existing wiki db
+		file copy [file join $home doc.sample $wikidb] $wikitroot
+	    }
 	} elseif {$overwrite
 		  && $reallyreallyoverwrite
 		  && $docroot ne $origin
@@ -2416,7 +2422,7 @@ namespace eval WikitWub {
 	    set ::WikitWub::WELCOME [::fileutil::cat [file join $docroot html welcome.html]]
 	}
 
-	catch {[WDB GetPage 9 page]}
+	catch {[WDB GetContent 9]}
 
 	variable roflag 
 	set ::roflag $roflag
