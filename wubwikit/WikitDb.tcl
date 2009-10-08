@@ -1,77 +1,270 @@
-namespace eval Db {
+package require OO
+package provide WikitDb 1.0
+
+namespace eval WDB {
     variable pageV
     variable refV
 
-    # return the 'from' field from refs from a given page
-    proc from {page} {
-	return [$refV get $page from]
-    }
-
-    # return those ref records which refer to $page
-    proc to {page} {
-	return [$refV select -exact to $page]
+    proc commit {} {
+	variable db
+	mk::file commit $db
     }
     
-    # return content size of a page
-    proc contentsize {pid} {
-	return [$pageV get $i -size page]
+    #----------------------------------------------------------------------------
+    #
+    # s2l --
+    #
+    #	convert a select-view to a list of records
+    #
+    # Parameters:
+    #	view - a mk4too view resulting from a select
+    #	max - maximum number of records to return
+    #
+    # Results:
+    #	Returns a list of dicts, each is a record corresponding to the
+    #	select result.
+    #
+    #	Beware: this only works on mk4too selects which have specified a -sort
+    #	or -rsort argument.  Other selects return a view containing index.
+    #
+    #----------------------------------------------------------------------------
+    proc s2l {view {max -1}} {
+	set result {}
+	set size [$view size]
+	if {$max > 0 && $size > $max} {
+	    set size $max
+	}
+	for {set i $size} {$i < $size} {incr i} {
+	    lappend result [$view get $i]
+	}
+	$view close
+	return $result
     }
 
-    # return page content
-    proc getcontent {id} {
-	return [getpage $id page]
+    #----------------------------------------------------------------------------
+    #
+    # i2l --
+    #
+    #	convert a select-view of indices to a list of records
+    #
+    # Parameters:
+    #	original - the view over which the select ran
+    #	select - the view resulting from the mk4too select
+    #
+    # Results:
+    #	Returns a list of dicts, each is a record corresponding to the
+    #	select result.
+    #
+    #	Beware: this only works on mk4too selects which haven't specified a -sort
+    #	or -rsort argument.  Other selects return a copy of the original record
+    #
+    #----------------------------------------------------------------------------
+    proc i2l {original select} {
+	set result {}
+	set size [$select size]
+	for {set i 0} {$i < $size} {incr i} {
+	    lappend result [$original get [$select get $i index]]
+	}
+	$select close
+	return $result
     }
 
-    # return named fields from a page
-    proc getpage {pid args} {
+    #----------------------------------------------------------------------------
+    #
+    # ReferencesTo --
+    #
+    #	return list of page indices of those pages which refer to a given page
+    #
+    # Parameters:
+    #	page - the page index of the page which we want all references to
+    #
+    # Results:
+    #	Returns a list ints, each is an index of a page which contains a reference
+    #	to the $page page.
+    #
+    #----------------------------------------------------------------------------
+    proc ReferencesTo {page} {
+	variable refV
+	return [i2l $refV [$refV select -exact to $page]]
+    }
+    
+    #----------------------------------------------------------------------------
+    #
+    # GetPage --
+    #
+    #	return named fields from a page
+    #
+    # Parameters:
+    #	pid - the page index of the page whose metadata we want
+    #	args - a list of field names whose values we want
+    #
+    # Results:
+    #	Returns a list of values corresponding to the field values of those fields
+    #	whose names are given in $args
+    #
+    #----------------------------------------------------------------------------
+    proc GetPage {pid args} {
+	variable pageV
 	return [$pageV get $pid {*}$args]
     }
 
-    # return number of versions of a page
-    proc versions {page} {
-	set changes [$pageV open $pid changes]
-	set result [$changes size]
-	$changes close
-	return $result
+    #----------------------------------------------------------------------------
+    #
+    # GetContent --
+    #
+    #	return page content
+    #
+    # Parameters:
+    #	pid - the page index of the page whose content we want
+    #
+    # Results:
+    #	the string content of a page
+    #
+    #----------------------------------------------------------------------------
+    proc GetContent {pid} {
+	return [GetPage $pid page]
     }
 
-    # return named fields from a version of a page
-    proc getchange {pid sid args} {
-	set changes [$pageV open $pid changes]
-	set result [$changes get $sid {*}$args]
-	$changes close
-	return $result
-    }
-
-    # return size of a changeset
-    proc changesetsize {pid sid} {
-	set changes [$pageV open $pid changes]
-	set diffs [$changes open $sid diffs]
-	set result [$diffs size]
-	$changes close
-	$diffs close
-	return $result
-    }
-
-    # return number of pages
-    proc pagecount {} {
-	return [mk::view size wdb.pages]
-    }
-
-    proc mostrecentchange {pid date} {
-	set changes [$pageV open $pid changes]
-	set dl [$changes select -max date $date -rsort date]
-	if {[llength $dl] == 0} {
-	    set dl [$changes select -rsort date]
+    #----------------------------------------------------------------------------
+    #
+    # GetPageVars --
+    #
+    #	set variables in the caller corresponding to the page fields named in $args
+    #
+    # Parameters:
+    #	pid - the page index of the page whose fields we want
+    #	args - a list of field names whose values we want
+    #
+    # Results:
+    #	operates only by side-effect, setting the named vars in the caller
+    #
+    #----------------------------------------------------------------------------
+    proc GetPageVars {pid args} {
+	variable pageV
+	set record [$pageV get $pid]
+	dict for n $args {
+	    uplevel 1 [list set $n [dict get? $n]]
 	}
-	return [lindex $dl 0]
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # PageCount --
+    #
+    #	return total number of pages
+    #
+    # Parameters:
+    #
+    # Results:
+    #	Returns the total number of pages in the database
+    #
+    #----------------------------------------------------------------------------
+    proc PageCount {} {
+	variable pageV
+	return [$pageV size]
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # Versions --
+    #
+    #	return number of versions of a page
+    #
+    # Parameters:
+    #	pid - the page index of the page whose version count we want
+    #
+    # Results:
+    #	an integer representing the number of versions of the page $pid
+    #
+    #----------------------------------------------------------------------------
+    proc Versions {pid} {
+	variable pageV
+	set changeV [$pageV open $pid changes]
+	set result [$changeV size]
+	$changeV close
+	return $result
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # GetChange --
+    #
+    #	return named fields from a version of a page
+    #
+    # Parameters:
+    #	pid - the page index of the page whose changes we want
+    #	sid - the page index of the changes whose fields we want
+    #	args - a list of field names whose values we want
+    #
+    # Results:
+    #	Returns a list of values corresponding to the field values of those fields
+    #
+    #----------------------------------------------------------------------------
+    proc GetChange {pid sid args} {
+	variable pageV
+	set changeV [$pageV open $pid changes]
+	set result [$changeV get $sid {*}$args]
+	$changeV close
+	return $result
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # ChangeSetSize --
+    #
+    #	return size of a changeset
+    #
+    # Parameters:
+    #	pid - the page index of the page whose changeset we're interested in
+    #	sid - the changeset index whose size we want
+    #
+    # Results:
+    #	Returns an integer, being the size of the changeset
+    #
+    #----------------------------------------------------------------------------
+    proc ChangeSetSize {pid sid} {
+	variable pageV
+	set changeV [$pageV open $pid changes]
+	set diffV [$changeV open $sid diffs]
+	set result [$diffV size]
+	$changeV close
+	$diffV close
+	return $result
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # MostRecentChange --
+    #
+    #	return most recent change before a given date
+    #
+    # Parameters:
+    #	pid - the page index of the page whose changeset we're interested in
+    #	date - the latest change date we're interested in
+    #
+    # Results:
+    #	Returns the change record of the most recent change
+    #
+    #----------------------------------------------------------------------------
+    proc MostRecentChange {pid date} {
+	variable pageV
+	set changeV [$pageV open $pid changes]
+	set dl [$changeV select -max date $date -rsort date]
+	if {[$dl size] == 0} {
+	    $dl close
+	    set dl [$changeV select -rsort date]
+	}
+	set result [$dl get 0]
+	$dl close
+	return $result
     }
 
     # search for text
     # key - a list of words
     # long - search in content as well as name
     # date - if non-0, search more recent pages than date
-    proc search {key long date} {
+    proc Search {key long date} {
+	variable pageV
 	set fields name
 	if {$long} {
 	    lappend fields page
@@ -85,48 +278,71 @@ namespace eval Db {
 	}
 
 	if {$date == 0} {
-	    set rows [$pageV select -rsort date {*}$search]
+	    set rows [$pageV select -rsort date -min date 1 {*}$search]
 	} else {
-	    set rows [$pageV select -max date $date -rsort date {*}$search]
+	    set rows [$pageV select -max date $date -min date 1 -rsort date {*}$search]
 	}
-	return $rows
+
+	return [s2l $rows]
     }
 
-    proc recent {threshold} {
-	set result [$pageV select -min date $threshold -min name " " -rsort date]
-	return [lrange $result 0 99]
+    proc RecentChanges {threshold} {
+	variable pageV
+	return [s2l [$pageV select -min date $threshold -min name " " -rsort date] 100]
     }
 
-    proc pageByName {name} {
-	return [$pageV select name $name -min date 1]
+    # LookupPage - find a named page
+    proc LookupPage {name} {
+	variable pageV
+	set lcname [string tolower $name]
+	set n [$pageV find name $name]
+	if {$n == ""} {
+	    $pageV insert end name $name
+	    commit
+	    set n [pagecount]
+	}
+	return $n
     }
 
-    proc pageGlobName {glob} {
-	return [$pageV select -glob name $glob -min date 1]
+    proc PageByName {name} {
+	variable pageV
+	return [$pageV find name $name]
     }
 
-    proc cleared {} {
-	set result [$pageV select -min date 1 -max page " " -rsort date]
-	return [lrange $result 0 99]
-    }
-
-    proc changesSince {pid date} {
-	set changes [$pageV open $pid changes]
-	set result [$changes select -min date $date -rsort date]
-	$changes close
+    proc PageGlobName {glob} {
+	variable pageV
+	set select [$pageV select -glob name $glob -min date 1]
+	set result [$pageV get [$select get 0]]
+	$select close
 	return $result
+    }
+
+    proc Cleared {} {
+	variable pageV
+	return [s2l [$pageV select -min date 1 -max page " " -rsort date] 100]
+    }
+
+    proc ChangesSince {pid date} {
+	variable pageV
+	set changeV [$pageV open $pid changes]
+	set result [$changeV select -min date $date -rsort date]
+	$changeV close
+	return [s2l $result]
     }
 
     # return all valid pages
-    proc allpages {} {
-	return [$pageV select -first 11 -min date 1 -sort date]
+    proc AllPages {} {
+	variable pageV
+	return [s2l [$pageV select -first 11 -min date 1 -sort date]]
     }
 
-    proc changes {pid} {
-	set changes [$pageV open $pid changes]
-	set result [$changes select -rsort date]
-	$changes close
-	return $result
+    # return all changes for a given page
+    proc Changes {pid} {
+	variable pageV
+	set changeV [$pageV open $pid changes]
+	set result [$changeV select -rsort date]
+	$changeV close
+	return [s2l $result]
     }
 
     #----------------------------------------------------------------------------
@@ -153,6 +369,7 @@ namespace eval Db {
     #----------------------------------------------------------------------------
 
     proc ListPageVersionsDB {id {limit Inf} {start 0}} {
+	variable pageV
 
 	# Special case for the fake pages
 
@@ -165,24 +382,24 @@ namespace eval Db {
 
 	# Determine the number of the most recent version
 	set results [list]
-	set mostRecent [versions $id]
+	set mostRecent [Versions $id]
 
 	# List the most recent version if requested
 	if {$start == 0} {
-	    lassign [getpage $id date who] date who
+	    GetPageVars $id date who
 	    lappend results [list $mostRecent $date $who]
 	    incr start
 	}
 
 	# Do earlier versions as needed
-	set changes [$pageV open $id changes]
+	set changeV [$pageV open $id changes]
 	set idx [expr {$mostRecent - $start}]
 	while {$idx >= 0 && [llength $results] < $limit} {
-	    lassign [$changes get $idx date who] date who
+	    lassign [$changeV get $idx date who] date who
 	    lappend results [list $idx $date $who]
 	    incr idx -1
 	}
-	$changes close
+	$changeV close
 	return $results
     }
 
@@ -196,7 +413,6 @@ namespace eval Db {
     #     id - Row ID in the 'pages' view of the page being queried.
     #     version - Version number that is to be retrieved (row ID in
     #               the 'changes' subview)
-    #	db - Handle to the database where the Wiki is stored.
     #
     # Results:
     #     Returns page text as Wikitext. Throws an error if the version
@@ -208,8 +424,9 @@ namespace eval Db {
 	return [join [GetPageVersionLines $id $version] \n]
     }
     proc GetPageVersionLines {id {version {}}} {
+	variable pageV
 	set page [$pageV get $id]
-	set latest [versions $id]
+	set latest [Versions $id]
 	if {$version eq {}} {
 	    set version $latest
 	}
@@ -227,15 +444,15 @@ namespace eval Db {
 	}
 	set v $latest
 	set lines [split $page \n]
-	set changes [$pageV open $id changes]
+	set changeV [$pageV open $id changes]
 	while {$v > $version} {
 	    incr v -1
-	    set i [changesetsize $id $v]
-	    set diffs [$changes open $v diffs]
+	    set i [ChangeSetSize $id $v]
+	    set diffV [$changeV open $v diffs]
 	    while {$i > 0} {
 		incr i -1
 		
-		dict with [$diffs get $i]
+		dict with [$diffV get $i]
 		if {$from <= $to} {
 		    set lines [eval [linsert $old 0 \
 					 lreplace $lines[set lines {}] $from $to]]
@@ -244,9 +461,9 @@ namespace eval Db {
 					 linsert $lines[set lines {}] $from]]
 		}
 	    }
-	    $diffs close
+	    $diffV close
 	}
-	$changes close
+	$changeV close
 	return $lines
     }
 
@@ -273,7 +490,8 @@ namespace eval Db {
     #----------------------------------------------------------------------------
 
     proc AnnotatePageVersion {id {version {}}} {
-	set latest [versions $id]
+	variable pageV
+	set latest [Versions $id]
 	if {$version eq {}} {
 	    set version $latest
 	}
@@ -290,21 +508,21 @@ namespace eval Db {
 	# Retrieve the version to be annotated
 
 	set lines [GetPageVersionLines $id $version]
-	set changes [$pageV open $id changes]
+	set changeV [$pageV open $id changes]
 
 	# Start the annotation by guessing that all lines have been there since
 	# the first commit of the page.
 
 	if {$version == $latest} {
-	    lassign [getpage $id date who] date who
+	    GetPageVars $id date who
 	} else {
-	    lassign [$changes get $version date who] date who
+	    lassign [$changeV get $version date who] date who
 	}
 	if {$latest == 0} {
 	    set firstdate $date
 	    set firstwho $who
 	} else {
-	    lassign [$changes get 0 date who] firstdate firstwho
+	    lassign [$changeV get 0 date who] firstdate firstwho
 	}
 	
 	# versions has one entry for each element in $lines, and contains
@@ -330,12 +548,12 @@ namespace eval Db {
 	    incr version -1
 
 	    # Walk backward through all changes applied to a version
-	    set i [changesetsize $id $version]
-	    lassign [$changes get $version date who] lastdate lastwho
-	    set diffs [$changes open $version diffs]
+	    set i [ChangeSetSize $id $version]
+	    lassign [$changeV get $version date who] lastdate lastwho
+	    set diffV [$changeV open $version diffs]
 	    while {$i > 0} {
 		incr i -1
-		lassign [$diffs get $i from to old] from to old
+		lassign [$diffV get $i from to old] from to old
 		
 		# Update 'versions' for all lines that first appeared in the
 		# version following the one being examined
@@ -366,11 +584,11 @@ namespace eval Db {
 					   linsert $whither[set whither {}] $from]]
 		}
 	    }
-	    $diffs close
+	    $diffV close
 	    set date $lastdate
 	    set who $lastwho
 	}
-	$changes close
+	$changeV close
 
 	set result {}
 	foreach line $lines v $versions date $dates who $whos {
@@ -382,6 +600,7 @@ namespace eval Db {
     # addRefs - a newly created page $id contains $refs references to other pages
     # Add these references to the .ref view.
     proc addRefs {id refs} {
+	variable refV
 	if {$id != 2 && $id != 4} {
 	    foreach x $refs {
 		if {$id != $x} {
@@ -393,29 +612,39 @@ namespace eval Db {
 
     # delRefs - remove all references from page $id to anywhere
     proc delRefs {id} {
-	set v [mk::select $db.refs from $id]	;# the set of all references from $id
+	variable refV
+	set v [$refV select from $id]	;# the set of all references from $id
+	set size [$v size]
+	set indices {}
+	for {set i 0} {$i < $size} {incr i} {
+	    lappend indices [$v get $i index]
+	}
+	set indices [lsort -integers $indices]
 
 	# delete from last to first
-	set n [llength $v]
+	set n [llength $indices]
 	while {[incr n -1] >= 0} {
-	    $refV delete [lindex $v $n]
+	    $refV delete [lindex $indices $n]
 	}
     }
 
     # FixPageRefs - recreate the entire refs view
-    proc FixPageRefs {{db wdb}} {
-	mk::view size $db.refs 0	;# delete all contents from the .refs view
+    proc FixPageRefs {} {
+	variable refV
+	variable pageV
+
+	$refV size 0	;# delete all contents from the .refs view
 
 	# visit each page, recreating its refs
-	mk::loop c $db.pages {
-	    set id [mk::cursor position c]
-	    pagevarsDB $db $id date page
+	set size [$pageV size]
+	for {set id 0} {$id < $size} {incr id} {
+	    GetPageVars $id date page
 	    if {$date != 0} {
 		# add the references from page $id to .refs view
-		addRefs $id $db [StreamToRefs [TextToStream $page] [list ::Wikit::InfoProc $db]]
+		addRefs $id [StreamToRefs [TextToStream $page] [list ::WubWikit::InfoProc]]
 	    }
 	}
-	DoCommit
+	commit
     }
 
     #----------------------------------------------------------------------------
@@ -443,12 +672,13 @@ namespace eval Db {
     #----------------------------------------------------------------------------
 
     proc UpdateChangeLog {id name date who page text} {
+	variable pageV
 
 	# Store summary information about the change
-	set version [versions $id]
-	set changes [$pageV open $id changes]
-	$changes insert end date $date who $who
-	set diffs [$changes open $version diffs]
+	set version [Versions $id]
+	set changeV [$pageV open $id changes]
+	$changeV insert end date $date who $who
+	set diffV [$changeV open $version diffs]
 
 	# Determine the changed lines
 	set linesnew [split $text \n]
@@ -486,13 +716,13 @@ namespace eval Db {
 					       - [string length $old])}]
 		}
 	    }
-	    $diffs insert end from $from to $to old $old
+	    $diffV insert end from $from to $to old $old
 	    incr i
 	}
 
-	$changes set $version delta $change	;# record magnitude of changes
-	$changes close
-	$diffs close
+	$changeV set $version delta $change	;# record magnitude of changes
+	$changeV close
+	$diffV close
     }
 
     # SavePage - store page $id ($who, $text, $newdate)
@@ -501,15 +731,9 @@ namespace eval Db {
 
 	set changed 0
 
-	variable mutex;
-	if {$mutex ne ""} {
-	    puts "SavePageDB@[clock seconds] lock"
-	    ::thread::mutex lock $mutex	;# lock for update
-	}
-
 	if {[catch {
 	    puts "SavePageDB@[clock seconds] pagevarsDB"
-	    lassign [getpage $id name date page who] name date page who
+	    GetPageVars $id name date page who
 
 	    if {$newName != $name} {
 		puts "SavePageDB@[clock seconds] new name"
@@ -519,8 +743,7 @@ namespace eval Db {
 		# Special case: If the name is being removed, leave references intact;
 		# this is used to clean up duplicates.
 		if {$newName != ""} {
-		    foreach x [mk::select $db.refs to $id] {
-			set x [$refV get $x from]
+		    foreach x [ReferencesTo $id] {
 			set y [$pageV get $x page]
 			$pageV set $x page [replaceLink $y $name $newName]
 		    }
@@ -553,8 +776,8 @@ namespace eval Db {
 		# in the databse, make a change log entry for rollback.
 
 		puts "SavePageDB@[clock seconds] log change"
-		mk::set $db.pages!$id page $text who $newWho
-		if {$page ne {} || [mk::view size $db.pages!$id.changes]} {
+		$pageV set page $text who $newWho
+		if {$page ne {} || [Versions $id]} {
 		    puts "SavePageDB@[clock seconds] update change log"
 		    UpdateChangeLog $db $id $name $date $who $page $text
 		}
@@ -573,23 +796,24 @@ namespace eval Db {
 
 	if {$commit} {
 	    puts "SavePageDB@[clock seconds] commit"
-	    mk::file commit $db
+	    commit
 	}
 
-	if {$mutex ne ""} {
-	    puts "SavePageDB@[clock seconds] unlock mutex"
-	    ::thread::mutex unlock $mutex	;# unlock for db update
-	}
         puts "SavePageDB@[clock seconds] done."
     }
 
-    proc WikiDatabase {name {db wdb} {shared 0}} {
+    proc WikiDatabase {args} {
+	variable db wdb
+	variable file wikit.db
 	variable readonly
-	variable wikifile $name
+	set shared 0
+	dict for {n v} $args {
+	    set $n $v
+	}
 
 	if {[lsearch -exact [mk::file open] $db] == -1} {
 	    if {$readonly == -1} {
-		if {[file exists $name] && ![file writable $name]} {
+		if {[file exists $file] && ![file writable $file]} {
 		    set readonly 1
 		} else {
 		    set readonly 0
@@ -609,16 +833,17 @@ namespace eval Db {
 	    }
 
 	    set msg ""
-	    if {[catch {eval mk::file open $db $name -nocommit $flags} msg]
-		&& [file $tst $name]} {
-
+	    if {[catch {
+		mk::file open $db $file -nocommit {*}$flags
+	    } msg]
+		&& [file $tst $file]
+	    } {
 		# if we can write and/or read the file but can't open
 		# it using mk then it is almost always inside a starkit,
 		# so we copy it to memory and open it from there
-
 		set readonly 1
 		mk::file open $db
-		set fd [open $name]
+		set fd [open $file]
 		mk::file load $db $fd
 		close $fd
 		set msg ""
@@ -628,24 +853,16 @@ namespace eval Db {
 		error $msg
 	    }
 
+	    # open our views
+	    variable pageV [mk::view open $db.pages]
+	    variable refV [mk::view open $db.refs]
+
 	    # if there are no references, probably it's the first time, so recalc
-	    if {!$readonly && [mk::view size $db.refs] == 0} {
+	    if {!$readonly && [$refV size] == 0} {
 		# this can take quite a while, unfortunately - but only once
-		::Wikit::FixPageRefs
+		FixPageRefs
 	    }
 	}
-    }
-
-    # LookupPage - find a named page
-    proc LookupPage {name} {
-	set lcname [string tolower $name]
-	set n [$pageV find name $name]
-	if {$n == ""} {
-	    $pageV insert end name $name
-	    mk::file commit $db
-	    set n [pagecount]
-	}
-	return $n
     }
 
     namespace export -clear *

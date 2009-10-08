@@ -10,6 +10,7 @@ package require Sitemap
 package require stx
 package require Form
 
+package require WikitDb
 package require WikitRss
 package require Wikit::Format
 
@@ -505,9 +506,10 @@ namespace eval WikitWub {
 	append map [Sitemap location $p "" mtime [file mtime $docroot/html/welcome.html] changefreq weekly] \n
 	append map [Sitemap location $p 4 mtime [clock seconds] changefreq always priority 1.0] \n
 
-	foreach i [Db allpages] {
-	    if {$i < 11} continue
-	    append map [Sitemap location $p $i mtime [Db getpage $i date]] \n
+	foreach record [WDB AllPages] {
+	    set id [dict get $record id]
+	    if {$id < 11} continue
+	    append map [Sitemap location $p $id mtime [dict get $record date]] \n
 	}
 
 	return [Http NoCache [Http Ok $r [Sitemap sitemap $map] text/xml]]
@@ -526,17 +528,18 @@ namespace eval WikitWub {
     }
 
     proc edit_activity { N } {
-	set pcdate [Db getpage $N date]
+	set pcdate [WDB GetPage $N date]
 	set edate [expr {$pcdate-10*86400}]
 	set first 1
 	set activity 0.0
-	foreach sid [Db changes $N] {
-	    lassign [Db getchange $N $sid date delta] cdate cdelta
-	    set changes [Db changesetsize $N $sid]
-	    set activity [expr {$activity + $changes * $cdelta / double([clock seconds] - $pcdate)}]
-	    set pcdate $cdate
-	    set first 0
-	    if {$cdate<$edate} break
+
+	foreach record [WDB Changes $N] {
+	    dict with record {
+		set changes [WDB ChangeSetSize $N $id]
+		set activity [expr {$activity + $changes * $delta / double([clock seconds] - $pcdate)}]
+		set pcdate $date
+		set first 0
+	    }
 	}
 
 	if {$first} {
@@ -554,7 +557,7 @@ namespace eval WikitWub {
 	    [regexp {^(.+)[,@](.*)} $who - who_nick who_ip]
 	    && $who_nick ne ""
 	} {
-	    set who "[<a> href /[Db LookupPage $who_nick] $who_nick]"
+	    set who "[<a> href /[WDB LookupPage $who_nick] $who_nick]"
 	    if {$ip} {
 		append who @[<a> rel nofollow target _blank href http://ip-lookup.net/index.php?ip=$who_ip $who_ip]
 	    }
@@ -574,8 +577,8 @@ namespace eval WikitWub {
 	set deletesAdded 0
 	set activityHeaderAdded 0
 
-	foreach id [Db recent $threshold] {
-	    lassign [Db getpage $id date name who page] date name who page
+	foreach record [WDB RecentChanges $threshold] {
+	    dict with record {}
 
 	    # these are fake pages, don't list them
 	    if {$id == 2 || $id == 4} continue
@@ -633,8 +636,8 @@ namespace eval WikitWub {
 	set results ""
 
 	set lastDay 0
-	foreach id [Db cleared] {
-	    lassign [Db getpage $id date name who page] date name who page
+	foreach record [WDB Cleared] {
+	    dict with record {}
 
 	    # these are fake pages, don't list them
 	    if {$id < 11} continue
@@ -682,7 +685,7 @@ namespace eval WikitWub {
 
     proc get_page_with_version {N V A} {
 	if {$A} {
-	    set aC [Db AnnotatePageVersion $N $V]
+	    set aC [WDB AnnotatePageVersion $N $V]
 	    set C ""
 	    set prevVersion -1
 	    foreach a $aC {
@@ -700,9 +703,9 @@ namespace eval WikitWub {
 		append C "\n<<<<<<"
 	    }
 	} elseif { $V >= 0 } {
-	    set C [Db GetPageVersion $N $V]
+	    set C [WDB GetPageVersion $N $V]
 	} else {
-	    set C [Db getcontent $N]
+	    set C [WDB GetContent $N]
 	}
 	return $C
     }
@@ -798,7 +801,7 @@ namespace eval WikitWub {
 	variable delta
 
 	set N [file rootname $N]	;# it's a simple single page
-	if {![string is integer -strict $N] || $N < 0 || $N >= [Db pagecount]} {
+	if {![string is integer -strict $N] || $N < 0 || $N >= [WDB PageCount]} {
 	    return [Http NotFound $r]
 	}
 	if {![string is integer -strict $D]} {
@@ -807,18 +810,18 @@ namespace eval WikitWub {
 
 	set R ""
 	set n 0
-	lassign [Db getpage $N date name who page] pcdate name pcwho page
-	# get #version for this page
-	set V [Db versions $N]
+	lassign [WDB GetPage $N date name who page] pcdate name pcwho page
+	set V [WDB Versions $N]	;# get #version for this page
+
 	append R <ul>\n
 	if {$V==0} {
 	    append R [<li> "$pcwho, [clock format $pcdate], New page"] \n
 	} else {
 	    # get changes for current page in last D days
 	    set edate [expr {$pcdate-$D*86400}]
-	    foreach sid [Db changesSince $N $edate] {
-		lassign [Db getchange $N $sid date who delta] cdate cwho cdelta
-		set changes [Db changesetsize $N $sid]
+	    foreach record [WDB ChangesSince $N $edate] {
+		dict update record date cdate who cwho delta cdelta id sid {}
+		set changes [WDB ChangeSetSize $N $sid]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
 		lassign [::Wikit StreamToHTML [::Wikit TextToStream $C] / ::WikitWub::InfoProc] C U T BR
@@ -864,7 +867,7 @@ namespace eval WikitWub {
 	    || ![string is integer -strict $V]
 	    || ![string is integer -strict $D]
             || $N < 0
-	    || $N >= [Db pagecount]
+	    || $N >= [WDB PageCount]
 	    || $ext ni {"" .txt .tk .str .code}
 	} {
 	    return [Http NotFound $r]
@@ -874,7 +877,7 @@ namespace eval WikitWub {
 	    set T 0
 	}
 
-	set nver [expr {1 + [Db versions $N]}]
+	set nver [expr {1 + [WDB Versions $N]}]
 	if { $V >= $nver || ($T == 0 && $D >= $nver) } {
 	    return [Http NotFound $r]
 	}
@@ -893,9 +896,9 @@ namespace eval WikitWub {
 	    }
 	} else {
 	    if {$V >= ($nver-1)} {
-		set vt [Db getpage $N date]
+		set vt [WDB GetPage $N date]
 	    } else {
-		set vt [Db getchange $N $V date]
+		set vt [WDB GetChange $N $V date]
 	    }
 	    if {$D < 0} {
 		set D 1
@@ -912,10 +915,10 @@ namespace eval WikitWub {
 
 	    # get most recent change
 	    set dt [expr {$vt-$D*86400}]
-	    set D [Db mostrecentchange $N $dt]
+	    set D [WDB MostRecentChange $N $dt]
 	}
 
-	set name [Db getpage $N name]
+	WDB GetPageVars $N name
 
 	set t1 [split [get_page_with_version $N $V 0] "\n"]
 
@@ -1080,14 +1083,14 @@ namespace eval WikitWub {
 	    || ![string is integer -strict $V]
 	    || ![string is integer -strict $A]
             || $N < 0
-	    || $N >= [Db pagecount]
+	    || $N >= [WDB PageCount]
 	    || $V < 0
 	    || $ext ni {"" .txt .tk .str .code}
 	} {
 	    return [Http NotFound $r]
 	}
 
-	set nver [expr {1 + [Db versions $N]}]
+	set nver [expr {1 + [WDB Versions $N]}]
 	if {$V >= $nver} {
 	    return [Http NotFound $r]
 	}
@@ -1096,7 +1099,7 @@ namespace eval WikitWub {
 	set menu [menus Home Recent Help HR]
 	lappend menu [Ref /_/history?N=$N History]
 
-	set name [Db getpage $N name]
+	WDB GetPageVars $N name
 	if {$V >= 0} {
 	    switch -- $ext {
 		.txt {
@@ -1166,19 +1169,19 @@ namespace eval WikitWub {
 	if {![string is integer -strict $N]
 	    || ![string is integer -strict $S]
 	    || ![string is integer -strict $L]
-	    || $N >= [Db pagecount]
+	    || $N >= [WDB PageCount]
 	    || $S < 0
 	    || $L <= 0} {
 	    return [Http NotFound $r]
 	}
 
-	set name "Change history of [Db getpage $N name]"
+	set name "Change history of [WDB GetPage $N name]"
 	set Title "Change history of [Ref $N]"
 
 	set menu [menus Home Recent Help HR]
 	set C ""
 	#	set links ""
-	set nver [expr {1 + [Db versions $N]}]
+	set nver [expr {1 + [WDB Versions $N]}]
 	if {$S > 0} {
 	    set pstart [expr {$S - $L}]
 	    if {$pstart < 0} {
@@ -1199,10 +1202,12 @@ namespace eval WikitWub {
 	#	if {$links ne {}} {
 	#	    append C <p> $links </p> \n
 	#	}
-	if {[catch {Db ListPageVersions $N $L $S} versions]} {
+	if {[catch {
+	    WDB ListPageVersions $N $L $S
+	} versions]} {
 	    append C <pre> $versions </pre>
 	} else {
-	    set name [Db getpage $N name]
+	    WDB GetPageVars $N name
 	    append C "<table summary='' class='history'><thead class='history'>\n<tr>"
 	    foreach {column span} {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1} {
 		append C [<th> class [lindex $column 0] colspan $span $column]
@@ -1277,7 +1282,7 @@ namespace eval WikitWub {
 	if {$name eq ""} {
 	    set page [lindex [file split $url] end]
 	    if {[catch {
-		set name [Db getpage $page name]
+		WDB GetPageVars $page name
 	    }]} {
 		set name $page
 	    }
@@ -1386,11 +1391,11 @@ namespace eval WikitWub {
 	    return $page
 	}
 
-	set N [Db pageByName $page]
+	set N [WDB PageByName $page]
 
-        # No matches, restart with decoded string
+        # No matches, retry with decoded string
         if {[llength $N] == 0} {
-	    set N [Db pageByName [Query decode $page]]
+	    set N [WDB PageByName [Query decode $page]]
 	}
 
 	switch [llength $N] {
@@ -1408,7 +1413,7 @@ namespace eval WikitWub {
 		if {[string first \[ $page] < 0} {
 		    regsub -all {[A-Z]} $page "\\\[&\[string tolower &\]\\\]" temp
 		    set temp "*[subst -novariable $temp]*"
-		    set N [Db pageGlobname $temp]
+		    set N [WDB PageGlobName $temp]
 		}
 		if {[llength $N] == 1} {
 		    # glob search was unambiguous
@@ -1511,13 +1516,13 @@ namespace eval WikitWub {
 	    puts "edit-save@[clock seconds] $N no integer"
 	    return [Http NotFound $r]
 	}
-	if {$N >= [Db pagecount]} {
+	if {$N >= [WDB PageCount]} {
 	    puts "edit-save@[clock seconds] $N not found"
 	    return [Http NotFound $r]
 	}
 
 	if {[catch {
-	    lassign [Db getpage $N name date who page] name date who page
+	    WDB GetPageVars $N name date who page
 	} er eo]} {
 	    puts "edit-save@[clock seconds] $N not a valid page"
 	    return [Http NotFound $er [subst {
@@ -1590,7 +1595,7 @@ namespace eval WikitWub {
 		# Look for category at end of page using following styles:
 		# ----\n[Category ...]
 		# ----\n!!!!!!\n%|Category...|%\n!!!!!!
-		set Cl [split [string trimright [Db getcontent $N] \n] \n]
+		set Cl [split [string trimright [WDB GetContent $N] \n] \n]
 		if {[lindex $Cl end] eq "!!!!!!" && [lindex $Cl end-2] eq "!!!!!!" && [string match "----*" [lindex $Cl end-3]] && [string match "%|*Category*|%" [lindex $Cl end-1]]} {
 		    set Cl [linsert $Cl end-4 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
 		} elseif {[string match "<<categories>>*" [lindex $Cl end]]} {
@@ -1603,7 +1608,7 @@ namespace eval WikitWub {
 	    puts "edit-save@[clock seconds] remove RA"
 	    set C [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C]
 	    puts "edit-save@[clock seconds] check if real changes"
-	    if {$C eq [Db getcontent $N]} {
+	    if {$C eq [WDB GetContent $N]} {
 		Debug.wikit {No change, not saving  $N}
 		puts "edit-save@[clock seconds] unchanged"
 		return [redir $r $url [<a> href $url "Unchanged Page"]]
@@ -1612,7 +1617,7 @@ namespace eval WikitWub {
 
 	    puts "edit-save@[clock seconds] save it"
 	    if {[catch {
-		Db SavePage $N $C $who $name $when
+		WDB SavePage $N $C $who $name $when
 	    } err eo]} {
 		set readonly $err
 	    }
@@ -1643,8 +1648,8 @@ namespace eval WikitWub {
 	    # from now on, instead of a "[...]" link to a first-time edit page
 	    puts "edit-save@[clock seconds] invalidate refs"
 	    if {$date == 0} {
-		foreach from [Db to $N] {
-		    invalidate $r [Db from $from]
+		foreach from [WDB ReferencesTo $N] {
+		    invalidate $r $from
 		}
 	    }
 	    puts "edit-save@[clock seconds] done saving"
@@ -1688,7 +1693,7 @@ namespace eval WikitWub {
 	if {[info exists protected($N)]} {
 	    return [Http Forbidden $r]
 	}
-	if {$N >= [Db pagecount]} {
+	if {$N >= [WDB PageCount]} {
 	    return [Http NotFound $r]
 	}
 
@@ -1702,7 +1707,7 @@ namespace eval WikitWub {
 	    return [sendPage $r login]
 	}
 
-	lassign [Db getpage $N name date who] name date who	;# get the last change author
+	WDB GetPageVars $N name date who	;# get the last change author
 
 	set who_nick ""
 	regexp {^(.+)[,@]} $who - who_nick
@@ -1711,7 +1716,7 @@ namespace eval WikitWub {
 	    set as_comment 1
 	    set C [armour "<enter your comment here, a header with nick-name and timestamp will be insert for you>"]
 	} else {
-	    set C [armour [Db getcontent $N]]
+	    set C [armour [WDB GetContent $N]]
 	    if {$C eq ""} {
 		if {[info exists ::starkit_edit_template]} {
 		    set C $::starkit_edit_template
@@ -1866,16 +1871,16 @@ namespace eval WikitWub {
 	if {![string is integer -strict $N]} {
 	    return [Http NotFound $r]
 	}
-	if {$N >= [Db pagecount]} {
+	if {$N >= [WDB PageCount]} {
 	    return [Http NotFound $r]
 	}
 
 	set refList ""
-	foreach from [Db to $N] {
-	    set from [Db from $from from]
-	    lassign [Db getpage $from name who date] name who date
+	foreach from [WDB ReferencesTo $N] {
+	    WDB GetPageVars $from name who date
 	    lappend refList [list [timestamp $date] $name $who $from]
 	}
+
 	set refList [lsort -dictionary -index 1 $refList]
 	set tableList {}
 	foreach ref $refList {
@@ -1911,8 +1916,8 @@ namespace eval WikitWub {
     }
 
     proc InfoProc {ref} {
-	set id [Db LookupPage $ref]
-	lassign [Db getpage $id date name] date name
+	set id [WDB LookupPage $ref]
+	WDB GetPageVars $id date name
 
 	if {$date == 0} {
 	    set id _/edit?N=$id ;# enter edit mode for missing links
@@ -1926,34 +1931,25 @@ namespace eval WikitWub {
     proc search {key date} {
 	Debug.wikit {search: '$key'}
 	set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
-	set rows [Db search $key $long $date]
 
 	# tclLog "SearchResults key <$key> long <$searchLong>"
 	set rdate $date
-	set count 0
 	set result "Searched for \"'''$key'''\" (in page titles"
 	if {$long} {
 	    append result { and contents}
 	}
 	append result "):\n\n"
-	set pcnt 0
-	foreach i $rows {
+	set max 100
+	set count 0
+	foreach record [WDB Search $key $long $date $max] {
+	    dict with record {}
+
 	    # these are fake pages, don't list them
-	    if {$i == 2 || $i == 4 || $i == 5} continue
+	    if {$id == 2 || $id == 4 || $id == 5} continue
 
-	    lassign [Db getpage $i date name] date name
-	    if {$date == 0} continue	;# don't list empty pages
-
-	    # ignore "near-empty" pages with at most 1 char, 30-09-2004
-	    if {[Db contentsize $i] <= 1} continue
-
-	    if {$count < 100} { 
-		append result "   * [timestamp $date] . . . \[$name\]\n"
-		set rdate $date
-		incr count
-	    }
-
-	    incr pcnt
+	    append result "   * [timestamp $date] . . . \[$name\]\n"
+	    set rdate $date
+	    incr count
 	}
 
 	if {$count == 0} {
@@ -1972,8 +1968,8 @@ namespace eval WikitWub {
     }
 
     proc pageXML {N} {
-	lassign [Db getpage $N name page date who] name page date who
-	set stream [::Wikit TextToStream [Db getcontent $N]]
+	WDB GetPageVars $N name page date who
+	set stream [::Wikit TextToStream [WDB GetContent $N]]
 	lassign [::Wikit StreamToHTML $stream / ::WikitWub::InfoProc] parsed - toc backrefs
 	return [<page> [subst { 
 	    [<name> [armour $name]]
@@ -2056,11 +2052,11 @@ namespace eval WikitWub {
 
 	switch -- $N {
 	    999999 {
-		set M [Db pagecount]
+		set M [WDB PageCount]
 		set ts [clock seconds]
 		for {set N 10} {$N < $M} {incr N} {
 		    puts "$N/$M"
-		    set C [::Wikit TextToStream [Db getcontent $N]]
+		    set C [::Wikit TextToStream [WDB GetContent $N]]
 		    lassign [::Wikit StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 		    set f [open /home/decoster/tmp/wp/$N.html w]
 		    puts $f $C
@@ -2135,7 +2131,7 @@ namespace eval WikitWub {
 	    default {
 
 		# simple page - non search term
-		if {$N >= [Db pagecount]} {
+		if {$N >= [WDB PageCount]} {
 		    return [Http NotFound $r]
 		}
 
@@ -2146,27 +2142,30 @@ namespace eval WikitWub {
 		}
 
 		# set up a few standard URLs an strings
-		if {[catch {lassign [Db getpage $N name date who] name date who}]} {
+		if {[catch {
+		    WDB GetPageVars $N name date who
+		}]} {
 		    return [Http NotFound $r]
 		}
 
 		# fetch page contents
+		set content [WDB GetContent $N]
 		switch -- $ext {
 		    .txt {
-			set C [Db getcontent $N]
+			set C $content
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
 		    .tk {
-			set C [::Wikit TextToStream [Db getcontent $N]]
+			set C [::Wikit TextToStream $content]
 			lassign [::Wikit StreamToTk $C $N ::WikitWub::InfoProc] C U T
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
 		    .str {
-			set C [::Wikit TextToStream [Db getcontent $N]]
+			set C [::Wikit TextToStream $content]
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
 		    .code {
-			set C [::Wikit TextToStream [Db getcontent $N] 0 0 0]
+			set C [::Wikit TextToStream $content 0 0 0]
 			set C [::Wikit StreamToTcl $name $C]
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
@@ -2176,12 +2175,12 @@ namespace eval WikitWub {
 			return [Http NoCache [Http Ok $r $C text/xml]]
 		    }
 		    default {
-			set C [::Wikit TextToStream [Db getcontent $N]]
+			set C [::Wikit TextToStream $content]
 			dict set r content-location "http://[Url host $r]/$N"
 			lassign [::Wikit StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 			foreach {containerid bref} $BR {
 			    if {[string length $bref]} {
-				set brefpage [Db LookupPage $bref]
+				set brefpage [WDB LookupPage $bref]
 			    } else {
 				set brefpage $N
 			    }
@@ -2229,7 +2228,7 @@ namespace eval WikitWub {
 		[regexp {^(.+)[,@]} $who - who_nick]
 		&& $who_nick ne ""
 	    } {
-		append updated " by [<a> href /[Db LookupPage $who_nick] $who_nick]"
+		append updated " by [<a> href /[WDB LookupPage $who_nick] $who_nick]"
 	    }
 	    if {[string length $updated]} {
 		variable delta
@@ -2387,7 +2386,7 @@ namespace eval WikitWub {
 	    set wikitdbpath [file join $wikitroot $wikidb]
 	}
 
-	Db WikiDatabase $wikitdbpath 1
+	WDB WikiDatabase file $wikitdbpath shared 1
 
 	package require utf8
 	variable utf8re [::utf8::makeUtf8Regexp]
@@ -2417,7 +2416,7 @@ namespace eval WikitWub {
 	    set ::WikitWub::WELCOME [::fileutil::cat [file join $docroot html welcome.html]]
 	}
 
-	catch {[Db getpage 9 page]}
+	catch {[WDB GetPage 9 page]}
 
 	variable roflag 
 	set ::roflag $roflag
