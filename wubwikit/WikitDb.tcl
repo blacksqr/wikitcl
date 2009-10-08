@@ -259,10 +259,66 @@ namespace eval WDB {
 	return $result
     }
 
-    # search for text
-    # key - a list of words
-    # long - search in content as well as name
-    # date - if non-0, search more recent pages than date
+    #----------------------------------------------------------------------------
+    #
+    # RecentChanges --
+    #
+    #	return 100 most recent changes more recent than a given date
+    #
+    # Parameters:
+    #	date - the latest change date we're interested in
+    #
+    # Results:
+    #	Returns the change record of the most recent change
+    #
+    #----------------------------------------------------------------------------
+    proc RecentChanges {date} {
+	variable pageV
+	return [s2l [$pageV select -min date $date -min name " " -rsort date] 100]
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # Changes --
+    #
+    #	return changes to a given page (optionally: since a date)
+    #
+    # Parameters:
+    #	pid - page index of page whose changes we're interested in
+    #	date - the latest change date we're interested in, or 0 for all
+    #
+    # Results:
+    #	Returns the change record of matching changes
+    #
+    #----------------------------------------------------------------------------
+    proc Changes {pid {date 0}} {
+	variable pageV
+	set changeV [$pageV open $pid changes]
+	if {$date} {
+	    set since [list -min date $date]
+	} else {
+	    set since {}
+	}
+	set result [$changeV select {*}$since -rsort date]
+	$changeV close
+	return [s2l $result]
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # Search --
+    #
+    #	search for text in page titles and/or content
+    #
+    # Parameters:
+    #	key - a list of words
+    #	long - search in content as well as name
+    #	date - if non-0, search more recent pages than date
+    #
+    # Results:
+    #	Returns a list of matching records
+    #
+    #----------------------------------------------------------------------------
     proc Search {key long date} {
 	variable pageV
 	set fields name
@@ -278,71 +334,111 @@ namespace eval WDB {
 	}
 
 	if {$date == 0} {
-	    set rows [$pageV select -rsort date -min date 1 {*}$search]
+	    set maxdate {}
 	} else {
-	    set rows [$pageV select -max date $date -min date 1 -rsort date {*}$search]
+	    set maxdate [list -max date $date]
 	}
+	set rows [$pageV select -min id 11 -min date 1 {*}$maxdate -rsort date {*}$search]
 
 	return [s2l $rows]
     }
 
-    proc RecentChanges {threshold} {
-	variable pageV
-	return [s2l [$pageV select -min date $threshold -min name " " -rsort date] 100]
-    }
-
-    # LookupPage - find a named page
+    #----------------------------------------------------------------------------
+    #
+    # LookupPage --
+    #
+    #	find a named page, creating it if necessary
+    #
+    # Parameters:
+    #	name - name of page
+    #
+    # Results:
+    #	Returns index of page
+    #
+    #----------------------------------------------------------------------------
     proc LookupPage {name} {
 	variable pageV
 	set lcname [string tolower $name]
 	set n [$pageV find name $name]
 	if {$n == ""} {
-	    $pageV insert end name $name
-	    commit
 	    set n [pagecount]
+	    $pageV insert end name $name id $n
+	    commit
 	}
 	return $n
     }
 
+    #----------------------------------------------------------------------------
+    #
+    # PageByName --
+    #
+    #	find a named page
+    #
+    # Parameters:
+    #	name - name of page
+    #
+    # Results:
+    #	Returns a list of matching records
+    #
+    #----------------------------------------------------------------------------
     proc PageByName {name} {
 	variable pageV
 	return [$pageV find name $name]
     }
 
+    #----------------------------------------------------------------------------
+    #
+    # PageGlobName --
+    #
+    #	find page whose name matches a glob
+    #
+    # Parameters:
+    #	glob - page name glob
+    #
+    # Results:
+    #	Returns matching record
+    #
+    #----------------------------------------------------------------------------
     proc PageGlobName {glob} {
 	variable pageV
 	set select [$pageV select -glob name $glob -min date 1]
 	set result [$pageV get [$select get 0]]
 	$select close
-	return $result
+	return [dict get $result id]
     }
 
+    #----------------------------------------------------------------------------
+    #
+    # Cleared --
+    #
+    #	find cleared pages
+    #
+    # Parameters:
+    #
+    # Results:
+    #	list of matching records
+    #
+    #----------------------------------------------------------------------------
     proc Cleared {} {
 	variable pageV
 	return [s2l [$pageV select -min date 1 -max page " " -rsort date] 100]
     }
 
-    proc ChangesSince {pid date} {
-	variable pageV
-	set changeV [$pageV open $pid changes]
-	set result [$changeV select -min date $date -rsort date]
-	$changeV close
-	return [s2l $result]
-    }
-
-    # return all valid pages
+    #----------------------------------------------------------------------------
+    #
+    # Cleared --
+    #
+    #	return all valid pages
+    #
+    # Parameters:
+    #
+    # Results:
+    #	list of matching records
+    #
+    #----------------------------------------------------------------------------
     proc AllPages {} {
 	variable pageV
-	return [s2l [$pageV select -first 11 -min date 1 -sort date]]
-    }
-
-    # return all changes for a given page
-    proc Changes {pid} {
-	variable pageV
-	set changeV [$pageV open $pid changes]
-	set result [$changeV select -rsort date]
-	$changeV close
-	return [s2l $result]
+	return [s2l [$pageV select -min id 11 -min date 1 -sort date]]
     }
 
     #----------------------------------------------------------------------------
