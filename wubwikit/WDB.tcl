@@ -895,11 +895,11 @@ namespace eval WDB {
 	    if {$changed || $text != $page} {
 		puts "SavePageDB@[clock seconds] parse"
 		# make sure it parses before deleting old references
-		set newRefs [WFormat StreamToRefs [WFormat TextToStream $text] [list ::Wikit::InfoProc $db]]
+		set newRefs [WFormat StreamToRefs [WFormat TextToStream $text] ::Wikit::InfoProc]
 		puts "SavePageDB@[clock seconds] delRefs"
-		delRefs $id $db
+		delRefs $id
 		puts "SavePageDB@[clock seconds] addRefs"
-		addRefs $id $db $newRefs
+		addRefs $id $newRefs
 
 		# If this isn't the first time that the given page has been stored
 		# in the databse, make a change log entry for rollback.
@@ -908,7 +908,7 @@ namespace eval WDB {
 		$pageV set page $text who $newWho
 		if {$page ne {} || [Versions $id]} {
 		    puts "SavePageDB@[clock seconds] update change log"
-		    UpdateChangeLog $db $id $name $date $who $page $text
+		    UpdateChangeLog $id $name $date $who $page $text
 		}
 
 		if {$newdate == ""} {
