@@ -180,7 +180,7 @@ namespace eval WDB {
 	set result [$changeV size]
 	$changeV close
 	Debug.WDB {Versions $pid -> $result}
-	return $result
+	return [expr {$result - 1}]
     }
 
     #----------------------------------------------------------------------------
@@ -254,7 +254,12 @@ namespace eval WDB {
 	    $dl close
 	    set dl [$changeV select -rsort date]
 	}
-	set result [$dl get 0]
+	if {[$dl size] == 0} {
+	    # no changes ... what happened?
+	    error "No Changes to $pid at all"
+	} else {
+	    set result [$dl get 0]
+	}
 	$dl close
 	Debug.WDB {MostRecentChange $pid $date -> $result}
 	return [dict get $result sid]
