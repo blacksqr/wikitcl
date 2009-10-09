@@ -895,7 +895,7 @@ namespace eval WDB {
 	    if {$changed || $text != $page} {
 		puts "SavePageDB@[clock seconds] parse"
 		# make sure it parses before deleting old references
-		set newRefs [WFormat StreamToRefs [WFormat TextToStream $text] ::Wikit::InfoProc]
+		set newRefs [WFormat StreamToRefs [WFormat TextToStream $text] ::WubWikit::InfoProc]
 		puts "SavePageDB@[clock seconds] delRefs"
 		delRefs $id
 		puts "SavePageDB@[clock seconds] addRefs"
