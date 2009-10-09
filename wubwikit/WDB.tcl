@@ -86,9 +86,11 @@ namespace eval WDB {
     #	to the $page page.
     #
     #----------------------------------------------------------------------------
-    proc ReferencesTo {page} {
+    proc ReferencesTo {pid} {
 	variable refV
-	return [i2l $refV [$refV select -exact to $page]]
+	set result [$refV select -exact to $pid]
+	Debug.WDB {ReferencesTo $pid -> [$result size] [$result info]}
+	return [i2l $refV $result]
     }
     
     #----------------------------------------------------------------------------
@@ -150,6 +152,7 @@ namespace eval WDB {
     proc GetPageVars {pid args} {
 	variable pageV
 	set record [$pageV get $pid]
+	Debug.WDB {GetPageVars $pid $args -> ([dict merge $record page <ELIDED>])}
 	dict for n $args {
 	    uplevel 1 [list set $n [dict get? $n]]
 	}
@@ -169,6 +172,7 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc PageCount {} {
 	variable pageV
+	Debug.WDB {PageCount -> [$pageV size]}
 	return [$pageV size]
     }
 
@@ -190,6 +194,7 @@ namespace eval WDB {
 	set changeV [$pageV open $pid changes]
 	set result [$changeV size]
 	$changeV close
+	Debug.WDB {Versions $pid -> $result}
 	return $result
     }
 
@@ -213,6 +218,7 @@ namespace eval WDB {
 	set changeV [$pageV open $pid changes]
 	set result [$changeV get $sid {*}$args]
 	$changeV close
+	Debug.WDB {GetChange $pid $sid $args -> $result}
 	return $result
     }
 
@@ -237,6 +243,7 @@ namespace eval WDB {
 	set result [$diffV size]
 	$changeV close
 	$diffV close
+	Debug.WDB {ChangeSetSize $pid $sid -> $result}
 	return $result
     }
 
@@ -264,6 +271,7 @@ namespace eval WDB {
 	}
 	set result [$dl get 0]
 	$dl close
+	Debug.WDB {MostRecentChange $pid $date -> $result}
 	return $result
     }
 
@@ -283,7 +291,7 @@ namespace eval WDB {
     proc RecentChanges {date} {
 	variable pageV
 	set result [$pageV select -min date $date -min name " " -rsort date]
-	Debug.WDB {RecentChanges $date -> [$result size] records [$result info] form}
+	Debug.WDB {RecentChanges $date -> [$result size] [$result info]}
 	return [s2l $result 100]
     }
 
@@ -351,6 +359,7 @@ namespace eval WDB {
 	}
 	set rows [$pageV select -min id 11 -min date 1 {*}$maxdate -rsort date {*}$search]
 
+	Debug.WDB {Search '$key' $long $date -> [$rows size] [$rows info]}
 	return [s2l $rows]
     }
 
