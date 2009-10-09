@@ -12,7 +12,7 @@ namespace eval WDB {
 	variable db
 	set now [clock microseconds]
 	mk::file commit $db
-	Debug.WDB {commit: [clock microseconds] - $now}
+	Debug.WDB {commit: [expr {[clock microseconds] - $now}]uS}
     }
     
     #----------------------------------------------------------------------------
@@ -769,7 +769,7 @@ namespace eval WDB {
 	    GetPageVars $id date page
 	    if {$date != 0} {
 		# add the references from page $id to .refs view
-		addRefs $id [StreamToRefs [TextToStream $page] [list ::WubWikit::InfoProc]]
+		addRefs $id [WFormat StreamToRefs [WFormat TextToStream $page] [list ::WubWikit::InfoProc]]
 	    }
 	}
 	commit
@@ -895,7 +895,7 @@ namespace eval WDB {
 	    if {$changed || $text != $page} {
 		puts "SavePageDB@[clock seconds] parse"
 		# make sure it parses before deleting old references
-		set newRefs [StreamToRefs [TextToStream $text] [list ::Wikit::InfoProc $db]]
+		set newRefs [WFormat StreamToRefs [WFormat TextToStream $text] [list ::Wikit::InfoProc $db]]
 		puts "SavePageDB@[clock seconds] delRefs"
 		delRefs $id $db
 		puts "SavePageDB@[clock seconds] addRefs"
