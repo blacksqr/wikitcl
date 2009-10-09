@@ -318,12 +318,13 @@ namespace eval WDB {
     #	key - a list of words
     #	long - search in content as well as name
     #	date - if non-0, search more recent pages than date
+    #	max - maximum number of records
     #
     # Results:
     #	Returns a list of matching records
     #
     #----------------------------------------------------------------------------
-    proc Search {key long date} {
+    proc Search {key long date max} {
 	variable pageV
 	set fields name
 	if {$long} {
@@ -345,7 +346,7 @@ namespace eval WDB {
 	set rows [$pageV select -min id 11 -min date 1 {*}$maxdate -rsort date {*}$search]
 
 	Debug.WDB {Search '$key' $long $date -> [$rows size] [$rows info]}
-	return [s2l $rows]
+	return [s2l $rows $max]
     }
 
     #----------------------------------------------------------------------------
