@@ -282,7 +282,9 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc RecentChanges {date} {
 	variable pageV
-	return [s2l [$pageV select -min date $date -min name " " -rsort date] 100]
+	set result [$pageV select -min date $date -min name " " -rsort date]
+	Debug.WDB {RecentChanges $date -> [$result size] records [result info] form}
+	return [s2l $result 100]
     }
 
     #----------------------------------------------------------------------------
