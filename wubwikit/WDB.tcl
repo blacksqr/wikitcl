@@ -747,7 +747,7 @@ namespace eval WDB {
 	for {set i 0} {$i < $size} {incr i} {
 	    lappend indices [$v get $i index]
 	}
-	set indices [lsort -integers $indices]
+	set indices [lsort -integer $indices]
 
 	# delete from last to first
 	set n [llength $indices]
