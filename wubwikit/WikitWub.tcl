@@ -30,11 +30,6 @@ set API(WikitWub) {
     language {html natural language (default "en")}
 }
 
-# ::Wikit SavePage $id $C $host $name
-
-# InfoProc {db name} - lookup $name in db,
-# returns a list: /$id (with suffix of @ if the page is new), $name, modification $date
-
 namespace eval WikitWub {
     variable readonly ""
     variable pagecaching 1
@@ -1915,6 +1910,8 @@ namespace eval WikitWub {
 	return [sendPage $r $tplt]
     }
 
+    # InfoProc {name} - lookup $name in db,
+    # returns a list: /$id (with suffix of @ if the page is new), $name, modification $date
     proc InfoProc {ref} {
 	set id [WDB LookupPage $ref]
 	WDB GetPageVars $id date name
