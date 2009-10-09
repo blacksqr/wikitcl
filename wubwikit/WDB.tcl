@@ -257,7 +257,7 @@ namespace eval WDB {
 	set result [$dl get 0]
 	$dl close
 	Debug.WDB {MostRecentChange $pid $date -> $result}
-	return $result
+	return [dict get $result sid]
     }
 
     #----------------------------------------------------------------------------
