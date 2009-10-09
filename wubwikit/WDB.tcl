@@ -366,7 +366,7 @@ namespace eval WDB {
 	Debug.WDB {LookupPage '$name'}
 	set lcname [string tolower $name]
 	if {[catch {$pageV find name $name} n]} {
-	    set n [pagecount]
+	    set n [PageCount]
 	    Debug.WDB {LookupPage '$name' not found, added $n}
 	    $pageV insert end name $name id $n
 	    commit
