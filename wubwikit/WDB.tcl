@@ -367,16 +367,22 @@ namespace eval WDB {
     #	Returns index of page
     #
     #----------------------------------------------------------------------------
+    variable namecache
     proc LookupPage {name} {
 	variable pageV
 	set lcname [string tolower $name]
-	if {[catch {$pageV find name $name} n]} {
+	variable namecache
+	if {[info exists namecache($lcname)]} {
+	    Debug.WDB {LookupPage '$name' found in cache -> $n}
+	    return $namecache($lcname)
+	} elseif {[catch {$pageV find name $name} n]} {
 	    set n [PageCount]
 	    Debug.WDB {LookupPage '$name' not found, added $n}
 	    $pageV insert end name $name id $n
 	    commit
 	}
 	Debug.WDB {LookupPage '$name' -> $n}
+	set namecache($name) $n
 	return $n
     }
 
