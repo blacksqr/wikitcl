@@ -1954,11 +1954,7 @@ namespace eval WikitWub {
 	    set rdate 0
 	} else {
 	    append result "   * ''Displayed $count matches''\n"
-	    if {$pcnt > $count} {
-		append result "   * ''Remaining [expr {$pcnt - $count + 1}] matches omitted...''\n"
-	    } else {
-		set rdate 0
-	    }
+	    set rdate 0
 	}
 
 	return [list $result $rdate $long]
