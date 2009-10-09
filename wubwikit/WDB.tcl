@@ -373,7 +373,7 @@ namespace eval WDB {
 	set lcname [string tolower $name]
 	variable namecache
 	if {[info exists namecache($lcname)]} {
-	    Debug.WDB {LookupPage '$name' found in cache -> $n}
+	    Debug.WDB {LookupPage '$name' found in cache -> $namecache($lcname)}
 	    return $namecache($lcname)
 	} elseif {[catch {$pageV find name $name} n]} {
 	    set n [PageCount]
