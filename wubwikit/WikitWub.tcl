@@ -10,7 +10,7 @@ package require Sitemap
 package require stx
 package require Form
 
-package require WikitDb
+package require WDB
 package require WikitRss
 package require WFormat
 
