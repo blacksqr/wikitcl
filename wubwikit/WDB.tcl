@@ -959,9 +959,9 @@ namespace eval WDB {
 	    }
 
 	    # open our views
-	    variable pageV [[mk::view open $db.pages] blocked]
+	    variable pageV [[mk::view open $db.pages] view blocked]
 	    
-	    variable refV [[mk::view open $db.refs] blocked]
+	    variable refV [[mk::view open $db.refs] view blocked]
 
 	    # if there are no references, probably it's the first time, so recalc
 	    if {!$readonly && [$refV size] == 0} {
