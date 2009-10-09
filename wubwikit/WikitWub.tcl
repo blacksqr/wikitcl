@@ -1008,6 +1008,7 @@ namespace eval WikitWub {
 	    set C [regsub -all "\0" $C " "]
 	}
 
+	set Title [Ref $N]
 	if {$V >= 0} {
 	    switch -- $ext {
 		.txt {
