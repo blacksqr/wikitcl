@@ -134,7 +134,7 @@ namespace eval WDB {
 	variable pageV
 	if {[catch {$pageV get $pid} record eo]} {
 	    Debug.WDB {GetPageVars $pid $args ERROR $record ($eo)}
-	    set record {}
+	    error $record
 	} else {
 	    Debug.WDB {GetPageVars $pid $args -> ([dict merge $record {page <ELIDED>}])}
 	}
