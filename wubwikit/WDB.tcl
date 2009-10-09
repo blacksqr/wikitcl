@@ -310,6 +310,7 @@ namespace eval WDB {
 	    set since {}
 	}
 	set result [$changeV select {*}$since -rsort date]
+	Debug.WDB {Changes $pid from $date -> [$result size] [$result info]}
 	$changeV close
 	return [s2l $result]
     }
