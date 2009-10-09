@@ -2145,7 +2145,8 @@ namespace eval WikitWub {
 		# set up a few standard URLs an strings
 		if {[catch {
 		    WDB GetPageVars $N name date who
-		}]} {
+		} e eo]} {
+		    puts stderr "Error: $e ($eo)"
 		    return [Http NotFound $r]
 		}
 
