@@ -62,13 +62,13 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc ReferencesTo {pid} {
 	variable refV
-	set select [$refV select -exact to $pid]
+	set select [$refV select -exact to $pid -rsort from]
 	Debug.WDB {ReferencesTo $pid -> [$select size] [$select info]}
 
 	set size [$select size]
 	set result {}
 	for {set i 0} {$i < $size} {incr i} {
-	    lappend result [$refV get [$select get $i index]]
+	    lappend result [dict get [$select get $i index] from]
 	}
 	$select close
 	return $result
