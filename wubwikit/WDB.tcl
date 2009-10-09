@@ -152,7 +152,7 @@ namespace eval WDB {
     proc GetPageVars {pid args} {
 	variable pageV
 	set record [$pageV get $pid]
-	Debug.WDB {GetPageVars $pid $args -> ([dict merge $record page <ELIDED>])}
+	Debug.WDB {GetPageVars $pid $args -> ([dict merge $record {page <ELIDED>}])}
 	dict for n $args {
 	    uplevel 1 [list set $n [dict get? $n]]
 	}
