@@ -1,5 +1,5 @@
 package require OO
-package provide WikitDb 1.0
+package provide WDB 1.0
 
 Debug on WDB 10
 
