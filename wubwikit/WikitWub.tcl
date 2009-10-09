@@ -525,7 +525,7 @@ namespace eval WikitWub {
 	}]]
     }
 
-    proc edit_activity { N } {
+    proc edit_activity {N} {
 	set pcdate [WDB GetPage $N date]
 	set edate [expr {$pcdate-10*86400}]
 	set first 1
@@ -533,7 +533,7 @@ namespace eval WikitWub {
 
 	foreach record [WDB Changes $N] {
 	    dict with record {
-		set changes [WDB ChangeSetSize $N $id]
+		set changes [WDB ChangeSetSize $N $sid]
 		set activity [expr {$activity + $changes * $delta / double([clock seconds] - $pcdate)}]
 		set pcdate $date
 		set first 0
@@ -819,7 +819,7 @@ namespace eval WikitWub {
 	    # get changes for current page in last D days
 	    set edate [expr {$pcdate-$D*86400}]
 	    foreach record [WDB Changes $N $edate] {
-		dict update record date cdate who cwho delta cdelta id sid {}
+		dict update record date cdate who cwho delta cdelta sid sid {}
 		set changes [WDB ChangeSetSize $N $sid]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
@@ -2369,20 +2369,6 @@ namespace eval WikitWub {
 	    file copy [file join $drdir [K [file link $dfile] [file delete $dfile]]] $dfile
 	}
 	
-	# create history directory
-	if {![info exists ::env(WIKIT_HIST)]} {
-	    variable history
-	    if {$history ne ""} {
-		if {[file pathtype $history] ne "absolute"} {
-		    set history [file join $wikitroot $history]
-		}
-		set ::env(WIKIT_HIST) $history
-		catch {file mkdir $history}
-	    }
-	} else {
-	    catch {file mkdir $::env(WIKIT_HIST)}
-	}
-
 	# initialize wikit DB
 	if {[info exists ::starkit_wikitdbpath]} {
 	    set wikitdbpath $::starkit_wikitdbpath
