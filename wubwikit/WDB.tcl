@@ -12,7 +12,7 @@ namespace eval WDB {
 	variable db
 	set now [clock microseconds]
 	mk::file commit $db
-	Debug.WDB {commit: [expr {[clock microseconds] - $now}]uS}
+	Debug.WDB {commit: [expr {[clock microseconds] - $now / 1000000.0}]sec}
     }
     
     #----------------------------------------------------------------------------
@@ -856,16 +856,16 @@ namespace eval WDB {
     # SavePage - store page $id ($who, $text, $newdate)
     proc SavePage {id text newWho newName {newdate ""} {commit 1}} {
 	variable pageV
-	puts "SavePageDB@[clock seconds] start"
+	puts "SavePage@[clock seconds] start"
 
 	set changed 0
 
 	if {[catch {
-	    puts "SavePageDB@[clock seconds] pagevarsDB"
+	    puts "SavePage@[clock seconds] pagevarsDB"
 	    GetPageVars $id name date page who
 
 	    if {$newName != $name} {
-		puts "SavePageDB@[clock seconds] new name"
+		puts "SavePage@[clock seconds] new name"
 		set changed 1
 
 		# rewrite all pages referencing $id changing old name to new
@@ -885,7 +885,7 @@ namespace eval WDB {
 	    }
 
 	    if {$newdate != ""} {
-		puts "SavePageDB@[clock seconds] set date"
+		puts "SavePage@[clock seconds] set date"
 		# change the date if requested
 		$pageV set $id date $newdate
 	    }
@@ -893,42 +893,42 @@ namespace eval WDB {
 	    # avoid creating a log entry and committing if nothing changed
 	    set text [string trimright $text]
 	    if {$changed || $text != $page} {
-		puts "SavePageDB@[clock seconds] parse"
+		puts "SavePage@[clock seconds] parse"
 		# make sure it parses before deleting old references
 		set newRefs [WFormat StreamToRefs [WFormat TextToStream $text] ::WikitWub::InfoProc]
-		puts "SavePageDB@[clock seconds] delRefs"
+		puts "SavePage@[clock seconds] delRefs"
 		delRefs $id
-		puts "SavePageDB@[clock seconds] addRefs"
+		puts "SavePage@[clock seconds] addRefs"
 		addRefs $id $newRefs
 
 		# If this isn't the first time that the given page has been stored
 		# in the databse, make a change log entry for rollback.
 
-		puts "SavePageDB@[clock seconds] log change"
-		$pageV set page $text who $newWho
+		puts "SavePage@[clock seconds] log change"
+		$pageV set $id page $text who $newWho
 		if {$page ne {} || [Versions $id]} {
-		    puts "SavePageDB@[clock seconds] update change log"
+		    puts "SavePage@[clock seconds] update change log"
 		    UpdateChangeLog $id $name $date $who $page $text
 		}
 
 		if {$newdate == ""} {
-		    puts "SavePageDB@[clock seconds] set date"
+		    puts "SavePage@[clock seconds] set date"
 		    $pageV set $id date [clock seconds]
 		    set commit 1
 		}
 
-		puts "SavePageDB@[clock seconds] done saving"
+		puts "SavePage@[clock seconds] done saving"
 	    }
 	} r]} {
 	    Debug.error "SavePageDb: '$r'"
 	}
 
 	if {$commit} {
-	    puts "SavePageDB@[clock seconds] commit"
+	    puts "SavePage@[clock seconds] commit"
 	    commit
 	}
 
-        puts "SavePageDB@[clock seconds] done."
+        puts "SavePage@[clock seconds] done."
     }
 
     proc WikiDatabase {args} {
