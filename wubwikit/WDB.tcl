@@ -37,7 +37,7 @@ namespace eval WDB {
 	if {$max > 0 && $size > $max} {
 	    set size $max
 	}
-	for {set i $size} {$i < $size} {incr i} {
+	for {set i 0} {$i < $size} {incr i} {
 	    lappend result [$view get $i]
 	}
 	$view close
@@ -283,7 +283,7 @@ namespace eval WDB {
     proc RecentChanges {date} {
 	variable pageV
 	set result [$pageV select -min date $date -min name " " -rsort date]
-	Debug.WDB {RecentChanges $date -> [$result size] records [result info] form}
+	Debug.WDB {RecentChanges $date -> [$result size] records [$result info] form}
 	return [s2l $result 100]
     }
 
