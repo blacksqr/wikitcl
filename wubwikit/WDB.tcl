@@ -48,34 +48,6 @@ namespace eval WDB {
 
     #----------------------------------------------------------------------------
     #
-    # i2l --
-    #
-    #	convert a select-view of indices to a list of records
-    #
-    # Parameters:
-    #	original - the view over which the select ran
-    #	select - the view resulting from the mk4too select
-    #
-    # Results:
-    #	Returns a list of dicts, each is a record corresponding to the
-    #	select result.
-    #
-    #	Beware: this only works on mk4too selects which haven't specified a -sort
-    #	or -rsort argument.  Other selects return a copy of the original record
-    #
-    #----------------------------------------------------------------------------
-    proc i2l {original select} {
-	set result {}
-	set size [$select size]
-	for {set i 0} {$i < $size} {incr i} {
-	    lappend result [$original get [$select get $i index]]
-	}
-	$select close
-	return $result
-    }
-
-    #----------------------------------------------------------------------------
-    #
     # ReferencesTo --
     #
     #	return list of page indices of those pages which refer to a given page
@@ -90,9 +62,16 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc ReferencesTo {pid} {
 	variable refV
-	set result [$refV select -exact to $pid]
-	Debug.WDB {ReferencesTo $pid -> [$result size] [$result info]}
-	return [i2l $refV $result]
+	set select [$refV select -exact to $pid]
+	Debug.WDB {ReferencesTo $pid -> [$select size] [$select info]}
+
+	set size [$select size]
+	set result {}
+	for {set i 0} {$i < $size} {incr i} {
+	    lappend result [$refV get [$select get $i index]]
+	}
+	$select close
+	return $result
     }
     
     #----------------------------------------------------------------------------
@@ -153,8 +132,12 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc GetPageVars {pid args} {
 	variable pageV
-	set record [$pageV get $pid]
-	Debug.WDB {GetPageVars $pid $args -> ([dict merge $record {page <ELIDED>}])}
+	if {[catch {$pageV get $pid} record eo]} {
+	    Debug.WDB {GetPageVars $pid $args ERROR $record ($eo)}
+	    set record {}
+	} else {
+	    Debug.WDB {GetPageVars $pid $args -> ([dict merge $record {page <ELIDED>}])}
+	}
 	foreach n $args {
 	    uplevel 1 [list set $n [dict get? $record $n]]
 	}
