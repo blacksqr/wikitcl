@@ -154,7 +154,7 @@ namespace eval WDB {
 	set record [$pageV get $pid]
 	Debug.WDB {GetPageVars $pid $args -> ([dict merge $record {page <ELIDED>}])}
 	foreach n $args {
-	    uplevel 1 [list set $n [dict get? $n]]
+	    uplevel 1 [list set $n [dict get? $record $n]]
 	}
     }
 
