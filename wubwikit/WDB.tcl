@@ -769,7 +769,7 @@ namespace eval WDB {
 	    GetPageVars $id date page
 	    if {$date != 0} {
 		# add the references from page $id to .refs view
-		addRefs $id [WFormat StreamToRefs [WFormat TextToStream $page] [list ::WubWikit::InfoProc]]
+		addRefs $id [WFormat StreamToRefs [WFormat TextToStream $page] [list ::WikitWub::InfoProc]]
 	    }
 	}
 	commit
@@ -895,7 +895,7 @@ namespace eval WDB {
 	    if {$changed || $text != $page} {
 		puts "SavePageDB@[clock seconds] parse"
 		# make sure it parses before deleting old references
-		set newRefs [WFormat StreamToRefs [WFormat TextToStream $text] ::WubWikit::InfoProc]
+		set newRefs [WFormat StreamToRefs [WFormat TextToStream $text] ::WikitWub::InfoProc]
 		puts "SavePageDB@[clock seconds] delRefs"
 		delRefs $id
 		puts "SavePageDB@[clock seconds] addRefs"
