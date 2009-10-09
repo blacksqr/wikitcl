@@ -127,7 +127,10 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc GetContent {pid} {
-	return [GetPage $pid page]
+	variable pageV
+	set result [$pageV get $pid page]
+	Debug.WDB {GetContent $pid -> [string length $result] '[string range $result 0 10]...[string range $result end-10 end]'}
+	return $result
     }
 
     #----------------------------------------------------------------------------
