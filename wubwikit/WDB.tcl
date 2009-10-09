@@ -365,8 +365,7 @@ namespace eval WDB {
 	variable pageV
 	Debug.WDB {LookupPage '$name'}
 	set lcname [string tolower $name]
-	set n [$pageV find name $name]
-	if {$n == ""} {
+	if {[catch {$pageV find name $name} n]} {
 	    set n [pagecount]
 	    Debug.WDB {LookupPage '$name' not found, added $n}
 	    $pageV insert end name $name id $n
