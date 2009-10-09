@@ -532,9 +532,11 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
 
     proc GetPageVersion {id {version {}}} {
+	Debug.WDB {GetPageVersion $id $version}
 	return [join [GetPageVersionLines $id $version] \n]
     }
     proc GetPageVersionLines {id {version {}}} {
+	Debug.WDB {GetPageVersionLines $id $version}
 	variable pageV
 	set page [$pageV get $id]
 	set latest [Versions $id]
