@@ -363,7 +363,6 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc LookupPage {name} {
 	variable pageV
-	Debug.WDB {LookupPage '$name'}
 	set lcname [string tolower $name]
 	if {[catch {$pageV find name $name} n]} {
 	    set n [PageCount]
@@ -371,6 +370,7 @@ namespace eval WDB {
 	    $pageV insert end name $name id $n
 	    commit
 	}
+	Debug.WDB {LookupPage '$name' -> $n}
 	return $n
     }
 
@@ -960,7 +960,6 @@ namespace eval WDB {
 
 	    # open our views
 	    variable pageV [[mk::view open $db.pages] view blocked]
-	    
 	    variable refV [[mk::view open $db.refs] view blocked]
 
 	    # if there are no references, probably it's the first time, so recalc
