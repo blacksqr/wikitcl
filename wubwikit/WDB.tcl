@@ -12,7 +12,7 @@ namespace eval WDB {
 	variable db
 	set now [clock microseconds]
 	mk::file commit $db
-	Debug.WDB {commit: [expr {[clock microseconds] - $now / 1000000.0}]sec}
+	Debug.WDB {commit: [expr {([clock microseconds] - $now) / 1000000.0}]sec}
     }
     
     #----------------------------------------------------------------------------
