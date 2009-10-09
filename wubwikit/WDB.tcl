@@ -68,7 +68,7 @@ namespace eval WDB {
 	set size [$select size]
 	set result {}
 	for {set i 0} {$i < $size} {incr i} {
-	    lappend result [dict get [$select get $i index] from]
+	    lappend result [dict get [$select get $i] from]
 	}
 	$select close
 	return $result
