@@ -12,7 +12,7 @@ package require Form
 
 package require WikitDb
 package require WikitRss
-package require Wikit::Format
+package require WFormat
 
 package provide WikitWub 1.0
 
@@ -29,8 +29,6 @@ set API(WikitWub) {
     cookie {name of login cookie (default "wikit_e")}
     language {html natural language (default "en")}
 }
-
-# ::Wikit Expand_HTML {text}
 
 # ::Wikit SavePage $id $C $host $name
 
@@ -825,7 +823,7 @@ namespace eval WikitWub {
 		set changes [WDB ChangeSetSize $N $sid]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
-		lassign [::Wikit StreamToHTML [::Wikit TextToStream $C] / ::WikitWub::InfoProc] C U T BR
+		lassign [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc] C U T BR
 		append R $C
 		set pcdate $cdate
 		set pcwho $cwho
@@ -1023,26 +1021,26 @@ namespace eval WikitWub {
 		.tk {
 		    set Title [<h1> [Ref $N]]
 		    set name "Difference between version $V and $D for $name"
-		    set C [::Wikit TextToStream $C]
-		    lassign [::Wikit StreamToTk $C $N ::WikitWub::InfoProc] C U
+		    set C [WFormat TextToStream $C]
+		    lassign [WFormat StreamToTk $C $N ::WikitWub::InfoProc] C U
 		    append result "<p>$C"
 		}
 		.code {
-		    set C [::Wikit TextToStream $C 0 0 0]
-		    set C [::Wikit StreamToTcl $name $C ::WikitWub::InfoProc]
+		    set C [WFormat TextToStream $C 0 0 0]
+		    set C [WFormat StreamToTcl $name $C ::WikitWub::InfoProc]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		.str {
-		    set C [::Wikit TextToStream $C]
+		    set C [WFormat TextToStream $C]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		default {
 		    set Title [Ref $N]
 		    set name "Difference between version $V and $D for $name"
 		    if { $W } {
-			set C [::Wikit ShowDiffs $C]
+			set C [WFormat ShowDiffs $C]
 		    } else {
-			lassign [::Wikit StreamToHTML [::Wikit TextToStream $C] / ::WikitWub::InfoProc] C U T BR
+			lassign [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc] C U T BR
 		    }
 		    set tC [<span> class newwikiline "Text added in version $V is highlighted like this"]
 		    append tC , [<span> class oldwikiline "text deleted from version $D is highlighted like this"]
@@ -1110,17 +1108,17 @@ namespace eval WikitWub {
 		.tk {
 		    set Title "Version $V of [Ref $N]"
 		    set name "Version $V of $name"
-		    set C [::Wikit TextToStream [get_page_with_version $N $V $A]]
-		    lassign [::Wikit StreamToTk $C $N ::WikitWub::InfoProc] C U T
+		    set C [WFormat TextToStream [get_page_with_version $N $V $A]]
+		    lassign [WFormat StreamToTk $C $N ::WikitWub::InfoProc] C U T
 		    append result "<p>$C"
 		}
 		.code {
-		    set C [::Wikit TextToStream [get_page_with_version $N $V $A] 0 0 0]
-		    set C [::Wikit StreamToTcl $name $C ::WikitWub::InfoProc]
+		    set C [WFormat TextToStream [get_page_with_version $N $V $A] 0 0 0]
+		    set C [WFormat StreamToTcl $name $C ::WikitWub::InfoProc]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		.str {
-		    set C [::Wikit TextToStream [get_page_with_version $N $V $A]]
+		    set C [WFormat TextToStream [get_page_with_version $N $V $A]]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		default {
@@ -1134,7 +1132,7 @@ namespace eval WikitWub {
 			    set Title "Version $V of [Ref $N]"
 			    set name "Version $V of $name"
 			}
-			lassign [::Wikit StreamToHTML [::Wikit TextToStream $C] / ::WikitWub::InfoProc] C U T BR
+			lassign [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc] C U T BR
 			if { $V > 0 } {
 			    lappend menu [Ref "/_/revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
 			}
@@ -1483,9 +1481,9 @@ namespace eval WikitWub {
 	}
 
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
-	set C [::Wikit TextToStream $O]
+	set C [WFormat TextToStream $O]
 	set ::Wikit::creating_preview 1
-	lassign [::Wikit StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+	lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 	set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
 	unset ::Wikit::creating_preview
 	return [sendPage $r preview_tc]
@@ -1771,7 +1769,7 @@ namespace eval WikitWub {
 	set TOC [string trim $TOC]
 	unset -nocomplain IMTOC
 	if { [string length $TOC] } {
-	    lassign [::Wikit FormatWikiToc $TOC] TOC IMTOCl
+	    lassign [WFormat FormatWikiToc $TOC] TOC IMTOCl
 	    array set IMTOC $IMTOCl
 	}
 
@@ -1972,8 +1970,8 @@ namespace eval WikitWub {
     proc pageXML {N} {
 	WDB GetPageVars $N name date who
 	set page [WDB GetContent $N]
-	set stream [::Wikit TextToStream [WDB GetContent $N]]
-	lassign [::Wikit StreamToHTML $stream / ::WikitWub::InfoProc] parsed - toc backrefs
+	set stream [WFormat TextToStream [WDB GetContent $N]]
+	lassign [WFormat StreamToHTML $stream / ::WikitWub::InfoProc] parsed - toc backrefs
 	return [<page> [subst { 
 	    [<name> [armour $name]]
 	    [<content> [armour $page]]
@@ -2059,8 +2057,8 @@ namespace eval WikitWub {
 		set ts [clock seconds]
 		for {set N 10} {$N < $M} {incr N} {
 		    puts "$N/$M"
-		    set C [::Wikit TextToStream [WDB GetContent $N]]
-		    lassign [::Wikit StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+		    set C [WFormat TextToStream [WDB GetContent $N]]
+		    lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 		    set f [open /home/decoster/tmp/wp/$N.html w]
 		    puts $f $C
 		    close $f
@@ -2089,8 +2087,8 @@ namespace eval WikitWub {
 		    }
 
 		    lassign [search $term $qdate] C nqdate long
-		    set C [::Wikit TextToStream $C]
-		    lassign [::Wikit StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+		    set C [WFormat TextToStream $C]
+		    lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 		    if { $nqdate } {
 			append C [<p> [<a> href "/_/search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
 		    }
@@ -2159,17 +2157,17 @@ namespace eval WikitWub {
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
 		    .tk {
-			set C [::Wikit TextToStream $content]
-			lassign [::Wikit StreamToTk $C $N ::WikitWub::InfoProc] C U T
+			set C [WFormat TextToStream $content]
+			lassign [WFormat StreamToTk $C $N ::WikitWub::InfoProc] C U T
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
 		    .str {
-			set C [::Wikit TextToStream $content]
+			set C [WFormat TextToStream $content]
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
 		    .code {
-			set C [::Wikit TextToStream $content 0 0 0]
-			set C [::Wikit StreamToTcl $name $C]
+			set C [WFormat TextToStream $content 0 0 0]
+			set C [WFormat StreamToTcl $name $C]
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
 		    .xml {
@@ -2178,9 +2176,9 @@ namespace eval WikitWub {
 			return [Http NoCache [Http Ok $r $C text/xml]]
 		    }
 		    default {
-			set C [::Wikit TextToStream $content]
+			set C [WFormat TextToStream $content]
 			dict set r content-location "http://[Url host $r]/$N"
-			lassign [::Wikit StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+			lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
 			foreach {containerid bref} $BR {
 			    if {[string length $bref]} {
 				set brefpage [WDB LookupPage $bref]
@@ -2404,22 +2402,29 @@ namespace eval WikitWub {
 
 	# set message of the day (if any) to be displayed on /4
 	catch {
-	    set ::WikitWub::motd [::fileutil::cat [file join $docroot motd]]
+	    variable motd [::fileutil::cat [file join $docroot motd]]
 	}
 
 	# set table of contents (if any) to be displayed on in left column menu
-	catch {
-	    set ::WikitWub::TOC [::fileutil::cat [file join $docroot TOC]]
-	    unset -nocomplain ::WikitWub::IMTOC
-	    if { [string length $::WikitWub::TOC] } {
-		lassign [::Wikit FormatWikiToc $::WikitWub::TOC] ::WikitWub::TOC IMTOCl
-		array set ::WikitWub::IMTOC $IMTOCl
+	if {[catch {
+	    variable TOC [::fileutil::cat [file join $docroot TOC]]
+	    variable IMTOC
+	    unset -nocomplain IMTOC
+	    if {[string length $TOC]} {
+		lassign [WFormat FormatWikiToc $TOC] TOC IMTOCl
+		array set IMTOC $IMTOCl
 	    }
+	} e eo]} {
+	    Debug.error {Wiki TOC loading: $e $eo}
+	    if {![info exists TOC]} {
+		set TOC ""
+	    }
+	    unset -nocomplain IMTOC
 	}
 
 	# set welcome message, if any
 	catch {
-	    set ::WikitWub::WELCOME [::fileutil::cat [file join $docroot html welcome.html]]
+	    variable WELCOME WELCOME [::fileutil::cat [file join $docroot html welcome.html]]
 	}
 
 	catch {[WDB GetContent 9]}
@@ -2428,9 +2433,11 @@ namespace eval WikitWub {
 	set ::roflag $roflag
 
 	# initialize RSS feeder
-	WikitRss new \
-	    [expr {[info exists ::starkit_wikittitle]?$::starkit_wikittitle:"Tcler's Wiki"}] \
-	    [expr {[info exists ::starkit_url]?"http://$::starkit_url/":"http://wiki.tcl.tk/"}]
+	if {0} {
+	    WikitRss new \
+		[expr {[info exists ::starkit_wikittitle]?$::starkit_wikittitle:"Tcler's Wiki"}] \
+		[expr {[info exists ::starkit_url]?"http://$::starkit_url/":"http://wiki.tcl.tk/"}]
+	}
 
 	variable pagecaching
 	variable pagecache

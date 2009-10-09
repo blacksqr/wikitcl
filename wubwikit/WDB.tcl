@@ -1,9 +1,12 @@
 package require OO
 package provide WikitDb 1.0
 
+Debug on WDB 10
+
 namespace eval WDB {
     variable pageV
     variable refV
+    variable readonly 0
 
     proc commit {} {
 	variable db
@@ -105,7 +108,9 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc GetPage {pid args} {
 	variable pageV
-	return [$pageV get $pid {*}$args]
+	set result [$pageV get $pid {*}$args]
+	Debug.WDB {GetPage $pid $args -> ($result)}
+	return $result
     }
 
     #----------------------------------------------------------------------------
@@ -358,10 +363,12 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc LookupPage {name} {
 	variable pageV
+	Debug.WDB {LookupPage '$name'}
 	set lcname [string tolower $name]
 	set n [$pageV find name $name]
 	if {$n == ""} {
 	    set n [pagecount]
+	    Debug.WDB {LookupPage '$name' not found, added $n}
 	    $pageV insert end name $name id $n
 	    commit
 	}
@@ -383,7 +390,9 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc PageByName {name} {
 	variable pageV
-	return [$pageV find name $name]
+	set result [$pageV find name $name]
+	Debug.WDB {PageByName '$name' -> $result}
+	return $result
     }
 
     #----------------------------------------------------------------------------
@@ -404,6 +413,7 @@ namespace eval WDB {
 	set select [$pageV select -glob name $glob -min date 1]
 	set result [$pageV get [$select get 0]]
 	$select close
+	Debug.WDB {PageGlobName '$glob' -> $result}
 	return [dict get $result id]
     }
 
