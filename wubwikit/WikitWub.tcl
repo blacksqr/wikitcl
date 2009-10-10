@@ -1,3 +1,9 @@
+#### Source local setup script (not under version control)
+if {[catch {source [file join [file dirname [info script]] local_setup.tcl]} r eo]} {
+    puts stderr "LOCAL SETUP: [clock format [clock second]] '$r' ($eo)"
+    exit 1
+}
+
 package require Mk4tcl
 package require fileutil
 package require struct::queue
