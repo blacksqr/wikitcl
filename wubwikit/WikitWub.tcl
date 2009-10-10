@@ -1469,10 +1469,8 @@ namespace eval WikitWub {
 
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
 	set C [WFormat TextToStream $O]
-	set ::Wikit::creating_preview 1
-	lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+	lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc 1] C U T BR
 	set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
-	unset ::Wikit::creating_preview
 	return [sendPage $r preview_tc]
     }
 

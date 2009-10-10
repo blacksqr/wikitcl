@@ -4,7 +4,7 @@
 package provide WFormat 1.1
 
 namespace eval ::WFormat {
-  namespace export TextToStream StreamToTk StreamToTcl StreamToHTML StreamToRefs \
+  namespace export TextToStream StreamToTcl StreamToHTML StreamToRefs \
     StreamToUrls Expand_HTML FormatWikiToc ShowDiffs
 
   # In this file:
@@ -949,7 +949,7 @@ namespace eval ::WFormat {
     return [list $text $text]
   }
 
-  proc StreamToHTML {s {cgi ""} {ip ""}} {
+  proc StreamToHTML {s {cgi ""} {ip ""} {creating_preview 0}} {
 
     # here so we aren't dependent on cksum unless rendering to HTML
     package require cksum
@@ -1010,7 +1010,7 @@ namespace eval ::WFormat {
             # no lookup, turn into a searchreference
             append result \
               $html_frag(a_) $cgi$text
-            if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+            if {$creating_preview} {
               append result "\" target=\"_blank"
             }
             append result $html_frag(tc) \
@@ -1036,7 +1036,7 @@ namespace eval ::WFormat {
             } else {
               append result $html_frag(a_) /$id
             }
-            if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+            if {$creating_preview} {
               append result "\" target=\"_blank"
             }
             append result $html_frag(tc) \
@@ -1052,13 +1052,13 @@ namespace eval ::WFormat {
             # use ID -- editor link on the brackets.
             append result \
               $html_frag(a_) /$id 
-            if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+            if {$creating_preview} {
               append result "\" target=\"_blank"
             }
             append result $html_frag(tc) \[ $html_frag(_a) \
               [quote $text] \
               $html_frag(a_) /$id 
-            if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+            if {$creating_preview} {
               append result "\" target=\"_blank"
             }
             append result $html_frag(tc) \] $html_frag(_a) \
@@ -1071,7 +1071,7 @@ namespace eval ::WFormat {
 	  }
           append result \
             $html_frag(e_) [quote $link] 
-          if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+          if {$creating_preview} {
             append result "\" target=\"_blank"
           }
           append result $html_frag(tc) \
@@ -1087,13 +1087,13 @@ namespace eval ::WFormat {
           } else {
             if {$text ne $link} {
               append result $html_frag(e_) [quote $link] 
-              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+              if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
               append result $html_frag(tc) [quote $text] $html_frag(_a)
             } else {
               append result \[ $html_frag(e_) [quote $link] 
-              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+              if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
               append result $html_frag(tc) [incr count] $html_frag(_a) \]
@@ -1262,7 +1262,7 @@ namespace eval ::WFormat {
               # no lookup, turn into a searchreference
               append result \
                 $html_frag(a_) $cgi$linktext 
-              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+              if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
               append result $html_frag(tc) \
@@ -1287,7 +1287,7 @@ namespace eval ::WFormat {
               } else {
                 append result $html_frag(a_) /$id
               }
-              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+              if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
               append result $html_frag(tc) \
@@ -1303,13 +1303,13 @@ namespace eval ::WFormat {
               # use ID -- editor link on the brackets.
               append result \
                 $html_frag(a_) /$id 
-              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+              if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
               append result $html_frag(tc) \[ $html_frag(_a) \
                 [quote $linktext] \
                 $html_frag(a_) /$id 
-              if {[info exists ::Wikit::creating_preview] && $::Wikit::creating_preview} {
+              if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
               append result $html_frag(tc) \] $html_frag(_a) \
