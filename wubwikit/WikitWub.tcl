@@ -867,7 +867,7 @@ namespace eval WikitWub {
 	    || ![string is integer -strict $D]
             || $N < 0
 	    || $N >= [WDB PageCount]
-	    || $ext ni {"" .txt .tk .str .code}
+	    || $ext ni {"" .txt .str .code}
 	} {
 	    return [Http NotFound $r]
 	}
@@ -1019,13 +1019,6 @@ namespace eval WikitWub {
 		.txt {
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
-		.tk {
-		    set Title [<h1> [Ref $N]]
-		    set name "Difference between version $V and $D for $name"
-		    set C [WFormat TextToStream $C]
-		    lassign [WFormat StreamToTk $C $N ::WikitWub::InfoProc] C U
-		    append result "<p>$C"
-		}
 		.code {
 		    set C [WFormat TextToStream $C 0 0 0]
 		    set C [WFormat StreamToTcl $name $C ::WikitWub::InfoProc]
@@ -1085,7 +1078,7 @@ namespace eval WikitWub {
             || $N < 0
 	    || $N >= [WDB PageCount]
 	    || $V < 0
-	    || $ext ni {"" .txt .tk .str .code}
+	    || $ext ni {"" .txt .str .code}
 	} {
 	    return [Http NotFound $r]
 	}
@@ -1105,13 +1098,6 @@ namespace eval WikitWub {
 		.txt {
 		    set C [get_page_with_version $N $V $A]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
-		}
-		.tk {
-		    set Title "Version $V of [Ref $N]"
-		    set name "Version $V of $name"
-		    set C [WFormat TextToStream [get_page_with_version $N $V $A]]
-		    lassign [WFormat StreamToTk $C $N ::WikitWub::InfoProc] C U T
-		    append result "<p>$C"
 		}
 		.code {
 		    set C [WFormat TextToStream [get_page_with_version $N $V $A] 0 0 0]
@@ -2154,11 +2140,6 @@ namespace eval WikitWub {
 		switch -- $ext {
 		    .txt {
 			set C $content
-			return [Http NoCache [Http Ok $r $C text/plain]]
-		    }
-		    .tk {
-			set C [WFormat TextToStream $content]
-			lassign [WFormat StreamToTk $C $N ::WikitWub::InfoProc] C U T
 			return [Http NoCache [Http Ok $r $C text/plain]]
 		    }
 		    .str {
