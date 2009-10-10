@@ -544,7 +544,7 @@ namespace eval WDB {
     proc GetPageVersionLines {id {version {}}} {
 	Debug.WDB {GetPageVersionLines $id $version}
 	variable pageV
-	set page [$pageV get $id]
+	set page [$pageV get $id page]
 	set latest [Versions $id]
 	if {$version eq {}} {
 	    set version $latest
