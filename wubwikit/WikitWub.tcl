@@ -13,7 +13,6 @@ package require Site	;# assume Wub/ is already on the path, or in /usr/lib
 lappend auto_path [file dirname [info script]]
 package require Sitemap
 package require stx
-package require stx2html
 package require Form
 
 package require WDB
