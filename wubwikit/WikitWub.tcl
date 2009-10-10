@@ -1,7 +1,6 @@
 #### Source local setup script (not under version control)
-if {[catch {source [file join [file dirname [info script]] local_setup.tcl]} r eo]} {
-    puts stderr "LOCAL SETUP: [clock format [clock second]] '$r' ($eo)"
-    exit 1
+if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
+    source [file join [file dirname [info script]] local_setup.tcl]
 }
 
 package require Mk4tcl
