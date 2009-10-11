@@ -808,7 +808,7 @@ namespace eval WikitWub {
 
 	set R ""
 	set n 0
-	lassign [WDB GetPage $N date name who page] pcdate name pcwho
+	lassign [WDB GetPage $N date name who] pcdate name pcwho
 	set page [WDB GetContent $N]
 	set V [WDB Versions $N]	;# get #version for this page
 
@@ -876,13 +876,13 @@ namespace eval WikitWub {
 	    set T 0
 	}
 
-	set nver [expr {1 + [WDB Versions $N]}]
+	set nver [WDB Versions $N]
 	if { $V >= $nver || ($T == 0 && $D >= $nver) } {
 	    return [Http NotFound $r]
 	}
 
 	if {$V < 0} {
-	    set V [expr {$nver - 1}]	;# default
+	    set V $nver	;# default
 	}
     
 	# If T is zero, D contains version to compare with
@@ -917,7 +917,7 @@ namespace eval WikitWub {
 	    set D [WDB MostRecentChange $N $dt]
 	}
 
-	WDB GetPageVars $N name
+	set name [WDB GetPage $N name]
 
 	set t1 [split [get_page_with_version $N $V 0] "\n"]
 
@@ -1083,8 +1083,8 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
-	set nver [expr {1 + [WDB Versions $N]}]
-	if {$V >= $nver} {
+	set nver [WDB Versions $N]
+	if {$V > $nver} {
 	    return [Http NotFound $r]
 	}
 
@@ -1092,7 +1092,7 @@ namespace eval WikitWub {
 	set menu [menus Home Recent Help HR]
 	lappend menu [Ref /_/history?N=$N History]
 
-	WDB GetPageVars $N name
+	set name [WDB GetPage $N name]
 	if {$V >= 0} {
 	    switch -- $ext {
 		.txt {
@@ -1123,7 +1123,7 @@ namespace eval WikitWub {
 			if { $V > 0 } {
 			    lappend menu [Ref "/_/revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
 			}
-			if { $V < ($nver-1) } {
+			if { $V < $nver } {
 			    lappend menu [Ref "/_/revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
 			}
 			if { $A } {
@@ -1167,7 +1167,6 @@ namespace eval WikitWub {
 	set menu [menus Home Recent Help HR]
 	set C ""
 	#	set links ""
-	set nver [expr {1 + [WDB Versions $N]}]
 	if {$S > 0} {
 	    set pstart [expr {$S - $L}]
 	    if {$pstart < 0} {
@@ -1177,6 +1176,7 @@ namespace eval WikitWub {
 	    #	    append links [<a> href "$N?S=$pstart&L=$L" "Previous $L"]
 	}
 	set nstart [expr {$S + $L}]
+	set nver [WDB Versions $N]
 	if {$nstart < $nver} {
 	    #	    if {$links ne {}} {
 	    #		append links { - }
@@ -1193,7 +1193,7 @@ namespace eval WikitWub {
 	} versions]} {
 	    append C <pre> $versions </pre>
 	} else {
-	    WDB GetPageVars $N name
+	    set name [WDB GetPage $N name]
 	    append C "<table summary='' class='history'><thead class='history'>\n<tr>"
 	    foreach {column span} {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1} {
 		append C [<th> class [lindex $column 0] colspan $span $column]
@@ -1204,7 +1204,7 @@ namespace eval WikitWub {
 		lassign $row vn date who
 		set prev [expr {$vn-1}]
 		set next [expr {$vn+1}]
-		set curr [expr {$nver-1}]
+		set curr $nver
 		if { $rowcnt % 2 } {
 		    append C "<tr class='odd'>"
 		} else {
@@ -1268,8 +1268,8 @@ namespace eval WikitWub {
 	if {$name eq ""} {
 	    set page [lindex [file split $url] end]
 	    if {[catch {
-		WDB GetPageVars $page name
-	    }]} {
+		WDB GetPage $page name
+	    } name]} {
 		set name $page
 	    }
 	}
@@ -1862,7 +1862,7 @@ namespace eval WikitWub {
 
 	set refList ""
 	foreach from [WDB ReferencesTo $N] {
-	    WDB GetPageVars $from name who date
+	    WDB GetPageVars $from name date who
 	    lappend refList [list [timestamp $date] $name $who $from]
 	}
 
@@ -1904,7 +1904,7 @@ namespace eval WikitWub {
     # returns a list: /$id (with suffix of @ if the page is new), $name, modification $date
     proc InfoProc {ref} {
 	set id [WDB LookupPage $ref]
-	WDB GetPageVars $id date name
+	WDB GetPageVars $id name date
 
 	if {$date == 0} {
 	    set id _/edit?N=$id ;# enter edit mode for missing links

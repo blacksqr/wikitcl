@@ -180,7 +180,7 @@ namespace eval WDB {
 	set result [$changeV size]
 	$changeV close
 	Debug.WDB {Versions $pid -> $result}
-	return [expr {$result - 1}]
+	return $result
     }
 
     #----------------------------------------------------------------------------
