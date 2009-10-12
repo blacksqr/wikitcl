@@ -3,9 +3,51 @@ package provide WDB 1.0
 
 Debug on WDB 10
 
+if {0} {
+    # pages view
+    pages {
+	id:I		;# page id number
+	name		;# page name
+	date:I		;# date of page last revision
+	versions:I	;# number of versions
+	who		;# who last edited page
+    }
+
+    # content view
+    contents {
+	id:I		;# page id number
+	content		;# page content
+    }
+
+    # changes view
+    changes {
+	id:I		;# page to which changes apply
+	version:I	;# which version of page is this?
+
+	date:I		;# date of change
+	who		;# who made change?
+	delta:I		;# 
+    }
+
+    # diffs view
+    diffs {
+	id:I		;# page to which diff applies
+	version:I	;# changeset this diff is a part of
+	diff:I		;# ordinal number of diff
+
+	from:I		;# 
+	to:I		;#
+	old		;# old text
+    }
+
+    # refs view
+    refs {
+	from:I		;# reference from page id
+    	to:I		;# reference to page id
+    }
+}
+
 namespace eval WDB {
-    variable pageV
-    variable refV
     variable readonly 0
 
     proc commit {} {
@@ -60,7 +102,7 @@ namespace eval WDB {
     #	to the $page page.
     #
     #----------------------------------------------------------------------------
-    proc ReferencesTo {pid} {
+    proc ReferencesTo {page} {
 	variable refV
 	set select [$refV select -exact to $pid -rsort from]
 	Debug.WDB {ReferencesTo $pid -> [$select size] [$select info]}
@@ -74,6 +116,77 @@ namespace eval WDB {
 	return $result
     }
     
+    #----------------------------------------------------------------------------
+    #
+    # LookupPage --
+    #
+    #	find a named page, creating it if necessary
+    #
+    # Parameters:
+    #	name - name of page
+    #
+    # Results:
+    #	Returns index of page
+    #
+    #----------------------------------------------------------------------------
+    proc LookupPage {name} {
+	variable pageV
+	Debug.WDB {LookupPage '$name'}
+	set lcname [string tolower $name]
+	set n [$pageV find name $name]
+	if {$n == ""} {
+	    set n [pagecount]
+	    Debug.WDB {LookupPage '$name' not found, added $n}
+	    $pageV insert end name $name id $n
+	    commit
+	}
+	return $n
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # PageByName --
+    #
+    #	find a named page
+    #
+    # Parameters:
+    #	name - name of page
+    #
+    # Results:
+    #	Returns a list of matching records
+    #
+    #----------------------------------------------------------------------------
+    proc PageByName {name} {
+	variable pageV
+	set result [$pageV find name $name]
+	Debug.WDB {PageByName '$name' -> $result}
+	return $result
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # PageGlobName --
+    #
+    #	find page whose name matches a glob
+    #
+    # Parameters:
+    #	glob - page name glob
+    #
+    # Results:
+    #	Returns matching record
+    #
+    #----------------------------------------------------------------------------
+    proc PageGlobName {glob} {
+	variable pageV
+
+	set select [$pageV select -glob name $glob -min date 1]
+	set result [$pageV get [$select get 0]]
+	$select close
+
+	Debug.WDB {PageGlobName '$glob' -> $result}
+	return [dict get $result id]
+    }
+
     #----------------------------------------------------------------------------
     #
     # GetPage --
@@ -110,10 +223,8 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc GetContent {pid} {
-	variable pageV
-	set result [$pageV get $pid page]
-	Debug.WDB {GetContent $pid -> [string length $result] '[string range $result 0 10]...[string range $result end-10 end]'}
-	return $result
+	variable contentV
+	return [$contentV get $pid content]
     }
 
     #----------------------------------------------------------------------------
@@ -141,6 +252,27 @@ namespace eval WDB {
 	foreach n $args {
 	    uplevel 1 [list set $n [dict get? $record $n]]
 	}
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # Versions --
+    #
+    #	return number of versions of a page
+    #
+    # Parameters:
+    #	pid - the page index of the page whose version count we want
+    #
+    # Results:
+    #	an integer representing the number of versions of the page $pid
+    #
+    #----------------------------------------------------------------------------
+    proc Versions {pid} {
+	variable changeV
+	set cv [$changeV select id $pid]
+	set result [$cv size]
+	$cv close
+	return $result
     }
 
     #----------------------------------------------------------------------------
@@ -191,19 +323,18 @@ namespace eval WDB {
     #
     # Parameters:
     #	pid - the page index of the page whose changes we want
-    #	sid - the page index of the changes whose fields we want
+    #	version - the page index of the changes whose fields we want
     #	args - a list of field names whose values we want
     #
     # Results:
     #	Returns a list of values corresponding to the field values of those fields
     #
     #----------------------------------------------------------------------------
-    proc GetChange {pid sid args} {
-	variable pageV
-	set changeV [$pageV open $pid changes]
-	set result [$changeV get $sid {*}$args]
-	$changeV close
-	Debug.WDB {GetChange $pid $sid $args -> $result}
+    proc GetChange {pid version args} {
+	variable changeV
+	set index [$changeV find id $pid version $version]
+	set result [$changeV get $index {*}$args]
+	Debug.WDB {GetChange $pid $version $args -> $result}
 	return $result
     }
 
@@ -215,19 +346,17 @@ namespace eval WDB {
     #
     # Parameters:
     #	pid - the page index of the page whose changeset we're interested in
-    #	sid - the changeset index whose size we want
+    #	version - the changeset index whose size we want
     #
     # Results:
     #	Returns an integer, being the size of the changeset
     #
     #----------------------------------------------------------------------------
-    proc ChangeSetSize {pid sid} {
-	variable pageV
-	set changeV [$pageV open $pid changes]
-	set diffV [$changeV open $sid diffs]
-	set result [$diffV size]
-	$changeV close
-	$diffV close
+    proc ChangeSetSize {pid version} {
+	variable diffV
+	set diffsV [$diffV select id $pid version $version]
+	set result [$diffsV size]
+	$diffsV close
 	Debug.WDB {ChangeSetSize $pid $sid -> $result}
 	return $result
     }
@@ -247,22 +376,16 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc MostRecentChange {pid date} {
-	variable pageV
-	set changeV [$pageV open $pid changes]
-	set dl [$changeV select -max date $date -rsort date]
+	variable changeV
+	set dl [$changeV select id $pid -max date $date -rsort date]
 	if {[$dl size] == 0} {
 	    $dl close
-	    set dl [$changeV select -rsort date]
+	    set dl [$changeV select id $pid -rsort date]
 	}
-	if {[$dl size] == 0} {
-	    # no changes ... what happened?
-	    error "No Changes to $pid at all"
-	} else {
-	    set result [$dl get 0]
-	}
+	set result [$dl get 0]
 	$dl close
 	Debug.WDB {MostRecentChange $pid $date -> $result}
-	return [dict get $result sid]
+	return $result
     }
 
     #----------------------------------------------------------------------------
@@ -279,8 +402,8 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc RecentChanges {date} {
-	variable pageV
-	set result [$pageV select -min date $date -min name " " -rsort date]
+	variable changeV
+	set result [$changeV select -min date $date -min name " " -rsort date]
 	Debug.WDB {RecentChanges $date -> [$result size] [$result info]}
 	return [s2l $result 100]
     }
@@ -300,16 +423,14 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc Changes {pid {date 0}} {
-	variable pageV
-	set changeV [$pageV open $pid changes]
+	variable changeV
 	if {$date} {
 	    set since [list -min date $date]
 	} else {
 	    set since {}
 	}
-	set result [$changeV select {*}$since -rsort date]
+	set result [$changeV select id $pid {*}$since -rsort date]
 	Debug.WDB {Changes $pid from $date -> [$result size] [$result info]}
-	$changeV close
 	return [s2l $result]
     }
 
@@ -329,11 +450,14 @@ namespace eval WDB {
     #	Returns a list of matching records
     #
     #----------------------------------------------------------------------------
-    proc Search {key long date max} {
+    proc Search {key long date} {
 	variable pageV
+	set view $pageV
+
 	set fields name
 	if {$long} {
 	    lappend fields page
+	    set view [$pageV join $contentV id]
 	}
 
 	set search {}
@@ -348,10 +472,14 @@ namespace eval WDB {
 	} else {
 	    set maxdate [list -max date $date]
 	}
-	set rows [$pageV select -min id 11 -min date 1 {*}$maxdate -rsort date {*}$search]
+	set rows [$view select -min id 11 -min date 1 {*}$maxdate -rsort date {*}$search]
 
+	if {$long} {
+	    $view close
+	}
 	Debug.WDB {Search '$key' $long $date -> [$rows size] [$rows info]}
-	return [s2l $rows $max]
+
+	return [s2l $rows]
     }
 
     #----------------------------------------------------------------------------
@@ -447,7 +575,7 @@ namespace eval WDB {
 
     #----------------------------------------------------------------------------
     #
-    # Cleared --
+    # AllPages --
     #
     #	return all valid pages
     #
@@ -497,9 +625,13 @@ namespace eval WDB {
 	    }
 	}
 
+	# select changes pertinent to this page
+	variable changeV
+	set changesV [$changeV select id $pid -min version $start -rsort date]
+
 	# Determine the number of the most recent version
 	set results [list]
-	set mostRecent [Versions $id]
+	set mostRecent [$changesV size]
 
 	# List the most recent version if requested
 	if {$start == 0} {
@@ -509,14 +641,13 @@ namespace eval WDB {
 	}
 
 	# Do earlier versions as needed
-	set changeV [$pageV open $id changes]
-	set idx [expr {$mostRecent - $start}]
-	while {$idx >= 0 && [llength $results] < $limit} {
-	    lassign [$changeV get $idx date who] date who
-	    lappend results [list $idx $date $who]
+	while {$mostRecent >= 0 && [llength $results] < $limit} {
+	    lassign [$changesV get $mostRecent date who] date who
+	    lappend results [list $mostRecent $date $who]
 	    incr idx -1
 	}
-	$changeV close
+	$changesV close
+
 	return $results
     }
 
@@ -542,9 +673,12 @@ namespace eval WDB {
 	return [join [GetPageVersionLines $id $version] \n]
     }
     proc GetPageVersionLines {id {version {}}} {
+	variable contentV
+	variable changeV
+	variable diffV
+
 	Debug.WDB {GetPageVersionLines $id $version}
-	variable pageV
-	set page [$pageV get $id page]
+	set content [$contentV get $id]
 	set latest [Versions $id]
 	if {$version eq {}} {
 	    set version $latest
@@ -559,30 +693,34 @@ namespace eval WDB {
 		-errorcode {wiki badVersion}
 	}
 	if {$version == $latest} {
-	    return [split $page \n]
+	    # the required version is the latest - just return content
+	    return [split $content \n]
 	}
+
+	# an earlier version is required
 	set v $latest
-	set lines [split $page \n]
-	set changeV [$pageV open $id changes]
+	set lines [split $content \n]
+
 	while {$v > $version} {
 	    incr v -1
-	    set i [ChangeSetSize $id $v]
-	    set diffV [$changeV open $v diffs]
+	    set diffsV [$diffV select id $id version $v -sort diff]
+	    set i [$diffsV size]
 	    while {$i > 0} {
 		incr i -1
-		set diffs [$diffV get $i]
-		dict with diffs {}
-		if {$from <= $to} {
-		    set lines [eval [linsert $old 0 \
-					 lreplace $lines[set lines {}] $from $to]]
-		} else {
-		    set lines [eval [linsert $old 0 \
-					 linsert $lines[set lines {}] $from]]
+		
+		dict with [$diffsV get $i] {
+		    if {$from <= $to} {
+			set lines [eval [linsert $old 0 \
+					     lreplace $lines[set lines {}] $from $to]]
+		    } else {
+			set lines [eval [linsert $old 0 \
+					     linsert $lines[set lines {}] $from]]
+		    }
 		}
 	    }
-	    $diffV close
+	    $diffsV close
 	}
-	$changeV close
+
 	return $lines
     }
 
@@ -610,6 +748,9 @@ namespace eval WDB {
 
     proc AnnotatePageVersion {id {version {}}} {
 	variable pageV
+	variable changeV
+	variable diffV
+
 	set latest [Versions $id]
 	if {$version eq {}} {
 	    set version $latest
@@ -625,9 +766,8 @@ namespace eval WDB {
 	}
 
 	# Retrieve the version to be annotated
-
 	set lines [GetPageVersionLines $id $version]
-	set changeV [$pageV open $id changes]
+	set changesV [$changeV select id $id -sort version]
 
 	# Start the annotation by guessing that all lines have been there since
 	# the first commit of the page.
@@ -635,15 +775,15 @@ namespace eval WDB {
 	if {$version == $latest} {
 	    GetPageVars $id date who
 	} else {
-	    lassign [$changeV get $version date who] date who
+	    lassign [$changesV get $version date who] date who
 	}
 	if {$latest == 0} {
 	    set firstdate $date
 	    set firstwho $who
 	} else {
-	    lassign [$changeV get 0 date who] firstdate firstwho
+	    lassign [$changesV get 0 date who] firstdate firstwho
 	}
-	
+ 
 	# versions has one entry for each element in $lines, and contains
 	# the version in which that line first appeared.  We guess version
 	# 0 for everything, and then fill in later versions by working backward
@@ -667,12 +807,12 @@ namespace eval WDB {
 	    incr version -1
 
 	    # Walk backward through all changes applied to a version
-	    set i [ChangeSetSize $id $version]
-	    lassign [$changeV get $version date who] lastdate lastwho
-	    set diffV [$changeV open $version diffs]
+	    lassign [$changesV get $version date who] lastdate lastwho
+	    set diffsV [$diffV select id $id version $version -sort diff]
+	    set i [$diffsV size]
 	    while {$i > 0} {
 		incr i -1
-		lassign [$diffV get $i from to old] from to old
+		lassign [$diffsV get $i from to old] from to old
 		
 		# Update 'versions' for all lines that first appeared in the
 		# version following the one being examined
@@ -703,17 +843,92 @@ namespace eval WDB {
 					   linsert $whither[set whither {}] $from]]
 		}
 	    }
-	    $diffV close
+	    $diffsV close
 	    set date $lastdate
 	    set who $lastwho
 	}
-	$changeV close
+	$changesV close
 
 	set result {}
 	foreach line $lines v $versions date $dates who $whos {
 	    lappend result [list $line $v $date $who]
 	}
+
 	return $result
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # UpdateChangeLog --
+    #     Updates the change log of a page.
+    #
+    # Parameters:
+    #     id - Row ID in the 'pages' view of the page being updated
+    #     name - Name that the page had *before* the current version.
+    #     date - Date of the last update of the page *prior* to the one
+    #            being saved.
+    #     who - String identifying the user that updated the page last
+    #           *prior* to the version being saved.
+    #     page - Previous version of the page text
+    #     text - Version of the page text now being saved.
+    #
+    # Results:
+    #	None
+    #
+    # Side effects:
+    #	Updates the 'changes' view with the differences that recnstruct
+    #     the previous version from the current one.
+    #
+    #----------------------------------------------------------------------------
+    proc UpdateChangeLog {id name date who page text} {
+	variable pageV
+	variable changeV
+	variable diffV
+
+	# Store summary information about the change
+	set version [Versions $id]
+
+	# Determine the changed lines
+	set linesnew [split $text \n]
+	set linesold [split $page \n]
+	set lcs [::struct::list longestCommonSubsequence2 $linesnew $linesold 5]
+	set changes [::struct::list lcsInvert \
+			 $lcs [llength $linesnew] [llength $linesold]]
+
+	# Store change information in the database
+	set i 0
+	set change 0	;# record magnitude of change
+	foreach tuple $changes {
+	    foreach {action newrange oldrange} $tuple break
+	    switch -exact -- $action {
+		deleted {
+		    foreach {from to} $newrange break
+		    set old {}
+
+		    incr change [string length [lrange $linesnew $from $to]]
+		}
+		added  {
+		    foreach {to from} $newrange break
+		    foreach {oldfrom oldto} $oldrange break
+		    set old [lrange $linesold $oldfrom $oldto]
+
+		    incr change [expr {abs([string length [lrange $linesnew $from $to]] \
+					       - [string length $old])}]
+		}
+		changed  {
+		    foreach {from to} $newrange break
+		    foreach {oldfrom oldto} $oldrange break
+		    set old [lrange $linesold $oldfrom $oldto]
+
+		    incr change [expr {abs([string length [lrange $linesnew $from $to]] \
+					       - [string length $old])}]
+		}
+	    }
+	    $diffV insert end id $id version $version diff $i from $from to $to old $old
+	    incr i
+	}
+
+	$changeV insert end id $id version $version date $date who $who delta $change
     }
 
     # addRefs - a newly created page $id contains $refs references to other pages
@@ -764,84 +979,6 @@ namespace eval WDB {
 	    }
 	}
 	commit
-    }
-
-    #----------------------------------------------------------------------------
-    #
-    # UpdateChangeLog --
-    #     Updates the change log of a page.
-    #
-    # Parameters:
-    #     id - Row ID in the 'pages' view of the page being updated
-    #     name - Name that the page had *before* the current version.
-    #     date - Date of the last update of the page *prior* to the one
-    #            being saved.
-    #     who - String identifying the user that updated the page last
-    #           *prior* to the version being saved.
-    #     page - Previous version of the page text
-    #     text - Version of the page text now being saved.
-    #
-    # Results:
-    #	None
-    #
-    # Side effects:
-    #	Updates the 'changes' view with the differences that recnstruct
-    #     the previous version from the current one.
-    #
-    #----------------------------------------------------------------------------
-
-    proc UpdateChangeLog {id name date who page text} {
-	variable pageV
-
-	# Store summary information about the change
-	set version [Versions $id]
-	set changeV [$pageV open $id changes]
-	$changeV insert end date $date who $who
-	set diffV [$changeV open $version diffs]
-
-	# Determine the changed lines
-	set linesnew [split $text \n]
-	set linesold [split $page \n]
-	set lcs [::struct::list longestCommonSubsequence2 $linesnew $linesold 5]
-	set changes [::struct::list lcsInvert \
-			 $lcs [llength $linesnew] [llength $linesold]]
-
-	# Store change information in the database
-	set i 0
-	set change 0	;# record magnitude of change
-	foreach tuple $changes {
-	    foreach {action newrange oldrange} $tuple break
-	    switch -exact -- $action {
-		deleted {
-		    foreach {from to} $newrange break
-		    set old {}
-
-		    incr change [string length [lrange $linesnew $from $to]]
-		}
-		added  {
-		    foreach {to from} $newrange break
-		    foreach {oldfrom oldto} $oldrange break
-		    set old [lrange $linesold $oldfrom $oldto]
-
-		    incr change [expr {abs([string length [lrange $linesnew $from $to]] \
-					       - [string length $old])}]
-		}
-		changed  {
-		    foreach {from to} $newrange break
-		    foreach {oldfrom oldto} $oldrange break
-		    set old [lrange $linesold $oldfrom $oldto]
-
-		    incr change [expr {abs([string length [lrange $linesnew $from $to]] \
-					       - [string length $old])}]
-		}
-	    }
-	    $diffV insert end from $from to $to old $old
-	    incr i
-	}
-
-	$changeV set $version delta $change	;# record magnitude of changes
-	$changeV close
-	$diffV close
     }
 
     # SavePage - store page $id ($who, $text, $newdate)
@@ -974,8 +1111,10 @@ namespace eval WDB {
 	    }
 
 	    # open our views
-	    variable pageV [[mk::view open $db.pages] view blocked]
-	    variable refV [[mk::view open $db.refs] view blocked]
+	    foreach v {page content change diff ref} {
+		variable ${v}B [mk::view open $db.${v}s]
+		variable ${v}V [${v}B view blocked]
+	    }
 
 	    # if there are no references, probably it's the first time, so recalc
 	    if {!$readonly && [$refV size] == 0} {
