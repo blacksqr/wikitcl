@@ -104,8 +104,8 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc ReferencesTo {page} {
 	variable refV
-	set select [$refV select -exact to $pid -rsort from]
-	Debug.WDB {ReferencesTo $pid -> [$select size] [$select info]}
+	set select [$refV select -exact to $page -rsort from]
+	Debug.WDB {ReferencesTo $page -> [$select size] [$select info]}
 
 	set size [$select size]
 	set result {}
@@ -605,7 +605,7 @@ namespace eval WDB {
 
 	# select changes pertinent to this page
 	variable changeV
-	set changesV [$changeV select id $pid -min version $start -rsort date]
+	set changesV [$changeV select id $id -min version $start -rsort date]
 
 	# Determine the number of the most recent version
 	set results [list]
