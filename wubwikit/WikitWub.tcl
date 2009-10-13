@@ -526,6 +526,7 @@ namespace eval WikitWub {
     }
 
     proc edit_activity {N} {
+	return 1
 	set pcdate [WDB GetPage $N date]
 	set edate [expr {$pcdate-10*86400}]
 	set first 1
