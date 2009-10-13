@@ -335,7 +335,7 @@ namespace eval WDB {
 	set diffsV [$diffV select id $pid version $version]
 	set result [$diffsV size]
 	$diffsV close
-	Debug.WDB {ChangeSetSize $pid $sid -> $result}
+	Debug.WDB {ChangeSetSize $pid $version -> $result}
 	return $result
     }
 
