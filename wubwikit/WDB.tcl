@@ -692,7 +692,6 @@ namespace eval WDB {
 		incr i -1
 		
 		dict with [$diffsV get $i] {
-		    puts stderr "OLD: $old"
 		    if {$from <= $to} {
 			set lines [eval [linsert $old 0;lreplace $lines[set lines {}] $from $to]]
 		    } else {
@@ -1096,11 +1095,9 @@ namespace eval WDB {
 	    foreach v {page content ref} {
 		set ${v}B [mk::view open $db.${v}s]
 		variable ${v}V [[set ${v}B] view blocked]
-		puts stderr "$v: [set ${v}V]"
 	    }
 	    foreach v {change diff} {
 		variable ${v}V [mk::view open $db.${v}s]
-		puts stderr "$v: [set ${v}V]"
 	    }
 
 	    # if there are no references, probably it's the first time, so recalc
