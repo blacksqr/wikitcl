@@ -384,6 +384,7 @@ namespace eval WDB {
 	variable pageV
 	set changes [$changeV select -min date $date -rsort date]
 	set result [$changeV join $pageV id]
+	$changes close
 	Debug.WDB {RecentChanges $date -> [$result size] [$result info]}
 	return [s2l $result 100]
     }
