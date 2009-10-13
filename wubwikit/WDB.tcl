@@ -1014,7 +1014,8 @@ namespace eval WDB {
 		# in the databse, make a change log entry for rollback.
 
 		puts "SavePage@[clock seconds] log change"
-		$pageV set $id page $text who $newWho
+		$pageV set $id who $newWho
+		$contentV set $id content $text 
 		if {$page ne {} || [Versions $id]} {
 		    puts "SavePage@[clock seconds] update change log"
 		    UpdateChangeLog $id $name $date $who $page $text
