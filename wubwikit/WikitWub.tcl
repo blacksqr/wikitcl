@@ -576,6 +576,7 @@ namespace eval WikitWub {
 	set activityHeaderAdded 0
 
 	foreach record [WDB RecentChanges $threshold] {
+	    puts stderr "RC: $record"
 	    dict with record {}
 
 	    # these are fake pages, don't list them
