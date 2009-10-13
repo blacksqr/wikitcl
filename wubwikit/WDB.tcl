@@ -669,13 +669,10 @@ namespace eval WDB {
 	    set version $latest
 	}
 	if {![string is integer $version] || $version < 0} {
-	    return -code error "bad version number \"$version\":\
-                          must be a positive integer" \
-		-errorcode {wiki badVersion}
+	    error "bad version number \"$version\": must be a positive integer"
 	}
 	if {$version > $latest} {
-	    return -code error "cannot get version $version, latest is $latest" \
-		-errorcode {wiki badVersion}
+	    error "cannot get version $version, latest is $latest"
 	}
 	if {$version == $latest} {
 	    # the required version is the latest - just return content
