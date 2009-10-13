@@ -253,7 +253,7 @@ namespace eval WDB {
 	    Debug.WDB {GetPageVars $pid $args ERROR $record ($eo)}
 	    error $record
 	} else {
-	    Debug.WDB {GetPageVars $pid $args -> ([dict merge $record {page <ELIDED>}])}
+	    Debug.WDB {GetPageVars $pid $args -> ($record)}
 	}
 	foreach n $args {
 	    uplevel 1 [list set $n [dict get? $record $n]]
@@ -616,7 +616,7 @@ namespace eval WDB {
 
 	# Determine the number of the most recent version
 	set results [list]
-	set mostRecent [$changesV size]
+	set mostRecent [expr {[$changesV size]-1}]
 
 	# List the most recent version if requested
 	if {$start == 0} {
