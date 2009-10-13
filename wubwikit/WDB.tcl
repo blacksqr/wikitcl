@@ -295,28 +295,6 @@ namespace eval WDB {
 
     #----------------------------------------------------------------------------
     #
-    # Versions --
-    #
-    #	return number of versions of a page
-    #
-    # Parameters:
-    #	pid - the page index of the page whose version count we want
-    #
-    # Results:
-    #	an integer representing the number of versions of the page $pid
-    #
-    #----------------------------------------------------------------------------
-    proc Versions {pid} {
-	variable pageV
-	set changeV [$pageV open $pid changes]
-	set result [$changeV size]
-	$changeV close
-	Debug.WDB {Versions $pid -> $result}
-	return $result
-    }
-
-    #----------------------------------------------------------------------------
-    #
     # GetChange --
     #
     #	return named fields from a version of a page
