@@ -688,12 +688,11 @@ namespace eval WDB {
 		incr i -1
 		
 		dict with [$diffsV get $i] {
+		    puts stderr "OLD: $old"
 		    if {$from <= $to} {
-			set lines [eval [linsert $old 0 \
-					     lreplace $lines[set lines {}] $from $to]]
+			set lines [eval [linsert $old 0;lreplace $lines[set lines {}] $from $to]]
 		    } else {
-			set lines [eval [linsert $old 0 \
-					     linsert $lines[set lines {}] $from]]
+			set lines [eval [linsert $old 0;linsert $lines[set lines {}] $from]]
 		    }
 		}
 	    }
