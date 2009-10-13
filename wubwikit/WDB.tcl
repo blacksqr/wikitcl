@@ -616,7 +616,7 @@ namespace eval WDB {
 
 	# Determine the number of the most recent version
 	set results [list]
-	set mostRecent [expr {[$changesV size]-1}]
+	set mostRecent [$changesV size]
 
 	# List the most recent version if requested
 	if {$start == 0} {
@@ -626,6 +626,7 @@ namespace eval WDB {
 	}
 
 	# Do earlier versions as needed
+	incr mostRecent -1
 	while {$mostRecent >= 0 && [llength $results] < $limit} {
 	    lassign [$changesV get $mostRecent date who] date who
 	    lappend results [list $mostRecent $date $who]
