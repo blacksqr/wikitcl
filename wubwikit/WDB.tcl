@@ -381,7 +381,7 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc RecentChanges {date} {
 	variable changeV
-	set result [$changeV select -min date $date -min name " " -rsort date]
+	set result [$changeV select -min date $date -rsort date]
 	Debug.WDB {RecentChanges $date -> [$result size] [$result info]}
 	return [s2l $result 100]
     }
