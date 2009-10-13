@@ -118,59 +118,6 @@ namespace eval WDB {
     
     #----------------------------------------------------------------------------
     #
-    # LookupPage --
-    #
-    #	find a named page, creating it if necessary
-    #
-    # Parameters:
-    #	name - name of page
-    #
-    # Results:
-    #	Returns index of page
-    #
-    #----------------------------------------------------------------------------
-    variable namecache
-    proc LookupPage {name} {
-	variable pageV
-	Debug.WDB {LookupPage '$name'}
-	set lcname [string tolower $name]
-	if {[info exists namecache($lcname)]} {
-	    Debug.WDB {Found '$name' in cache}
-	    return $namecache($lcname)
-	}
-	set n [$pageV find name $name]
-	if {$n == ""} {
-	    set n [pagecount]
-	    Debug.WDB {LookupPage '$name' not found, added $n}
-	    $pageV insert end name $name id $n
-	    commit
-	}
-	set namecache($lcname) $n
-	return $n
-    }
-
-    #----------------------------------------------------------------------------
-    #
-    # PageByName --
-    #
-    #	find a named page
-    #
-    # Parameters:
-    #	name - name of page
-    #
-    # Results:
-    #	Returns a list of matching records
-    #
-    #----------------------------------------------------------------------------
-    proc PageByName {name} {
-	variable pageV
-	set result [$pageV find name $name]
-	Debug.WDB {PageByName '$name' -> $result}
-	return $result
-    }
-
-    #----------------------------------------------------------------------------
-    #
     # PageGlobName --
     #
     #	find page whose name matches a glob
@@ -488,7 +435,9 @@ namespace eval WDB {
 	if {[info exists namecache($lcname)]} {
 	    Debug.WDB {LookupPage '$name' found in cache -> $namecache($lcname)}
 	    return $namecache($lcname)
-	} elseif {[catch {$pageV find name $name} n]} {
+	}
+	set n [$pageV find name $name]
+	if {$n eq ""} {
 	    set n [PageCount]
 	    Debug.WDB {LookupPage '$name' not found, added $n}
 	    $pageV insert end name $name id $n
@@ -517,28 +466,6 @@ namespace eval WDB {
 	set result [$pageV find name $name]
 	Debug.WDB {PageByName '$name' -> $result}
 	return $result
-    }
-
-    #----------------------------------------------------------------------------
-    #
-    # PageGlobName --
-    #
-    #	find page whose name matches a glob
-    #
-    # Parameters:
-    #	glob - page name glob
-    #
-    # Results:
-    #	Returns matching record
-    #
-    #----------------------------------------------------------------------------
-    proc PageGlobName {glob} {
-	variable pageV
-	set select [$pageV select -glob name $glob -min date 1]
-	set result [$pageV get [$select get 0]]
-	$select close
-	Debug.WDB {PageGlobName '$glob' -> $result}
-	return [dict get $result id]
     }
 
     #----------------------------------------------------------------------------
@@ -1095,11 +1022,11 @@ namespace eval WDB {
 	    }
 
 	    # open our views
-	    foreach v {page content ref} {
+	    foreach v {page content ref diff} {
 		set ${v}B [mk::view open $db.${v}s]
 		variable ${v}V [[set ${v}B] view blocked]
 	    }
-	    foreach v {change diff} {
+	    foreach v {change} {
 		variable ${v}V [mk::view open $db.${v}s]
 	    }
 
