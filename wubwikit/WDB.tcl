@@ -330,12 +330,12 @@ namespace eval WDB {
     #	Returns an integer, being the size of the changeset
     #
     #----------------------------------------------------------------------------
-    proc ChangeSetSize {pid version} {
+    proc ChangeSetSize {id version} {
 	variable diffV
-	set diffsV [$diffV select id $pid version $version]
+	set diffsV [$diffV select id $id version $version]
 	set result [$diffsV size]
 	$diffsV close
-	Debug.WDB {ChangeSetSize $pid $version -> $result}
+	Debug.WDB {ChangeSetSize $id $version -> $result}
 	return $result
     }
 
