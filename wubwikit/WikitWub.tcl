@@ -580,7 +580,7 @@ namespace eval WikitWub {
 	    dict with record {}
 
 	    # these are fake pages, don't list them
-	    if {$id == 2 || $id == 4} continue
+	    if {$id < 11} continue
 
 	    # only report last change to a page on each day
 	    set day [expr {$date/86400}]
