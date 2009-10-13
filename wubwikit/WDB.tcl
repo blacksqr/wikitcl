@@ -1015,6 +1015,7 @@ namespace eval WDB {
 
 		puts "SavePage@[clock seconds] log change"
 		$pageV set $id who $newWho
+		puts "SavePage@[clock seconds] save content"
 		$contentV set $id content $text 
 		if {$page ne {} || [Versions $id]} {
 		    puts "SavePage@[clock seconds] update change log"
