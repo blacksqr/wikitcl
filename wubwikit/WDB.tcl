@@ -382,7 +382,7 @@ namespace eval WDB {
     proc RecentChanges {date} {
 	variable changeV
 	variable pageV
-	set changes [$changeV select -min date $date -rsort date]
+	set changes [$changeV select -rsort date]
 	set result [$changeV view join $pageV id]
 	$changes close
 	Debug.WDB {RecentChanges $date -> [$result size] [$result info]}
