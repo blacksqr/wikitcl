@@ -612,7 +612,7 @@ namespace eval WDB {
 
 	# select changes pertinent to this page
 	variable changeV
-	set changesV [$changeV select id $id -min version $start -rsort date]
+	set changesV [$changeV select id $id -sort version]
 
 	# Determine the number of the most recent version
 	set results [list]
@@ -626,7 +626,7 @@ namespace eval WDB {
 	}
 
 	# Do earlier versions as needed
-	incr mostRecent -1
+	incr mostRecent -$start
 	while {$mostRecent >= 0 && [llength $results] < $limit} {
 	    lassign [$changesV get $mostRecent date who] date who
 	    lappend results [list $mostRecent $date $who]

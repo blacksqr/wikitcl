@@ -1222,7 +1222,7 @@ namespace eval WikitWub {
 	    } else {
 		append C <td></td>
 	    }
-	    if { $next < $nver } {
+	    if { $next <= $nver } {
 		append C [<td> class Line2 [<a> href "/_/diff?N=$N&V=$vn&D=$next#diff0" $next]]
 	    } else {
 		append C <td></td>
@@ -1238,7 +1238,7 @@ namespace eval WikitWub {
 	    } else {
 		append C <td></td>
 	    }
-	    if { $next < $nver } {
+	    if { $next <= $nver } {
 		append C [<td> class Word2 [<a> href "/_/diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
 	    } else {
 		append C <td></td>
