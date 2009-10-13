@@ -1116,7 +1116,7 @@ namespace eval WDB {
 		variable ${v}V [${v}B view blocked]
 	    }
 	    foreach v {change diff} {
-		variable ${v} [mk::view open $db.${v}s]
+		variable ${v}V [mk::view open $db.${v}s]
 	    }
 
 	    # if there are no references, probably it's the first time, so recalc
