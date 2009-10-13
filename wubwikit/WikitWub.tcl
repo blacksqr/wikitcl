@@ -1195,71 +1195,67 @@ namespace eval WikitWub {
 	#	if {$links ne {}} {
 	#	    append C <p> $links </p> \n
 	#	}
-	if {[catch {
-	    WDB ListPageVersions $N $L $S
-	} versions]} {
-	    append C <pre> $versions </pre>
-	} else {
-	    set name [WDB GetPage $N name]
-	    append C "<table summary='' class='history'><thead class='history'>\n<tr>"
-	    foreach {column span} {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1} {
-		append C [<th> class [lindex $column 0] colspan $span $column]
-	    }
-	    append C "</tr></thead><tbody>\n"
-	    set rowcnt 0
-	    foreach row $versions {
-		lassign $row vn date who
-		set prev [expr {$vn-1}]
-		set next [expr {$vn+1}]
-		set curr $nver
-		if { $rowcnt % 2 } {
-		    append C "<tr class='odd'>"
-		} else {
-		    append C "<tr class='even'>"
-		}
-		append C [<td> class Rev [<a> href "/_/revision?N=$N&V=$vn" rel nofollow $vn]]
-		append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
-		append C [<td> class Who [WhoUrl $who]]
-
-		if { $prev >= 0 } {
-		    append C [<td> class Line1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
-		} else {
-		    append C <td></td>
-		}
-		if { $next < $nver } {
-		    append C [<td> class Line2 [<a> href "/_/diff?N=$N&V=$vn&D=$next#diff0" $next]]
-		} else {
-		    append C <td></td>
-		}
-		if { $vn != $curr } {
-		    append C [<td> class Line3 [<a> href "/_/diff?N=$N&V=$curr&D=$vn#diff0" Current]]
-		} else {
-		    append C <td></td>
-		}
-
-		if { $prev >= 0 } {
-		    append C [<td> class Word1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
-		} else {
-		    append C <td></td>
-		}
-		if { $next < $nver } {
-		    append C [<td> class Word2 [<a> href "/_/diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
-		} else {
-		    append C <td></td>
-		}
-		if { $vn != $curr } {
-		    append C [<td> class Word3 [<a> href "/_/diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
-		} else {
-		    append C <td></td>
-		}
-
-		append C [<td> class Annotated [<a> href "/_/revision?N=$N&V=$vn&A=1" $vn]]
-		append C [<td> class WikiText [<a> href "/_/revision?N=$N.txt&V=$vn" $vn]]
-		append C </tr> \n
-		incr rowcnt
-	    }
-	    append C </tbody></table> \n
+	set versions [WDB ListPageVersions $N $L $S]
+	set name [WDB GetPage $N name]
+	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
+	foreach {column span} {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1} {
+	    append C [<th> class [lindex $column 0] colspan $span $column]
 	}
+	append C "</tr></thead><tbody>\n"
+	set rowcnt 0
+	foreach row $versions {
+	    lassign $row vn date who
+	    set prev [expr {$vn-1}]
+	    set next [expr {$vn+1}]
+	    set curr $nver
+	    if { $rowcnt % 2 } {
+		append C "<tr class='odd'>"
+	    } else {
+		append C "<tr class='even'>"
+	    }
+	    append C [<td> class Rev [<a> href "/_/revision?N=$N&V=$vn" rel nofollow $vn]]
+	    append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
+	    append C [<td> class Who [WhoUrl $who]]
+	    
+	    if { $prev >= 0 } {
+		append C [<td> class Line1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
+	    } else {
+		append C <td></td>
+	    }
+	    if { $next < $nver } {
+		append C [<td> class Line2 [<a> href "/_/diff?N=$N&V=$vn&D=$next#diff0" $next]]
+	    } else {
+		append C <td></td>
+	    }
+	    if { $vn != $curr } {
+		append C [<td> class Line3 [<a> href "/_/diff?N=$N&V=$curr&D=$vn#diff0" Current]]
+	    } else {
+		append C <td></td>
+	    }
+
+	    if { $prev >= 0 } {
+		append C [<td> class Word1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
+	    } else {
+		append C <td></td>
+	    }
+	    if { $next < $nver } {
+		append C [<td> class Word2 [<a> href "/_/diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
+	    } else {
+		append C <td></td>
+	    }
+	    if { $vn != $curr } {
+		append C [<td> class Word3 [<a> href "/_/diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
+	    } else {
+		append C <td></td>
+	    }
+	    
+	    append C [<td> class Annotated [<a> href "/_/revision?N=$N&V=$vn&A=1" $vn]]
+	    append C [<td> class WikiText [<a> href "/_/revision?N=$N.txt&V=$vn" $vn]]
+	    append C </tr> \n
+	    incr rowcnt
+	}
+	append C </tbody></table> \n
+
 	#	if {$links ne {}} {
 	#	    append C <p> $links </p> \n
 	#	}
