@@ -690,8 +690,8 @@ namespace eval WDB {
 	    set i [$diffsV size]
 	    while {$i > 0} {
 		incr i -1
-		
-		dict with [$diffsV get $i] {
+		set result [$diffsV get $i] 
+		dict with result {
 		    if {$from <= $to} {
 			set lines [eval [linsert $old 0;lreplace $lines[set lines {}] $from $to]]
 		    } else {
