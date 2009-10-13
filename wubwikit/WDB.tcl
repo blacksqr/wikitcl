@@ -366,7 +366,7 @@ namespace eval WDB {
 	    $dl close
 	    set dl [$changeV select id $pid -rsort date]
 	}
-	set result [$dl get 0]
+	set result [$dl get 0 version]
 	$dl close
 	Debug.WDB {MostRecentChange $pid $date -> $result}
 	return $result
