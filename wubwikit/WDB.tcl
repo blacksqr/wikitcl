@@ -629,7 +629,7 @@ namespace eval WDB {
 	while {$mostRecent >= 0 && [llength $results] < $limit} {
 	    lassign [$changesV get $mostRecent date who] date who
 	    lappend results [list $mostRecent $date $who]
-	    incr idx -1
+	    incr mostRecent -1
 	}
 	$changesV close
 
