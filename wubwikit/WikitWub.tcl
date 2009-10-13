@@ -683,7 +683,8 @@ namespace eval WikitWub {
 	return [sendPage $r]
     }
 
-    proc get_page_with_version {N V A} {
+    proc get_page_with_version {N V {A 0}} {
+	Debug.wikit {get_page_with_version N:$N V:$V A:$A}
 	if {$A} {
 	    set aC [WDB AnnotatePageVersion $N $V]
 	    set C ""
@@ -702,7 +703,7 @@ namespace eval WikitWub {
 	    if { $prevVersion != -1 } {
 		append C "\n<<<<<<"
 	    }
-	} elseif { $V >= 0 } {
+	} elseif {$V >= 0} {
 	    set C [WDB GetPageVersion $N $V]
 	} else {
 	    set C [WDB GetContent $N]
@@ -735,6 +736,7 @@ namespace eval WikitWub {
     }
 
     proc summary_diff { N V W {rss 0} } {
+	Debug.wikit {summary_diff N:$N V:$V W:$W rss:$rss}
 	set t1 [split [get_page_with_version $N $V 0] "\n"]
 	set W [expr {$V-1}]
 	set t2 [split [get_page_with_version $N $W 0] "\n"]
@@ -855,7 +857,9 @@ namespace eval WikitWub {
     }
 
     proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
-	Debug.wikit {/diff $N $V $D $W}
+	# If T is zero, D contains version to compare with
+	# If T is non zero, D contains a number of days and /diff must
+	Debug.wikit {/diff N:$N V:$V D:$D W:$W T:$T}
 
 	if {[dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -904,6 +908,7 @@ namespace eval WikitWub {
 	    if {$D < 0} {
 		set D 1
 	    }
+
 	    if {$V == ($nver - 1)} {
 		if {$D==1} {
 		    set updated "Changes in last day"
@@ -921,11 +926,11 @@ namespace eval WikitWub {
 
 	set name [WDB GetPage $N name]
 
-	set t1 [split [get_page_with_version $N $V 0] "\n"]
+	set t1 [split [get_page_with_version $N $V] "\n"]
 
 	if {!$W} { set uwt1 [unWhiteSpace $t1] } else { set uwt1 $t1 }
 
-	set t2 [split [get_page_with_version $N $D 0] "\n"]
+	set t2 [split [get_page_with_version $N $D] "\n"]
 	if {!$W} { set uwt2 [unWhiteSpace $t2] } else { set uwt2 $t2 }
 	set p1 0
 	set p2 0
