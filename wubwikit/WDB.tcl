@@ -657,7 +657,7 @@ namespace eval WDB {
 	variable diffV
 
 	Debug.WDB {GetPageVersionLines $id $version}
-	set content [$contentV get $id]
+	set content [$contentV get $id content]
 	set latest [Versions $id]
 	if {$version eq {}} {
 	    set version $latest
