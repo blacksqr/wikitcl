@@ -965,6 +965,7 @@ namespace eval WDB {
     # SavePage - store page $id ($who, $text, $newdate)
     proc SavePage {id text newWho newName {newdate ""} {commit 1}} {
 	variable pageV
+	variable contentV
 	puts "SavePage@[clock seconds] start"
 
 	set changed 0
