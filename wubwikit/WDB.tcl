@@ -1112,8 +1112,8 @@ namespace eval WDB {
 
 	    # open our views
 	    foreach v {page content ref} {
-		variable ${v}B [mk::view open $db.${v}s]
-		variable ${v}V [${v}B view blocked]
+		set ${v}B [mk::view open $db.${v}s]
+		variable ${v}V [[set ${v}B] view blocked]
 		puts stderr "$v: [set ${v}V]"
 	    }
 	    foreach v {change diff} {
