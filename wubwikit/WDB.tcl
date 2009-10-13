@@ -1114,9 +1114,11 @@ namespace eval WDB {
 	    foreach v {page content ref} {
 		variable ${v}B [mk::view open $db.${v}s]
 		variable ${v}V [${v}B view blocked]
+		puts stderr "$v: [set ${v}V]"
 	    }
 	    foreach v {change diff} {
 		variable ${v}V [mk::view open $db.${v}s]
+		puts stderr "$v: [set ${v}V]"
 	    }
 
 	    # if there are no references, probably it's the first time, so recalc
