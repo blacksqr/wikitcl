@@ -1141,7 +1141,6 @@ namespace eval WikitWub {
 	    }
 	}
 
-	lappend menu [Ref /_/history?N=$N History]
 	set footer [menus Home Recent Help Search]
 	set updated ""
 	set T ""
