@@ -620,11 +620,9 @@ namespace eval WDB {
 		set result [$diffsV get $i]
 		dict with result {
 		    if {$from <= $to} {
-			set lines [eval [linsert $old 0 \
-					     lreplace $lines[set lines {}] $from $to]]
+			set lines [lreplace $lines[set lines {}] $from $to {*}$old]
 		    } else {
-			set lines [eval [linsert $old 0 \
-					     linsert $lines[set lines {}] $from]]
+			set lines [linsert $lines[set lines {}] $from {*}$old]
 		    }
 		}
 	    }
