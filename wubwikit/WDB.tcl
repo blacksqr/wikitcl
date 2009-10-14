@@ -585,24 +585,24 @@ namespace eval WDB {
 	Debug.WDB {GetPageVersion $id $version}
 	return [join [GetPageVersionLines $id $version] \n]
     }
-    proc GetPageVersionLines {id {version {}}} {
+    proc GetPageVersionLines {id {rversion {}}} {
 	variable contentV
 	variable changeV
 	variable diffV
 
-	Debug.WDB {GetPageVersionLines $id $version}
+	Debug.WDB {GetPageVersionLines $id $rversion}
 	set content [$contentV get $id content]
 	set latest [Versions $id]
-	if {$version eq {}} {
-	    set version $latest
+	if {$rversion eq {}} {
+	    set rversion $latest
 	}
-	if {![string is integer $version] || $version < 0} {
-	    error "bad version number \"$version\": must be a positive integer"
+	if {![string is integer $rversion] || $rversion < 0} {
+	    error "bad version number \"$rversion\": must be a positive integer"
 	}
-	if {$version > $latest} {
-	    error "cannot get version $version, latest is $latest"
+	if {$rversion > $latest} {
+	    error "cannot get version $rversion, latest is $latest"
 	}
-	if {$version == $latest} {
+	if {$rversion == $latest} {
 	    # the required version is the latest - just return content
 	    return [split $content \n]
 	}
@@ -611,18 +611,20 @@ namespace eval WDB {
 	set v $latest
 	set lines [split $content \n]
 
-	while {$v > $version} {
+	while {$v > $rversion} {
 	    incr v -1
 	    set diffsV [$diffV select id $id version $v -sort diff]
 	    set i [$diffsV size]
 	    while {$i > 0} {
 		incr i -1
-		set result [$diffsV get $i] 
+		set result [$diffsV get $i]
 		dict with result {
 		    if {$from <= $to} {
-			set lines [eval [linsert $old 0;lreplace $lines[set lines {}] $from $to]]
+			set lines [eval [linsert $old 0 \
+					     lreplace $lines[set lines {}] $from $to]]
 		    } else {
-			set lines [eval [linsert $old 0;linsert $lines[set lines {}] $from]]
+			set lines [eval [linsert $old 0 \
+					     linsert $lines[set lines {}] $from]]
 		    }
 		}
 	    }

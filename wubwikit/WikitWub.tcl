@@ -1116,28 +1116,25 @@ namespace eval WikitWub {
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		default {
-		    if { [catch {get_page_with_version $N $V $A} C] } {
-			return [Http NotFound $r]
+		    set C [get_page_with_version $N $V $A]
+		    if {$A} {
+			set Title "Annotated version $V of [Ref $N]"
+			set name "Annotated version $V of $name"
 		    } else {
-			if {$A} {
-			    set Title "Annotated version $V of [Ref $N]"
-			    set name "Annotated version $V of $name"
-			} else {
-			    set Title "Version $V of [Ref $N]"
-			    set name "Version $V of $name"
-			}
-			lassign [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc] C U T BR
-			if { $V > 0 } {
-			    lappend menu [Ref "/_/revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
-			}
-			if { $V < $nver } {
-			    lappend menu [Ref "/_/revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
-			}
-			if { $A } {
-			    lappend menu [Ref "/_/revision?N=$N&V=$V&A=0" "Not annotated"]
-			} else {
-			    lappend menu [Ref "/_/revision?N=$N&V=$V&A=1" "Annotated"]
-			}
+			set Title "Version $V of [Ref $N]"
+			set name "Version $V of $name"
+		    }
+		    lassign [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc] C U T BR
+		    if { $V > 0 } {
+			lappend menu [Ref "/_/revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
+		    }
+		    if { $V < $nver } {
+			lappend menu [Ref "/_/revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
+		    }
+		    if { $A } {
+			lappend menu [Ref "/_/revision?N=$N&V=$V&A=0" "Not annotated"]
+		    } else {
+			lappend menu [Ref "/_/revision?N=$N&V=$V&A=1" "Annotated"]
 		    }
 		}
 	    }
