@@ -131,13 +131,14 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc PageGlobName {glob} {
 	variable pageV
-
 	set select [$pageV select -glob name $glob -min date 1]
-	set result [$pageV get [$select get 0]]
+	set result {}
+	for {set p 0} {$p < [$select size]} {incr p} {
+	    lappend result [$pageV get [dict get [$select get $p] index] id]
+	}
 	$select close
-
 	Debug.WDB {PageGlobName '$glob' -> $result}
-	return [dict get $result id]
+	return $result 
     }
 
     #----------------------------------------------------------------------------
@@ -384,7 +385,7 @@ namespace eval WDB {
     #	Returns a list of matching records
     #
     #----------------------------------------------------------------------------
-    proc Search {key long date} {
+    proc Search {key long date max} {
 	variable pageV
 	set view $pageV
 
@@ -413,7 +414,7 @@ namespace eval WDB {
 	}
 	Debug.WDB {Search '$key' $long $date -> [$rows size] [$rows info]}
 
-	return [s2l $rows]
+	return [s2l $rows $max]
     }
 
     #----------------------------------------------------------------------------
@@ -465,7 +466,12 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc PageByName {name} {
 	variable pageV
-	set result [$pageV find name $name]
+	set select [$pageV select name $name]
+	set result {}
+	for {set p 0} {$p < [$select size]} {incr p} {
+	    lappend result [$pageV get [dict get [$select get $p] index] id]
+	}
+	$select close
 	Debug.WDB {PageByName '$name' -> $result}
 	return $result
     }

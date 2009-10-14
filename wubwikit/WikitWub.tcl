@@ -2035,21 +2035,6 @@ namespace eval WikitWub {
 	set BR {}
 
 	switch -- $N {
-	    999999 {
-		set M [WDB PageCount]
-		set ts [clock seconds]
-		for {set N 10} {$N < $M} {incr N} {
-		    puts "$N/$M"
-		    set C [WFormat TextToStream [WDB GetContent $N]]
-		    lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
-		    set f [open /home/decoster/tmp/wp/$N.html w]
-		    puts $f $C
-		    close $f
-		}
-		set te [clock seconds]
-		puts "Elapsed: [expr {$te-$ts}]"
-		return [Http NotFound $r]
-	    }
 	    2 {
 		# search page
 		set qd [Dict get? $r -Query]
