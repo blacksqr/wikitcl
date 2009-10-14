@@ -901,7 +901,7 @@ namespace eval WikitWub {
 		set D [expr {$nver - 1}]	;# default
 	    }
 	} else {
-	    if {$V >= $nver)} {
+	    if {$V >= $nver} {
 		set vt [WDB GetPage $N date]
 	    } else {
 		set vt [WDB GetChange $N $V date]

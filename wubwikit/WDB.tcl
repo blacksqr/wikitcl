@@ -211,7 +211,7 @@ namespace eval WDB {
     #
     # Versions --
     #
-    #	return number of versions of a page
+    #	return number of non-current versions of a page
     #
     # Parameters:
     #	pid - the page index of the page whose version count we want
@@ -308,12 +308,14 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc MostRecentChange {pid date} {
 	variable changeV
-	set dl [$changeV select id $pid -max date $date -rsort date]
-	if {[$dl size] == 0} {
-	    $dl close
-	    set dl [$changeV select id $pid -rsort date]
+	set dl [$changeV select id $pid -rsort date]
+	set result 0
+	for {set d 0} {$d < [$dl size]} {incr d} {
+	    lassign [$dl get $d date version] cdate version
+	    if {$cdate < $date} {
+		break
+	    }
 	}
-	set result [$dl get 0 version]
 	$dl close
 	Debug.WDB {MostRecentChange $pid $date -> $result}
 	return $result
