@@ -883,7 +883,8 @@ namespace eval WikitWub {
 	}
 
 	set nver [WDB Versions $N]
-	if { $V >= $nver || ($T == 0 && $D >= $nver) } {
+
+	if { $V > $nver || ($T == 0 && $D > $nver) } {
 	    return [Http NotFound $r]
 	}
 
@@ -897,10 +898,10 @@ namespace eval WikitWub {
 	set updated ""
 	if {$T == 0} {
 	    if {$D < 0} {
-		set D [expr {$nver - 2}]	;# default
+		set D [expr {$nver - 1}]	;# default
 	    }
 	} else {
-	    if {$V >= ($nver-1)} {
+	    if {$V >= $nver)} {
 		set vt [WDB GetPage $N date]
 	    } else {
 		set vt [WDB GetChange $N $V date]
@@ -909,7 +910,7 @@ namespace eval WikitWub {
 		set D 1
 	    }
 
-	    if {$V == ($nver - 1)} {
+	    if {$V == $nver} {
 		if {$D==1} {
 		    set updated "Changes in last day"
 		} elseif {$D==7} {
