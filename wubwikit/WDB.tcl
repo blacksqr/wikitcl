@@ -473,7 +473,7 @@ namespace eval WDB {
 	}
 	$select close
 	Debug.WDB {LookupPage '$name' -> $n}
-	set namecache($name) $n
+	set namecache([string tolower $name]) $n
 	return $n
     }
 
@@ -1073,12 +1073,27 @@ namespace eval WDB {
 	    }
 
 	    # open our views
-	    foreach v {page content ref diff} {
+	    set hashed 1
+	    foreach {v n} {page 1 content 1 ref 1 diff 2} {
 		set ${v}B [mk::view open $db.${v}s]
-		variable ${v}V [[set ${v}B] view blocked]
+		if {!$hashed} {
+		    variable ${v}V [[set ${v}B] view blocked]
+		} else {
+		    set raw [[set ${v}B] view blocked]
+		    mk::view layout $db.${v}hash { _H:I _R:I }
+		    set hash [mk::view open $db.${v}hash]
+		    variable ${v}V [$raw view hash $hash $n]
+		}
 	    }
-	    foreach v {change} {
-		variable ${v}V [mk::view open $db.${v}s]
+	    foreach {v n} {change 2} {
+		if {!$hashed} {
+		    variable ${v}V [mk::view open $db.${v}s]
+		} else {
+		    set raw [mk::view open $db.${v}s]
+		    mk::view layout $db.${v}hash { _H:I _R:I }
+		    set hash [mk::view open $db.${v}hash]
+		    variable ${v}V [$raw view hash $hash $n]		
+		}
 	    }
 
 	    # if there are no references, probably it's the first time, so recalc
