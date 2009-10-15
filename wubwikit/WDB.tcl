@@ -380,14 +380,18 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc Changes {pid {date 0}} {
 	variable changeV
-	if {$date} {
-	    set since [list -min date $date]
-	} else {
-	    set since {}
+	set result {}
+	set select [$changeV select id $pid -rsort date]
+	Debug.WDB {Changes $pid from $date -> [$select size]}
+	for {set i 0} {$i < [$select size]} {incr i} {
+	    set d [$select get $i]
+	    lappend result $d
+	    if {[dict get $d date] < $date} {
+		break
+	    }
 	}
-	set result [$changeV select id $pid {*}$since -rsort date]
-	Debug.WDB {Changes $pid from $date -> [$result size] [$result info]}
-	return [s2l $result]
+	$select close
+	return $result
     }
 
     #----------------------------------------------------------------------------
