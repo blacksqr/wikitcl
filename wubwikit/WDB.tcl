@@ -57,6 +57,14 @@ namespace eval WDB {
 	Debug.WDB {commit: [expr {([clock microseconds] - $now) / 1000000.0}]sec}
     }
     
+    proc rollback {} {
+	variable db
+	mk::file rollback $db
+    }
+
+    proc StartTransaction { } {
+    }
+
     #----------------------------------------------------------------------------
     #
     # s2l --
@@ -158,7 +166,11 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc GetPage {pid args} {
 	variable pageV
-	set result [$pageV get $pid {*}$args]
+	set select [$pageV select id $pid]
+	if {[$select size]} {
+	    set result [$pageV get [dict get [$select get 0] index] {*}$args]
+	}
+	$select close
 	Debug.WDB {GetPage $pid $args -> ($result)}
 	return $result
     }
@@ -178,7 +190,13 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc GetContent {pid} {
 	variable contentV
-	return [$contentV get $pid content]
+	set result {}
+	set select [$contentV select id $pid]
+	if {[$select size]} {
+	    set result [$contentV get [dict get [$select get 0] index] content]
+	}
+	$select close
+	return $result
     }
 
     #----------------------------------------------------------------------------
@@ -197,15 +215,14 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc GetPageVars {pid args} {
 	variable pageV
-	if {[catch {$pageV get $pid} record eo]} {
-	    Debug.WDB {GetPageVars $pid $args ERROR $record ($eo)}
-	    error $record
-	} else {
-	    Debug.WDB {GetPageVars $pid $args -> ($record)}
+	set select [$pageV select id $pid]
+	if {[$select size]} {
+	    set result [$pageV get [dict get [$select get 0] index]]
+	    foreach n $args {
+		uplevel 1 [list set $n [dict get? $result $n]]
+	    }
 	}
-	foreach n $args {
-	    uplevel 1 [list set $n [dict get? $record $n]]
-	}
+	$select close
     }
 
     #----------------------------------------------------------------------------
@@ -264,8 +281,12 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc GetChange {pid version args} {
 	variable changeV
-	set index [$changeV find id $pid version $version]
-	set result [$changeV get $index {*}$args]
+	set select [$changeV select id $pid version $version]
+	set result {}
+	if {[$select size]} {
+	    set result [$changeV get [dict get [$index get 0] index] {*}$args]
+	}
+	$select close
 	Debug.WDB {GetChange $pid $version $args -> $result}
 	return $result
     }
@@ -435,17 +456,22 @@ namespace eval WDB {
 	variable pageV
 	set lcname [string tolower $name]
 	variable namecache
+	Debug.WDB {LookupPage '$name'}
 	if {[info exists namecache($lcname)]} {
 	    Debug.WDB {LookupPage '$name' found in cache -> $namecache($lcname)}
 	    return $namecache($lcname)
 	}
-	set n [$pageV find name $name]
-	if {$n eq ""} {
+	set select [$pageV select name $name]
+	if {[$select size]} {
+	    set n [$pageV get [dict get [$select get 0] index] id]
+	    Debug.WDB {LookupPage '$name' found in db -> $n}
+	} else {
 	    set n [PageCount]
 	    Debug.WDB {LookupPage '$name' not found, added $n}
 	    $pageV insert end name $name id $n
 	    commit
 	}
+	$select close
 	Debug.WDB {LookupPage '$name' -> $n}
 	set namecache($name) $n
 	return $n
@@ -599,7 +625,7 @@ namespace eval WDB {
 	variable diffV
 
 	Debug.WDB {GetPageVersionLines $id $rversion}
-	set content [$contentV get $id content]
+	set content [GetContent $id]
 	set latest [Versions $id]
 	if {$rversion eq {}} {
 	    set rversion $latest
@@ -807,6 +833,7 @@ namespace eval WDB {
 	# Determine the changed lines
 	set linesnew [split $text \n]
 	set linesold [split $page \n]
+
 	set lcs [::struct::list longestCommonSubsequence2 $linesnew $linesold 5]
 	set changes [::struct::list lcsInvert \
 			 $lcs [llength $linesnew] [llength $linesold]]
@@ -844,6 +871,7 @@ namespace eval WDB {
 	    incr i
 	}
 
+	# When using foreign keys, this insert must be before inserting info diffs, and delta must be adjusted here
 	$changeV insert end id $id version $version date $date who $who delta $change
     }
 
@@ -888,7 +916,8 @@ namespace eval WDB {
 	# visit each page, recreating its refs
 	set size [$pageV size]
 	for {set id 0} {$id < $size} {incr id} {
-	    GetPageVars $id date page
+	    GetPageVars $id date
+	    set page [GetContent $id]
 	    if {$date != 0} {
 		# add the references from page $id to .refs view
 		addRefs $id [WFormat StreamToRefs [WFormat TextToStream $page] [list ::WikitWub::InfoProc]]
@@ -905,32 +934,37 @@ namespace eval WDB {
 
 	set changed 0
 
+	StartTransaction
+
 	if {[catch {
 	    puts "SavePage@[clock seconds] pagevarsDB"
-	    GetPageVars $id name date page who
+	    GetPageVars $id name date who
+	    set page [GetContent $id]
 
-	    if {$newName != $name} {
-		puts "SavePage@[clock seconds] new name"
-		set changed 1
-
-		# rewrite all pages referencing $id changing old name to new
-		# Special case: If the name is being removed, leave references intact;
-		# this is used to clean up duplicates.
-		if {$newName != ""} {
-		    foreach x [ReferencesTo $id] {
-			set y [$pageV get $x page]
-			$pageV set $x page [replaceLink $y $name $newName]
-		    }
-		    
-		    # don't forget to adjust links in this page itself
-		    set text [replaceLink $text $name $newName]
-		}
-
-		$pageV set $id name $newName
-	    }
+# Update of page names not possible using Web interface, placed in comments because untested.
+#
+# 	    if {$newName != $name} {
+# 		puts "SavePage@[clock seconds] new name"
+# 		set changed 1
+#
+# 		# rewrite all pages referencing $id changing old name to new
+# 		# Special case: If the name is being removed, leave references intact;
+# 		# this is used to clean up duplicates.
+# 		if {$newName != ""} {
+# 		    foreach x [ReferencesTo $id] {
+# 			set y [$pageV get $x page]
+# 			$pageV set $x page [replaceLink $y $name $newName]
+# 		    }
+#		    
+# 		    # don't forget to adjust links in this page itself
+# 		    set text [replaceLink $text $name $newName]
+# 		}
+#
+# 		$pageV set $id name $newName
+# 	    }
 
 	    if {$newdate != ""} {
-		puts "SavePage@[clock seconds] set date"
+		puts "SavePage@[clock seconds] set date $id $date"
 		# change the date if requested
 		$pageV set $id date $newdate
 	    }
@@ -952,12 +986,19 @@ namespace eval WDB {
 		puts "SavePage@[clock seconds] log change"
 		$pageV set $id who $newWho
 		puts "SavePage@[clock seconds] save content"
-		$contentV set $id content $text 
+		set selectc [$contentV select id $id]
+		if {[$selectc size]} {
+		    $contentV set [dict get [$selectc get 0] index] content $text
+		} else {
+		    $contentV insert end id $id content $text
+		}
+		$selectc close
 		if {$page ne {} || [Versions $id]} {
-		    puts "SavePage@[clock seconds] update change log"
+		    puts "SavePage@[clock seconds] update change log (old: [string length $page], [llength [split $page \n]], new:  [string length $text], [llength [split $text \n]])"
 		    UpdateChangeLog $id $name $date $who $page $text
 		}
 
+		# Set change date, only if page was actually changed
 		if {$newdate == ""} {
 		    puts "SavePage@[clock seconds] set date"
 		    $pageV set $id date [clock seconds]
@@ -967,7 +1008,9 @@ namespace eval WDB {
 		puts "SavePage@[clock seconds] done saving"
 	    }
 	} r]} {
+	    rollback
 	    Debug.error "SavePageDb: '$r'"
+	    error $r
 	}
 
 	if {$commit} {
