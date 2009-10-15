@@ -516,7 +516,22 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc Cleared {} {
 	variable pageV
-	return [s2l [$pageV select -min date 1 -max page " " -rsort date] 100]
+	set n 0
+	set result {}
+	set select [$pageV select -rsort date]
+	for {set i 0} {$i < [$select size]} {incr i} {
+	    lassign [$select get $i id date] id date
+	    set cont [GetContent $id]
+	    if {[string length $content] <= 1} {
+		lappend result [$select get $i]
+		incr n
+		if {$n>= 100} {
+		    break
+		}
+	    }
+	}
+	$select close
+	return $result
     }
 
     #----------------------------------------------------------------------------
