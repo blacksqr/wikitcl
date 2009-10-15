@@ -526,7 +526,7 @@ namespace eval WikitWub {
     }
 
     proc edit_activity {N} {
-	return 1
+
 	set pcdate [WDB GetPage $N date]
 	set edate [expr {$pcdate-10*86400}]
 	set first 1
@@ -538,6 +538,9 @@ namespace eval WikitWub {
 		set activity [expr {$activity + $changes * $delta / double([clock seconds] - $pcdate)}]
 		set pcdate $date
 		set first 0
+	    }
+	    if {$pcdate<$edate} {
+		break
 	    }
 	}
 

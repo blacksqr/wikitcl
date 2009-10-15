@@ -167,6 +167,7 @@ namespace eval WDB {
     proc GetPage {pid args} {
 	variable pageV
 	set select [$pageV select id $pid]
+	set result {}
 	if {[$select size]} {
 	    set result [$pageV get [dict get [$select get 0] index] {*}$args]
 	}
@@ -215,14 +216,12 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc GetPageVars {pid args} {
 	variable pageV
-	set select [$pageV select id $pid]
-	if {[$select size]} {
-	    set result [$pageV get [dict get [$select get 0] index]]
-	    foreach n $args {
-		uplevel 1 [list set $n [dict get? $result $n]]
-	    }
+	if {[catch {$pageV get $pid} record eo]} {
+	    error $record
 	}
-	$select close
+	foreach n $args {
+	    uplevel 1 [list set $n [dict get? $record $n]]
+	}
     }
 
     #----------------------------------------------------------------------------
