@@ -1073,7 +1073,7 @@ namespace eval WDB {
 	    }
 
 	    # open our views
-	    set hashed 1
+	    set hashed 0
 	    foreach {v n} {page 1 content 1 ref 1 diff 2} {
 		set ${v}B [mk::view open $db.${v}s]
 		if {!$hashed} {
