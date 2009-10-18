@@ -944,7 +944,6 @@ namespace eval WDB {
     proc addRefs {id refs} {
 	variable db
 	if {$id != 2 && $id != 4} {
-	    $refV insert end from $id to $x
 	    set stmt [$db prepare {INSERT INTO refs (fromid, toid) VALUES (:id, :x)}]
 	    foreach x $refs {
 		if {$id != $x} {
@@ -1054,19 +1053,24 @@ namespace eval WDB {
 		$stmt execute
 		$stmt close
 		puts "SavePage@[clock seconds] save content"
-		set stmtc [$db prepare {SELECT * FROM pages WHERE id = :pid}]
+		set stmtc [$db prepare {SELECT COUNT(*) FROM pages_content WHERE id = :id}]
 		set rsc [$stmtc execute]
-		if {[$rsc nextdict d]} {
+		$rsc nextdict d
+		puts "d=$d"
+		if {[dict get $d COUNT(*)]} {
+		    puts "update"
 		    set stmt [$db prepare {UPDATE pages_content SET content = :text WHERE id = :id}]
 		    $stmt execute
 		    $stmt close
 		} else {
+		    puts "insert"
 		    set stmt [$db prepare {INSERT INTO pages_content (id, content) VALUES (:id, :text)}]
 		    $stmt execute
 		    $stmt close
 		}
 		$rsc close
 		$stmtc close
+		puts "SavePage@[clock seconds] saved content"
 		if {$page ne {} || [Versions $id]} {
 		    puts "SavePage@[clock seconds] update change log (old: [string length $page], [llength [split $page \n]], new:  [string length $text], [llength [split $text \n]])"
 		    UpdateChangeLog $id $name $date $who $page $text
