@@ -15,7 +15,8 @@ package require Sitemap
 package require stx
 package require Form
 
-package require WDB
+#package require WDB_sqlite
+package require WDB_mk
 package require WikitRss
 package require WFormat
 
@@ -848,8 +849,8 @@ namespace eval WikitWub {
 	lappend menu [Ref /_/history?N=$N History]
 	lappend menu [Ref /_/summary?N=$N "Edit summary"]
 	lappend menu [Ref /_/diff?N=$N "Last change"]
-	lappend menu [Ref /_/diff?N=$N&T=1&D=1 "Changes in last day"]
-	lappend menu [Ref /_/diff?N=$N&T=1&D=7 "Changes in last week"]
+	lappend menu [Ref /_/diff?N=$N&T=1&D=1 "Changes last day"]
+	lappend menu [Ref /_/diff?N=$N&T=1&D=7 "Changes last week"]
 	set footer [menus Home Recent Help Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set C $R
@@ -915,11 +916,11 @@ namespace eval WikitWub {
 
 	    if {$V == $nver} {
 		if {$D==1} {
-		    set updated "Changes in last day"
+		    set updated "Changes last day"
 		} elseif {$D==7} {
-		    set updated "Changes in last week"
+		    set updated "Changes last week"
 		} else {
-		    set updated "Changes in last $D days"
+		    set updated "Changes last $D days"
 		}
 	    }
 
@@ -1066,8 +1067,8 @@ namespace eval WikitWub {
 	lappend menu [Ref /_/history?N=$N History]
 	lappend menu [Ref /_/summary?N=$N "Edit summary"]
 	lappend menu [Ref /_/diff?N=$N "Last change"]
-	lappend menu [Ref /_/diff?N=$N&T=1&D=1 "Changes in last day"]
-	lappend menu [Ref /_/diff?N=$N&T=1&D=7 "Changes in last week"]
+	lappend menu [Ref /_/diff?N=$N&T=1&D=1 "Changes last day"]
+	lappend menu [Ref /_/diff?N=$N&T=1&D=7 "Changes last week"]
 	set footer [menus Home Recent Help Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
@@ -1270,9 +1271,8 @@ namespace eval WikitWub {
     proc Ref {url {name "" } args} {
 	if {$name eq ""} {
 	    set page [lindex [file split $url] end]
-	    if {[catch {
-		WDB GetPage $page name
-	    } name]} {
+	    set name [WDB GetPage $page name]
+	    if {$name eq ""} {
 		set name $page
 	    }
 	}
@@ -1508,10 +1508,9 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
-	if {[catch {
-	    WDB GetPageVars $N name date who
-	    set page [WDB GetContent $N]
-	} er eo]} {
+	lassign [WDB GetPage $N name date who] name date who
+	set page [WDB GetContent $N]
+	if {$name eq ""} {
 	    puts "edit-save@[clock seconds] $N not a valid page"
 	    return [Http NotFound $er [subst {
 		[<h2> "$N is not a valid page."]
@@ -1695,7 +1694,7 @@ namespace eval WikitWub {
 	    return [sendPage $r login]
 	}
 
-	WDB GetPageVars $N name date who	;# get the last change author
+	lassign [WDB GetPage $N name date who] name date who ;# get the last change author
 
 	set who_nick ""
 	regexp {^(.+)[,@]} $who - who_nick
@@ -1865,7 +1864,7 @@ namespace eval WikitWub {
 
 	set refList ""
 	foreach from [WDB ReferencesTo $N] {
-	    WDB GetPageVars $from name date who
+	    lassign [WDB GetPage $from name date who] name date who
 	    lappend refList [list [timestamp $date] $name $who $from]
 	}
 
@@ -1907,14 +1906,12 @@ namespace eval WikitWub {
     # returns a list: /$id (with suffix of @ if the page is new), $name, modification $date
     proc InfoProc {ref} {
 	set id [WDB LookupPage $ref]
-	WDB GetPageVars $id name date
-
-	if {$date == 0} {
+	lassign [WDB GetPage $id name date] name date
+	if {$name eq ""} {
 	    set id _/edit?N=$id ;# enter edit mode for missing links
 	} else {
 	    set id /$id	;# add a leading / which format.tcl will strip
 	}
-
 	return [list /$id $name $date]
     }
 
@@ -1954,7 +1951,7 @@ namespace eval WikitWub {
     }
 
     proc pageXML {N} {
-	WDB GetPageVars $N name date who
+	lassign [WDB GetPage $N name date who] name date who
 	set page [WDB GetContent $N]
 	set stream [WFormat TextToStream [WDB GetContent $N]]
 	lassign [WFormat StreamToHTML $stream / ::WikitWub::InfoProc] parsed - toc backrefs
@@ -2114,9 +2111,8 @@ namespace eval WikitWub {
 		}
 
 		# set up a few standard URLs an strings
-		if {[catch {
-		    WDB GetPageVars $N name date who
-		} e eo]} {
+		lassign [WDB GetPage $N name date who] name date who
+		if {$name eq ""} {
 		    puts stderr "Error: $e ($eo)"
 		    return [Http NotFound $r]
 		}

@@ -1,51 +1,49 @@
 package require OO
+package require tdbc::sqlite3
 package provide WDB 1.0
-package provide WDB_mk 1.0
+package provide WDB_sqlite 1.0
 
 Debug on WDB 10
 
 if {0} {
-    # pages view
-    pages {
-	id:I		;# page id number
-	name		;# page name
-	date:I		;# date of page last revision
-	versions:I	;# number of versions
-	who		;# who last edited page
-    }
+CREATE TABLE pages (
+       id INT NOT NULL,
+       name TEXT NOT NULL,
+       date INT NOT NULL,
+       who TEXT NOT NULL,
+       PRIMARY KEY (id));
 
-    # content view
-    contents {
-	id:I		;# page id number
-	content		;# page content
-    }
+CREATE TABLE pages_content (
+       id INT NOT NULL,
+       content TEXT NOT NULL,
+       PRIMARY KEY (id),
+       FOREIGN KEY (id) REFERENCES pages(id));
 
-    # changes view
-    changes {
-	id:I		;# page to which changes apply
-	version:I	;# which version of page is this?
+CREATE TABLE changes (
+       id INT NOT NULL,
+       cid INT NOT NULL,
+       date INT NOT NULL,
+       who TEXT NOT NULL,
+       delta TEXT NOT NULL,
+       PRIMARY KEY (id, cid),
+       FOREIGN KEY (id) REFERENCES pages(id));
+       
+CREATE TABLE diffs (
+       id INT NOT NULL,
+       cid INT NOT NULL,
+       did INT NOT NULL,
+       fromline INT NOT NULL,
+       toline INT NOT NULL,	
+       old TEXT NOT NULL,
+       PRIMARY KEY (id, cid, did),
+       FOREIGN KEY (id, cid) REFERENCES changes(id, cid));
 
-	date:I		;# date of change
-	who		;# who made change?
-	delta:I		;# 
-    }
-
-    # diffs view
-    diffs {
-	id:I		;# page to which diff applies
-	version:I	;# changeset this diff is a part of
-	diff:I		;# ordinal number of diff
-
-	from:I		;# 
-	to:I		;#
-	old		;# old text
-    }
-
-    # refs view
-    refs {
-	from:I		;# reference from page id
-    	to:I		;# reference to page id
-    }
+CREATE TABLE refs (
+       fromid INT NOT NULL,
+       toid INT NOT NULL,
+       PRIMARY KEY (fromid, toid),
+       FOREIGN KEY (fromid) references pages(id),
+       FOREIGN KEY (toid) references pages(id));
 }
 
 namespace eval WDB {
@@ -54,47 +52,18 @@ namespace eval WDB {
     proc commit {} {
 	variable db
 	set now [clock microseconds]
-	mk::file commit $db
+	$db commit
 	Debug.WDB {commit: [expr {([clock microseconds] - $now) / 1000000.0}]sec}
     }
     
     proc rollback {} {
 	variable db
-	mk::file rollback $db
+	$db rollback
     }
 
     proc StartTransaction { } {
-    }
-
-    #----------------------------------------------------------------------------
-    #
-    # s2l --
-    #
-    #	convert a select-view to a list of records
-    #
-    # Parameters:
-    #	view - a mk4too view resulting from a select
-    #	max - maximum number of records to return
-    #
-    # Results:
-    #	Returns a list of dicts, each is a record corresponding to the
-    #	select result.
-    #
-    #	Beware: this only works on mk4too selects which have specified a -sort
-    #	or -rsort argument.  Other selects return a view containing index.
-    #
-    #----------------------------------------------------------------------------
-    proc s2l {view {max -1}} {
-	set result {}
-	set size [$view size]
-	if {$max > 0 && $size > $max} {
-	    set size $max
-	}
-	for {set i 0} {$i < $size} {incr i} {
-	    lappend result [$view get $i]
-	}
-	$view close
-	return $result
+	variable db
+	$db begintransaction
     }
 
     #----------------------------------------------------------------------------
@@ -112,16 +81,15 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc ReferencesTo {page} {
-	variable refV
-	set select [$refV select -exact to $page -rsort from]
-	Debug.WDB {ReferencesTo $page -> [$select size] [$select info]}
-
-	set size [$select size]
+	variable db
+	set stmt [$db prepare {SELECT fromid FROM refs WHERE toid = :page ORDER BY fromid ASC}]
+	set rs [$stmt execute]
 	set result {}
-	for {set i 0} {$i < $size} {incr i} {
-	    lappend result [dict get [$select get $i] from]
+	while {[$rs nextdict d]} {
+	    lappend result [dict get $d fromid]
 	}
-	$select close
+	$rs close
+	$stmt close
 	return $result
     }
     
@@ -166,13 +134,21 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc GetPage {pid args} {
-	variable pageV
-	set select [$pageV select id $pid]
+	variable db
+	set stmt [$db prepare {SELECT * FROM pages WHERE id = :pid}]
+	set rs [$stmt execute]
+	$rs nextdict d
+	$rs close
+	$stmt close
+	dict set d content [GetContent $pid]
 	set result {}
-	if {[$select size]} {
-	    set result [$pageV get [dict get [$select get 0] index] {*}$args]
+	if {[llength $args] == 1} {
+	    set result [dict get? $d [lindex $args 0]]
+	} else {
+	    foreach n $args {
+		lappend result [dict get? $d $n]
+	    }
 	}
-	$select close
 	Debug.WDB {GetPage $pid $args -> ($result)}
 	return $result
     }
@@ -191,14 +167,17 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc GetContent {pid} {
-	variable contentV
-	set result {}
-	set select [$contentV select id $pid]
-	if {[$select size]} {
-	    set result [$contentV get [dict get [$select get 0] index] content]
+	variable db
+	set stmtc [$db prepare {SELECT * FROM pages_content WHERE id = :pid}]
+	set rsc [$stmtc execute]
+	set rsc_next [$rsc nextdict dc]
+	$rsc close
+	$stmtc close
+	if {$rsc_next} {
+	    return [dict get? $dc content]
+	} else {
+	    return ""
 	}
-	$select close
-	return $result
     }
 
     #----------------------------------------------------------------------------
@@ -215,11 +194,13 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc Versions {pid} {
-	variable changeV
-	set cv [$changeV select id $pid]
-	set result [$cv size]
-	$cv close
-	return $result
+	variable db
+	set stmt [$db prepare {SELECT COUNT(*) FROM changes WHERE id = :pid}]
+	set rs [$stmt execute]
+	$rs nextdict d
+	$rs close
+	$stmt close
+	return [dict get $d "COUNT(*)"]
     }
 
     #----------------------------------------------------------------------------
@@ -235,9 +216,14 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc PageCount {} {
-	variable pageV
-	Debug.WDB {PageCount -> [$pageV size]}
-	return [$pageV size]
+	variable db
+	set stmt [$db prepare {SELECT COUNT(*) FROM pages}]
+	set rs [$stmt execute]
+	$rs nextdict d
+	$rs close
+	$stmt close
+	Debug.WDB {PageCount -> [dict get $d "COUNT(*)"]}
+	return [dict get $d "COUNT(*)"]
     }
 
     #----------------------------------------------------------------------------
@@ -256,13 +242,17 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc GetChange {pid version args} {
-	variable changeV
-	set select [$changeV select id $pid version $version]
+	variable db
+	set stmt [$db prepare {SELECT * FROM changes WHERE id = :id AND cid  = :version}]
+	set rs [$stmt execute]
 	set result {}
-	if {[$select size]} {
-	    set result [$changeV get [dict get [$index get 0] index] {*}$args]
+	if {[$rs nextdict d]} {
+	    foreach a $args {
+		lappend result [dict get? $d $a]
+	    }
 	}
-	$select close
+	$rs close
+	$stmt close
 	Debug.WDB {GetChange $pid $version $args -> $result}
 	return $result
     }
@@ -282,12 +272,14 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc ChangeSetSize {id version} {
-	variable diffV
-	set diffsV [$diffV select id $id version $version]
-	set result [$diffsV size]
-	$diffsV close
-	Debug.WDB {ChangeSetSize $id $version -> $result}
-	return $result
+	variable db
+	set stmt [$db prepare {SELECT COUNT(*) FROM diffs WHERE id = :id AND cid = :version}]
+	set rs [$stmt execute]
+	$rs nextdict d
+	$rs close
+	$stmt close
+	Debug.WDB {ChangeSetSize $id $version -> [dict get $d "COUNT(*)"]}
+	return [dict get $d "COUNT(*)"]
     }
 
     #----------------------------------------------------------------------------
@@ -305,16 +297,15 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc MostRecentChange {pid date} {
-	variable changeV
-	set dl [$changeV select id $pid -rsort date]
+	variable db
+	set stmt [$db prepare {SELECT cid, date FROM changes WHERE id = :pid AND date < :date ORDER BY date DESC}]
+	set rs [$stmt execute]
 	set result 0
-	for {set d 0} {$d < [$dl size]} {incr d} {
-	    lassign [$dl get $d date version] cdate version
-	    if {$cdate < $date} {
-		break
-	    }
+	if {[$rs nextdict d]} {
+	    set result [dict get $d date]
 	}
-	$dl close
+	$rs close
+	$stmt close
 	Debug.WDB {MostRecentChange $pid $date -> $result}
 	return $result
     }
@@ -333,11 +324,18 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc RecentChanges {date} {
-	variable changeV
-	variable pageV
-	set result [$pageV select -first 11 -min date $date -rsort date]
-	Debug.WDB {RecentChanges $date -> [$result size] [$result info]}
-	return [s2l $result 100]
+	variable db
+	set stmt [$db prepare {SELECT id, name, date, who FROM pages WHERE date > :date ORDER BY date DESC}]
+	set rs [$stmt execute]
+	set result {}
+	set n 0
+	while {$n < 100 && [$rs nextdict d]} {
+	    lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who]]
+	    incr n
+	}
+	$rs close
+	$stmt close
+	return $result
     }
 
     #----------------------------------------------------------------------------
@@ -355,18 +353,18 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc Changes {pid {date 0}} {
-	variable changeV
+	variable db
 	set result {}
-	set select [$changeV select id $pid -rsort date]
-	Debug.WDB {Changes $pid from $date -> [$select size]}
-	for {set i 0} {$i < [$select size]} {incr i} {
-	    set d [$select get $i]
-	    lappend result $d
+	set stmt [$db prepare {SELECT * FROM changes WHERE id = :pid ORDER BY date DESC}]
+	set rs [$stmt execute]
+	while {[$rs nextdict d]} {
+	    lappend result s [list version [dict get? $d cid] date [dict get? $d date] who [dict get? $d who] delta [dict get? $d delta]]
 	    if {[dict get $d date] < $date} {
 		break
 	    }
 	}
-	$select close
+	$rs close
+	$stmt close
 	return $result
     }
 
@@ -433,6 +431,41 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     variable namecache
     proc LookupPage {name} {
+	variable db
+	set lcname [string tolower $name]
+	variable namecache
+	if {[info exists namecache($lcname)]} {
+	    Debug.WDB {LookupPage '$name' found in cache -> $namecache($lcname)}
+	    return $namecache($lcname)
+	}
+	set stmt [$db prepare {SELECT id FROM pages WHERE name = :name}]
+	set rs [$stmt execute]
+	set rs_next [$rs nextdict d]
+	$rs close
+	$stmt close
+	if {!$rs_next} {
+	    set n [PageCount]
+	    Debug.WDB {LookupPage '$name' not found, added $n}
+	    StartTransaction
+	    if {[catch {
+		set stmt [$db prepare {INSERT INTO pages (id, name, date, who) VALUES (:n, :name, 0, "")}]
+		$stmt execute
+		$stmt close
+	    } msg]} {
+		rollback
+		error $msg
+	    } else {
+		commit
+	    }
+	    
+	} else {
+	    set n [dict get $d id]
+	}
+	Debug.WDB {LookupPage '$name' -> $n}
+	set namecache($lcname) $n
+	return $n
+
+
 	variable pageV
 	set lcname [string tolower $name]
 	variable namecache
@@ -453,7 +486,7 @@ namespace eval WDB {
 	}
 	$select close
 	Debug.WDB {LookupPage '$name' -> $n}
-	set namecache($lcname) $n
+	set namecache([string tolower $name]) $n
 	return $n
     }
 
@@ -527,8 +560,16 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc AllPages {} {
-	variable pageV
-	return [s2l [$pageV select -min id 11 -min date 1 -sort date]]
+	variable db
+	set stmt [$db prepare {SELECT id, name, date, who FROM pages WHERE date > :date ORDER BY date DESC}]
+	set rs [$stmt execute]
+	set result {}
+	while {[$rs nextdict d]} {
+	    lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who]]
+	}
+	$rs close
+	$stmt close
+	return $result
     }
 
     #----------------------------------------------------------------------------
@@ -555,7 +596,9 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
 
     proc ListPageVersionsDB {id {limit Inf} {start 0}} {
-	variable pageV
+	variable db
+
+	puts "id=$id, limit=$limit, start=$start"
 
 	# Special case for the fake pages
 
@@ -566,30 +609,37 @@ namespace eval WDB {
 	    }
 	}
 
-	# select changes pertinent to this page
-	variable changeV
-	set changesV [$changeV select id $id -sort version]
-
 	# Determine the number of the most recent version
 	set results [list]
-	set mostRecent [$changesV size]
+	set mostRecent [Versions $id]
+	set nskip 0
+	set nsel 0
 
 	# List the most recent version if requested
 	if {$start == 0} {
 	    lassign [GetPage $id date who] date who
 	    lappend results [list $mostRecent $date $who]
 	    incr start
+	    incr nsel
+	    incr nskip
 	}
-
+	# select changes pertinent to this page
+	set stmt [$db prepare {SELECT cid, date, who FROM changes WHERE id = :id ORDER BY cid DESC}]
+	set rs [$stmt execute]
 	# Do earlier versions as needed
-	incr mostRecent -$start
-	while {$mostRecent >= 0 && [llength $results] < $limit} {
-	    lassign [$changesV get $mostRecent date who] date who
-	    lappend results [list $mostRecent $date $who]
-	    incr mostRecent -1
+	while {[$rs nextdict d]} {
+	    incr nskip
+	    if {$nskip <= $start} {
+		continue
+	    }
+	    lappend results [list [dict get? $d cid] [dict get? $d date] [dict get? $d who]]
+	    incr nsel
+	    if {$nsel >= $limit} {
+		break
+	    }
 	}
-	$changesV close
-
+	$rs close
+	$stmt close
 	return $results
     }
 
@@ -615,9 +665,7 @@ namespace eval WDB {
 	return [join [GetPageVersionLines $id $version] \n]
     }
     proc GetPageVersionLines {id {rversion {}}} {
-	variable contentV
-	variable changeV
-	variable diffV
+	variable db
 
 	Debug.WDB {GetPageVersionLines $id $rversion}
 	set content [GetContent $id]
@@ -642,20 +690,19 @@ namespace eval WDB {
 
 	while {$v > $rversion} {
 	    incr v -1
-	    set diffsV [$diffV select id $id version $v -sort diff]
-	    set i [$diffsV size]
-	    while {$i > 0} {
-		incr i -1
-		set result [$diffsV get $i]
-		dict with result {
-		    if {$from <= $to} {
-			set lines [lreplace $lines[set lines {}] $from $to {*}$old]
+	    set stmt [$db prepare {SELECT * FROM diffs WHERE id = :id AND cid = :v ORDER BY did DESC}]
+	    set rs [$stmt execute]
+	    while {[$rs nextdict d]} {
+		dict with d {
+		    if {$fromline <= $toline} {
+			set lines [lreplace $lines[set lines {}] $fromline $toline {*}$old]
 		    } else {
-			set lines [linsert $lines[set lines {}] $from {*}$old]
+			set lines [linsert $lines[set lines {}] $fromline {*}$old]
 		    }
 		}
 	    }
-	    $diffsV close
+	    $rs close
+	    $stmt close
 	}
 
 	return $lines
@@ -684,27 +731,27 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
 
     proc AnnotatePageVersion {id {version {}}} {
-	variable pageV
-	variable changeV
-	variable diffV
+	variable db
 
 	set latest [Versions $id]
 	if {$version eq {}} {
 	    set version $latest
 	}
 	if {![string is integer $version] || $version < 0} {
-	    return -code error "bad version number \"$version\":\
-                          must be a positive integer" \
-		-errorcode {wiki badVersion}
+	    error "bad version number \"$version\": must be a positive integer"
 	}
 	if {$version > $latest} {
-	    return -code error "cannot get version $version, latest is $latest" \
-		-errorcode {wiki badVersion}
+	    error "cannot get version $version, latest is $latest"
 	}
 
 	# Retrieve the version to be annotated
 	set lines [GetPageVersionLines $id $version]
-	set changesV [$changeV select id $id -sort version]
+	set cstmt [$db prepare {SELECT date, who FROM changes WHERE id = :id ORDER BY cid}]
+	set crs [$cstmt execute]
+	set crsdl {}
+	while {[$crs nextdict d]} {
+	    lappend crsdl $d
+	}
 
 	# Start the annotation by guessing that all lines have been there since
 	# the first commit of the page.
@@ -712,15 +759,19 @@ namespace eval WDB {
 	if {$version == $latest} {
 	    lassign [GetPage $id date who] date who
 	} else {
-	    lassign [$changesV get $version date who] date who
+	    set d [lindex $crsdl $version]
+	    set date [dict get? $d date]
+	    set who [dict get? $d who]
 	}
 	if {$latest == 0} {
 	    set firstdate $date
 	    set firstwho $who
 	} else {
-	    lassign [$changesV get 0 date who] firstdate firstwho
+	    set d [lindex $crsdl 0]
+	    set firstdate [dict get? $d date]
+	    set firstwho [dict get? $d who]
 	}
- 
+	
 	# versions has one entry for each element in $lines, and contains
 	# the version in which that line first appeared.  We guess version
 	# 0 for everything, and then fill in later versions by working backward
@@ -738,21 +789,26 @@ namespace eval WDB {
 	for {set i 0} {$i < [llength $lines]} {incr i} {
 	    lappend whither $i
 	}
-	
+
 	# Walk backward through all versions of the page
 	while {$version > 0} {
 	    incr version -1
 
 	    # Walk backward through all changes applied to a version
-	    lassign [$changesV get $version date who] lastdate lastwho
+	    set d [lindex $crsdl $version]
+	    set lastdate [dict get? $d date]
+	    set lastwho [dict get? $d who]
 
 	    puts "last: $lastdate/$lastwho     $date/$who"
 
-	    set diffsV [$diffV select id $id version $version -sort diff]
-	    set i [$diffsV size]
-	    while {$i > 0} {
-		incr i -1
-		lassign [$diffsV get $i from to old] from to old
+	    set dstmt [$db prepare {SELECT fromline, toline, old FROM diffs WHERE id = :id AND cid = :version ORDER BY did DESC}]
+	    set drs [$dstmt execute]
+
+	    while {[$drs nextdict dd]} {
+
+		set from [dict get $dd fromline]
+		set to [dict get $dd toline]
+		set old [dict get $dd old]
 		
 		# Update 'versions' for all lines that first appeared in the
 		# version following the one being examined
@@ -783,11 +839,13 @@ namespace eval WDB {
 					   linsert $whither[set whither {}] $from]]
 		}
 	    }
-	    $diffsV close
+	    $drs close
+	    $dstmt close
 	    set date $lastdate
 	    set who $lastwho
 	}
-	$changesV close
+	$crs close
+	$cstmt close
 
 	set result {}
 	foreach line $lines v $versions date $dates who $whos {
@@ -821,9 +879,7 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc UpdateChangeLog {id name date who page text} {
-	variable pageV
-	variable changeV
-	variable diffV
+	variable db
 
 	# Store summary information about the change
 	set version [Versions $id]
@@ -837,6 +893,13 @@ namespace eval WDB {
 			 $lcs [llength $linesnew] [llength $linesold]]
 
 	# Store change information in the database
+
+	set stmt [$db prepare {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, 0)}]
+	$stmt execute
+	$stmt close
+
+	set dstmt [$db prepare {INSERT INTO diffs (id, cid, did, fromline, toline, old) VALUES (:id, :version, :i, :from, :to, :old)}]
+
 	set i 0
 	set change 0	;# record magnitude of change
 	foreach tuple $changes {
@@ -865,69 +928,72 @@ namespace eval WDB {
 					       - [string length $old])}]
 		}
 	    }
-	    $diffV insert end id $id version $version diff $i from $from to $to old $old
+	    $dstmt execute
 	    incr i
 	}
 
-	# When using foreign keys, this insert must be before inserting info diffs, and delta must be adjusted here
-	$changeV insert end id $id version $version date $date who $who delta $change
+	$dstmt close
+
+	set stmt [$db prepare {UPDATE changes SET delta = :change WHERE id = :id AND cid = :version}]
+	$stmt execute
+	$stmt close
     }
 
     # addRefs - a newly created page $id contains $refs references to other pages
     # Add these references to the .ref view.
     proc addRefs {id refs} {
-	variable refV
+	variable db
 	if {$id != 2 && $id != 4} {
+	    $refV insert end from $id to $x
+	    set stmt [$db prepare {INSERT INTO refs (fromid, toid) VALUES (:id, :x)}]
 	    foreach x $refs {
 		if {$id != $x} {
-		    $refV insert end from $id to $x
+		    $stmt execute
 		}
 	    }
+	    $stmt close
 	}
     }
-
+    
     # delRefs - remove all references from page $id to anywhere
     proc delRefs {id} {
-	variable refV
-	set v [$refV select from $id]	;# the set of all references from $id
-	set size [$v size]
-	set indices {}
-	for {set i 0} {$i < $size} {incr i} {
-	    lappend indices [$v get $i index]
-	}
-	set indices [lsort -integer $indices]
-
-	# delete from last to first
-	set n [llength $indices]
-	while {[incr n -1] >= 0} {
-	    $refV delete [lindex $indices $n]
-	}
+	variable db
+	set stmt [$db prepare {DELETE FROM refs WHERE fromid = :id}]
+	$stmt execute
+	$stmt close
     }
 
     # FixPageRefs - recreate the entire refs view
     proc FixPageRefs {} {
-	variable refV
-	variable pageV
+	variable db
 
-	$refV size 0	;# delete all contents from the .refs view
+	# delete all contents from the .refs view
+	set stmt [$db prepare {DELETE FROM refs}]
+	$stmt execute
+	$stmt close
 
 	# visit each page, recreating its refs
-	set size [$pageV size]
-	for {set id 0} {$id < $size} {incr id} {
-	    set date [GetPage $id date]
-	    set page [GetContent $id]
-	    if {$date != 0 && $name ne ""} {
-		# add the references from page $id to .refs view
-		addRefs $id [WFormat StreamToRefs [WFormat TextToStream $page] [list ::WikitWub::InfoProc]]
-	    }
+	set size [PageCount]
+	StartTransaction
+	if {[catch {
+	    for {set id 0} {$id < $size} {incr id} {
+		set date [GetPage $id date]
+		set page [GetContent $id]
+		if {$date != 0 && $name ne ""} {
+		    # add the references from page $id to .refs view
+		    addRefs $id [WFormat StreamToRefs [WFormat TextToStream $page] [list ::WikitWub::InfoProc]]
+		}
+	    }} msg]} {
+	    rollback
+	    error $msg
+	} else {
+	    commit
 	}
-	commit
     }
 
     # SavePage - store page $id ($who, $text, $newdate)
     proc SavePage {id text newWho newName {newdate ""} {commit 1}} {
-	variable pageV
-	variable contentV
+	variable db
 	puts "SavePage@[clock seconds] start"
 
 	set changed 0
@@ -939,32 +1005,34 @@ namespace eval WDB {
 	    lassign [GetPage $id name date who] name date who
 	    set page [GetContent $id]
 
-# Update of page names not possible using Web interface, placed in comments because untested.
-#
-# 	    if {$newName != $name} {
-# 		puts "SavePage@[clock seconds] new name"
-# 		set changed 1
-#
-# 		# rewrite all pages referencing $id changing old name to new
-# 		# Special case: If the name is being removed, leave references intact;
-# 		# this is used to clean up duplicates.
-# 		if {$newName != ""} {
-# 		    foreach x [ReferencesTo $id] {
-# 			set y [$pageV get $x page]
-# 			$pageV set $x page [replaceLink $y $name $newName]
-# 		    }
-#		    
-# 		    # don't forget to adjust links in this page itself
-# 		    set text [replaceLink $text $name $newName]
-# 		}
-#
-# 		$pageV set $id name $newName
-# 	    }
+	    # Update of page names not possible using Web interface, placed in comments because untested.
+	    #
+	    # 	    if {$newName != $name} {
+	    # 		puts "SavePage@[clock seconds] new name"
+	    # 		set changed 1
+	    #
+	    # 		# rewrite all pages referencing $id changing old name to new
+	    # 		# Special case: If the name is being removed, leave references intact;
+	    # 		# this is used to clean up duplicates.
+	    # 		if {$newName != ""} {
+	    # 		    foreach x [ReferencesTo $id] {
+	    # 			set y [$pageV get $x page]
+	    # 			$pageV set $x page [replaceLink $y $name $newName]
+	    # 		    }
+	    #		    
+	    # 		    # don't forget to adjust links in this page itself
+	    # 		    set text [replaceLink $text $name $newName]
+	    # 		}
+	    #
+	    # 		$pageV set $id name $newName
+	    # 	    }
 
 	    if {$newdate != ""} {
 		puts "SavePage@[clock seconds] set date $id $date"
 		# change the date if requested
-		$pageV set $id date $newdate
+		set stmt [$db prepare {UPDATE pages SET date = :newdate WHERE id = :id}]
+		$stmt execute
+		$stmt close
 	    }
 
 	    # avoid creating a log entry and committing if nothing changed
@@ -982,15 +1050,23 @@ namespace eval WDB {
 		# in the databse, make a change log entry for rollback.
 
 		puts "SavePage@[clock seconds] log change"
-		$pageV set $id who $newWho
+		set stmt [$db prepare {UPDATE pages SET who = :newWho WHERE id = :id}]
+		$stmt execute
+		$stmt close
 		puts "SavePage@[clock seconds] save content"
-		set selectc [$contentV select id $id]
-		if {[$selectc size]} {
-		    $contentV set [dict get [$selectc get 0] index] content $text
+		set stmtc [$db prepare {SELECT * FROM pages WHERE id = :pid}]
+		set rsc [$stmtc execute]
+		if {[$rsc nextdict d]} {
+		    set stmt [$db prepare {UPDATE pages_content SET content = :text WHERE id = :id}]
+		    $stmt execute
+		    $stmt close
 		} else {
-		    $contentV insert end id $id content $text
+		    set stmt [$db prepare {INSERT INTO pages_content (id, content) VALUES (:id, :text)}]
+		    $stmt execute
+		    $stmt close
 		}
-		$selectc close
+		$rsc close
+		$stmtc close
 		if {$page ne {} || [Versions $id]} {
 		    puts "SavePage@[clock seconds] update change log (old: [string length $page], [llength [split $page \n]], new:  [string length $text], [llength [split $text \n]])"
 		    UpdateChangeLog $id $name $date $who $page $text
@@ -999,7 +1075,10 @@ namespace eval WDB {
 		# Set change date, only if page was actually changed
 		if {$newdate == ""} {
 		    puts "SavePage@[clock seconds] set date"
-		    $pageV set $id date [clock seconds]
+		    set ndate [clock seconds]
+		    set stmt [$db prepare {UPDATE pages SET date = :ndate WHERE id = :id}]
+		    $stmt execute
+		    $stmt close
 		    set commit 1
 		}
 
@@ -1016,90 +1095,16 @@ namespace eval WDB {
 	    commit
 	}
 
-        puts "SavePage@[clock seconds] done."
+	puts "SavePage@[clock seconds] done."
     }
 
     proc WikiDatabase {args} {
 	variable db wdb
 	variable file wikit.db
-	variable readonly
-	set shared 0
 	dict for {n v} $args {
 	    set $n $v
 	}
-
-	if {[lsearch -exact [mk::file open] $db] == -1} {
-	    if {$readonly == -1} {
-		if {[file exists $file] && ![file writable $file]} {
-		    set readonly 1
-		} else {
-		    set readonly 0
-		}
-	    }
-
-	    set flags {}
-	    if {$readonly} {
-		lappend flags -readonly
-		set tst readable
-	    } else {
-		set tst writable
-	    }
-
-	    if {$shared} {
-		lappend flags -shared
-	    }
-
-	    set msg ""
-	    if {[catch {
-		mk::file open $db $file -nocommit {*}$flags
-	    } msg]
-		&& [file $tst $file]
-	    } {
-		# if we can write and/or read the file but can't open
-		# it using mk then it is almost always inside a starkit,
-		# so we copy it to memory and open it from there
-		set readonly 1
-		mk::file open $db
-		set fd [open $file]
-		mk::file load $db $fd
-		close $fd
-		set msg ""
-	    }
-
-	    if {$msg != "" && ![string equal $msg $db]} {
-		error $msg
-	    }
-
-	    # open our views
-	    set hashed 0
-	    foreach {v n} {page 1 content 1 ref 1 diff 2} {
-		set ${v}B [mk::view open $db.${v}s]
-		if {!$hashed} {
-		    variable ${v}V [[set ${v}B] view blocked]
-		} else {
-		    set raw [[set ${v}B] view blocked]
-		    mk::view layout $db.${v}hash { _H:I _R:I }
-		    set hash [mk::view open $db.${v}hash]
-		    variable ${v}V [$raw view hash $hash $n]
-		}
-	    }
-	    foreach {v n} {change 2} {
-		if {!$hashed} {
-		    variable ${v}V [mk::view open $db.${v}s]
-		} else {
-		    set raw [mk::view open $db.${v}s]
-		    mk::view layout $db.${v}hash { _H:I _R:I }
-		    set hash [mk::view open $db.${v}hash]
-		    variable ${v}V [$raw view hash $hash $n]		
-		}
-	    }
-
-	    # if there are no references, probably it's the first time, so recalc
-	    if {!$readonly && [$refV size] == 0} {
-		# this can take quite a while, unfortunately - but only once
-		FixPageRefs
-	    }
-	}
+	tdbc::sqlite3::connection create $db $file 
     }
 
     namespace export -clear *

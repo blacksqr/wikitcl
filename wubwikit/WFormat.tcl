@@ -917,14 +917,10 @@ namespace eval ::WFormat {
   # Used for rendering Wiki pages in HTML and as styled text in Tk
   proc InfoProc {ref} {
     set id [WDB LookupPage $ref]
-    WDB GetPageVars $id date name
-
-    if {$date == 0} {
+    lassign [WDB GetPage $id date name] date name
+    if {$name eq ""} {
       append id @ ;# enter edit mode for missing links
-    } else {
-      #append id .html
     }
-
     return [list /$id $name $date]
   }
 
