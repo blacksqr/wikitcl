@@ -358,7 +358,7 @@ namespace eval WDB {
 	set stmt [$db prepare {SELECT * FROM changes WHERE id = :pid ORDER BY date DESC}]
 	set rs [$stmt execute]
 	while {[$rs nextdict d]} {
-	    lappend result s [list version [dict get? $d cid] date [dict get? $d date] who [dict get? $d who] delta [dict get? $d delta]]
+	    lappend result [list version [dict get? $d cid] date [dict get? $d date] who [dict get? $d who] delta [dict get? $d delta]]
 	    if {[dict get $d date] < $date} {
 		break
 	    }
