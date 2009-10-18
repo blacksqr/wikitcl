@@ -1056,14 +1056,11 @@ namespace eval WDB {
 		set stmtc [$db prepare {SELECT COUNT(*) FROM pages_content WHERE id = :id}]
 		set rsc [$stmtc execute]
 		$rsc nextdict d
-		puts "d=$d"
 		if {[dict get $d COUNT(*)]} {
-		    puts "update"
 		    set stmt [$db prepare {UPDATE pages_content SET content = :text WHERE id = :id}]
 		    $stmt execute
 		    $stmt close
 		} else {
-		    puts "insert"
 		    set stmt [$db prepare {INSERT INTO pages_content (id, content) VALUES (:id, :text)}]
 		    $stmt execute
 		    $stmt close

@@ -827,6 +827,7 @@ namespace eval WikitWub {
 	    # get changes for current page in last D days
 	    set edate [expr {$pcdate-$D*86400}]
 	    foreach record [WDB Changes $N $edate] {
+		puts "record=$record"
 		dict update record date cdate who cwho delta cdelta version version {}
 		set changes [WDB ChangeSetSize $N $version]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
