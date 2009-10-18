@@ -302,7 +302,7 @@ namespace eval WDB {
 	set rs [$stmt execute]
 	set result 0
 	if {[$rs nextdict d]} {
-	    set result [dict get $d date]
+	    set result [dict get $d cid]
 	}
 	$rs close
 	$stmt close
