@@ -107,13 +107,15 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc PageGlobName {glob} {
-	variable pageV
-	set select [$pageV select -glob name $glob -min date 1]
+	variable db
+	set stmt [$db prepare {SELECT id FROM pages WHERE name GLOB :glob}]
+	set rs [$stmt execute]
 	set result {}
-	for {set p 0} {$p < [$select size]} {incr p} {
-	    lappend result [$pageV get [dict get [$select get $p] index] id]
+	while {[$rs nextdict d]} {
+	    lappend result [dict get $d id]
 	}
-	$select close
+	$rs close
+	$stmt close
 	Debug.WDB {PageGlobName '$glob' -> $result}
 	return $result 
     }
@@ -293,7 +295,7 @@ namespace eval WDB {
     #	date - the latest change date we're interested in
     #
     # Results:
-    #	Returns the change record of the most recent change
+    #	Returns The change record of the most recent change
     #
     #----------------------------------------------------------------------------
     proc MostRecentChange {pid date} {
@@ -385,35 +387,40 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc Search {key long date max} {
-	variable pageV
-	set view $pageV
+	variable db
 
 	set fields name
+	set stmttxt "SELECT a.id, a.name, a.date FROM pages a, pages_content b WHERE a.id > 11 AND b.id > 11 AND a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
 	if {$long} {
-	    lappend fields page
-	    set view [$pageV join $contentV id]
-	}
-
-	set search {}
-	foreach k [split $key " "] {
-	    if {$k ne ""} {
-		lappend search -keyword $fields $k
+	    foreach k [split $key " "] {
+		append stmttxt " AND (a.name GLOB \"*$k*\" OR b.content GLOB \"*$k*\")"
+	    }
+	} else {
+	    foreach k [split $key " "] {
+		append stmttxt " AND a.name GLOB \"*$k*\""
 	    }
 	}
-
-	if {$date == 0} {
-	    set maxdate {}
+	if {$date > 0} {
+	    append stmttxt " AND a.date >= $date"
 	} else {
-	    set maxdate [list -max date $date]
+	    append stmttxt " AND a.date > 0"
 	}
-	set rows [$view select -min id 11 -min date 1 {*}$maxdate -rsort date {*}$search]
-
-	if {$long} {
-	    $view close
+	append stmttxt " ORDER BY a.date DESC"
+	set stmt [$db prepare $stmttxt]
+	set rs [$stmt execute]
+	set results {}
+	set n 0
+	while {$n < $max && [$rs nextdict d]} {
+	    puts "Search: $d"
+	    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date]]
+	    incr n
 	}
-	Debug.WDB {Search '$key' $long $date -> [$rows size] [$rows info]}
+	$rs close
+	$stmt close
 
-	return [s2l $rows $max]
+	Debug.WDB {Search '$key' $long $date -> $results}
+
+	return $results
     }
 
     #----------------------------------------------------------------------------
@@ -504,13 +511,15 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc PageByName {name} {
-	variable pageV
-	set select [$pageV select name $name]
+	variable db
+	set stmt [$db prepare {SELECT id FROM pages WHERE name = :name}]
+	set rs [$stmt execute]
 	set result {}
-	for {set p 0} {$p < [$select size]} {incr p} {
-	    lappend result [$pageV get [dict get [$select get $p] index] id]
+	while {[$rs nextdict d]} {
+	    lappend result [dict get $d id]
 	}
-	$select close
+	$rs close
+	$stmt close
 	Debug.WDB {PageByName '$name' -> $result}
 	return $result
     }
