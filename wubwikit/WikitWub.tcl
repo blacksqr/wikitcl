@@ -2113,7 +2113,6 @@ namespace eval WikitWub {
 		# set up a few standard URLs an strings
 		lassign [WDB GetPage $N name date who] name date who
 		if {$name eq ""} {
-		    puts stderr "Error: $e ($eo)"
 		    return [Http NotFound $r]
 		}
 
