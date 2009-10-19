@@ -65,7 +65,7 @@ namespace eval WDB {
 		"diffs_for_pid_v"             { set sql {SELECT * FROM diffs WHERE id = :id AND cid = :v ORDER BY did DESC} }
 		"count_pages"                 { set sql {SELECT COUNT(*) FROM pages} }
 		"count_content_for_id"        { set sql {SELECT COUNT(*) FROM pages_content WHERE id = :id} }
-		"page_for_name"               { set sql {SELECT * FROM pages WHERE name = :name} }
+		"page_for_name"               { set sql {SELECT * FROM pages WHERE lower(name) = lower(:name)} }
 		"page_for_name_glob"          { set sql {SELECT * FROM pages WHERE name GLOB :glob} }
 		"page_for_pid"                { set sql {SELECT * FROM pages WHERE id = :pid} }
 		"pages_gt_date"               { set sql {SELECT * FROM pages WHERE date > :date ORDER BY date DESC} }
@@ -397,11 +397,11 @@ namespace eval WDB {
 	set stmttxt "SELECT a.id, a.name, a.date FROM pages a, pages_content b WHERE a.id > 11 AND b.id > 11 AND a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
 	if {$long} {
 	    foreach k [split $key " "] {
-		append stmttxt " AND (a.name GLOB \"*$k*\" OR b.content GLOB \"*$k*\")"
+		append stmttxt " AND (lower(a.name) GLOB lower(\"*$k*\") OR lower(b.content) GLOB lower(\"*$k*\"))"
 	    }
 	} else {
 	    foreach k [split $key " "] {
-		append stmttxt " AND a.name GLOB \"*$k*\""
+		append stmttxt " AND lower(a.name) GLOB lower(\"*$k*\")"
 	    }
 	}
 	if {$date > 0} {
