@@ -299,7 +299,7 @@ namespace eval WDB {
 	set rs [[statement "count_diffs_for_pid_version"] execute]
 	$rs nextdict d
 	$rs close
-	Debug.WDB {ChangeSetSize $id $version -> [dict get $d "COUNT(*)"]}
+	Debug.WDB {ChangeSetSize $pid $version -> [dict get $d "COUNT(*)"]}
 	return [dict get $d "COUNT(*)"]
     }
 
@@ -368,7 +368,7 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc Changes {pid {date 0}} {
 	set result {}
-	[statement "changes_for_pid_desc"] foreach -as dicts d {
+	[statement "changes_for_pid_ge_date"] foreach -as dicts d {
 	    lappend result [list version [dict get? $d cid] date [dict get? $d date] who [dict get? $d who] delta [dict get? $d delta]]
 	}
 	return $result
