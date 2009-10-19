@@ -15,8 +15,8 @@ package require Sitemap
 package require stx
 package require Form
 
-package require WDB_sqlite
-#package require WDB_mk
+#package require WDB_sqlite
+package require WDB_mk
 package require WikitRss
 package require WFormat
 
