@@ -596,7 +596,7 @@ namespace eval WDB {
 	# select changes pertinent to this page
 	[statement "changes_for_pid_desc"] foreach -as dicts d {
 	    incr nskip
-	    if {$nskip <= $start} {
+	    if {$nskip < $start} {
 		continue
 	    }
 	    lappend results [list [dict get? $d cid] [dict get? $d date] [dict get? $d who]]

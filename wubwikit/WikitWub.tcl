@@ -634,7 +634,8 @@ namespace eval WikitWub {
     }
 
     proc /cleared { r } {
-	if {[dict get? $r -ua_class] eq "robot"} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
 	set results ""
@@ -800,7 +801,8 @@ namespace eval WikitWub {
     }
 
     proc /summary {r N {D 10}} {
-	if {[dict get? $r -ua_class] eq "robot"} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
 
@@ -865,7 +867,8 @@ namespace eval WikitWub {
 	# If T is non zero, D contains a number of days and /diff must
 	Debug.wikit {/diff N:$N V:$V D:$D W:$W T:$T}
 
-	if {[dict get? $r -ua_class] eq "robot"} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
     
@@ -1077,7 +1080,8 @@ namespace eval WikitWub {
     proc /revision {r N {V -1} {A 0}} {
 	Debug.wikit {/page $args}
 
-	if {[dict get? $r -ua_class] eq "robot"} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
 
@@ -1156,7 +1160,8 @@ namespace eval WikitWub {
     proc /history {r N {S 0} {L 25}} {
 	Debug.wikit {/history $N $S $L}
 
-	if {[dict get? $r -ua_class] eq "robot"} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
 
@@ -1418,7 +1423,8 @@ namespace eval WikitWub {
     }
 
     proc /search {r {S ""} args} {
-	if {[dict get? $r -ua_class] eq "robot"} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
 
@@ -1466,7 +1472,8 @@ namespace eval WikitWub {
     }
 
     proc /preview { r N O } {
-	if {[dict get? $r -ua_class] eq "robot"} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
 
@@ -1481,7 +1488,8 @@ namespace eval WikitWub {
 
 	puts "edit-save@[clock seconds] start"
 
-	if {[dict get? $r -ua_class] eq "robot"} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    puts "edit-save@[clock seconds] robot"
 	    return [robot $r]
 	}
@@ -1664,7 +1672,8 @@ namespace eval WikitWub {
     
     # called to generate an edit page
     proc /edit {r N A args} {
-	if {[dict get? $r -ua_class] eq "robot"} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
 
@@ -1846,7 +1855,8 @@ namespace eval WikitWub {
 
     # called to generate a page with references
     proc /ref {r N A} {
-	if {[dict get? $r -ua_class] eq "robot"} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
 
@@ -2008,7 +2018,8 @@ namespace eval WikitWub {
 		return [Http Redir $r "http://[dict get $r host]/_/search" S [Query decode $term$fancy]]
 	    } elseif {$N ne $term} {
 		# we really should redirect
-		if {[dict get? $r -ua_class] eq "robot"} {
+		variable detect_robots
+		if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 		    # try to make robots always use the canonical form
 		    return [Http Moved $r "http://[dict get $r host]/$N"]
 		} else {
@@ -2256,6 +2267,7 @@ namespace eval WikitWub {
     variable utf8clean 0		;# we do not want utf8 cleansing
     variable upflag ""			;# no URL syncing
     variable roflag 0
+    variable detect_robots 1
 
     proc init {args} {
 	variable {*}$args
