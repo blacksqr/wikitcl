@@ -554,7 +554,7 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
 
-    proc ListPageVersions {id {limit Inf} {start 0}} {
+    proc ListPageVersions {id {limit -1} {start 0}} {
 	variable pageV
 
 	# Special case for the fake pages
@@ -583,7 +583,7 @@ namespace eval WDB {
 
 	# Do earlier versions as needed
 	incr mostRecent -$start
-	while {$mostRecent >= 0 && [llength $results] < $limit} {
+	while {$mostRecent >= 0 && ($limit < 0 || [llength $results] < $limit)} {
 	    lassign [$changesV get $mostRecent date who] date who
 	    lappend results [list $mostRecent $date $who]
 	    incr mostRecent -1
