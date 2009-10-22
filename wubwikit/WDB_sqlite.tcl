@@ -1,4 +1,5 @@
 package require OO
+package require sqlite3 3.6.19
 package require tdbc::sqlite3
 package provide WDB 1.0
 package provide WDB_sqlite 1.0
@@ -54,33 +55,34 @@ namespace eval WDB {
 	variable db
 	if {![info exists statements($name)]} {
 	    switch -exact -- $name {
+		"changes_for_pid_asc"         { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY cid} }
+		"changes_for_pid_desc"        { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY cid DESC LIMIT :limit OFFSET :start} }
 		"changes_for_pid_ge_date"     { set sql {SELECT * FROM changes WHERE id = :pid AND date >= :date ORDER BY date DESC} }
 		"changes_for_pid_lt_date"     { set sql {SELECT * FROM changes WHERE id = :pid AND date < :date ORDER BY date DESC} }
 		"changes_for_pid_version"     { set sql {SELECT * FROM changes WHERE id = :pid AND cid  = :version} }
-		"changes_for_pid_desc"        { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY cid DESC} }
-		"changes_for_pid_asc"         { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY cid} }
 		"content_for_pid"             { set sql {SELECT * FROM pages_content WHERE id = :pid} }
 		"count_changes_for_pid"       { set sql {SELECT COUNT(*) FROM changes WHERE id = :pid} }
-		"count_diffs_for_pid_version" { set sql {SELECT COUNT(*) FROM diffs WHERE id = :pid AND cid = :version} }
-		"diffs_for_pid_v"             { set sql {SELECT * FROM diffs WHERE id = :id AND cid = :v ORDER BY did DESC} }
-		"count_pages"                 { set sql {SELECT COUNT(*) FROM pages} }
 		"count_content_for_id"        { set sql {SELECT COUNT(*) FROM pages_content WHERE id = :id} }
+		"count_diffs_for_pid_version" { set sql {SELECT COUNT(*) FROM diffs WHERE id = :pid AND cid = :version} }
+		"count_pages"                 { set sql {SELECT COUNT(*) FROM pages} }
+		"delete_refs"                 { set sql {DELETE FROM refs} }
+		"delete_refs_for_id"          { set sql {DELETE FROM refs WHERE fromid = :id} }
+		"diffs_for_pid_v"             { set sql {SELECT * FROM diffs WHERE id = :id AND cid = :v ORDER BY did DESC} }
+		"insert_change"               { set sql {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, :change)} }
+		"insert_content"              { set sql {INSERT INTO pages_content (id, content) VALUES (:id, :text)} }
+		"insert_diff"                 { set sql {INSERT INTO diffs (id, cid, did, fromline, toline, old) VALUES (:id, :version, :i, :from, :to, :old)} }
+		"insert_page"                 { set sql {INSERT INTO pages (id, name, date, who) VALUES (:pid, :name, :date, :who)} }
+		"insert_ref"                  { set sql {INSERT INTO refs (fromid, toid) VALUES (:id, :x)} }
 		"page_for_name"               { set sql {SELECT * FROM pages WHERE lower(name) = lower(:name)} }
 		"page_for_name_glob"          { set sql {SELECT * FROM pages WHERE name GLOB :glob} }
 		"page_for_pid"                { set sql {SELECT * FROM pages WHERE id = :pid} }
 		"pages_gt_date"               { set sql {SELECT * FROM pages WHERE date > :date ORDER BY date DESC} }
 		"refs_to_pid"                 { set sql {SELECT * FROM refs WHERE toid = :pid ORDER BY fromid ASC} }
-		"insert_page"                 { set sql {INSERT INTO pages (id, name, date, who) VALUES (:pid, :name, :date, :who)} }
-		"insert_change"               { set sql {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, :change)} }
-		"insert_diff"                 { set sql {INSERT INTO diffs (id, cid, did, fromline, toline, old) VALUES (:id, :version, :i, :from, :to, :old)} }
-		"insert_ref"                  { set sql {INSERT INTO refs (fromid, toid) VALUES (:id, :x)} }
 		"update_change_delta"         { set sql {UPDATE changes SET delta = :change WHERE id = :id AND cid = :version} }
-		"delete_refs_for_id"          { set sql {DELETE FROM refs WHERE fromid = :id} }
-		"delete_refs"                 { set sql {DELETE FROM refs} }
+		"update_content_for_id"       { set sql {UPDATE pages_content SET content = :text WHERE id = :id} }
 		"update_page_date_for_id"     { set sql {UPDATE pages SET date = :newdate WHERE id = :id} }
 		"update_page_who_for_id"      { set sql {UPDATE pages SET who = :newWho WHERE id = :id} }
-		"update_content_for_id"       { set sql {UPDATE pages_content SET content = :text WHERE id = :id} }
-		"insert_content"              { set sql {INSERT INTO pages_content (id, content) VALUES (:id, :text)} }
+		"enable_foreign_keys"         { set sql {PRAGMA foreign_keys = ON} }
 		default { error "Unknown statement '$name'" }
 	    }
 	    set statements($name) [$db prepare $sql]
@@ -415,7 +417,6 @@ namespace eval WDB {
 	set results {}
 	set n 0
 	while {$n < $max && [$rs nextdict d]} {
-	    puts "Search: $d"
 	    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date]]
 	    incr n
 	}
@@ -569,7 +570,7 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
 
-    proc ListPageVersionsDB {pid {limit Inf} {start 0}} {
+    proc ListPageVersions {pid {limit -1} {start 0}} {
 
 	# Special case for the fake pages
 	switch $pid {
@@ -582,28 +583,19 @@ namespace eval WDB {
 	# Determine the number of the most recent version
 	set results [list]
 	set mostRecent [Versions $pid]
-	set nskip 0
-	set nsel 0
 
 	# List the most recent version if requested
 	if {$start == 0} {
 	    lassign [GetPage $pid date who] date who
 	    lappend results [list $mostRecent $date $who]
-	    incr start
-	    incr nsel
-	    incr nskip
+	    incr limit -1
+	} else {
+	    incr start -1
 	}
+	puts "limit=$limit, start=$start"
 	# select changes pertinent to this page
 	[statement "changes_for_pid_desc"] foreach -as dicts d {
-	    incr nskip
-	    if {$nskip < $start} {
-		continue
-	    }
-	    lappend results [list [dict get? $d cid] [dict get? $d date] [dict get? $d who]]
-	    incr nsel
-	    if {$nsel >= $limit} {
-		break
-	    }
+	    lappend results [list [dict get $d cid] [dict get $d date] [dict get $d who]]
 	}
 	return $results
     }
@@ -1027,6 +1019,7 @@ namespace eval WDB {
 	    set $n $v
 	}
 	tdbc::sqlite3::connection create $db $file 
+	[statement "enable_foreign_keys"] execute
     }
 
     namespace export -clear *

@@ -554,7 +554,7 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
 
-    proc ListPageVersionsDB {id {limit Inf} {start 0}} {
+    proc ListPageVersions {id {limit Inf} {start 0}} {
 	variable pageV
 
 	# Special case for the fake pages
