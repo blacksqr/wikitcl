@@ -45,6 +45,8 @@ if {0} {
 		       PRIMARY KEY (fromid, toid),
 		       FOREIGN KEY (fromid) references pages(id),
 		       FOREIGN KEY (toid) references pages(id));
+
+    CREATE INDEX refs_toid_index ON refs (toid);
 }
 
 namespace eval WDB {
@@ -56,7 +58,7 @@ namespace eval WDB {
 	if {![info exists statements($name)]} {
 	    switch -exact -- $name {
 		"changes_for_pid_asc"         { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY cid} }
-		"changes_for_pid_desc"        { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY cid DESC LIMIT :limit OFFSET :start} }
+		"changes_for_pid_desc"        { set sql {SELECT cid, date, who FROM changes WHERE id = :pid ORDER BY cid DESC LIMIT :limit OFFSET :start} }
 		"changes_for_pid_ge_date"     { set sql {SELECT * FROM changes WHERE id = :pid AND date >= :date ORDER BY date DESC} }
 		"changes_for_pid_lt_date"     { set sql {SELECT * FROM changes WHERE id = :pid AND date < :date ORDER BY date DESC} }
 		"changes_for_pid_version"     { set sql {SELECT * FROM changes WHERE id = :pid AND cid  = :version} }
@@ -67,7 +69,7 @@ namespace eval WDB {
 		"count_pages"                 { set sql {SELECT COUNT(*) FROM pages} }
 		"delete_refs"                 { set sql {DELETE FROM refs} }
 		"delete_refs_for_id"          { set sql {DELETE FROM refs WHERE fromid = :id} }
-		"diffs_for_pid_v"             { set sql {SELECT * FROM diffs WHERE id = :id AND cid = :v ORDER BY did DESC} }
+		"diffs_for_pid_v"             { set sql {SELECT fromline, toline, old FROM diffs WHERE id = :id AND cid = :v ORDER BY did DESC} }
 		"insert_change"               { set sql {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, :change)} }
 		"insert_content"              { set sql {INSERT INTO pages_content (id, content) VALUES (:id, :text)} }
 		"insert_diff"                 { set sql {INSERT INTO diffs (id, cid, did, fromline, toline, old) VALUES (:id, :version, :i, :from, :to, :old)} }
@@ -77,12 +79,16 @@ namespace eval WDB {
 		"page_for_name_glob"          { set sql {SELECT * FROM pages WHERE name GLOB :glob} }
 		"page_for_pid"                { set sql {SELECT * FROM pages WHERE id = :pid} }
 		"pages_gt_date"               { set sql {SELECT * FROM pages WHERE date > :date ORDER BY date DESC} }
-		"refs_to_pid"                 { set sql {SELECT * FROM refs WHERE toid = :pid ORDER BY fromid ASC} }
+		"refs_to_pid"                 { set sql {SELECT fromid FROM refs WHERE toid = :pid ORDER BY fromid ASC} }
 		"update_change_delta"         { set sql {UPDATE changes SET delta = :change WHERE id = :id AND cid = :version} }
 		"update_content_for_id"       { set sql {UPDATE pages_content SET content = :text WHERE id = :id} }
 		"update_page_date_for_id"     { set sql {UPDATE pages SET date = :newdate WHERE id = :id} }
 		"update_page_who_for_id"      { set sql {UPDATE pages SET who = :newWho WHERE id = :id} }
 		"enable_foreign_keys"         { set sql {PRAGMA foreign_keys = ON} }
+		"cleared_pages"               { set sql {SELECT a.id, a.name, a.date, a.who 
+		                                         FROM pages a, pages_content b 
+                                                         WHERE a.id = b.id AND a.date > 0 AND length(b.content) <= 1 
+                                                         ORDER BY a.date DESC LIMIT 100} }
 		default { error "Unknown statement '$name'" }
 	    }
 	    set statements($name) [$db prepare $sql]
@@ -131,8 +137,8 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc ReferencesTo {pid} {
 	set result {}
-	[statement "refs_to_pid"] foreach -as dicts d {
-	    lappend result [dict get $d fromid]
+	[statement "refs_to_pid"] foreach -as lists d {
+	    lappend result {*}$d
 	}
 	return $result
     }
@@ -178,7 +184,7 @@ namespace eval WDB {
 	set rs [[statement "page_for_pid"] execute]
 	$rs nextdict d
 	$rs close
-	dict set d content [GetContent $pid]
+	#dict set d content [GetContent $pid]
 	set result {}
 	if {[llength $args] == 1} {
 	    set result [dict get? $d [lindex $args 0]]
@@ -508,22 +514,10 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
     proc Cleared {} {
-	variable pageV
-	set n 0
 	set result {}
-	set select [$pageV select -rsort date]
-	for {set i 0} {$i < [$select size]} {incr i} {
-	    lassign [$select get $i id date] id date
-	    set cont [GetContent $id]
-	    if {[string length $content] <= 1} {
-		lappend result [$select get $i]
-		incr n
-		if {$n>= 100} {
-		    break
-		}
-	    }
+	[statement "cleared_pages"] foreach -as dicts d {
+	    lappend result $d
 	}
-	$select close
 	return $result
     }
 
@@ -573,29 +567,23 @@ namespace eval WDB {
     proc ListPageVersions {pid {limit -1} {start 0}} {
 
 	# Special case for the fake pages
-	switch $pid {
-	    2 - 4 {
-		return [list [list 0 [clock seconds]
-			      {Version information not maintained for this page}]]
-	    }
+	if {$pid in {2 4}} {
+	    return [list [list 0 [clock seconds] {Version information not maintained for this page}]]
 	}
 
 	# Determine the number of the most recent version
 	set results [list]
-	set mostRecent [Versions $pid]
 
 	# List the most recent version if requested
 	if {$start == 0} {
-	    lassign [GetPage $pid date who] date who
-	    lappend results [list $mostRecent $date $who]
+	    lappend results [list [Versions $pid] {*}[GetPage $pid date who]]
 	    incr limit -1
 	} else {
 	    incr start -1
 	}
-	puts "limit=$limit, start=$start"
 	# select changes pertinent to this page
-	[statement "changes_for_pid_desc"] foreach -as dicts d {
-	    lappend results [list [dict get $d cid] [dict get $d date] [dict get $d who]]
+	[statement "changes_for_pid_desc"] foreach -as lists d {
+	    lappend results $d
 	}
 	return $results
     }
