@@ -388,18 +388,14 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc Search {key long date max} {
 	variable pageV
-	set view $pageV
-
-	set fields name
-	if {$long} {
-	    lappend fields page
-	    set view [$pageV join $contentV id]
-	}
+	variable contentV
 
 	set search {}
+	set csearch {}
 	foreach k [split $key " "] {
 	    if {$k ne ""} {
-		lappend search -keyword $fields $k
+		lappend psearch -keyword name $k
+		lappend csearch -keyword content $k
 	    }
 	}
 
@@ -408,14 +404,41 @@ namespace eval WDB {
 	} else {
 	    set maxdate [list -max date $date]
 	}
-	set rows [$view select -min id 11 -min date 1 {*}$maxdate -rsort date {*}$search]
+
 
 	if {$long} {
-	    $view close
+	    set crows [$contentV select {*}$csearch]
+	    Debug.WDB {Search '$key' $long $date -> [$crows size] [$crows info]}
+	    set result {}
+	    set size [$crows size]
+	    for {set i 0} {$i < $size} {incr i} {
+		set id [$contentV get [dict get [$crows get $i] index] id]
+		lassign [$pageV get $id date] date
+		if {$id > 10 && $date > 0} {
+		    lappend result [$pageV get $id]
+		}
+	    }
+	    set prows [$pageV select -min id 11 -min date 1 {*}$maxdate -rsort date {*}$psearch]
+	    lappend result {*}[s2l $prows $max]
+	    set result [lsort -integer -decreasing -command WDB::date_sort_command $result]
+	    return [lrange $result 0 [expr {$max-1}]]
+	} else {
+	    set prows [$pageV select -min id 11 -min date 1 {*}$maxdate -rsort date {*}$psearch]
+	    Debug.WDB {Search '$key' $long $date -> [$prows size] [$prows info]}
+	    return [s2l $prows $max]
 	}
-	Debug.WDB {Search '$key' $long $date -> [$rows size] [$rows info]}
+    }
 
-	return [s2l $rows $max]
+    proc date_sort_command {a b} {
+	set a [dict get $a date]
+	set b [dict get $b date]
+	if {$a < $b} {
+	    return -1
+	} elseif {$a == $b} {
+	    return 0
+	} else {
+	    return 1
+	}
     }
 
     #----------------------------------------------------------------------------
