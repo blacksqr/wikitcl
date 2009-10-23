@@ -15,8 +15,8 @@ package require Sitemap
 package require stx
 package require Form
 
-#package require WDB_sqlite
-package require WDB_mk
+package require WDB_sqlite
+#package require WDB_mk
 package require WikitRss
 package require WFormat
 
@@ -2440,7 +2440,7 @@ proc pest {req} {return 0}	;# default [pest] catcher
 catch {source [file join [file dirname [info script]] pest.tcl]}
 
 #### set up appropriate debug levels (negative means off)
-Debug setting log 10 error 10 query -10 wikit -10 direct -10 convert -10 cookies -10 socket -10
+Debug setting log 10 error 10 query -10 wikit -10 direct -10 convert -10 cookies -10 socket -10 WDB -10
 
 #### Source local config script (not under version control)
 catch {source [file join [file dirname [info script]] local.tcl]} r eo
