@@ -460,6 +460,7 @@ namespace eval WDB {
 	set who ""
 	set lcname [string tolower $name]
 	variable namecache
+	variable transaction_started
 	if {[info exists namecache($lcname)]} {
 	    Debug.WDB {LookupPage '$name' found in cache -> $namecache($lcname)}
 	    return $namecache($lcname)
@@ -470,13 +471,19 @@ namespace eval WDB {
 	if {!$rs_next} {
 	    set pid [PageCount]
 	    Debug.WDB {LookupPage '$name' not found, added $pid}
-	    StartTransaction
+	    set ts $transaction_started
+	    if {!$ts} {
+		StartTransaction
+	    }
 	    if {[catch {[statement "insert_page"] execute} msg]} {
 		rollback
 		error $msg
 	    } else {
-		commit
+		if {!$ts} {
+		    commit
+		}
 	    }
+	    set transaction_started $ts
 	} else {
 	    set pid [dict get $d id]
 	}
