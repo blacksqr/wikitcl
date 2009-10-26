@@ -2384,7 +2384,7 @@ namespace eval WikitWub {
 
 	# set welcome message, if any
 	catch {
-	    variable WELCOME WELCOME [::fileutil::cat [file join $docroot html welcome.html]]
+	    variable WELCOME [::fileutil::cat [file join $docroot html welcome.html]]
 	}
 
 	catch {[WDB GetContent 9]}
