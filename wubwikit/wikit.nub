@@ -71,7 +71,7 @@ Disallow: /
 } text/plain
 
 code /rss.xml {
-     return [Http NotFound $r "RSS Feed Temporarily Offline"]
+    # return [Http NotFound $r "RSS Feed Temporarily Offline"]
     # generate and return RSS feed
     return [Http CacheableContent $r [clock seconds] [WikitRss rss] application/rss+xml]
 }

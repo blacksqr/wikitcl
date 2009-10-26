@@ -17,7 +17,7 @@ package provide WikitRss 1.0
 #
 ###############################################################
 namespace eval WikitRss {
-    variable db
+
     variable baseUrl http://wiki.tcl.tk
     variable MaxItems 25
     variable cache
@@ -77,12 +77,11 @@ namespace eval WikitRss {
     #
     ###############################################################
 
-    proc new {_db name baseurl} {
+    proc new {name baseurl} {
 	# The Wikit implementation has the Wiki name as the name of page 0.
-	variable db $_db
 	variable wikiName $name
 	variable baseUrl $baseurl
-	variable Name [Db getpage 0 name]
+	variable Name [WDB GetPage 0 name]
 	variable cache ""
     }
 
@@ -93,7 +92,6 @@ namespace eval WikitRss {
     
     proc rss {} {
 
-	variable db
 	Debug.rss {rss request [clock seconds]}
 
 	variable cache
@@ -120,27 +118,33 @@ namespace eval WikitRss {
 	
 	Debug.rss {filling details} 7
 	
-	if {0} {
-	    # generate items for changed pages,
-	    # ordered from most recently changed to least recently changed.
+	set i 0
+	set D 3
+	set edate [expr {[clock seconds]-$D*86400}]
+	set pages [WDB RecentChanges $edate]
+	foreach pager $pages {
+
+	    puts "$pager"
+
+	    dict with pager {}
+
+	    if {$id in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
 	    
-	    # look for edit dates in pages.changes!
+	    set changes ""
+
 	    # look for changes in past D days
-	    set D 10
-	    set edate [expr {[clock seconds]-$D*86400}]
 	    set changes {}
-
-	    set pages [mk::select $db.pages -rsort date]
-	    foreach N $pages {
-		if {$N in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
-		lassign [Db getpage $N name date who] name date who
-		if {$date<$edate} break
-
-		set V [Db versions $N]
-		foreach sid [mk::select wdb.pages!$N.changes -rsort date] {
-		    lassign [Db getversion $N $sid date who delta] cdate cwho cdelta
-		    set C [::WikitWub::summary_diff $N $V [expr {$V-1}] 1]
-		    lappend changes [list $name $date $cdelta $who $N $V $C]
+	    set delta 0
+	    set whol {}
+	    set V [WDB Versions $id]
+	    if {$V > 0} {
+		foreach record [WDB Changes $id $edate] {
+		    dict update record date cdate who cwho delta cdelta version version {}
+		    puts "incr delta [expr {int(abs($cdelta))}]"
+		    incr delta [expr {int(abs($cdelta))}]
+		    set C [WikitWub::summary_diff $id $V [expr {$V-1}] 1]
+		    append changes $C\n
+		    lappend whol $who
 		    incr V -1
 		    if {$V < 1} break
 		    if {$cdate<$edate} break
@@ -149,56 +153,10 @@ namespace eval WikitRss {
 		}
 	    }
 	    
-	    set i 0
-	    set changes [lsort -integer -decreasing -index 1 $changes]
-	    foreach change $changes {
-		lassign $change name date delta who N V C
-		append contents [item $name $date $who $baseUrl$N " ($delta characters)\n$C"] \n
-		if {[incr i] > $MaxItems} break	;# limit RSS size
-	    }
-	}
-
-	set i 0
-	set D 3
-	set edate [expr {[clock seconds]-$D*86400}]
-	set pages [mk::select $db.pages -rsort date]
-	foreach page $pages {
-	    if {$page in $exclude} continue	;# exclude "Search" and "Recent Changes" pages
-	    
-	    lassign [getpage $page name date who] name date who
-	    
-	    if {$date<$edate} break
-	    set changes ""
-
-	    # calculate line change
-#	    set change [expr {[mk::view size wdb.pages!$page.changes] - 1}]
-#	    if {$change < 0} continue
-
-	    # look for changes in past D days
-	    set D 3
-	    set edate [expr {[clock seconds]-$D*86400}]
-	    set changes {}
-	    set V [mk::view size wdb.pages!$page.changes]
-	    set delta 0
-	    set whol {}
-	    foreach sid [Db changesSince $page $edate] {
-		lassign [Db getchange $page $sid date who delta] cdate cwho cdelta
-		incr delta [expr {int(abs($cdelta))}]
-		set C [WikitWub::summary_diff $page $V [expr {$V-1}] 1]
-		append changes $C\n
-		lappend whol $who
-		incr V -1
-		if {$V < 1} break
-		if {$cdate<$edate} break
-		set date $cdate
-		set who $cwho
-	    }
-	    
-	    Debug.rss {detail $name $date $who $page} 7
+	    Debug.rss {detail $name $date $who $id} 7
 
 	    if {$delta > 0} {
-		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$page " ($delta characters)\n$changes"] \n
-#		append contents [item $name $date $who $baseUrl$page ""] \n
+		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$id " ($delta characters)\n$changes"] \n
 		if {[incr i] > $MaxItems} break	;# limit RSS size
 	    }
 	}
