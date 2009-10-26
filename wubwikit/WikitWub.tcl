@@ -38,7 +38,7 @@ set API(WikitWub) {
 
 namespace eval WikitWub {
     variable readonly ""
-    variable pagecaching 1
+    variable pagecaching 0
 
     # sortable - include javascripts and CSS for sortable table.
     proc sortable {r} {

@@ -1,3 +1,5 @@
+lappend auto_path /home/decoster/www/mk4tcl
+
 if {[llength $argv] != 2} {
     puts stderr "Usage: mk2tdbc <mkdatabase> <sqlitedatabase>"
     exit 1
@@ -111,4 +113,4 @@ $idiffs close
 $irefs close
 
 mk::file close mdb
-sdb close
+sb close
