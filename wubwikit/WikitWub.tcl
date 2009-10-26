@@ -2393,9 +2393,11 @@ namespace eval WikitWub {
 	set ::roflag $roflag
 
 	# initialize RSS feeder
-	WikitRss new \
-	    [expr {[info exists ::starkit_wikittitle]?$::starkit_wikittitle:"Tcler's Wiki"}] \
-	    [expr {[info exists ::starkit_url]?"http://$::starkit_url/":"http://wiki.tcl.tk/"}]
+	catch {
+	    WikitRss new \
+		[expr {[info exists ::starkit_wikittitle]?$::starkit_wikittitle:"Tcler's Wiki"}] \
+		[expr {[info exists ::starkit_url]?"http://$::starkit_url/":"http://wiki.tcl.tk/"}]
+	}
 
 	variable pagecaching
 	variable pagecache
