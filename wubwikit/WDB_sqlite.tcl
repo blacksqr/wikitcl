@@ -51,6 +51,7 @@ if {0} {
 
 namespace eval WDB {
     variable readonly 0
+    variable transaction_started 0
 
     proc statement {name} {
 	variable statements
@@ -106,6 +107,7 @@ namespace eval WDB {
 
     proc commit {} {
 	variable db
+	variable transaction_started 0
 	set now [clock microseconds]
 	$db commit
 	Debug.WDB {commit: [expr {([clock microseconds] - $now) / 1000000.0}]sec}
@@ -113,12 +115,17 @@ namespace eval WDB {
     
     proc rollback {} {
 	variable db
+	variable transaction_started 0
 	$db rollback
     }
 
     proc StartTransaction { } {
 	variable db
-	$db begintransaction
+	variable transaction_started
+	if {!$transaction_started} {
+	    $db begintransaction
+	    set transaction_started 1
+	}
     }
 
     #----------------------------------------------------------------------------
