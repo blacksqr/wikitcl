@@ -1245,6 +1245,8 @@ namespace eval ::WFormat {
           incr backrefid
         }
         CATEGORY {
+          set mode T
+          append result $html_frag($state$mode)
           append result "<hr>"
           append result "<div class='centered'><p></p><table summary='' class='wikit_table'><thead><tr>"
           set text [string map [list "%|%" \1] $text]
@@ -1313,6 +1315,7 @@ namespace eval ::WFormat {
             append result "</th>"
           }
           append result "</tr></thead></table></div><p></p>"
+          set state $mode
         }
       }
     }
