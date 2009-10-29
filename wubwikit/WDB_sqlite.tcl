@@ -70,7 +70,7 @@ namespace eval WDB {
 		"count_pages"                 { set sql {SELECT COUNT(*) FROM pages} }
 		"delete_refs"                 { set sql {DELETE FROM refs} }
 		"delete_refs_for_id"          { set sql {DELETE FROM refs WHERE fromid = :id} }
-		"diffs_for_pid_v"             { set sql {SELECT fromline, toline, old FROM diffs WHERE id = :id AND cid = :v ORDER BY did DESC} }
+		"diffs_for_pid_v"             { set sql {SELECT fromline, toline, old FROM diffs WHERE id = :pid AND cid = :v ORDER BY did DESC} }
 		"insert_change"               { set sql {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, :change)} }
 		"insert_content"              { set sql {INSERT INTO pages_content (id, content) VALUES (:id, :text)} }
 		"insert_diff"                 { set sql {INSERT INTO diffs (id, cid, did, fromline, toline, old) VALUES (:id, :version, :i, :from, :to, :old)} }
@@ -626,12 +626,12 @@ namespace eval WDB {
 	Debug.WDB {GetPageVersion $id $version}
 	return [join [GetPageVersionLines $id $version] \n]
     }
-    proc GetPageVersionLines {id {rversion {}}} {
+    proc GetPageVersionLines {pid {rversion {}}} {
 	variable db
 
-	Debug.WDB {GetPageVersionLines $id $rversion}
-	set content [GetContent $id]
-	set latest [Versions $id]
+	Debug.WDB {GetPageVersionLines $pid $rversion}
+	set content [GetContent $pid]
+	set latest [Versions $pid]
 	if {$rversion eq {}} {
 	    set rversion $latest
 	}
@@ -756,6 +756,7 @@ namespace eval WDB {
 	    set lastwho [dict get? $d who]
 
 	    set v $version
+
 	    [statement "diffs_for_pid_v"] foreach -as dicts dd {
 
 		set from [dict get $dd fromline]
