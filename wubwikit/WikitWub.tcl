@@ -1724,7 +1724,7 @@ namespace eval WikitWub {
 	variable as_comment 0
 	if {[string is integer -strict $A] && $A} {
 	    set as_comment 1
-	    set C [armour "<enter your comment here, a header with nick-name and timestamp will be insert for you>"]
+	    set C [armour "<enter your comment here and a header with your wiki nickname and timestamp will be inserted for you>"]
 	} else {
 	    set C [armour [WDB GetContent $N]]
 	    if {$C eq ""} {
