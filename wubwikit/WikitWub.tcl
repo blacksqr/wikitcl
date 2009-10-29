@@ -74,7 +74,7 @@ namespace eval WikitWub {
 	if {$titles($tname) ne ""} {
 	    dict set r -title [uplevel 1 subst [list $titles($tname)]]
 	}
-	dict set r -content [uplevel 1 subst [list $templates($tname)]]
+	dict set r -content [uplevel 1 subst [list $templates($tname)]][<div> class generated [generated $r]]
 	dict set r content-type x-text/wiki
 
 	# run http filters
@@ -1992,6 +1992,10 @@ namespace eval WikitWub {
     proc Filter {req term} {}
 
     variable trailers {@ /_/edit ! /_/ref - /_/diff + /_/history}
+
+    proc generated { r } {
+	return "Generated in [expr {int([clock microseconds] - [dict get $r -received])/1000}]ms"
+    }
 
     proc do {r} {
 	# decompose name
