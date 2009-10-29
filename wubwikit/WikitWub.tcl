@@ -1352,9 +1352,8 @@ namespace eval WikitWub {
 
 	variable cookie
 	Debug.wikit {/login - created cookie $nickname with R $R}
-	set cdict [Cookies add $cdict -path /_/ -name $cookie -value $nickname {*}$age]
+	set r [Cookies Add $r -path /_/ -name $cookie -value $nickname {*}$age]
 
-	dict set r -cookies $cdict
 	if {$R eq ""} {
 	    set R [Http Referer $r]
 	    if {$R eq ""} {
@@ -1458,13 +1457,12 @@ namespace eval WikitWub {
 
     proc who {r} {
 	variable cookie
-	set cdict [dict get $r -cookies]
-	set cl [Cookies match $cdict -name $cookie]
+	set cl [Cookies Match $r -name $cookie]
 	if {[llength $cl] != 1} {
 	    return ""
 	} else {
 	    Debug.wikit {who /edit/ $cl}
-	    return [dict get [Cookies fetch $cdict -name $cookie] -value]
+	    return [dict get [Cookies Fetch $r -name $cookie] -value]
 	}
     }
 
