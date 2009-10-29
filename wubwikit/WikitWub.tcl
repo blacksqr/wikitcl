@@ -1335,11 +1335,6 @@ namespace eval WikitWub {
 	    return [sendPage $r login]
 	}
 
-	if {[dict exists $r -cookies]} {
-	    set cdict [dict get $r -cookies]
-	} else {
-	    set cdict [dict create]
-	}
 	set dom [dict get $r -host]
 
 	# include an optional expiry age
