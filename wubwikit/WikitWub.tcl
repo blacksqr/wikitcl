@@ -677,7 +677,7 @@ namespace eval WikitWub {
 	set T ""
 	set N 0
 	set updated ""
-        set menu [menus Home Recent Help]
+        set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help Search]
 
 	set C [join $results "\n"]
@@ -844,7 +844,7 @@ namespace eval WikitWub {
 	variable menus
 	variable TOC
 	set updated "Edit summary"
-	set menu [menus Home Recent Help HR]
+	set menu [menus Home Recent Help WhoAmI HR]
 	lappend menu [Ref /_/history?N=$N History]
 	lappend menu [Ref /_/summary?N=$N "Edit summary"]
 	lappend menu [Ref /_/diff?N=$N "Last change"]
@@ -1063,7 +1063,7 @@ namespace eval WikitWub {
 	if {![string length $updated]} {
 	    set updated "Difference between version $V and $D"
 	}
-	set menu [menus Home Recent Help HR]
+	set menu [menus Home Recent Help WhoAmI HR]
 	lappend menu [Ref /_/history?N=$N History]
 	lappend menu [Ref /_/summary?N=$N "Edit summary"]
 	lappend menu [Ref /_/diff?N=$N "Last change"]
@@ -1102,7 +1102,7 @@ namespace eval WikitWub {
 	}
 
 	variable menus
-	set menu [menus Home Recent Help HR]
+	set menu [menus Home Recent Help WhoAmI HR]
 	lappend menu [Ref /_/history?N=$N History]
 
 	set name [WDB GetPage $N name]
@@ -1174,7 +1174,7 @@ namespace eval WikitWub {
 	set name "Change history of [WDB GetPage $N name]"
 	set Title "Change history of [Ref $N]"
 
-	set menu [menus Home Recent Help HR]
+	set menu [menus Home Recent Help WhoAmI HR]
 	set C ""
 	#	set links ""
 	if {$S > 0} {
@@ -1290,6 +1290,7 @@ namespace eval WikitWub {
     set menus(Help)   [Ref 3 "Help"]
     set menus(HR)     <br>
     set menus(Search) [Ref 2 "Search"]
+    set menus(WhoAmI) [<a> href "/_/whoami" "WhoAmI"]/[<a> href "/_/logout" "Logout"]
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
 	<h1>Redirecting to $url</h1>
@@ -1315,6 +1316,29 @@ namespace eval WikitWub {
     proc /who {r} {
 	set C [Html dict2table [dict get $r -session] {who edit}]
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
+    }
+
+    proc /whoami {r} {
+	set nick [who $r]
+	if {[string length $nick]} {
+	    set C "You are '$nick'."
+	} else {
+	    set C "You are not logged in. Login is required to edit a page. You will be asked to provided a user-name the next time you edit a page."
+	}
+	set name "Who Am I?"
+	set Title "Who Am I?"
+	set menu [menus Home Recent Help WhoAmI]
+	set footer [menus Home Recent Help Search]
+	set updated ""
+	set T ""
+	variable TOC
+	return [sendPage $r]
+    }
+
+    proc /logout {r} {
+	variable cookie
+	set r [Cookies Clear $r path /_/ -name $cookie]
+	return [Http Redir $r [dict get $r referer]]	
     }
 
     proc /edit/login {r {nickname ""} {R ""}} {
@@ -1442,7 +1466,7 @@ namespace eval WikitWub {
 	variable TOC
 	variable gsearch 1
 	variable query $S
-	set menu [menus Home Recent Help]
+	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help]
 	set T ""
 	set r [sendPage $r]
@@ -1800,7 +1824,7 @@ namespace eval WikitWub {
 	    return [Http Redir $r "http://[dict get $r host]/0"]
 	}
 	
-	set menu [menus Recent Help]
+	set menu [menus Recent Help WhoAmI]
 	set footer [menus Recent Help Search]
 
 	if {[info exists ::starkit_wikittitle]} {
@@ -1887,7 +1911,7 @@ namespace eval WikitWub {
 	    # include javascripts and CSS for sortable table.
 	    set r [sortable $r]
 	} 
-	set menu [menus Home Recent Help]
+	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help Search]
 
 	set name "References to $N"
@@ -2206,8 +2230,8 @@ namespace eval WikitWub {
 
 	variable protected
 
-	set menu [menus Home Recent Help]
-	set footer [menus Home Recent Help Search]
+	set menu [menus Home Recent Help WhoAmI]
+	set footer [menus Home Recent Help Search WhoAmI]
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
 	    if {!$::roflag} {
