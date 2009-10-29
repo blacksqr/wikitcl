@@ -533,15 +533,12 @@ namespace eval WikitWub {
 	set first 1
 	set activity 0.0
 
-	foreach record [WDB Changes $N] {
+	foreach record [WDB Changes $N $edate] {
 	    dict with record {
 		set changes [WDB ChangeSetSize $N $version]
 		set activity [expr {$activity + $changes * $delta / double([clock seconds] - $pcdate)}]
 		set pcdate $date
 		set first 0
-	    }
-	    if {$pcdate<$edate} {
-		break
 	    }
 	}
 
@@ -828,7 +825,7 @@ namespace eval WikitWub {
 	} else {
 	    # get changes for current page in last D days
 	    set edate [expr {$pcdate-$D*86400}]
-	    foreach record [WDB Changes $N 0] {
+	    foreach record [WDB Changes $N $edate] {
 		dict update record date cdate who cwho delta cdelta version version {}
 		set changes [WDB ChangeSetSize $N $version]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
@@ -838,7 +835,7 @@ namespace eval WikitWub {
 		set pcdate $cdate
 		set pcwho $cwho
 		incr V -1
-		if {$V < 1 || $pcdate < $edate} break
+		if {$V < 1} break
 	    }
 	}
 	append R </ul> \n

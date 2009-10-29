@@ -60,7 +60,7 @@ namespace eval WDB {
 	    switch -exact -- $name {
 		"changes_for_pid_asc"         { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY cid} }
 		"changes_for_pid_desc"        { set sql {SELECT cid, date, who FROM changes WHERE id = :pid ORDER BY cid DESC LIMIT :limit OFFSET :start} }
-		"changes_for_pid_ge_date"     { set sql {SELECT * FROM changes WHERE id = :pid AND date >= :date ORDER BY date DESC} }
+		"changes_for_pid_ge_date"     { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY date DESC} }
 		"changes_for_pid_lt_date"     { set sql {SELECT * FROM changes WHERE id = :pid AND date < :date ORDER BY date DESC} }
 		"changes_for_pid_version"     { set sql {SELECT * FROM changes WHERE id = :pid AND cid  = :version} }
 		"content_for_pid"             { set sql {SELECT * FROM pages_content WHERE id = :pid} }
@@ -384,7 +384,10 @@ namespace eval WDB {
     proc Changes {pid {date 0}} {
 	set result {}
 	[statement "changes_for_pid_ge_date"] foreach -as dicts d {
-	    lappend result [list version [dict get? $d cid] date [dict get? $d date] who [dict get? $d who] delta [dict get? $d delta]]
+	    lappend result [list version [dict get $d cid] date [dict get $d date] who [dict get $d who] delta [dict get $d delta]]
+	    if {[dict get $d date] < $date} {
+		break
+	    }
 	}
 	return $result
     }
