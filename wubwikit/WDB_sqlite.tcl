@@ -79,7 +79,12 @@ namespace eval WDB {
 		"page_for_name"               { set sql {SELECT * FROM pages WHERE lower(name) = lower(:name)} }
 		"page_for_name_glob"          { set sql {SELECT * FROM pages WHERE name GLOB :glob} }
 		"page_for_pid"                { set sql {SELECT * FROM pages WHERE id = :pid} }
-		"pages_gt_date"               { set sql {SELECT * FROM pages WHERE date > :date ORDER BY date DESC} }
+		"pages_gt_date"               { set sql {SELECT * 
+		                                         FROM pages a, pages_content b 
+		                                         WHERE a.id = b.id 
+		                                         AND a.date > :date 
+                                                         AND length(b.content) > 1
+                                                         ORDER BY a.date DESC} }
 		"refs_to_pid"                 { set sql {SELECT fromid FROM refs WHERE toid = :pid ORDER BY fromid ASC} }
 		"update_change_delta"         { set sql {UPDATE changes SET delta = :change WHERE id = :id AND cid = :version} }
 		"update_content_for_id"       { set sql {UPDATE pages_content SET content = :text WHERE id = :id} }
@@ -552,6 +557,7 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc AllPages {} {
 	set result {}
+	set date 0
 	[statement "pages_gt_date"] foreach -as dicts d {
 	    lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who]]
 	}
