@@ -603,7 +603,7 @@ namespace eval ::WFormat {
     # Compat: (Bugfix) Added " to the regexp as proper boundary of an url.
     #set re {\m(https?|ftp|news|mailto|file):(\S+[^\]\)\s\.,!\?;:'>"])}
     #set re {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])}
-    set re {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ;#"
+    set re {\m(https?|ftp|news|mailto|file|irc):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ;#"
     set txt 0
     set end [string length $text]
 
@@ -654,9 +654,9 @@ namespace eval ::WFormat {
     set bpre  {\[(brefs:|backrefs:)([^\]]*)]}  ; #  page back-references ; # compat
     #set lre  {\m(https?|ftp|news|mailto|file):(\S+[^\]\)\s\.,!\?;:'>"])} ; # "
     #set lre  {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])} ; # "
-    set prelre {\[\m(https?|ftp|news|mailto|file):([^\s:\]][^\]]*?)]} ; # "
-    set lre  {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ; # "
-    set lre2 {\m(https?|ftp|news|mailto|file):([^\s:]\S*[^\]\)\s\.,!\?;:'>"]%\|%[^%]+%\|%)} ; # "
+    set prelre {\[\m(https?|ftp|news|mailto|file|irc):([^\s:\]][^\]]*?)]} ; # "
+    set lre  {\m(https?|ftp|news|mailto|file|irc):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ; # "
+    set lre2 {\m(https?|ftp|news|mailto|file|irc):([^\s:]\S*[^\]\)\s\.,!\?;:'>"]%\|%[^%]+%\|%)} ; # "
 
 #    set blre "\\\[\0\1u\2(\[^\0\]*)\0\\\]"
 
