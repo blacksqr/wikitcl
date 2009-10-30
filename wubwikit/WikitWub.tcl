@@ -6,10 +6,11 @@ if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
 package require fileutil
 package require struct::queue
 
+lappend auto_path [file dirname [info script]]
+
 #### initialize Wikit
 package require Site	;# assume Wub/ is already on the path, or in /usr/lib
 
-lappend auto_path [file dirname [info script]]
 package require Sitemap
 package require stx
 package require Form
