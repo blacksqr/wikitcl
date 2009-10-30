@@ -1636,12 +1636,11 @@ namespace eval WikitWub {
 	    puts "edit-save@[clock seconds] check pagecaching"
 	    variable pagecaching
 	    if {$pagecaching} {
-		variable pagecache
-		if {[$pagecache exists id $N]} {
-		    $pagecache delete [$pagecache find id $N]
+		if {[WDB pagecache exists $N]} {
+		    WDB pagecache delete $N
 		}
-		if {[$pagecache exists id 4]} {
-		    $pagecache delete [$pagecache find id 4]
+		if {[WDB pagecache exists 4]} {
+		    WDB pagecache delete 4
 		}
 	    }
 
@@ -1996,8 +1995,7 @@ namespace eval WikitWub {
     proc fromCache {r N ext} {
 	variable pagecaching
 	if {$pagecaching && $ext eq ""} {
-	    variable pagecache
-	    set p [$pagecache fetch id $N]
+	    set p [WDB pagecache fetch $N]
 	    if {[dict size $p]} {
 		dict with p {
 		    dict set r -title $title
@@ -2260,12 +2258,10 @@ namespace eval WikitWub {
 	    set result [sendPage [Http CacheableContent $r $date] page DCache]
 	    variable pagecaching
 	    if {$pagecaching} {
-		variable pagecache
-		if {[$pagecache exists id $N]} {
-		    $pagecache set [$pagecache find id $N] content [dict get $result -content] ct [dict get $result content-type] when [clock milliseconds] title [dict get? $result -title]
-		} else {
-		    $pagecache append id $N content [dict get $result -content] ct [dict get $result content-type] when [clock milliseconds] title [dict get? $result -title]
+		if {[WDB pagecache exists $N]} {
+		    WDB pagecache delete $N
 		}
+		WDB pagecache insert $N [dict get $result -content] [dict get $result content-type] [clock milliseconds] [dict get? $result -title]
 	    }
 	    return $result
 	} else {
@@ -2292,13 +2288,13 @@ namespace eval WikitWub {
 
     proc init {args} {
 	variable {*}$args
-
+	
 	Convert Namespace ::WikitWub	;# add wiki-local conversions
-
+	
 	variable base
 	variable wikitroot	;# where the wikit lives
 	variable docroot	;# where ancillary docs live
-
+	
 	variable overwrite		;# set both to overwrite
 	variable reallyreallyoverwrite	;# set both to overwrite
 	variable wikidb
@@ -2328,11 +2324,11 @@ namespace eval WikitWub {
 		set docroot [file join $base docroot]
 	    }
 	}
-
+	
 	Debug.log {WikitWub base:$base docroot:$docroot wikitroot:$wikitroot}
-
+	
 	set origin [file normalize [file join $home docroot]]	;# all the originals live here
-
+	
 	if {![file exists $docroot]} {
 	    # new install. copy the origin docroot to $base
 	    catch {file mkdir $wikitroot}
@@ -2353,7 +2349,7 @@ namespace eval WikitWub {
 	} else {
 	    # normal start, existing db
 	}
-
+	
 	# clean up any symlinks in docroot
 	package require functional
 	package require fileutil
@@ -2365,16 +2361,16 @@ namespace eval WikitWub {
 	}
 	
 	# initialize wikit DB
-	if $wikitdbpath eq ""} {
+	if {![info exists wikitdbpath] || $wikitdbpath eq ""} {
 	    if {[info exists ::starkit_wikitdbpath]} {
 		set wikitdbpath $::starkit_wikitdbpath
 	    } else {
 		set wikitdbpath [file join $wikitroot $wikidb]
 	    }
 	}
-
+	
 	WDB WikiDatabase file $wikitdbpath shared 1
-
+    
 	package require utf8
 	variable utf8re [::utf8::makeUtf8Regexp]
 	variable utf8clean
@@ -2426,17 +2422,10 @@ namespace eval WikitWub {
 	variable pagecache
 	if {$pagecaching} {
 	    # initialize page cache
-	    package require View	;# for page caching
-	    [View create pagecache file pagecache.db db pagecache layout {
-		id:I	;# page number
-		content:S	;# generated content
-		ct:S		;# content-type
-		title:S		;# page title
-		when:L		;# date/time generated
-	    }] as pagecache
+	    WDB pagecache create
 	}
-	proc init {args} {}	;# we can't be called twice
-    }
+    proc init {args} {}	;# we can't be called twice
+}
 
     proc new {args} {
 	init {*}$args
