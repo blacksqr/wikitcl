@@ -3,7 +3,6 @@ if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
     source [file join [file dirname [info script]] local_setup.tcl]
 }
 
-package require Mk4tcl
 package require fileutil
 package require struct::queue
 
