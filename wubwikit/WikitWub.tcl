@@ -578,7 +578,7 @@ namespace eval WikitWub {
 	set activityHeaderAdded 0
 
 	foreach record [WDB RecentChanges $threshold] {
-	    puts stderr "RC: $record"
+
 	    dict with record {}
 
 	    # these are fake pages, don't list them
@@ -1994,14 +1994,12 @@ namespace eval WikitWub {
 
     proc fromCache {r N ext} {
 	variable pagecaching
-	if {$pagecaching && $ext eq ""} {
+	if {$pagecaching && $ext eq "" && [WDB pagecache exists $N]} {
 	    set p [WDB pagecache fetch $N]
-	    if {[dict size $p]} {
-		dict with p {
-		    dict set r -title $title
-		    dict set r -caching Wiki_inserted
-		    return [list 1 [Http Ok [Http DCache $r] $content $ct]]
-		}
+	    dict with p {
+		dict set r -title $title
+		dict set r -caching Wiki_inserted
+		return [list 1 [Http Ok [Http DCache $r] $content $ct]]
 	    }
 	}
 	return 0
@@ -2452,7 +2450,7 @@ proc pest {req} {return 0}	;# default [pest] catcher
 catch {source [file join [file dirname [info script]] pest.tcl]}
 
 #### set up appropriate debug levels (negative means off)
-Debug setting log 10 error 10 query -10 wikit -10 direct -10 convert -10 cookies -10 socket -10 WDB -10
+Debug setting log 10 error 10 query -10 wikit -10 direct -10 convert -10 cookies -10 socket -10 WDB -10 WDBpagecache 1
 
 #### Source local config script (not under version control)
 catch {source [file join [file dirname [info script]] local.tcl]} r eo

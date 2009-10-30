@@ -102,7 +102,23 @@ namespace eval WDB {
 	}
 	return $statements($name)
     }
-
+    proc pagecache_statement {name} {
+	variable pagecache_statements
+	variable db
+	if {![info exists statements($name)]} {
+	    switch -exact -- $name {
+		"create" { set sql  {CREATE TABLE pagecache (id INT NOT NULL, content TEXT NOT NULL, ct TEXT NOT NULL, cwhen INT NOT NULL, title TEXT NOT NULL, PRIMARY KEY (id))} }
+		"insert" { set sql {INSERT INTO pagecache (id, content, ct, cwhen, title) VALUES (:id, :content, :ct, :when, :title)} }
+		"exists" { set sql {SELECT COUNT(*) FROM pagecache WHERE id = :id} }
+		"fetch"  { set sql {SELECT * FROM pagecache WHERE id = :id} }
+		"delete" { set sql {DELETE FROM pagecache WHERE id = :id} }
+		default  { error "Unknown statement '$name'" }
+	    }
+	    set pagecache_statements($name) [$db.pagecache prepare $sql]
+	}
+	return $pagecache_statements($name)
+    }
+    
     proc close_statements { } {
 	variable statements
 	foreach {k v} [array ? statements] {
@@ -110,7 +126,7 @@ namespace eval WDB {
 	    unset statements($k)
 	}
     }
-
+    
     proc commit {} {
 	variable db
 	variable transaction_started 0
@@ -1030,51 +1046,48 @@ namespace eval WDB {
 	variable file
 	switch -exact -- $cmd {
 	    create {
+		Debug.WDB {Create pagecache}
+		puts "WDBpagecache: Create pagecache"
 		if {[file exists $file.pagecache]} {
 		    file delete -force $file.pagecache
 		}
 		tdbc::sqlite3::connection create $db.pagecache $file.pagecache
-		set stmt [$db.pagecache prepare {CREATE TABLE pagecache (id INT NOT NULL, content TEXT NOT NULL, ct TEXT NOT NULL, when INT NOT NULL, title TEXT NOT NULL, PRIMARY KEY (id))}]
-		set rs [$stmt execute]
-		$rs close
-		$stmt close
+		[[pagecache_statement "create"] execute] close
 	    }
 	    insert {
 		lassign $args id content ct when title
-		set stmt [$db.pagecache prepare {INSERT INTO pagecache (id, content, ct, when, title) VALUES (:id, :content, :ct, :when, :title)}]
-		set rs [$stmt execute]
-		$rs close
-		$stmt close
+		Debug.WDB {Insert pagecache $id}
+		puts "WDBpagecache Insert pagecache $id"
+		[[pagecache_statement "insert"] execute] close
 	    }
 	    exists {
 		lassign $args id
-		set stmt [$db.pagecache prepare {SELECT COUNT(*) FROM pagecache WHERE id = :id}]
-		set rs [$stmt execute]
+		Debug.WDB {Exists pagecache $id}
+		puts "WDBpagecache Exists pagecache $id"
+		set rs [[pagecache_statement "exists"] execute]
 		set rsn [$rs nextdict d]
 		set n 0
 		if {$rsn} {
 		    set n [dict get $d "COUNT(*)"]
 		}
 		$rs close
-		$stmt close
 		return $n
 	    }
 	    fetch {
 		lassign $args id
-		set stmt [$db.pagecache prepare {SELECT * FROM pagecache WHERE id = :id}]
-		set rs [$stmt execute]
-		dict create d
+		Debug.WDB {Fetch pagecache $id}
+		puts "WDBpagecache Fetch pagecache $id"
+		set rs [[pagecache_statement "fetch"] execute]
+		set d [dict create]
 		$rs nextdict d
 		$rs close
-		$stmt close
 		return $d
 	    }
 	    delete {
 		lassign $args id
-		set stmt [$db.pagecache prepare {DELETE FROM pagecache WHERE id = :id}]
-		set rs [$stmt execute]
-		$rs close
-		$stmt close
+		Debug.WDB {Delete pagecache $id}
+		puts "WDBpagecache Delete pagecache $id"
+		[[pagecache_statement "delete"] execute] close
 	    }
 	}
     }
@@ -1087,13 +1100,6 @@ namespace eval WDB {
 	}
 	tdbc::sqlite3::connection create $db $file 
 	[statement "enable_foreign_keys"] execute
-	if {[file exists $file.pagecache]} {
-	    file delete -force $file.pagecache
-	}
-	tdbc::sqlite3::connection create $db.pagecache $file.pagecache
-	set stmt [$db.pagecache prepare {CREATE TABLE pages_content (id INT NOT NULL, content TEXT NOT NULL, PRIMARY KEY (id))}]
-	$stmt execute
-	$stmt close
     }
 
     namespace export -clear *
