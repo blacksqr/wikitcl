@@ -1930,8 +1930,11 @@ namespace eval WikitWub {
 
     # InfoProc {name} - lookup $name in db,
     # returns a list: /$id (with suffix of @ if the page is new), $name, modification $date
-    proc InfoProc {ref} {
-	set id [WDB LookupPage $ref]
+    proc InfoProc {ref {query_only 0}} {
+	set id [WDB LookupPage $ref $query_only]
+	if {$query_only} {
+	    return $id
+	}
 	lassign [WDB GetPage $id name date] name date
 	if {$name eq ""} {
 	    set id _/edit?N=$id ;# enter edit mode for missing links

@@ -480,7 +480,7 @@ namespace eval WDB {
     #
     #----------------------------------------------------------------------------
 
-    proc LookupPage {name} {
+    proc LookupPage {name {query_only 0}} {
 	set date 0
 	set who ""
 	set lcname [string tolower $name]
@@ -494,21 +494,25 @@ namespace eval WDB {
 	set rs_next [$rs nextdict d]
 	$rs close
 	if {!$rs_next} {
-	    set pid [PageCount]
-	    Debug.WDB {LookupPage '$name' not found, added $pid}
-	    set ts $transaction_started
-	    if {!$ts} {
-		StartTransaction
-	    }
-	    if {[catch {[statement "insert_page"] execute} msg]} {
-		rollback
-		error $msg
+	    if {$query_only} {
+		return ""
 	    } else {
+		set pid [PageCount]
+		Debug.WDB {LookupPage '$name' not found, added $pid}
+		set ts $transaction_started
 		if {!$ts} {
-		    commit
+		    StartTransaction
 		}
+		if {[catch {[statement "insert_page"] execute} msg]} {
+		    rollback
+		    error $msg
+		} else {
+		    if {!$ts} {
+			commit
+		    }
+		}
+		set transaction_started $ts
 	    }
-	    set transaction_started $ts
 	} else {
 	    set pid [dict get $d id]
 	}

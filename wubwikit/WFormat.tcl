@@ -1268,8 +1268,36 @@ namespace eval ::WFormat {
               append result "</th>"
               continue
             }
-            set info [eval $ip [list $link]]
-            foreach {id name date} $info break
+            if {[string match "Category *" $link]} {
+              set info [eval $ip [list $link]]
+              foreach {id name date} $info break
+            } else {
+              # Check if "Category $link" exists
+              set id [eval $ip [list "Category $link"] 1]
+              if {$id == ""} {
+                # "Category $link" doesn't exist, check $link
+                set id [eval $ip [list $link] 1]
+                if {$id == ""} {
+                  # $link doesn't exists, create new "Category $link" page
+                  set info [eval $ip [list "Category $link"]]
+                  foreach {id name date} $info break
+                  if {$link eq $linktext} {
+                    set linktext "Category $link"
+                  }
+                } else {
+                  # $link exists, use it
+                  set info [eval $ip [list $link]]
+                  foreach {id name date} $info break                  
+                }
+              } else {
+                # "Category $link" exists, use it.
+                set info [eval $ip [list "Category $link"]]
+                foreach {id name date} $info break
+                if {$link eq $linktext} {
+                  set linktext "Category $link"
+                }
+              }
+            }
             if {$id == ""} {
               # not found, don't turn into an URL
               append result "\[[quote $linktext]\]"
