@@ -2365,10 +2365,12 @@ namespace eval WikitWub {
 	}
 	
 	# initialize wikit DB
-	if {[info exists ::starkit_wikitdbpath]} {
-	    set wikitdbpath $::starkit_wikitdbpath
-	} else {
-	    set wikitdbpath [file join $wikitroot $wikidb]
+	if $wikitdbpath eq ""} {
+	    if {[info exists ::starkit_wikitdbpath]} {
+		set wikitdbpath $::starkit_wikitdbpath
+	    } else {
+		set wikitdbpath [file join $wikitroot $wikidb]
+	    }
 	}
 
 	WDB WikiDatabase file $wikitdbpath shared 1
