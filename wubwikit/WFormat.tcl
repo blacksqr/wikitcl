@@ -116,6 +116,9 @@ namespace eval ::WFormat {
     foreach line [split $text \n] {
       # Per line, classify the it and extract the main textual information.
       foreach {tag depth txt aux} [linetype $line] break ; # lassign
+      if {$tag eq "COMMENT"} {
+        continue
+      }
       set otag $tag
       if {$mode_fixed && $tag ne "FIXED" && $tag ne "CODE" \
             && $tag ne "EVAL"} {
@@ -555,6 +558,7 @@ namespace eval ::WFormat {
       DL	{^(   +)([^:]+):   (\S.*)$}
 
       INLINEHTML {^<<inlinehtml>>$}
+      COMMENT  {^()()(###).*$}
       FIXED  {^()()(===)$}
       CODE   {^()()(======)$}
       OPTION {^()()(\+\+\+)$}
