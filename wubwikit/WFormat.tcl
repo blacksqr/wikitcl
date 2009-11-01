@@ -110,6 +110,7 @@ namespace eval ::WFormat {
     set mode_fixed $fixed ; # flag to indicate currently in fixed font block
     set mode_code $code   ; # indicates code block (no markup)
     set mode_option 0	  ; # options (fixed option, variable description)
+    set mode_inlinehtml 0
     set optnum 0	 	  ; # option block number
     set optlen 0	 	  ; # length of option block fixed part
     foreach line [split $text \n] {
@@ -124,6 +125,9 @@ namespace eval ::WFormat {
       }
       if {$mode_option && $tag ne "OPTION"} {
         set tag OPTION_CONTENT
+      }
+      if {$mode_inlinehtml && $tag ne "INLINEHTML"} {
+        set tag "INLINEHTML_CONTENT"
       }
       # Classification tags
       #
@@ -150,7 +154,7 @@ namespace eval ::WFormat {
       ## there is any.
       #
       switch -exact -- $tag {
-        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS - CATEGORY - INLINETOC {
+        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS - CATEGORY - INLINETOC - INLINEHTML {
           if {$paragraph != {}} {
             if {$mode_fixed} {
               lappend irep FI {}
@@ -314,6 +318,14 @@ namespace eval ::WFormat {
           } else {
             lappend paragraph $line
           }
+        }
+        INLINEHTML {
+          if {$::WikitWub::inline_html} {
+            set mode_inlinehtml [expr {!$mode_inlinehtml}]
+          }
+        }
+        INLINEHTML_CONTENT {
+          lappend irep INLINEHTML $line
         }
         OPTION {
           if {$mode_option} {
@@ -542,6 +554,7 @@ namespace eval ::WFormat {
       1OL	{^(   +)(\d)\. (\S.*)$}
       DL	{^(   +)([^:]+):   (\S.*)$}
 
+      INLINEHTML {^<<inlinehtml>>$}
       FIXED  {^()()(===)$}
       CODE   {^()()(======)$}
       OPTION {^()()(\+\+\+)$}
@@ -641,6 +654,7 @@ namespace eval ::WFormat {
     # match and process parts of the string.
 
     upvar irep irep
+    upvar irefs irefs
     variable codemap
 
     ## puts stderr \]>>$irep<<\[
@@ -657,6 +671,7 @@ namespace eval ::WFormat {
     set prelre {\[\m(https?|ftp|news|mailto|file|irc):([^\s:\]][^\]]*?)]} ; # "
     set lre  {\m(https?|ftp|news|mailto|file|irc):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ; # "
     set lre2 {\m(https?|ftp|news|mailto|file|irc):([^\s:]\S*[^\]\)\s\.,!\?;:'>"]%\|%[^%]+%\|%)} ; # "
+    set ire {<<include:(.*?)>>}
 
 #    set blre "\\\[\0\1u\2(\[^\0\]*)\0\\\]"
 
@@ -690,6 +705,7 @@ namespace eval ::WFormat {
                                                  ## puts stderr X>>$text<<*
                                                  regsub -all $lre2 $text "\0\1u\2\\1\3\\2\0" text
                                                  regsub -all $lre  $text "\0\1u\2\\1\3\\2\0" text
+                                                 regsub -all $ire $text "\0\1INCLUDE\2\\1\\2\0" text
                                                  set text [string map {\3 :} $text]
                                                  ## puts stderr C>>$text<<*
 
@@ -756,6 +772,7 @@ namespace eval ::WFormat {
         f-    {lappend irep f 0}
         br    {lappend irep BR 0}
         nbsp  {lappend irep NBSP 0}
+        
         default {
           if {$detail == {}} {
             # Pure text
@@ -964,11 +981,12 @@ namespace eval ::WFormat {
     set in_header 0
     set tocheader ""
     set uol {}
+    set irefs {}
 
     variable html_frag
 
     foreach {mode text} $s {
-      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY}} {
+      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY INLINEHTML BACKREFS}} {
         # Unwind uol
         append result </li>
         foreach uo [lreverse $uol] {
@@ -1060,6 +1078,15 @@ namespace eval ::WFormat {
             append result $html_frag(tc) \] $html_frag(_a) \
             }
           }
+        INCLUDE {
+          set text [string trim $text]
+          if {$::WikitWub::include_pages} {
+            lappend irefs $text
+            append result "\n<div class='include'>@@@@@@@@@@$text@@@@@@@@@@</div>\n"
+          } else {
+            append result $text
+          }
+        }
         u {
           lassign [split_url_link_text $text] link text
 	  if { $in_header } {
@@ -1208,6 +1235,28 @@ namespace eval ::WFormat {
           }
           append result [subst $html_frag($state$mode)]
           set state $mode
+        }
+        INLINEHTML {
+          set mode T
+          if {$state ne "T"} {
+            append result [subst $html_frag($state$mode)]
+          }
+          if {$::WikitWub::include_pages} {
+            set lidx 0
+            foreach {match0 match1} [regexp -all -indices -inline {<<include:(.*?)>>} $text] {
+              lassign $match0 idx00 idx01
+              lassign $match1 idx10 idx11
+              append result [string range $text $lidx [expr {$idx00-1}]]
+              set id [string trim [string range $text $idx10 $idx11]]
+              lappend irefs $id
+              append result @@@@@@@@@@$id@@@@@@@@@@
+              set lidx [expr {$idx01+1}]
+            }
+            append result [string range $text $lidx end]
+          } else {
+            append result $text
+          }
+          set state T
         }
         BR {
           append result "<br>"
@@ -1450,7 +1499,7 @@ namespace eval ::WFormat {
     # Get rid of spurious newline at start of each quoted area.
     regsub -all "<pre>\n" $result "<pre>" result
 
-    list $result {} $toc $brefs
+    list $result {} $toc $brefs $irefs
   }
 
   proc quote {q} {
@@ -1685,14 +1734,12 @@ namespace eval ::WFormat {
 
   proc StreamToRefs {s ip} {
     array set pages {}
-
+    
     foreach {mode text} $s {
       if {[string equal $mode g]} {
-
         set info [eval $ip [list $text]]
         foreach {id name date} $info break
         if {$id == ""} {continue}
-        
         regexp {[0-9]+} $id id
         set pages($id) ""
       } elseif {[string equal $mode "CATEGORY"]} {
@@ -1709,6 +1756,33 @@ namespace eval ::WFormat {
           
           regexp {[0-9]+} $id id
           set pages($id) ""          
+        }
+      } elseif {[string equal $mode "INCLUDE"]} {
+        if {$::WikitWub::include_pages} {
+          set id [string trim $text]
+          if {[string is integer -strict $id]} {
+            set pages($id) ""
+          } else {
+            set info [eval $ip [list $id]]
+            foreach {id name date} $info break
+            if {$id == ""} {continue}
+            regexp {[0-9]+} $id id
+            set pages($id) ""
+          }
+        }
+      } elseif {$mode eq "INLINEHTML"} {
+        foreach {match0 match1} [regexp -all -indices -inline {<<include:(.*?)>>} $text] {
+          lassign $match1 idx10 idx11
+          set id [string trim [string range $text $idx10 $idx11]]
+          if {[string is integer -strict $id]} {
+            set pages($id) ""
+          } else {
+            set info [eval $ip [list $id]]
+            foreach {id name date} $info break
+            if {$id == ""} {continue}
+            regexp {[0-9]+} $id id
+            set pages($id) ""
+          }
         }
       }
     }

@@ -39,6 +39,8 @@ set API(WikitWub) {
 namespace eval WikitWub {
     variable readonly ""
     variable pagecaching 0
+    variable inline_html 0
+    variable include_pages 0
 
     # sortable - include javascripts and CSS for sortable table.
     proc sortable {r} {
@@ -1658,7 +1660,8 @@ namespace eval WikitWub {
 	    # this makes sure that cache entries point to a filled-in page
 	    # from now on, instead of a "[...]" link to a first-time edit page
 	    puts "edit-save@[clock seconds] invalidate refs"
-	    if {$date == 0} {
+	    variable include_pages
+	    if {$date == 0 || $include_pages} {
 		foreach from [WDB ReferencesTo $N] {
 		    invalidate $r $from
 		}
@@ -2010,6 +2013,32 @@ namespace eval WikitWub {
 
     proc Filter {req term} {}
 
+    proc IncludePages {C IH} {
+	foreach ih $IH {
+	    if {[string is integer -strict $ih]} {
+		set N $ih
+	    } else {
+		set N [WDB PageByName $ih]
+		if {[llength $N]==0} {
+		    continue
+		}
+	    }
+	    set ihcontent [WDB GetContent $N]
+	    set IHC [WFormat TextToStream $ihcontent]
+	    lassign [WFormat StreamToHTML $IHC / ::WikitWub::InfoProc 1] IHC
+	    set IHC [string trim $IHC \n]
+	    if {[string match "<p></p>*" $IHC]} {
+		set IHC [string range $IHC 7 end]
+	    }
+	    set idx [string first "@@@@@@@@@@$ih@@@@@@@@@@" $C]
+	    set tC [string range $C 0 [expr {$idx-1}]]
+	    append tC $IHC
+	    append tC [string range $C [expr {$idx+20+[string length $ih]}] end]
+	    set C $tC
+	}
+	return $C
+    }
+
     variable trailers {@ /_/edit ! /_/ref - /_/diff + /_/history}
 
     proc generated { r } {
@@ -2171,7 +2200,11 @@ namespace eval WikitWub {
 		    default {
 			set C [WFormat TextToStream $content]
 			dict set r content-location "http://[Url host $r]/$N"
-			lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+			lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc] C U T BR IH
+			variable include_pages
+			if {$include_pages} {
+			    set C [IncludePages $C $IH]
+			}
 			foreach {containerid bref} $BR {
 			    if {[string length $bref]} {
 				set brefpage [WDB LookupPage $bref]
@@ -2368,8 +2401,8 @@ namespace eval WikitWub {
 	    } else {
 		set wikitdbpath [file join $wikitroot $wikidb]
 	    }
-	}
-	
+	}	
+
 	WDB WikiDatabase file $wikitdbpath shared 1
     
 	package require utf8
@@ -2425,8 +2458,8 @@ namespace eval WikitWub {
 	    # initialize page cache
 	    WDB pagecache create
 	}
-    proc init {args} {}	;# we can't be called twice
-}
+	proc init {args} {}	;# we can't be called twice
+    }
 
     proc new {args} {
 	init {*}$args
