@@ -1167,7 +1167,7 @@ namespace eval WikitWub {
 	if {![string is integer -strict $N]
 	    || ![string is integer -strict $S]
 	    || ![string is integer -strict $L]
-	    || $N >= [WDB PageCount]
+	    || $N < 0 || $N >= [WDB PageCount]
 	    || $S < 0
 	    || $L <= 0} {
 	    return [Http NotFound $r]
@@ -1527,7 +1527,7 @@ namespace eval WikitWub {
 	    puts "edit-save@[clock seconds] $N no integer"
 	    return [Http NotFound $r]
 	}
-	if {$N >= [WDB PageCount]} {
+	if {$N < 0 || $N >= [WDB PageCount]} {
 	    puts "edit-save@[clock seconds] $N not found"
 	    return [Http NotFound $r]
 	}
@@ -1708,7 +1708,7 @@ namespace eval WikitWub {
 	if {[info exists protected($N)]} {
 	    return [Http Forbidden $r]
 	}
-	if {$N >= [WDB PageCount]} {
+	if {$N < 0 || $N >= [WDB PageCount]} {
 	    return [Http NotFound $r]
 	}
 
@@ -1887,7 +1887,7 @@ namespace eval WikitWub {
 	if {![string is integer -strict $N]} {
 	    return [Http NotFound $r]
 	}
-	if {$N >= [WDB PageCount]} {
+	if {$N < 0 || $N >= [WDB PageCount]} {
 	    return [Http NotFound $r]
 	}
 
@@ -2160,7 +2160,7 @@ namespace eval WikitWub {
 	    default {
 
 		# simple page - non search term
-		if {$N >= [WDB PageCount]} {
+		if {$N < 0 || $N >= [WDB PageCount]} {
 		    return [Http NotFound $r]
 		}
 

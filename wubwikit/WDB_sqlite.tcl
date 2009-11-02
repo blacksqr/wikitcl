@@ -211,15 +211,17 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc GetPage {pid args} {
 	set rs [[statement "page_for_pid"] execute]
-	$rs nextdict d
+	set rsn [$rs nextdict d]
 	$rs close
 	#dict set d content [GetContent $pid]
 	set result {}
-	if {[llength $args] == 1} {
-	    set result [dict get? $d [lindex $args 0]]
-	} else {
-	    foreach n $args {
-		lappend result [dict get? $d $n]
+	if {$rsn} {
+	    if {[llength $args] == 1} {
+		set result [dict get? $d [lindex $args 0]]
+	    } else {
+		foreach n $args {
+		    lappend result [dict get? $d $n]
+		}
 	    }
 	}
 	Debug.WDB {GetPage $pid $args -> ($result)}
