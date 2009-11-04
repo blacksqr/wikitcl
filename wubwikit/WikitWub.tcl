@@ -2268,12 +2268,13 @@ namespace eval WikitWub {
 	}
 
 	variable protected
+	variable readonly
 
 	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help Search WhoAmI]
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
-	    if {!$::roflag} {
+	    if {!$::roflag && $readonly eq {}} {
 		lappend menu [Ref /_/edit?N=$N&A=1 "Add comments"]
 		lappend footer [Ref /_/edit?N=$N&A=1 "Add comments"]
 		lappend menu [Ref /_/edit?N=$N Edit]
@@ -2286,7 +2287,7 @@ namespace eval WikitWub {
 
 	variable TOC
 	variable readonly
-	if {$readonly ne ""} {
+	if {$readonly ne "" && (![info exists ::starkit_hidereadonly] || !$::starkit_hidereadonly)} {
 	    set ro "<it>(Read Only Mode: $readonly)</it>"
 	} else {
 	    set ro ""
