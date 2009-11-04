@@ -1340,7 +1340,11 @@ namespace eval WikitWub {
     proc /logout {r} {
 	variable cookie
 	set r [Cookies Clear $r path /_/ -name $cookie]
-	return [Http Redir $r [dict get $r referer]]	
+	if {[dict exists $r referer]} {
+	    return [Http Redir $r [dict get $r referer]]	
+	} else {
+	    return [/whoami $r]
+	}
     }
 
     proc /edit/login {r {nickname ""} {R ""}} {
