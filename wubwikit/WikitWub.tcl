@@ -1992,13 +1992,13 @@ namespace eval WikitWub {
 	set stream [WFormat TextToStream [WDB GetContent $N]]
 	lassign [WFormat StreamToHTML $stream / ::WikitWub::InfoProc] parsed - toc backrefs
 	return [<page> [subst { 
-	    [<name> [armour $name]]
-	    [<content> [armour $page]]
+	    [<name> [xmlarmour $name]]
+	    [<content> [xmlarmour $page]]
 	    [<date> [Http Date $date]]
-	    [<who> [armour $who]]
-	    [<parsed> [armour $parsed]]
-	    [<toc> [armour $toc]]
-	    [<backrefs> [armour $backrefs]]
+	    [<who> [xmlarmour $who]]
+	    [<parsed> [xmlarmour $parsed]]
+	    [<toc> [xmlarmour $toc]]
+	    [<backrefs> [xmlarmour $backrefs]]
 	}]]
     }
 
