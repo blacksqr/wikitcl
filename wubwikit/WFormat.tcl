@@ -674,7 +674,7 @@ namespace eval ::WFormat {
     #set lre  {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])} ; # "
     set prelre {\[\m(https?|ftp|news|mailto|file|irc):([^\s:\]][^\]]*?)]} ; # "
     set lre  {\m(https?|ftp|news|mailto|file|irc):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ; # "
-    set lre2 {\m(https?|ftp|news|mailto|file|irc):([^\s:]\S*[^\]\)\s\.,!\?;:'>"]%\|%[^%]+%\|%)} ; # "
+    set lre2 {\m(https?|ftp|news|mailto|file|irc):([^\s:][^\s%]*[^\]\)\s\.,!\?;:'>"]%\|%[^%]*?%\|%)} ; # "
     set ire {<<include:(.*?)>>}
 
 #    set blre "\\\[\0\1u\2(\[^\0\]*)\0\\\]"
