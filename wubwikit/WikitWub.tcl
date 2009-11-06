@@ -13,6 +13,7 @@ package require Site	;# assume Wub/ is already on the path, or in /usr/lib
 
 package require Sitemap
 package require stx
+package require stx2html
 package require Form
 
 package require WDB_sqlite
@@ -36,11 +37,16 @@ set API(WikitWub) {
     language {html natural language (default "en")}
 }
 
+proc stx2html::local {what} {
+    return [<a> href /[WDB LookupPage $what] $what]
+}
+
 namespace eval WikitWub {
     variable readonly ""
     variable pagecaching 0
     variable inline_html 0
     variable include_pages 0
+    variable markup_language wikit
 
     # sortable - include javascripts and CSS for sortable table.
     proc sortable {r} {
@@ -66,7 +72,8 @@ namespace eval WikitWub {
     }
 
     proc toolbar_edit_button {action img alt} {
-	return [format {<button type='button' class='editbutton' onClick='%1$s("editarea");' onmouseout='popUp(event,"tip_%1$s")' onmouseover='popUp(event,"tip_%1$s")'><img src='/%3$s'></button><span id='tip_%1$s' class='tip'>%2$s</span>} $action $alt $img]
+	variable markup_language
+	return [format {<button type='button' class='editbutton' onClick='%1$s("editarea", "%4$s");' onmouseout='popUp(event,"tip_%1$s")' onmouseover='popUp(event,"tip_%1$s")'><img src='/%3$s'></button><span id='tip_%1$s' class='tip'>%2$s</span>} $action $alt $img $markup_language]
     }
 
     # page - format up a page using templates
@@ -148,7 +155,7 @@ namespace eval WikitWub {
 #		<button type='button' class='editbutton' id='savebutton' onclick='' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png' alt='Save'></button><span id='tip_save' class='tip'>Save</span>
 #		<button type='button' class='editbutton' id='cancelbutton' onclick='editCancel();' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png' alt='Cancel'></button><span id='tip_cancel' class='tip'>Cancel</span>
     
-    set quick_reference {
+    set quick_reference(wikit) {
 	[<br>]
 	[<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
 	[<br>]
@@ -168,7 +175,24 @@ namespace eval WikitWub {
 	</ul>
     }
 
-    set edit_toolbar {
+    set quick_reference(stx) {
+	[<br>]
+	[<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
+	[<br>]
+	<ul>
+	<li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]].</li>
+	<li>[<b> BULLETS] are lines with an asterisk (*) and a space - the item must be one (wrapped) line</li>
+	<li>[<b> "NUMBERED LISTS"] are lines a hash (#) and a space - the item must be one (wrapped) line</li>
+	<li>[<b> PARAGRAPHS] are split with empty lines</li>
+	<li>[<b> "UNFORMATTED TEXT"] starts with white space</li>
+	<li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> ''bold''], three for [<b> {'''}][<i> italics][<b> {'''}].</li>
+	<li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
+	<li>[<b> HEADERS] can be specified with lines containing <b>=Header level 1=</b>, <b>==Header level 2==</b> or <b>===Header level 3===</b></li>
+	<li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data</tt></b>, a <b>header</b> row as <b><tt>|+header|header|header</tt></b></li>
+	</ul>
+    }
+
+    set edit_toolbar(wikit) {
 	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
 	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
 	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
@@ -183,6 +207,30 @@ namespace eval WikitWub {
 	[toolbar_edit_button list_bullets    text_list_bullets.png   "List with Bullets"]
 	[toolbar_edit_button list_numbers    text_list_numbers.png   "Numbered list"]
 	[toolbar_edit_button align_center    text_align_center.png   "Center"]
+	[toolbar_edit_button wiki_link       link.png                "Wiki link"]
+	[toolbar_edit_button url_link        world_link.png          "World link"]
+	[toolbar_edit_button img_link        photo_link.png          "Image link"]
+	[toolbar_edit_button code            script_code.png         "Script"]
+	[toolbar_edit_button table           table.png               "Table"]
+	&nbsp; &nbsp; &nbsp;
+	<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
+    }
+
+    set edit_toolbar(stx) {
+	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
+	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
+	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
+	&nbsp; &nbsp; &nbsp;
+	[toolbar_edit_button bold            text_bold.png           "Bold"]
+	[toolbar_edit_button italic          text_italic.png         "Italic"]
+	[toolbar_edit_button superscript     text_superscript.png    "Super script"]
+	[toolbar_edit_button subscript       text_subscript.png      "Sub script"]
+	[toolbar_edit_button heading1        text_heading_1.png      "Heading 1"]
+	[toolbar_edit_button heading2        text_heading_2.png      "Heading 2"]
+	[toolbar_edit_button heading3        text_heading_3.png      "Heading 3"]
+	[toolbar_edit_button hruler          text_horizontalrule.png "Horizontal Rule"]
+	[toolbar_edit_button list_bullets    text_list_bullets.png   "List with Bullets"]
+	[toolbar_edit_button list_numbers    text_list_numbers.png   "Numbered list"]
 	[toolbar_edit_button wiki_link       link.png                "Wiki link"]
 	[toolbar_edit_button url_link        world_link.png          "World link"]
 	[toolbar_edit_button img_link        photo_link.png          "Image link"]
@@ -213,11 +261,11 @@ namespace eval WikitWub {
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action /_/edit/save {
-		     [<div> id helptext "[<hr>] [subst $quick_reference]"]
+		     [<div> id helptext "[<hr>] [subst $quick_reference($markup_language)]"]
 		     [<div> class previewarea_pre id previewarea_pre ""]
 		     [<div> class previewarea id previewarea ""]
 		     [<div> class previewarea_post id previewarea_post ""]
-		     [<div> class toolbar [subst $edit_toolbar]]
+		     [<div> class toolbar [subst $edit_toolbar($markup_language)]]
 		     [<textarea> C id editarea rows 35 cols 72 compact 0 style width:100% [tclarmour $C]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
@@ -584,7 +632,7 @@ namespace eval WikitWub {
 	    dict with record {}
 
 	    # these are fake pages, don't list them
-	    if {$id < 11} continue
+	    if {$id < 10} continue
 
 	    # only report last change to a page on each day
 	    set day [expr {$date/86400}]
@@ -687,6 +735,16 @@ namespace eval WikitWub {
 	return [sendPage $r]
     }
 
+    proc mark_annotate_start {N lineVersion who time} {
+	set C "\n>>>>>>a;$N;$lineVersion;$who;"
+	append C [clock format $time -format "%Y-%m-%d %T" -gmt true]
+	return $C
+    }
+
+    proc mark_annotate_end {} {
+	return "\n<<<<<<"
+    }
+
     proc get_page_with_version {N V {A 0}} {
 	Debug.wikit {get_page_with_version N:$N V:$V A:$A}
 	if {$A} {
@@ -697,15 +755,15 @@ namespace eval WikitWub {
 		lassign $a line lineVersion time who
 		if { $lineVersion != $prevVersion } {
 		    if { $prevVersion != -1 } {
-			append C "\n<<<<<<"
+			append C [mark_annotate_end]
 		    }
-		    append C "\n>>>>>>a;$N;$lineVersion;$who;" [clock format $time -format "%Y-%m-%d %T" -gmt true]
+		    append C [mark_annotate_start $N $lineVersion $who $time]
 		    set prevVersion $lineVersion
 		}
 		append C "\n$line"
 	    }
 	    if { $prevVersion != -1 } {
-		append C "\n<<<<<<"
+		append C [mark_annotate_end]
 	    }
 	} elseif {$V >= 0} {
 	    set C [WDB GetPageVersion $N $V]
@@ -739,6 +797,62 @@ namespace eval WikitWub {
 	return $n
     }
 
+    # Markup language dependent code
+
+    proc list_item {txt} {
+	variable markup_language
+	switch -exact -- $markup_language {
+	    stx { return "* $txt\n" }
+	    wikit { return "   * $txt\n" }
+	}
+    }
+
+    proc mark_new {N V txt} {
+	variable markup_language
+	switch -exact -- $markup_language {
+	    stx { append C "\n\n----\n\n New in version $V\n\n----\n\n$txt\n\n" }
+	    wikit { append C ">>>>>>n;$N;$V;;\n$txt\n<<<<<<\n" }
+	}
+    }
+
+    proc mark_old {N W txt} {
+	variable markup_language
+	switch -exact -- $markup_language {
+	    stx { append C "\n\n----\n\n Old in version $W\n\n----\n\n$txt\n\n" }
+	    wikit { append C ">>>>>>o;$N;$W;;\n$txt\n<<<<<<\n" }
+	}
+    }
+
+    proc translate {name C ext {preview 0}} {
+	variable markup_language
+	switch -exact -- $ext {
+	    .txt {
+		return $C
+	    }
+	    .str {
+		switch -exact -- $markup_language {
+		    stx { return [stx::translate $C] }
+		    wikit { return [WFormat TextToStream $C] }
+		}
+	    }
+	    .code {
+		switch -exact -- $markup_language {
+		    stx { return $C }
+		    wikit { return [WFormat StreamToTcl $name [WFormat TextToStream $C 0 0 0]] }
+		}
+	    }
+	    .xml {
+		return $C
+	    }
+	    default {
+		switch -exact -- $markup_language {
+		    stx { return [list [stx2html::translate $C]] }
+		    wikit { return [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview] }
+		}
+	    }
+	}
+    }
+    
     proc summary_diff { N V W {rss 0} } {
 	Debug.wikit {summary_diff N:$N V:$V W:$W rss:$rss}
 	set t1 [split [get_page_with_version $N $V 0] "\n"]
@@ -755,7 +869,7 @@ namespace eval WikitWub {
 		    if {$rss} {
 			append C "[lindex $t1 $p1]\n"
 		    } else {
-			append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+			append C [mark_new $N $V [lindex $t1 $p1]]
 		    }
 		    incr p1
 		}
@@ -763,7 +877,7 @@ namespace eval WikitWub {
 		    if {$rss} {
 			#			append C ">>>>>>o;$N;$W;;\n[lindex $t2 $p2]\n<<<<<<\n"
 		    } else {
-			append C ">>>>>>o;$N;$W;;\n[lindex $t2 $p2]\n<<<<<<\n"
+			append C [mark_old $N $W [lindex $t2 $p2]]
 		    }
 		    incr p2
 		}
@@ -775,7 +889,7 @@ namespace eval WikitWub {
 	    if {$rss} {
 		append C "[lindex $t1 $p1]\n"
 	    } else {
-		append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+		append C [mark_new $N $V [lindex $t1 $p1]]
 	    }
 	    incr p1
 	}
@@ -783,7 +897,7 @@ namespace eval WikitWub {
 	    if {$rss} {
 		#		append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
 	    } else {
-		append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
+		append C [mark_old $N $V [lindex $t2 $p2]]
 	    }
 	    incr p2
 	}
@@ -832,7 +946,7 @@ namespace eval WikitWub {
 		set changes [WDB ChangeSetSize $N $version]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
-		lassign [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc] C U T BR
+		lassign [translate $name $C .html] C U T BR
 		append R $C
 		set pcdate $cdate
 		set pcwho $cwho
@@ -1080,6 +1194,7 @@ namespace eval WikitWub {
 	Debug.wikit {/page $args}
 
 	variable detect_robots
+	variable markup_language
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
@@ -1109,22 +1224,14 @@ namespace eval WikitWub {
 
 	set name [WDB GetPage $N name]
 	if {$V >= 0} {
+	    set C [get_page_with_version $N $V $A]
 	    switch -- $ext {
-		.txt {
-		    set C [get_page_with_version $N $V $A]
-		    return [Http NoCache [Http Ok $r $C text/plain]]
-		}
-		.code {
-		    set C [WFormat TextToStream [get_page_with_version $N $V $A] 0 0 0]
-		    set C [WFormat StreamToTcl $name $C ::WikitWub::InfoProc]
-		    return [Http NoCache [Http Ok $r $C text/plain]]
-		}
+		.txt -
+		.code -
 		.str {
-		    set C [WFormat TextToStream [get_page_with_version $N $V $A]]
-		    return [Http NoCache [Http Ok $r $C text/plain]]
+		    return [Http NoCache [Http Ok $r [translate $name $C $ext] text/plain]]
 		}
 		default {
-		    set C [get_page_with_version $N $V $A]
 		    if {$A} {
 			set Title "Annotated version $V of [Ref $N]"
 			set name "Annotated version $V of $name"
@@ -1132,17 +1239,19 @@ namespace eval WikitWub {
 			set Title "Version $V of [Ref $N]"
 			set name "Version $V of $name"
 		    }
-		    lassign [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc] C U T BR
+		    lassign [translate $name $C $ext] C U T BR
 		    if { $V > 0 } {
 			lappend menu [Ref "/_/revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
 		    }
 		    if { $V < $nver } {
 			lappend menu [Ref "/_/revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
 		    }
-		    if { $A } {
-			lappend menu [Ref "/_/revision?N=$N&V=$V&A=0" "Not annotated"]
-		    } else {
-			lappend menu [Ref "/_/revision?N=$N&V=$V&A=1" "Annotated"]
+		    if {$markup_language eq "wikit"} {
+			if { $A } {
+			    lappend menu [Ref "/_/revision?N=$N&V=$V&A=0" "Not annotated"]
+			} else {
+			    lappend menu [Ref "/_/revision?N=$N&V=$V&A=1" "Annotated"]
+			}
 		    }
 		}
 	    }
@@ -1160,6 +1269,8 @@ namespace eval WikitWub {
 	Debug.wikit {/history $N $S $L}
 
 	variable detect_robots
+	variable markup_language
+
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
@@ -1203,7 +1314,12 @@ namespace eval WikitWub {
 	set versions [WDB ListPageVersions $N $L $S]
 	set name [WDB GetPage $N name]
 	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
-	foreach {column span} {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1} {
+	if {$markup_language eq "wikit"} {
+	    set histheaders {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1}
+	} else {
+	    set histheaders {Rev 1 Date 1 {Modified by} 1 {Word compare} 3 WikiText 1}
+	}
+	foreach {column span} $histheaders {
 	    append C [<th> class [lindex $column 0] colspan $span $column]
 	}
 	append C "</tr></thead><tbody>\n"
@@ -1222,20 +1338,22 @@ namespace eval WikitWub {
 	    append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
 	    append C [<td> class Who [WhoUrl $who]]
 	    
-	    if { $prev >= 0 } {
-		append C [<td> class Line1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
-	    } else {
-		append C <td></td>
-	    }
-	    if { $next <= $nver } {
-		append C [<td> class Line2 [<a> href "/_/diff?N=$N&V=$vn&D=$next#diff0" $next]]
-	    } else {
-		append C <td></td>
-	    }
-	    if { $vn != $curr } {
-		append C [<td> class Line3 [<a> href "/_/diff?N=$N&V=$curr&D=$vn#diff0" Current]]
-	    } else {
-		append C <td></td>
+	    if {$markup_language eq "wikit"} {
+		if { $prev >= 0 } {
+		    append C [<td> class Line1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
+		} else {
+		    append C <td></td>
+		}
+		if { $next <= $nver } {
+		    append C [<td> class Line2 [<a> href "/_/diff?N=$N&V=$vn&D=$next#diff0" $next]]
+		} else {
+		    append C <td></td>
+		}
+		if { $vn != $curr } {
+		    append C [<td> class Line3 [<a> href "/_/diff?N=$N&V=$curr&D=$vn#diff0" Current]]
+		} else {
+		    append C <td></td>
+		}
 	    }
 
 	    if { $prev >= 0 } {
@@ -1254,7 +1372,9 @@ namespace eval WikitWub {
 		append C <td></td>
 	    }
 	    
-	    append C [<td> class Annotated [<a> href "/_/revision?N=$N&V=$vn&A=1" $vn]]
+	    if {$markup_language eq "wikit"} {
+		append C [<td> class Annotated [<a> href "/_/revision?N=$N&V=$vn&A=1" $vn]]
+	    }
 	    append C [<td> class WikiText [<a> href "/_/revision?N=$N.txt&V=$vn" $vn]]
 	    append C </tr> \n
 	    incr rowcnt
@@ -1498,8 +1618,7 @@ namespace eval WikitWub {
 	}
 
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
-	set C [WFormat TextToStream $O]
-	lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc 1] C U T BR
+	lassign [translate preview $O .html 1] C U T BR
 	set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
 	return [sendPage $r preview_tc]
     }
@@ -1696,6 +1815,7 @@ namespace eval WikitWub {
     # called to generate an edit page
     proc /edit {r N A args} {
 	variable detect_robots
+	variable markup_language
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
@@ -1958,6 +2078,7 @@ namespace eval WikitWub {
 	# tclLog "SearchResults key <$key> long <$searchLong>"
 	set rdate $date
 	set result "Searched for \"'''$key'''\" (in page titles"
+
 	if {$long} {
 	    append result { and contents}
 	}
@@ -1969,17 +2090,16 @@ namespace eval WikitWub {
 
 	    # these are fake pages, don't list them
 	    if {$id == 2 || $id == 4 || $id == 5} continue
-
-	    append result "   * [timestamp $date] . . . \[$name\]\n"
+	    append result [list_item "[timestamp $date] . . . \[$name\]"]
 	    set rdate $date
 	    incr count
 	}
 
 	if {$count == 0} {
-	    append result "   * '''''No matches found'''''\n"
+	    append result [list_item "'''''No matches found'''''"]
 	    set rdate 0
 	} else {
-	    append result "   * ''Displayed $count matches''\n"
+	    append result [list_item "''Displayed $count matches''"]
 	    set rdate 0
 	}
 
@@ -1989,14 +2109,13 @@ namespace eval WikitWub {
     proc pageXML {N} {
 	lassign [WDB GetPage $N name date who] name date who
 	set page [WDB GetContent $N]
-	set stream [WFormat TextToStream [WDB GetContent $N]]
-	lassign [WFormat StreamToHTML $stream / ::WikitWub::InfoProc] parsed - toc backrefs
+	lassign [translate $name $page .html] parsed - toc backrefs
 	return [<page> [subst { 
 	    [<name> [xmlarmour $name]]
 	    [<content> [xmlarmour $page]]
+	    [<parsed> [xmlarmour $parsed]]
 	    [<date> [Http Date $date]]
 	    [<who> [xmlarmour $who]]
-	    [<parsed> [xmlarmour $parsed]]
 	    [<toc> [xmlarmour $toc]]
 	    [<backrefs> [xmlarmour $backrefs]]
 	}]]
@@ -2119,8 +2238,7 @@ namespace eval WikitWub {
 		    }
 
 		    lassign [search $term $qdate] C nqdate long
-		    set C [WFormat TextToStream $C]
-		    lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc] C U T BR
+		    lassign [translate "Search" $C .html] C U T BR
 		    if { $nqdate } {
 			append C [<p> [<a> href "/_/search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
 		    }
@@ -2183,28 +2301,19 @@ namespace eval WikitWub {
 		# fetch page contents
 		set content [WDB GetContent $N]
 		switch -- $ext {
-		    .txt {
-			set C $content
-			return [Http NoCache [Http Ok $r $C text/plain]]
-		    }
-		    .str {
-			set C [WFormat TextToStream $content]
-			return [Http NoCache [Http Ok $r $C text/plain]]
-		    }
+		    .txt -
+		    .str -
 		    .code {
-			set C [WFormat TextToStream $content 0 0 0]
-			set C [WFormat StreamToTcl $name $C]
-			return [Http NoCache [Http Ok $r $C text/plain]]
+			return [Http NoCache [Http Ok $r [translate $name $content $ext] text/plain]]
 		    }
 		    .xml {
 			set C "<?xml version='1.0'?>"
 			append C \n [pageXML $N]
-			return [Http NoCache [Http Ok $r $C text/xml]]
+			return [Http NoCache [Http Ok $r [translate $name $C $ext] text/xml]]
 		    }
 		    default {
-			set C [WFormat TextToStream $content]
 			dict set r content-location "http://[Url host $r]/$N"
-			lassign [WFormat StreamToHTML $C / ::WikitWub::InfoProc] C U T BR IH
+			lassign [translate $name $content $ext] C U T BR IH
 			variable include_pages
 			if {$include_pages} {
 			    set C [IncludePages $C $IH]
@@ -2224,7 +2333,7 @@ namespace eval WikitWub {
 	}
 	
 	Debug.wikit {located: $N}
-
+	
 	# set up backrefs
 	set refs {1}
 	Debug.wikit {[llength $refs] backrefs to $N}

@@ -1018,28 +1018,112 @@ function insert_at_selection(txtareaid, markup){
     before_selection_after(txtareaid, markup, "", "");
 }
 
-function bold(txtareaid)     { surround_selection(txtareaid, "'''",  "bold text"); return false; }
-function italic(txtareaid)   { surround_selection(txtareaid, "''",   "italic text"); return false; }
-function teletype(txtareaid) { surround_selection(txtareaid, "`",    "teletype text"); return false; }
+function bold(txtareaid, markup_language)     {
+    if (markup_language == "stx")
+	surround_selection(txtareaid, "''", "bold text");
+    else
+	surround_selection(txtareaid, "'''", "bold text");
+    return false;
+}
+function italic(txtareaid, markup_language)   {
+    if (markup_language == "stx")
+	surround_selection(txtareaid, "'''", "italic text");
+    else
+	surround_selection(txtareaid, "''", "italic text");
+    return false;	
+}
+function teletype(txtareaid, markup_language) {
+    if (markup_language == "wikit")    
+	surround_selection(txtareaid, "`", "teletype text");
+    return false;
+}
+function superscript(txtareaid, markup_language) {
+    if (markup_language == "stx")    
+	surround_selection(txtareaid, "^^", "superscript text");
+    return false;
+}
+function subscript(txtareaid, markup_language) {
+    if (markup_language == "stx")    
+	surround_selection(txtareaid, "^^^", "subscript text");
+    return false;
+}
 
-function heading1(txtareaid) { before_selection_after(txtareaid, "\n**",   "**\n",   "your heading1"); return false; }
-function heading2(txtareaid) { before_selection_after(txtareaid, "\n***" , "***\n",  "your heading2"); return false; }
-function heading3(txtareaid) { before_selection_after(txtareaid, "\n****", "****\n", "your heading3"); return false; }
+function heading1(txtareaid, markup_language) {
+    if (markup_language == "stx")
+	before_selection_after(txtareaid, "\n=",   "=\n",   "your heading1");
+    else
+	before_selection_after(txtareaid, "\n**",   "**\n",   "your heading1");
+    return false;
+}
+function heading2(txtareaid, markup_language) {
+    if (markup_language == "stx")
+	before_selection_after(txtareaid, "\n==" , "*==n",  "your heading2");
+    else
+	before_selection_after(txtareaid, "\n***" , "***\n",  "your heading2");
+    return false;
+}
+function heading3(txtareaid, markup_language) {
+    if (markup_language == "stx")
+	before_selection_after(txtareaid, "\n===", "===\n", "your heading3");
+    else
+	before_selection_after(txtareaid, "\n****", "****\n", "your heading3");
+    return false;
+}
 
-function hruler(txtareaid)   { insert_at_selection(txtareaid, "\n----\n"); return false; }
+function hruler(txtareaid, markup_language)   { insert_at_selection(txtareaid, "\n----\n"); return false; }
 
-function list_bullets(txtareaid) { before_selection_after(txtareaid, "\n   * ",  "\n", "your bullet item"); return false; }
-function list_numbers(txtareaid) { before_selection_after(txtareaid, "\n   1. ", "\n", "your numbered item"); return false; }
+function list_bullets(txtareaid, markup_language) {
+    if (markup_language == "stx")
+	before_selection_after(txtareaid, "\n* ",  "\n", "your bullet item");
+    else
+	before_selection_after(txtareaid, "\n   * ",  "\n", "your bullet item");
+    return false;
+}
+function list_numbers(txtareaid, markup_language) {
+    if (markup_language == "stx")
+	before_selection_after(txtareaid, "\n# ", "\n", "your numbered item");
+    else
+	before_selection_after(txtareaid, "\n   1. ", "\n", "your numbered item");
+    return false;
+}
 
-function align_center(txtareaid) { surround_selection(txtareaid, "\n!!!!!!\n", "your centered text"); return false; }
+function align_center(txtareaid, markup_language) {
+    if (markup_language == "wikit")    
+	surround_selection(txtareaid, "\n!!!!!!\n", "your centered text");
+    return false;
+}
 
-function wiki_link(txtareaid) { before_selection_after(txtareaid, "[", "]", "your wiki page name"); return false; return false; }
-function url_link(txtareaid)  { insert_at_selection(txtareaid, "http://here.com/what.html%|%link name%|%"); return false; }
-function img_link(txtareaid)  { insert_at_selection(txtareaid, "[http://here.com/photo.gif|png|jpg]"); return false; }
+function wiki_link(txtareaid, markup_language) {
+    before_selection_after(txtareaid, "[", "]", "your wiki page name");
+    return false;
+}
+function url_link(txtareaid, markup_language)  {
+    if (markup_language == "stx")
+	insert_at_selection(txtareaid, "http://here.com/what.html");
+    else
+	insert_at_selection(txtareaid, "http://here.com/what.html%|%link name%|%");
+    return false;
+}
+function img_link(txtareaid, markup_language)  {
+    insert_at_selection(txtareaid, "[http://here.com/photo.gif|png|jpg]");
+    return false;
+}
 
-function code(txtareaid)  { surround_selection(txtareaid, "\n======\n", "your script"); return false; }
+function code(txtareaid, markup_language)  {
+    if (markup_language == "stx")
+	before_selection_after(txtareaid, "\n ", "", "your script");
+    else
+	surround_selection(txtareaid, "\n======\n", "your script");
+    return false;
+}
 
-function table(txtareaid)  { insert_at_selection(txtareaid, "\n%|header|row|%\n&|data|row|&\n&|data|row|&\n&|data|row|&\n"); return false; }
+function table(txtareaid, markup_language)  {
+    if (markup_language == "stx")
+	insert_at_selection(txtareaid, "\n|+header|row\n|data|row\n|data|row\n|data|row\n");
+    else
+	insert_at_selection(txtareaid, "\n%|header|row|%\n&|data|row|&\n&|data|row|&\n&|data|row|&\n");
+    return false;
+}
 
 /*
  * tooltips.js
