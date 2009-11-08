@@ -534,8 +534,8 @@ namespace eval WikitWub {
 
     proc /cclear {r args} {
 	Cache clear
-	variable mount
-	return [Http Redir $r "http://[dict get $r host][file join $mount 4]"]
+	variable mount; variable pageURL
+	return [Http Redir $r "http://[dict get $r host][file join $pageURL 4]"]
     }
 
     proc /cache {r args} {
@@ -550,8 +550,8 @@ namespace eval WikitWub {
 
     # generate site map
     proc /sitemap {r args} {
-	variable docroot
-	set p http://[Url host $r]/[string trimleft $mount /]
+	variable docroot; variable pageURL
+	set p http://[Url host $r]/[string trimleft $pageURL /]
 	set map {}
 	append map [Sitemap location $p "" mtime [file mtime $docroot/html/welcome.html] changefreq weekly] \n
 	append map [Sitemap location $p 4 mtime [clock seconds] changefreq always priority 1.0] \n
@@ -980,7 +980,7 @@ namespace eval WikitWub {
 	# If T is zero, D contains version to compare with
 	# If T is non zero, D contains a number of days and /diff must
 	Debug.wikit {/diff N:$N V:$V D:$D W:$W T:$T}
-	variable mount
+	variable mount; variable pageURL
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -1163,7 +1163,7 @@ namespace eval WikitWub {
 		    if { $W } {
 			set C [WFormat ShowDiffs $C]
 		    } else {
-			lassign [WFormat StreamToHTML [WFormat TextToStream $C] $mount ::WikitWub::InfoProc] C U T BR
+			lassign [WFormat StreamToHTML [WFormat TextToStream $C] $pageURL ::WikitWub::InfoProc] C U T BR
 		    }
 		    set tC [<span> class newwikiline "Text added in version $V is highlighted like this"]
 		    append tC , [<span> class oldwikiline "text deleted from version $D is highlighted like this"]
@@ -1415,7 +1415,7 @@ namespace eval WikitWub {
     set menus(Help)   [Ref 3 "Help"]
     set menus(HR)     <br>
     set menus(Search) [Ref 2 "Search"]
-    set menus(WhoAmI) [<a> href "_/whoami" "WhoAmI"]/[<a> href "_/logout" "Logout"]
+    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
 	<h1>Redirecting to $url</h1>
@@ -1463,7 +1463,7 @@ namespace eval WikitWub {
     proc /logout {r} {
 	variable mount
 	variable cookie
-	set r [Cookies Clear $r path [file join $mount _] -name $cookie]
+	set r [Cookies Clear $r path $mount -name $cookie]
 	if {[dict exists $r referer]} {
 	    return [Http Redir $r [dict get $r referer]]	
 	} else {
@@ -1503,7 +1503,7 @@ namespace eval WikitWub {
 	variable cookie
 	variable mount
 	Debug.wikit {/login - created cookie $nickname with R $R}
-	set r [Cookies Add $r -path [file join $mount _] -name $cookie -value $nickname {*}$age]
+	set r [Cookies Add $r -path $mount -name $cookie -value $nickname {*}$age]
 
 	if {$R eq ""} {
 	    set R [Http Referer $r]
@@ -1679,8 +1679,8 @@ namespace eval WikitWub {
 
 	# if there is new page content, save it now
 	variable protected
-	variable mount
-	set url http://[Url host $r][file join $mount $N]
+	variable mount; variable pageURL
+	set url http://[Url host $r][file join $pageURL $N]
 	if {$N ne ""
 	    && $C ne ""
 	    && ![info exists protected($N)]
@@ -2427,7 +2427,8 @@ namespace eval WikitWub {
 
     # Site WikitWub-specific defaults
     # These may be overwritten by command line, or by vars.tcl
-    variable mount /		;# default URL prefix
+    variable mount /_/		;# default direct URL prefix
+    variable pageURL /		;# default page prefix
     variable home [file dirname [info script]]
     variable base ""		;# default place for wiki to live
     variable wikitroot ""	;# where the wikit lives
