@@ -2177,6 +2177,7 @@ namespace eval WikitWub {
 
     proc do {r} {
 	# decompose name
+	variable mount
 	set term [file tail [dict get $r -path]]
 	set N [file rootname $term]	;# it's a simple single page
 	set ext [file extension $term]	;# file extension?
@@ -2194,7 +2195,7 @@ namespace eval WikitWub {
 	    set N [locate $term]
 	    if {$N == 2} {
 		# locate has given up - can't find a page - go to search
-		return [Http Redir $r "_/search" S [Query decode $term$fancy]]
+		return [Http Redir $r [file join $mount _/search] S [Query decode $term$fancy]]
 	    } elseif {$N ne $term} {
 		# we really should redirect
 		variable detect_robots
