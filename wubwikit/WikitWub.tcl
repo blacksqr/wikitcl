@@ -2585,6 +2585,7 @@ namespace eval WikitWub {
 	    # initialize page cache
 	    WDB pagecache create
 	}
+	menus	;# call it to prime array
 	proc init {args} {}	;# we can't be called twice
     }
 
