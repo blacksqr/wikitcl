@@ -1409,13 +1409,6 @@ namespace eval WikitWub {
     variable menus
     variable bullet " &bull; "
 
-    # Init common menu items
-    set menus(Home)   [<a> href "/" Home]
-    set menus(Recent) [Ref 4 "Recent changes"]
-    set menus(Help)   [Ref 3 "Help"]
-    set menus(HR)     <br>
-    set menus(Search) [Ref 2 "Search"]
-    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
 	<h1>Redirecting to $url</h1>
@@ -1424,6 +1417,16 @@ namespace eval WikitWub {
 
     proc menus { args } {
         variable menus
+	variable mount
+	if {![array size menus]} {
+	    # Init common menu items
+	    set menus(Home)   [<a> href "/" Home]
+	    set menus(Recent) [Ref 4 "Recent changes"]
+	    set menus(Help)   [Ref 3 "Help"]
+	    set menus(HR)     <br>
+	    set menus(Search) [Ref 2 "Search"]
+	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
+	}
 	set m {}
 	foreach arg $args {
 	    if {$arg ne ""} {
