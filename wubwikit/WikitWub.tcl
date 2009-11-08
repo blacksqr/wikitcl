@@ -1418,7 +1418,7 @@ namespace eval WikitWub {
     proc menus { args } {
         variable menus
 	variable mount
-	if {![array size menus]} {
+	if {![info exists menus] || ![array size menus]} {
 	    # Init common menu items
 	    set menus(Home)   [<a> href "/" Home]
 	    set menus(Recent) [Ref [file join $pageURL 4] "Recent changes"]
