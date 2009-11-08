@@ -260,7 +260,7 @@ namespace eval WikitWub {
 	    }]
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
-		 <form> edit method post action _/edit/save {
+		 <form> edit method post action edit/save {
 		     [<div> id helptext "[<hr>] [subst $quick_reference($markup_language)]"]
 		     [<div> class previewarea_pre id previewarea_pre ""]
 		     [<div> class previewarea id previewarea ""]
@@ -294,7 +294,7 @@ namespace eval WikitWub {
     template login {login} {
 	[<p> "Please choose a nickname that your edit will be identified by."]
 	[if {0} {[<p> "You can optionally enter a password that will reserve that nickname for you."]}]
-	[<form> login method post action _/edit/login {
+	[<form> login method post action edit/login {
 	    [<fieldset> login title Login {
 		[<text> nickname title "Nickname"]
 		[<input> name save type submit value "Login" {}]
@@ -534,7 +534,8 @@ namespace eval WikitWub {
 
     proc /cclear {r args} {
 	Cache clear
-	return [Http Redir $r "http://[dict get $r host]/4"]
+	variable mount
+	return [Http Redir $r "http://[dict get $r host][file join $mount 4]"]
     }
 
     proc /cache {r args} {
@@ -550,7 +551,7 @@ namespace eval WikitWub {
     # generate site map
     proc /sitemap {r args} {
 	variable docroot
-	set p http://[Url host $r]/
+	set p http://[Url host $r]/[string trimleft $mount]
 	set map {}
 	append map [Sitemap location $p "" mtime [file mtime $docroot/html/welcome.html] changefreq weekly] \n
 	append map [Sitemap location $p 4 mtime [clock seconds] changefreq always priority 1.0] \n
@@ -715,7 +716,7 @@ namespace eval WikitWub {
 	    append link [<span> class dots ". . ."]
 	    append link [<span> class nick [clock format $date -gmt 1 -format %T]]
 	    append link [<span> class dots ". . ."]
-	    append link [<a> class delta href _/history?N=$id history]
+	    append link [<a> class delta href history?N=$id history]
 	    lappend results [<li> $link]
 	}
 	if {$lastDay} {
@@ -961,11 +962,11 @@ namespace eval WikitWub {
 	variable TOC
 	set updated "Edit summary"
 	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [Ref _/history?N=$N History]
-	lappend menu [Ref _/summary?N=$N "Edit summary"]
-	lappend menu [Ref _/diff?N=$N "Last change"]
-	lappend menu [Ref _/diff?N=$N&T=1&D=1 "Changes last day"]
-	lappend menu [Ref _/diff?N=$N&T=1&D=7 "Changes last week"]
+	lappend menu [Ref history?N=$N History]
+	lappend menu [Ref summary?N=$N "Edit summary"]
+	lappend menu [Ref diff?N=$N "Last change"]
+	lappend menu [Ref diff?N=$N&T=1&D=1 "Changes last day"]
+	lappend menu [Ref diff?N=$N&T=1&D=7 "Changes last week"]
 	set footer [menus Home Recent Help Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set C $R
@@ -979,7 +980,7 @@ namespace eval WikitWub {
 	# If T is zero, D contains version to compare with
 	# If T is non zero, D contains a number of days and /diff must
 	Debug.wikit {/diff N:$N V:$V D:$D W:$W T:$T}
-
+	variable mount
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -1162,7 +1163,7 @@ namespace eval WikitWub {
 		    if { $W } {
 			set C [WFormat ShowDiffs $C]
 		    } else {
-			lassign [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc] C U T BR
+			lassign [WFormat StreamToHTML [WFormat TextToStream $C] $mount ::WikitWub::InfoProc] C U T BR
 		    }
 		    set tC [<span> class newwikiline "Text added in version $V is highlighted like this"]
 		    append tC , [<span> class oldwikiline "text deleted from version $D is highlighted like this"]
@@ -1180,11 +1181,11 @@ namespace eval WikitWub {
 	    set updated "Difference between version $V and $D"
 	}
 	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [Ref _/history?N=$N History]
-	lappend menu [Ref _/summary?N=$N "Edit summary"]
-	lappend menu [Ref _/diff?N=$N "Last change"]
-	lappend menu [Ref _/diff?N=$N&T=1&D=1 "Changes last day"]
-	lappend menu [Ref _/diff?N=$N&T=1&D=7 "Changes last week"]
+	lappend menu [Ref history?N=$N History]
+	lappend menu [Ref summary?N=$N "Edit summary"]
+	lappend menu [Ref diff?N=$N "Last change"]
+	lappend menu [Ref diff?N=$N&T=1&D=1 "Changes last day"]
+	lappend menu [Ref diff?N=$N&T=1&D=7 "Changes last week"]
 	set footer [menus Home Recent Help Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
@@ -1193,6 +1194,7 @@ namespace eval WikitWub {
     proc /revision {r N {V -1} {A 0}} {
 	Debug.wikit {/page $args}
 
+	variable mount
 	variable detect_robots
 	variable markup_language
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
@@ -1220,7 +1222,7 @@ namespace eval WikitWub {
 
 	variable menus
 	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [Ref _/history?N=$N History]
+	lappend menu [Ref history?N=$N History]
 
 	set name [WDB GetPage $N name]
 	if {$V >= 0} {
@@ -1241,16 +1243,16 @@ namespace eval WikitWub {
 		    }
 		    lassign [translate $name $C $ext] C U T BR
 		    if { $V > 0 } {
-			lappend menu [Ref "_/revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
+			lappend menu [Ref "revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
 		    }
 		    if { $V < $nver } {
-			lappend menu [Ref "_/revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
+			lappend menu [Ref "revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
 		    }
 		    if {$markup_language eq "wikit"} {
 			if { $A } {
-			    lappend menu [Ref "_/revision?N=$N&V=$V&A=0" "Not annotated"]
+			    lappend menu [Ref "revision?N=$N&V=$V&A=0" "Not annotated"]
 			} else {
-			    lappend menu [Ref "_/revision?N=$N&V=$V&A=1" "Annotated"]
+			    lappend menu [Ref "revision?N=$N&V=$V&A=1" "Annotated"]
 			}
 		    }
 		}
@@ -1268,6 +1270,7 @@ namespace eval WikitWub {
     proc /history {r N {S 0} {L 25}} {
 	Debug.wikit {/history $N $S $L}
 
+	variable mount
 	variable detect_robots
 	variable markup_language
 
@@ -1334,48 +1337,48 @@ namespace eval WikitWub {
 	    } else {
 		append C "<tr class='even'>"
 	    }
-	    append C [<td> class Rev [<a> href "_/revision?N=$N&V=$vn" rel nofollow $vn]]
+	    append C [<td> class Rev [<a> href "revision?N=$N&V=$vn" rel nofollow $vn]]
 	    append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
 	    append C [<td> class Who [WhoUrl $who]]
 	    
 	    if {$markup_language eq "wikit"} {
 		if { $prev >= 0 } {
-		    append C [<td> class Line1 [<a> href "_/diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
+		    append C [<td> class Line1 [<a> href "diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
 		} else {
 		    append C <td></td>
 		}
 		if { $next <= $nver } {
-		    append C [<td> class Line2 [<a> href "_/diff?N=$N&V=$vn&D=$next#diff0" $next]]
+		    append C [<td> class Line2 [<a> href "diff?N=$N&V=$vn&D=$next#diff0" $next]]
 		} else {
 		    append C <td></td>
 		}
 		if { $vn != $curr } {
-		    append C [<td> class Line3 [<a> href "_/diff?N=$N&V=$curr&D=$vn#diff0" Current]]
+		    append C [<td> class Line3 [<a> href "diff?N=$N&V=$curr&D=$vn#diff0" Current]]
 		} else {
 		    append C <td></td>
 		}
 	    }
 
 	    if { $prev >= 0 } {
-		append C [<td> class Word1 [<a> href "_/diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
+		append C [<td> class Word1 [<a> href "diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
 	    } else {
 		append C <td></td>
 	    }
 	    if { $next <= $nver } {
-		append C [<td> class Word2 [<a> href "_/diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
+		append C [<td> class Word2 [<a> href "diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
 	    } else {
 		append C <td></td>
 	    }
 	    if { $vn != $curr } {
-		append C [<td> class Word3 [<a> href "_/diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
+		append C [<td> class Word3 [<a> href "diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
 	    } else {
 		append C <td></td>
 	    }
 	    
 	    if {$markup_language eq "wikit"} {
-		append C [<td> class Annotated [<a> href "_/revision?N=$N&V=$vn&A=1" $vn]]
+		append C [<td> class Annotated [<a> href "revision?N=$N&V=$vn&A=1" $vn]]
 	    }
-	    append C [<td> class WikiText [<a> href "_/revision?N=$N.txt&V=$vn" $vn]]
+	    append C [<td> class WikiText [<a> href "revision?N=$N.txt&V=$vn" $vn]]
 	    append C </tr> \n
 	    incr rowcnt
 	}
@@ -1400,7 +1403,7 @@ namespace eval WikitWub {
 		set name $page
 	    }
 	}
-	return [<a> href /[string trimleft $url /] {*}$args [armour $name]]
+	return [<a> href [string trimleft $url /] {*}$args [armour $name]]
     }
 
     variable menus
@@ -1469,6 +1472,7 @@ namespace eval WikitWub {
     }
 
     proc /edit/login {r {nickname ""} {R ""}} {
+	variable mount
 	set path [file split [dict get $r -path]]
 	set N [lindex $path end]
 	set suffix /[string trimleft [lindex $path end-1] _]
@@ -1675,7 +1679,8 @@ namespace eval WikitWub {
 
 	# if there is new page content, save it now
 	variable protected
-	set url http://[Url host $r]/$N
+	variable mount
+	set url http://[Url host $r][file join $mount $N]
 	if {$N ne ""
 	    && $C ne ""
 	    && ![info exists protected($N)]
