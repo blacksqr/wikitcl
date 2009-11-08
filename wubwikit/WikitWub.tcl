@@ -551,7 +551,7 @@ namespace eval WikitWub {
     # generate site map
     proc /sitemap {r args} {
 	variable docroot
-	set p http://[Url host $r]/[string trimleft $mount]
+	set p http://[Url host $r]/[string trimleft $mount /]
 	set map {}
 	append map [Sitemap location $p "" mtime [file mtime $docroot/html/welcome.html] changefreq weekly] \n
 	append map [Sitemap location $p 4 mtime [clock seconds] changefreq always priority 1.0] \n
@@ -2195,7 +2195,7 @@ namespace eval WikitWub {
 	    set N [locate $term]
 	    if {$N == 2} {
 		# locate has given up - can't find a page - go to search
-		return [Http Redir $r /[file join $mount _/search] S [Query decode $term$fancy]]
+		return [Http Redir $r [file join $mount search] S [Query decode $term$fancy]]
 	    } elseif {$N ne $term} {
 		# we really should redirect
 		variable detect_robots
