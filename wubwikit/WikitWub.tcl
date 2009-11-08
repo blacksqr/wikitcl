@@ -260,7 +260,7 @@ namespace eval WikitWub {
 	    }]
 	    [div editcontents {
 		[set disabled [expr {$nick eq ""}]
-		 <form> edit method post action /_/edit/save {
+		 <form> edit method post action _/edit/save {
 		     [<div> id helptext "[<hr>] [subst $quick_reference($markup_language)]"]
 		     [<div> class previewarea_pre id previewarea_pre ""]
 		     [<div> class previewarea id previewarea ""]
@@ -294,7 +294,7 @@ namespace eval WikitWub {
     template login {login} {
 	[<p> "Please choose a nickname that your edit will be identified by."]
 	[if {0} {[<p> "You can optionally enter a password that will reserve that nickname for you."]}]
-	[<form> login method post action /_/edit/login {
+	[<form> login method post action _/edit/login {
 	    [<fieldset> login title Login {
 		[<text> nickname title "Nickname"]
 		[<input> name save type submit value "Login" {}]
@@ -316,7 +316,7 @@ namespace eval WikitWub {
 
     # page sent in response to a search
     template search {} {
-	[<form> search method get action /_/search {
+	[<form> search method get action _/search {
 	    [<fieldset> sfield title "Construct a new search" {
 		[<legend> "Enter a Search Phrase"]
 		[<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
@@ -331,14 +331,14 @@ namespace eval WikitWub {
     template conflict {Edit Conflict on $N} {
 	[<h2> "Edit conflict on page $N - [Ref $N $name]"]
 	[<p> "[<b> "Your changes have NOT been saved"] because someone (at IP address $who) saved a change to this page while you were editing."]
-	[<p> [<i> "Please restart a new [Ref /_/edit?N=$N edit] and merge your version (which is shown in full below.)"]]
+	[<p> [<i> "Please restart a new [Ref _/edit?N=$N edit] and merge your version (which is shown in full below.)"]]
 	[<p> "Got '$O' expected '$X'"]
 	[<hr> size 1]
 	[<p> [<pre> [armour $C]]]
 	[<hr> size 1]
     }
 
-    variable searchForm [string map {%S $search %N $N} [<form> search method get action /_/search {
+    variable searchForm [string map {%S $search %N $N} [<form> search method get action _/search {
 	[<fieldset> sfield title "Construct a new search" {
 	    [<legend> "Enter a Search Phrase"]
 	    [<text> S title "Append an asterisk (*) to search page contents" [armour %S]]
@@ -389,11 +389,11 @@ namespace eval WikitWub {
 
     # return a search form
     proc searchF {} {
-	set result [<form> searchform method get action /_/search {
+	set result [<form> searchform method get action _/search {
 	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
 	    [<hidden> _charset_ ""]
 	}]
-	append result \n [<form> gsearchform method get action /_/gsearch {
+	append result \n [<form> gsearchform method get action _/gsearch {
 	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} "Search in pages"]
 	    [<hidden> _charset_ ""]
 	}] \n
@@ -401,11 +401,11 @@ namespace eval WikitWub {
     }
 
     proc gsearchF {Q} {
-	set result [<form> searchform action /_/search {
+	set result [<form> searchform action _/search {
 	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
 	    [<hidden> _charset_ ""]
 	}]
-	append result \n [<form> gsearchform method get action /_/gsearch {
+	append result \n [<form> gsearchform method get action _/gsearch {
 	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} [tclarmour $Q]]
 	    [<hidden> _charset_ ""]
 	}] \n
@@ -464,7 +464,7 @@ namespace eval WikitWub {
 	    /* for Internet Explorer */
 	    /*@cc_on @*/
 	    /*@if (@_win32)
-	    document.write("<script defer src='/_/ie_onload1.JS'><\/script>");
+	    document.write("<script defer src='_/ie_onload1.JS'><\/script>");
 	    /*@end @*/
 	    
 	    /* for other browsers */
@@ -645,7 +645,7 @@ namespace eval WikitWub {
 		    set result {}
 
 		    if { !$deletesAdded } {
-			lappend results [<p> [<a> class cleared href /_/cleared "Cleared pages (title and/or page)"]]
+			lappend results [<p> [<a> class cleared href _/cleared "Cleared pages (title and/or page)"]]
 			set deletesAdded 1
 		    }
 		}
@@ -664,13 +664,13 @@ namespace eval WikitWub {
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
 
-	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta rel nofollow href /_/diff?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href /_/summary?N=$id [string repeat $actimg [edit_activity $id]]]]]
+	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta rel nofollow href _/diff?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href _/summary?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
 	if { [llength $result] } {
 	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
 	    if { !$deletesAdded } {
-		lappend results [<p> [<a> href /_/cleared "Cleared pages (title and/or page)"]]
+		lappend results [<p> [<a> href _/cleared "Cleared pages (title and/or page)"]]
 	    }
 	}
 
@@ -715,7 +715,7 @@ namespace eval WikitWub {
 	    append link [<span> class dots ". . ."]
 	    append link [<span> class nick [clock format $date -gmt 1 -format %T]]
 	    append link [<span> class dots ". . ."]
-	    append link [<a> class delta href /_/history?N=$id history]
+	    append link [<a> class delta href _/history?N=$id history]
 	    lappend results [<li> $link]
 	}
 	if {$lastDay} {
@@ -961,11 +961,11 @@ namespace eval WikitWub {
 	variable TOC
 	set updated "Edit summary"
 	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [Ref /_/history?N=$N History]
-	lappend menu [Ref /_/summary?N=$N "Edit summary"]
-	lappend menu [Ref /_/diff?N=$N "Last change"]
-	lappend menu [Ref /_/diff?N=$N&T=1&D=1 "Changes last day"]
-	lappend menu [Ref /_/diff?N=$N&T=1&D=7 "Changes last week"]
+	lappend menu [Ref _/history?N=$N History]
+	lappend menu [Ref _/summary?N=$N "Edit summary"]
+	lappend menu [Ref _/diff?N=$N "Last change"]
+	lappend menu [Ref _/diff?N=$N&T=1&D=1 "Changes last day"]
+	lappend menu [Ref _/diff?N=$N&T=1&D=7 "Changes last week"]
 	set footer [menus Home Recent Help Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set C $R
@@ -1180,11 +1180,11 @@ namespace eval WikitWub {
 	    set updated "Difference between version $V and $D"
 	}
 	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [Ref /_/history?N=$N History]
-	lappend menu [Ref /_/summary?N=$N "Edit summary"]
-	lappend menu [Ref /_/diff?N=$N "Last change"]
-	lappend menu [Ref /_/diff?N=$N&T=1&D=1 "Changes last day"]
-	lappend menu [Ref /_/diff?N=$N&T=1&D=7 "Changes last week"]
+	lappend menu [Ref _/history?N=$N History]
+	lappend menu [Ref _/summary?N=$N "Edit summary"]
+	lappend menu [Ref _/diff?N=$N "Last change"]
+	lappend menu [Ref _/diff?N=$N&T=1&D=1 "Changes last day"]
+	lappend menu [Ref _/diff?N=$N&T=1&D=7 "Changes last week"]
 	set footer [menus Home Recent Help Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
@@ -1220,7 +1220,7 @@ namespace eval WikitWub {
 
 	variable menus
 	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [Ref /_/history?N=$N History]
+	lappend menu [Ref _/history?N=$N History]
 
 	set name [WDB GetPage $N name]
 	if {$V >= 0} {
@@ -1241,16 +1241,16 @@ namespace eval WikitWub {
 		    }
 		    lassign [translate $name $C $ext] C U T BR
 		    if { $V > 0 } {
-			lappend menu [Ref "/_/revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
+			lappend menu [Ref "_/revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
 		    }
 		    if { $V < $nver } {
-			lappend menu [Ref "/_/revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
+			lappend menu [Ref "_/revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
 		    }
 		    if {$markup_language eq "wikit"} {
 			if { $A } {
-			    lappend menu [Ref "/_/revision?N=$N&V=$V&A=0" "Not annotated"]
+			    lappend menu [Ref "_/revision?N=$N&V=$V&A=0" "Not annotated"]
 			} else {
-			    lappend menu [Ref "/_/revision?N=$N&V=$V&A=1" "Annotated"]
+			    lappend menu [Ref "_/revision?N=$N&V=$V&A=1" "Annotated"]
 			}
 		    }
 		}
@@ -1334,48 +1334,48 @@ namespace eval WikitWub {
 	    } else {
 		append C "<tr class='even'>"
 	    }
-	    append C [<td> class Rev [<a> href "/_/revision?N=$N&V=$vn" rel nofollow $vn]]
+	    append C [<td> class Rev [<a> href "_/revision?N=$N&V=$vn" rel nofollow $vn]]
 	    append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
 	    append C [<td> class Who [WhoUrl $who]]
 	    
 	    if {$markup_language eq "wikit"} {
 		if { $prev >= 0 } {
-		    append C [<td> class Line1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
+		    append C [<td> class Line1 [<a> href "_/diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
 		} else {
 		    append C <td></td>
 		}
 		if { $next <= $nver } {
-		    append C [<td> class Line2 [<a> href "/_/diff?N=$N&V=$vn&D=$next#diff0" $next]]
+		    append C [<td> class Line2 [<a> href "_/diff?N=$N&V=$vn&D=$next#diff0" $next]]
 		} else {
 		    append C <td></td>
 		}
 		if { $vn != $curr } {
-		    append C [<td> class Line3 [<a> href "/_/diff?N=$N&V=$curr&D=$vn#diff0" Current]]
+		    append C [<td> class Line3 [<a> href "_/diff?N=$N&V=$curr&D=$vn#diff0" Current]]
 		} else {
 		    append C <td></td>
 		}
 	    }
 
 	    if { $prev >= 0 } {
-		append C [<td> class Word1 [<a> href "/_/diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
+		append C [<td> class Word1 [<a> href "_/diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
 	    } else {
 		append C <td></td>
 	    }
 	    if { $next <= $nver } {
-		append C [<td> class Word2 [<a> href "/_/diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
+		append C [<td> class Word2 [<a> href "_/diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
 	    } else {
 		append C <td></td>
 	    }
 	    if { $vn != $curr } {
-		append C [<td> class Word3 [<a> href "/_/diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
+		append C [<td> class Word3 [<a> href "_/diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
 	    } else {
 		append C <td></td>
 	    }
 	    
 	    if {$markup_language eq "wikit"} {
-		append C [<td> class Annotated [<a> href "/_/revision?N=$N&V=$vn&A=1" $vn]]
+		append C [<td> class Annotated [<a> href "_/revision?N=$N&V=$vn&A=1" $vn]]
 	    }
-	    append C [<td> class WikiText [<a> href "/_/revision?N=$N.txt&V=$vn" $vn]]
+	    append C [<td> class WikiText [<a> href "_/revision?N=$N.txt&V=$vn" $vn]]
 	    append C </tr> \n
 	    incr rowcnt
 	}
@@ -1412,7 +1412,7 @@ namespace eval WikitWub {
     set menus(Help)   [Ref 3 "Help"]
     set menus(HR)     <br>
     set menus(Search) [Ref 2 "Search"]
-    set menus(WhoAmI) [<a> href "/_/whoami" "WhoAmI"]/[<a> href "/_/logout" "Logout"]
+    set menus(WhoAmI) [<a> href "_/whoami" "WhoAmI"]/[<a> href "_/logout" "Logout"]
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
 	<h1>Redirecting to $url</h1>
@@ -1458,8 +1458,9 @@ namespace eval WikitWub {
     }
 
     proc /logout {r} {
+	variable mount
 	variable cookie
-	set r [Cookies Clear $r path /_/ -name $cookie]
+	set r [Cookies Clear $r path [file join $mount _] -name $cookie]
 	if {[dict exists $r referer]} {
 	    return [Http Redir $r [dict get $r referer]]	
 	} else {
@@ -1496,8 +1497,9 @@ namespace eval WikitWub {
 	}
 
 	variable cookie
+	variable mount
 	Debug.wikit {/login - created cookie $nickname with R $R}
-	set r [Cookies Add $r -path /_/ -name $cookie -value $nickname {*}$age]
+	set r [Cookies Add $r -path [file join $mount _] -name $cookie -value $nickname {*}$age]
 
 	if {$R eq ""} {
 	    set R [Http Referer $r]
@@ -2162,7 +2164,7 @@ namespace eval WikitWub {
 	return $C
     }
 
-    variable trailers {@ /_/edit ! /_/ref - /_/diff + /_/history}
+    variable trailers {@ _/edit ! _/ref - _/diff + _/history}
 
     proc generated { r } {
 	return "Generated in [expr {int([clock microseconds] - [dict get $r -received])/1000}]ms"
@@ -2187,7 +2189,7 @@ namespace eval WikitWub {
 	    set N [locate $term]
 	    if {$N == 2} {
 		# locate has given up - can't find a page - go to search
-		return [Http Redir $r "http://[dict get $r host]/_/search" S [Query decode $term$fancy]]
+		return [Http Redir $r "_/search" S [Query decode $term$fancy]]
 	    } elseif {$N ne $term} {
 		# we really should redirect
 		variable detect_robots
@@ -2240,15 +2242,15 @@ namespace eval WikitWub {
 		    lassign [search $term $qdate] C nqdate long
 		    lassign [translate "Search" $C .html] C U T BR
 		    if { $nqdate } {
-			append C [<p> [<a> href "/_/search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
+			append C [<p> [<a> href "_/search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
 		    }
 		    if { $long } {
 			append C <p> 
-			append C [<a> href "/_/search?S=[armour [string trimright $term *]]&_charset_=utf-8" "Repeat search in titles only"]
+			append C [<a> href "_/search?S=[armour [string trimright $term *]]&_charset_=utf-8" "Repeat search in titles only"]
 			append C ", or remove trailing asterisks from the search string to search the titles only.</p>"
 		    } else {
 			append C <p> 
-			append C [<a> href "/_/search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
+			append C [<a> href "_/search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
 			append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
 		    }
 		    set q [string trimright $term *]
@@ -2344,12 +2346,12 @@ namespace eval WikitWub {
 		set Title [armour $name]
 	    }
 	    1 {
-		set backRef /_/ref?N=$N
+		set backRef _/ref?N=$N
 		set Refs "[Ref $backRef Reference] - "
 		set Title [Ref $backRef $name title "click to see reference to this page"]
 	    }
 	    default {
-		set backRef /_/ref?N=$N
+		set backRef _/ref?N=$N
 		set Refs "[llength $refs] [Ref $backRef {References to this page}]"
 		set Title [Ref $backRef $name title "click to see [llength $refs] references to this page"]
 		Debug.wikit {backrefs: backRef:'$backRef' Refs:'$Refs' Title:'$Title'} 10
@@ -2372,7 +2374,7 @@ namespace eval WikitWub {
 	    }
 	    if {[string length $updated]} {
 		variable delta
-		append updated " " [<a> class delta href /_/diff?N=$N#diff0 $delta]
+		append updated " " [<a> class delta href _/diff?N=$N#diff0 $delta]
 	    }
 	}
 
@@ -2384,13 +2386,13 @@ namespace eval WikitWub {
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
 	    if {!$::roflag && $readonly eq {}} {
-		lappend menu [Ref /_/edit?N=$N&A=1 "Add comments"]
-		lappend footer [Ref /_/edit?N=$N&A=1 "Add comments"]
-		lappend menu [Ref /_/edit?N=$N Edit]
-		lappend footer [Ref /_/edit?N=$N Edit]
+		lappend menu [Ref _/edit?N=$N&A=1 "Add comments"]
+		lappend footer [Ref _/edit?N=$N&A=1 "Add comments"]
+		lappend menu [Ref _/edit?N=$N Edit]
+		lappend footer [Ref _/edit?N=$N Edit]
 	    }
-	    lappend menu [Ref /_/history?N=$N "History"]
-	    lappend menu [Ref /_/summary?N=$N "Edit summary"]
+	    lappend menu [Ref _/history?N=$N "History"]
+	    lappend menu [Ref _/summary?N=$N "Edit summary"]
 	    lappend menu [Ref $backRef References]
 	}
 
@@ -2419,6 +2421,7 @@ namespace eval WikitWub {
 
     # Site WikitWub-specific defaults
     # These may be overwritten by command line, or by vars.tcl
+    variable mount /		;# default URL prefix
     variable home [file dirname [info script]]
     variable base ""		;# default place for wiki to live
     variable wikitroot ""	;# where the wikit lives
