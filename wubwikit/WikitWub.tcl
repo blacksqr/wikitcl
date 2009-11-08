@@ -1406,19 +1406,19 @@ namespace eval WikitWub {
 	return [<a> href [string trimleft $url /] {*}$args [armour $name]]
     }
 
-    variable menus
-    variable bullet " &bull; "
-
     set redir {meta: http-equiv='refresh' content='10;url=$url'
 
 	<h1>Redirecting to $url</h1>
 	<p>$content</p>
     }
 
+    variable menus
+    variable bullet " &bull; "
+
     proc menus { args } {
         variable menus
 	variable mount
-	if {![info exists menus] || ![array size menus]} {
+	if {![info exists menus(Recent)]} {
 	    # Init common menu items
 	    set menus(Home)   [<a> href "/" Home]
 	    set menus(Recent) [Ref [file join $pageURL 4] "Recent changes"]
