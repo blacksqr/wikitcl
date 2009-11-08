@@ -2248,15 +2248,15 @@ namespace eval WikitWub {
 		    lassign [search $term $qdate] C nqdate long
 		    lassign [translate "Search" $C .html] C U T BR
 		    if { $nqdate } {
-			append C [<p> [<a> href "_/search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
+			append C [<p> [<a> href "search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
 		    }
 		    if { $long } {
 			append C <p> 
-			append C [<a> href "_/search?S=[armour [string trimright $term *]]&_charset_=utf-8" "Repeat search in titles only"]
+			append C [<a> href "search?S=[armour [string trimright $term *]]&_charset_=utf-8" "Repeat search in titles only"]
 			append C ", or remove trailing asterisks from the search string to search the titles only.</p>"
 		    } else {
 			append C <p> 
-			append C [<a> href "_/search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
+			append C [<a> href "search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
 			append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
 		    }
 		    set q [string trimright $term *]
