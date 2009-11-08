@@ -331,7 +331,7 @@ namespace eval WikitWub {
     template conflict {Edit Conflict on $N} {
 	[<h2> "Edit conflict on page $N - [Ref $N $name]"]
 	[<p> "[<b> "Your changes have NOT been saved"] because someone (at IP address $who) saved a change to this page while you were editing."]
-	[<p> [<i> "Please restart a new [Ref _/edit?N=$N edit] and merge your version (which is shown in full below.)"]]
+	[<p> [<i> "Please restart a new [<a> href _/edit?N=$N edit] and merge your version (which is shown in full below.)"]]
 	[<p> "Got '$O' expected '$X'"]
 	[<hr> size 1]
 	[<p> [<pre> [armour $C]]]
@@ -962,11 +962,11 @@ namespace eval WikitWub {
 	variable TOC
 	set updated "Edit summary"
 	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [Ref history?N=$N History]
-	lappend menu [Ref summary?N=$N "Edit summary"]
-	lappend menu [Ref diff?N=$N "Last change"]
-	lappend menu [Ref diff?N=$N&T=1&D=1 "Changes last day"]
-	lappend menu [Ref diff?N=$N&T=1&D=7 "Changes last week"]
+	lappend menu [<a> href history?N=$N History]
+	lappend menu [<a> href summary?N=$N "Edit summary"]
+	lappend menu [<a> href diff?N=$N "Last change"]
+	lappend menu [<a> href diff?N=$N&T=1&D=1 "Changes last day"]
+	lappend menu [<a> href diff?N=$N&T=1&D=7 "Changes last week"]
 	set footer [menus Home Recent Help Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	set C $R
@@ -1181,11 +1181,11 @@ namespace eval WikitWub {
 	    set updated "Difference between version $V and $D"
 	}
 	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [Ref history?N=$N History]
-	lappend menu [Ref summary?N=$N "Edit summary"]
-	lappend menu [Ref diff?N=$N "Last change"]
-	lappend menu [Ref diff?N=$N&T=1&D=1 "Changes last day"]
-	lappend menu [Ref diff?N=$N&T=1&D=7 "Changes last week"]
+	lappend menu [<a> href history?N=$N History]
+	lappend menu [<a> href summary?N=$N "Edit summary"]
+	lappend menu [<a> href diff?N=$N "Last change"]
+	lappend menu [<a> href diff?N=$N&T=1&D=1 "Changes last day"]
+	lappend menu [<a> href diff?N=$N&T=1&D=7 "Changes last week"]
 	set footer [menus Home Recent Help Search]
 	set T "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
@@ -1222,7 +1222,7 @@ namespace eval WikitWub {
 
 	variable menus
 	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [Ref history?N=$N History]
+	lappend menu [<a> href history?N=$N History]
 
 	set name [WDB GetPage $N name]
 	if {$V >= 0} {
@@ -1243,16 +1243,16 @@ namespace eval WikitWub {
 		    }
 		    lassign [translate $name $C $ext] C U T BR
 		    if { $V > 0 } {
-			lappend menu [Ref "revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
+			lappend menu [<a> href "revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
 		    }
 		    if { $V < $nver } {
-			lappend menu [Ref "revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
+			lappend menu [<a> href "revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
 		    }
 		    if {$markup_language eq "wikit"} {
 			if { $A } {
-			    lappend menu [Ref "revision?N=$N&V=$V&A=0" "Not annotated"]
+			    lappend menu [<a> href "revision?N=$N&V=$V&A=0" "Not annotated"]
 			} else {
-			    lappend menu [Ref "revision?N=$N&V=$V&A=1" "Annotated"]
+			    lappend menu [<a> href "revision?N=$N&V=$V&A=1" "Annotated"]
 			}
 		    }
 		}
@@ -1270,7 +1270,7 @@ namespace eval WikitWub {
     proc /history {r N {S 0} {L 25}} {
 	Debug.wikit {/history $N $S $L}
 
-	variable mount
+	variable mount; variable pageURL
 	variable detect_robots
 	variable markup_language
 
@@ -1396,6 +1396,7 @@ namespace eval WikitWub {
 
     # Ref - utility proc to generate an <A> from a page id
     proc Ref {url {name "" } args} {
+	variable pageURL
 	if {$name eq ""} {
 	    set page [lindex [file split $url] end]
 	    set name [WDB GetPage $page name]
@@ -1403,7 +1404,7 @@ namespace eval WikitWub {
 		set name $page
 	    }
 	}
-	return [<a> href [string trimleft $url /] {*}$args [armour $name]]
+	return [<a> href [file join $pageURL $url] {*}$args [armour $name]]
     }
 
     set redir {meta: http-equiv='refresh' content='10;url=$url'
@@ -2356,13 +2357,13 @@ namespace eval WikitWub {
 	    }
 	    1 {
 		set backRef _/ref?N=$N
-		set Refs "[Ref $backRef Reference] - "
-		set Title [Ref $backRef $name title "click to see reference to this page"]
+		set Refs "[<a> href $backRef Reference] - "
+		set Title [<a> href $backRef title "click to see reference to this page" $name]
 	    }
 	    default {
 		set backRef _/ref?N=$N
-		set Refs "[llength $refs] [Ref $backRef {References to this page}]"
-		set Title [Ref $backRef $name title "click to see [llength $refs] references to this page"]
+		set Refs "[llength $refs] [<a> href $backRef {References to this page}]"
+		set Title [<a> href $backRef title "click to see [llength $refs] references to this page" $name]
 		Debug.wikit {backrefs: backRef:'$backRef' Refs:'$Refs' Title:'$Title'} 10
 	    }
 	}
@@ -2395,14 +2396,14 @@ namespace eval WikitWub {
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
 	    if {!$::roflag && $readonly eq {}} {
-		lappend menu [Ref _/edit?N=$N&A=1 "Add comments"]
-		lappend footer [Ref _/edit?N=$N&A=1 "Add comments"]
-		lappend menu [Ref _/edit?N=$N Edit]
-		lappend footer [Ref _/edit?N=$N Edit]
+		lappend menu [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
+		lappend footer [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
+		lappend menu [<a> href [file join $mount edit]?N=$N Edit]
+		lappend footer [<a> href [file join $mount edit]?N=$N Edit]
 	    }
-	    lappend menu [Ref _/history?N=$N "History"]
-	    lappend menu [Ref _/summary?N=$N "Edit summary"]
-	    lappend menu [Ref $backRef References]
+	    lappend menu [<a> href [file join $mount history]?N=$N "History"]
+	    lappend menu [<a> href [file join $mount summary]?N=$N "Edit summary"]
+	    lappend menu [<a> href $backRef References]
 	}
 
 	variable TOC
