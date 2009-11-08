@@ -1417,7 +1417,7 @@ namespace eval WikitWub {
 
     proc menus { args } {
         variable menus
-	variable mount
+	variable mount; variable pageURL
 	if {![info exists menus(Recent)]} {
 	    # Init common menu items
 	    set menus(Home)   [<a> href "/" Home]
