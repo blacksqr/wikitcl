@@ -2199,7 +2199,7 @@ namespace eval WikitWub {
 	    set N [locate $term]
 	    if {$N == 2} {
 		# locate has given up - can't find a page - go to search
-		return [Http Redir $r [file join $mount search] S [Query decode $term$fancy]]
+		return [Http Redir $r /[file join $mount search] S [Query decode $term$fancy]]
 	    } elseif {$N ne $term} {
 		# we really should redirect
 		variable detect_robots
