@@ -1421,10 +1421,10 @@ namespace eval WikitWub {
 	if {![info exists menus(Recent)]} {
 	    # Init common menu items
 	    set menus(Home)   [<a> href "/" Home]
-	    set menus(Recent) [Ref [file join $pageURL 4] "Recent changes"]
-	    set menus(Help)   [Ref [file join $pageURL 3] "Help"]
+	    set menus(Recent) [<a> href [file join $pageURL 4] "Recent changes"]
+	    set menus(Help)   [<a> href [file join $pageURL 3] "Help"]
 	    set menus(HR)     <br>
-	    set menus(Search) [Ref [file join $pageURL 2] "Search"]
+	    set menus(Search) [<a> href [file join $pageURL 2] "Search"]
 	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
 	}
 	set m {}
