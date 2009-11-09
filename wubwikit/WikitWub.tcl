@@ -80,6 +80,7 @@ namespace eval WikitWub {
     proc sendPage {r {tname page} {http {NoCache Ok}}} {
 	variable templates
 	variable titles
+	variable mount
 	if {$titles($tname) ne ""} {
 	    dict set r -title [uplevel 1 subst [list $titles($tname)]]
 	}
@@ -316,7 +317,7 @@ namespace eval WikitWub {
 
     # page sent in response to a search
     template search {} {
-	[<form> search method get action _/search {
+	[<form> search method get action [file join $mount search] {
 	    [<fieldset> sfield title "Construct a new search" {
 		[<legend> "Enter a Search Phrase"]
 		[<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
@@ -338,7 +339,7 @@ namespace eval WikitWub {
 	[<hr> size 1]
     }
 
-    variable searchForm [string map {%S $search %N $N} [<form> search method get action _/search {
+    variable searchForm [string map {%S $search %N $N %M $mount} [<form> search method get action [file join %M search] {
 	[<fieldset> sfield title "Construct a new search" {
 	    [<legend> "Enter a Search Phrase"]
 	    [<text> S title "Append an asterisk (*) to search page contents" [armour %S]]
@@ -389,11 +390,12 @@ namespace eval WikitWub {
 
     # return a search form
     proc searchF {} {
-	set result [<form> searchform method get action _/search {
+	variable mount
+	set result [<form> searchform method get action [file join $mount search] {
 	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
 	    [<hidden> _charset_ ""]
 	}]
-	append result \n [<form> gsearchform method get action _/gsearch {
+	append result \n [<form> gsearchform method get action [file join $mount gsearch] {
 	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} "Search in pages"]
 	    [<hidden> _charset_ ""]
 	}] \n
@@ -401,11 +403,12 @@ namespace eval WikitWub {
     }
 
     proc gsearchF {Q} {
-	set result [<form> searchform action _/search {
+	variable mount
+	set result [<form> searchform action [file join $mount search] {
 	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
 	    [<hidden> _charset_ ""]
 	}]
-	append result \n [<form> gsearchform method get action _/gsearch {
+	append result \n [<form> gsearchform method get action [file join $mount gsearch] {
 	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} [tclarmour $Q]]
 	    [<hidden> _charset_ ""]
 	}] \n
