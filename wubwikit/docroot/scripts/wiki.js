@@ -931,12 +931,18 @@ var Url = {
 
 }
 
-function previewPage(page)
+function previewPage(page, markup_language)
 {
     document.getElementById("previewarea_pre").innerHTML = "<hr><b>Preview:</b> <button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
     document.getElementById("previewarea_post").innerHTML = "<b>Preview:</b> <button type='button' id='previewbutton' onclick='clearPreview();'>Hide preview</button>";
     var txt = document.getElementById("editarea").value;
-    ajaxpage("/_/preview", "N=" + page + "&O="+Url.encode(txt), "previewarea");
+    if (markup_language == "creole") {
+	document.getElementById("previewarea").innerHTML = "";
+	render_creole_in_id("previewarea", txt);
+    }
+    else {
+	ajaxpage("/_/preview", "N=" + page + "&O="+Url.encode(txt), "previewarea");
+    }
     return false;
 }
 
@@ -1021,6 +1027,8 @@ function insert_at_selection(txtareaid, markup){
 function bold(txtareaid, markup_language)     {
     if (markup_language == "stx")
 	surround_selection(txtareaid, "''", "bold text");
+    else if (markup_language == "creole")
+	surround_selection(txtareaid, "**", "bold text");
     else
 	surround_selection(txtareaid, "'''", "bold text");
     return false;
@@ -1028,6 +1036,8 @@ function bold(txtareaid, markup_language)     {
 function italic(txtareaid, markup_language)   {
     if (markup_language == "stx")
 	surround_selection(txtareaid, "'''", "italic text");
+    else if (markup_language == "creole")
+	surround_selection(txtareaid, "//", "italic text");
     else
 	surround_selection(txtareaid, "''", "italic text");
     return false;	
@@ -1050,14 +1060,18 @@ function subscript(txtareaid, markup_language) {
 
 function heading1(txtareaid, markup_language) {
     if (markup_language == "stx")
-	before_selection_after(txtareaid, "\n=",   "=\n",   "your heading1");
+	before_selection_after(txtareaid, "\n=", "=\n", "your heading1");
+    else if (markup_language == "creole")
+	before_selection_after(txtareaid, "\n== ", "", "your heading1");
     else
-	before_selection_after(txtareaid, "\n**",   "**\n",   "your heading1");
+	before_selection_after(txtareaid, "\n**", "**\n", "your heading1");
     return false;
 }
 function heading2(txtareaid, markup_language) {
     if (markup_language == "stx")
 	before_selection_after(txtareaid, "\n==" , "*==n",  "your heading2");
+    else if (markup_language == "creole")
+	before_selection_after(txtareaid, "\n=== ", "", "your heading2");
     else
 	before_selection_after(txtareaid, "\n***" , "***\n",  "your heading2");
     return false;
@@ -1065,22 +1079,27 @@ function heading2(txtareaid, markup_language) {
 function heading3(txtareaid, markup_language) {
     if (markup_language == "stx")
 	before_selection_after(txtareaid, "\n===", "===\n", "your heading3");
+    else if (markup_language == "creole")
+	before_selection_after(txtareaid, "\n==== ", "", "your heading3");
     else
 	before_selection_after(txtareaid, "\n****", "****\n", "your heading3");
     return false;
 }
 
-function hruler(txtareaid, markup_language)   { insert_at_selection(txtareaid, "\n----\n"); return false; }
+function hruler(txtareaid, markup_language)   {
+    insert_at_selection(txtareaid, "\n----\n");
+    return false;
+}
 
 function list_bullets(txtareaid, markup_language) {
-    if (markup_language == "stx")
+    if (markup_language == "stx" || markup_language == "creole")
 	before_selection_after(txtareaid, "\n* ",  "\n", "your bullet item");
     else
 	before_selection_after(txtareaid, "\n   * ",  "\n", "your bullet item");
     return false;
 }
 function list_numbers(txtareaid, markup_language) {
-    if (markup_language == "stx")
+    if (markup_language == "stx" || markup_language == "creole")
 	before_selection_after(txtareaid, "\n# ", "\n", "your numbered item");
     else
 	before_selection_after(txtareaid, "\n   1. ", "\n", "your numbered item");
@@ -1094,24 +1113,34 @@ function align_center(txtareaid, markup_language) {
 }
 
 function wiki_link(txtareaid, markup_language) {
-    before_selection_after(txtareaid, "[", "]", "your wiki page name");
+    if (markup_language == "creole")
+	before_selection_after(txtareaid, "[[", "]]", "your wiki page name");
+    else
+	before_selection_after(txtareaid, "[", "]", "your wiki page name");
     return false;
 }
 function url_link(txtareaid, markup_language)  {
     if (markup_language == "stx")
 	insert_at_selection(txtareaid, "http://here.com/what.html");
+    else if (markup_language == "creole")
+	insert_at_selection(txtareaid, "[[http://here.com/what.html|link name]]");
     else
 	insert_at_selection(txtareaid, "http://here.com/what.html%|%link name%|%");
     return false;
 }
 function img_link(txtareaid, markup_language)  {
-    insert_at_selection(txtareaid, "[http://here.com/photo.gif|png|jpg]");
+    if (markup_language == "creole")
+	insert_at_selection(txtareaid, "{{http://here.com/photo.jpg|title}}");
+    else
+	insert_at_selection(txtareaid, "[http://here.com/photo.gif|png|jpg]");
     return false;
 }
 
 function code(txtareaid, markup_language)  {
     if (markup_language == "stx")
 	before_selection_after(txtareaid, "\n ", "", "your script");
+    else if (markup_language == "creole")
+	before_selection_after(txtareaid, "\n{{{\n", "\n}}}\n", "your script");
     else
 	surround_selection(txtareaid, "\n======\n", "your script");
     return false;
@@ -1120,6 +1149,8 @@ function code(txtareaid, markup_language)  {
 function table(txtareaid, markup_language)  {
     if (markup_language == "stx")
 	insert_at_selection(txtareaid, "\n|+header|row\n|data|row\n|data|row\n|data|row\n");
+    else if (markup_language == "creole")
+	insert_at_selection(txtareaid, "\n|=header|=row|\n|data|row|\n|data|row|\n|data|row|\n");
     else
 	insert_at_selection(txtareaid, "\n%|header|row|%\n&|data|row|&\n&|data|row|&\n&|data|row|&\n");
     return false;

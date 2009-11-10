@@ -37,8 +37,12 @@ set API(WikitWub) {
     language {html natural language (default "en")}
 }
 
-proc stx2html::local {what} {
-    return [<a> href /[WDB LookupPage $what] $what]
+proc ::stx2html::local {what} {
+    set id [WDB LookupPage $what]
+    if {[info exists ::WikitWub::stx2html_collect_refs] && $::WikitWub::stx2html_collect_refs} {
+	lappend  ::WikitWub::stx2html_refs $id
+    }
+    return [<a> href /$id $what]
 }
 
 namespace eval WikitWub {
@@ -156,6 +160,23 @@ namespace eval WikitWub {
 #		<button type='button' class='editbutton' id='savebutton' onclick='' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png' alt='Save'></button><span id='tip_save' class='tip'>Save</span>
 #		<button type='button' class='editbutton' id='cancelbutton' onclick='editCancel();' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png' alt='Cancel'></button><span id='tip_cancel' class='tip'>Cancel</span>
     
+    set quick_reference(creole) {
+	[<br>]
+	[<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
+	[<br>]
+	<ul>
+	<li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]].</li>
+	<li>[<b> BULLETS] are lines with an asterisk (*) and a space - the item must be one (wrapped) line</li>
+	<li>[<b> "NUMBERED LISTS"] are lines a hash (#) and a space - the item must be one (wrapped) line</li>
+	<li>[<b> PARAGRAPHS] are split with empty lines</li>
+	<li>[<b> "UNFORMATTED TEXT"] starts with a line containng {{{ and ends with a line containing }}}</li>
+	<li>[<b> HIGHLIGHTS] are indicated by  - use ** for [<b> **bold**], three // for [<b> {//}][<i> italics][<b> {//}].</li>
+	<li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
+	<li>[<b> HEADERS] can be specified with lines containing <b>==Header level 1==</b>, <b>===Header level 2===</b> or <b>====Header level 3====</b></li>
+	<li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>|=header|=header|=header|</tt></b></li>
+	</ul>
+    }
+
     set quick_reference(wikit) {
 	[<br>]
 	[<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
@@ -193,9 +214,31 @@ namespace eval WikitWub {
 	</ul>
     }
 
+    set edit_toolbar(creole) {
+	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
+	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N,"creole");' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
+	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
+	&nbsp; &nbsp; &nbsp;
+	[toolbar_edit_button bold            text_bold.png           "Bold"]
+	[toolbar_edit_button italic          text_italic.png         "Italic"]
+	[toolbar_edit_button heading1        text_heading_1.png      "Heading 1"]
+	[toolbar_edit_button heading2        text_heading_2.png      "Heading 2"]
+	[toolbar_edit_button heading3        text_heading_3.png      "Heading 3"]
+	[toolbar_edit_button hruler          text_horizontalrule.png "Horizontal Rule"]
+	[toolbar_edit_button list_bullets    text_list_bullets.png   "List with Bullets"]
+	[toolbar_edit_button list_numbers    text_list_numbers.png   "Numbered list"]
+	[toolbar_edit_button wiki_link       link.png                "Wiki link"]
+	[toolbar_edit_button url_link        world_link.png          "World link"]
+	[toolbar_edit_button img_link        photo_link.png          "Image link"]
+	[toolbar_edit_button code            script_code.png         "Script"]
+	[toolbar_edit_button table           table.png               "Table"]
+	&nbsp; &nbsp; &nbsp;
+	<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
+    }
+
     set edit_toolbar(wikit) {
 	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
-	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
+	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N,"wikit");' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
 	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
 	&nbsp; &nbsp; &nbsp;
 	[toolbar_edit_button bold            text_bold.png           "Bold"]
@@ -219,7 +262,7 @@ namespace eval WikitWub {
 
     set edit_toolbar(stx) {
 	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
-	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
+	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N,"stx");' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
 	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
 	&nbsp; &nbsp; &nbsp;
 	[toolbar_edit_button bold            text_bold.png           "Bold"]
@@ -274,7 +317,7 @@ namespace eval WikitWub {
 		     [<hidden> A $as_comment]
                      <input name='save' type='submit' value='Save your changes'>
 		     <input name='cancel' type='submit' value='Cancel'>
-		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
+		     <button type='button' id='previewbutton' onclick='previewPage($N,"$markup_language");'>Preview</button>
 		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
 		 }]
 		[<hr>]
@@ -447,6 +490,12 @@ namespace eval WikitWub {
 		arguments.callee.done = true;
 
 		try {
+		    if (typeof(creole_content) != "undefined")
+		        render_creole_in_id('content', creole_content);
+		}
+		catch (e){}
+
+		try {
 		    document.getElementById("googletxt").value;
 		    googleQuery();
 		}
@@ -484,7 +533,10 @@ namespace eval WikitWub {
     }
 
     # html suffix to be sent on every page
-    variable htmlsuffix [<script> src /wiki.js] \n
+    variable htmlsuffix
+    set htmlsuffix(wikit) [<script> src /wiki.js]\n
+    set htmlsuffix(stx) [<script> src /wiki.js]\n
+    set htmlsuffix(creole) [<script> src /wiki.js][<script> src /creole.js]\n
 
     # convertor from wiki to html
     proc .x-text/wiki.text/html {rsp} {
@@ -519,7 +571,9 @@ namespace eval WikitWub {
 
 	    append content <body> \n
 	    append content $rspcontent
-	    variable htmlsuffix; append content $htmlsuffix
+	    variable markup_language
+	    variable htmlsuffix
+	    append content $htmlsuffix($markup_language)
 
 	    if {[dict exists $rsp -postload]} {
 		append content [join [dict get $rsp -postload] \n]
@@ -806,14 +860,43 @@ namespace eval WikitWub {
     proc list_item {txt} {
 	variable markup_language
 	switch -exact -- $markup_language {
+	    creole -
 	    stx { return "* $txt\n" }
 	    wikit { return "   * $txt\n" }
+	}
+    }
+
+    proc bold {txt} {
+	variable markup_language
+	switch -exact -- $markup_language {
+	    creole { return "**$txt**" }
+	    stx { return "''$txt''" }
+	    wikit { return "'''$txt'''" }
+	}
+    }
+
+    proc italic {txt} {
+	variable markup_language
+	switch -exact -- $markup_language {
+	    creole { return "//$txt//" }
+	    stx { return "'''$txt'''" }
+	    wikit { return "''$txt''" }
+	}
+    }
+
+    proc wiki_link {id txt} {
+	variable markup_language
+	switch -exact -- $markup_language {
+	    creole { return "\[\[/$id|$txt\]\]" }
+	    stx -
+	    wikit { return "\[$txt\]" }
 	}
     }
 
     proc mark_new {N V txt} {
 	variable markup_language
 	switch -exact -- $markup_language {
+	    creole -
 	    stx { append C "\n\n----\n\n New in version $V\n\n----\n\n$txt\n\n" }
 	    wikit { append C ">>>>>>n;$N;$V;;\n$txt\n<<<<<<\n" }
 	}
@@ -822,6 +905,7 @@ namespace eval WikitWub {
     proc mark_old {N W txt} {
 	variable markup_language
 	switch -exact -- $markup_language {
+	    creole -
 	    stx { append C "\n\n----\n\n Old in version $W\n\n----\n\n$txt\n\n" }
 	    wikit { append C ">>>>>>o;$N;$W;;\n$txt\n<<<<<<\n" }
 	}
@@ -835,12 +919,14 @@ namespace eval WikitWub {
 	    }
 	    .str {
 		switch -exact -- $markup_language {
+		    creole { return $C }
 		    stx { return [stx::translate $C] }
 		    wikit { return [WFormat TextToStream $C] }
 		}
 	    }
 	    .code {
 		switch -exact -- $markup_language {
+		    creole -
 		    stx { return $C }
 		    wikit { return [WFormat StreamToTcl $name [WFormat TextToStream $C 0 0 0]] }
 		}
@@ -850,7 +936,11 @@ namespace eval WikitWub {
 	    }
 	    default {
 		switch -exact -- $markup_language {
-		    stx { return [list [stx2html::translate $C]] }
+		    creole { return [list "<script type='text/javascript'>var creole_content = \"[string map {\n \\n \" \\"} $C]\";</script>"] ;# " } 
+		    stx { 
+			set ::stx2html::local ::WikitWub::stx2html_local
+			return [list [stx2html::translate $C]] 
+		    }
 		    wikit { return [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview] }
 		}
 	    }
@@ -950,6 +1040,7 @@ namespace eval WikitWub {
 		set changes [WDB ChangeSetSize $N $version]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
+		puts "C=$C"
 		lassign [translate $name $C .html] C U T BR
 		append R $C
 		set pcdate $cdate
@@ -2070,6 +2161,39 @@ namespace eval WikitWub {
 	return [sendPage $r $tplt]
     }
 
+    proc GetRefs {text} {
+	variable markup_language
+	switch -exact -- $markup_language {
+	    wikit {
+		return [WFormat StreamToRefs [WFormat TextToStream $text] ::WikitWub::InfoProc]
+	    }
+	    stx {
+		variable stx2html_refs {}
+		variable stx2html_collect_refs 1
+		stx2html::translate $text
+		variable stx2html_collect_refs 0
+		return $stx2html_refs
+	    }
+	    creole {
+		puts "text=$text"
+		regsub {\n\{\{\{} $text \x8E text
+		regsub {\}\}\}\n} $text \x8E text
+		set refs {}
+		foreach {b -} [split $text \x8E] {
+		    puts "b=$b"
+		    foreach {m0 m1} [regexp -all -inline {\[\[([^\]]+)\]\]} $b] {
+			puts "  m1=$m1"
+			if {![regexp {(https?|ftp|news|mailto|file|irc):[^\s:]\S*} $m1]} {
+			    puts "  id=[WDB LookupPage $m1]"
+			    lappend refs [WDB LookupPage $m1]
+			}
+		    }
+		}
+		return $refs
+	    }
+	}
+    }
+
     # InfoProc {name} - lookup $name in db,
     # returns a list: /$id (with suffix of @ if the page is new), $name, modification $date
     proc InfoProc {ref {query_only 0}} {
@@ -2092,7 +2216,7 @@ namespace eval WikitWub {
 
 	# tclLog "SearchResults key <$key> long <$searchLong>"
 	set rdate $date
-	set result "Searched for \"'''$key'''\" (in page titles"
+	set result "Searched for \"[bold $key]\" (in page titles"
 
 	if {$long} {
 	    append result { and contents}
@@ -2105,16 +2229,16 @@ namespace eval WikitWub {
 
 	    # these are fake pages, don't list them
 	    if {$id == 2 || $id == 4 || $id == 5} continue
-	    append result [list_item "[timestamp $date] . . . \[$name\]"]
+	    append result [list_item "[timestamp $date] . . . [wiki_link $id $name]"]
 	    set rdate $date
 	    incr count
 	}
 
 	if {$count == 0} {
-	    append result [list_item "'''''No matches found'''''"]
+	    append result [list_item [bold [italic "No matches found"]]]
 	    set rdate 0
 	} else {
-	    append result [list_item "''Displayed $count matches''"]
+	    append result [list_item [italic "Displayed $count matches"]]
 	    set rdate 0
 	}
 

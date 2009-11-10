@@ -996,10 +996,10 @@ namespace eval WDB {
 	    if {$changed || $text != $page} {
 		puts "SavePage@[clock seconds] parse"
 		# make sure it parses before deleting old references
-		set newRefs [WFormat StreamToRefs [WFormat TextToStream $text] ::WikitWub::InfoProc]
+		set newRefs [::WikitWub::GetRefs $text] ;#[WFormat StreamToRefs [WFormat TextToStream $text] ::WikitWub::InfoProc]
 		puts "SavePage@[clock seconds] delRefs"
 		delRefs $id
-		puts "SavePage@[clock seconds] addRefs"
+		puts "SavePage@[clock seconds] addRefs $newRefs"
 		addRefs $id $newRefs
 
 		# If this isn't the first time that the given page has been stored
