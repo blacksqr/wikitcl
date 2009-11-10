@@ -2789,5 +2789,8 @@ catch {source [file join [file dirname [info script]] pest.tcl]}
 
 Debug.log {RESTART: [clock format [clock second]]}
 
+Debug on wikit
+Debug on WDB
+
 # Initialize Site
 Site start application WikitWub home [file normalize [file dirname [info script]]] ini wikit.ini
