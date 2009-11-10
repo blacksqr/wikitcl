@@ -1951,7 +1951,7 @@ namespace eval WikitWub {
 
     proc /map {r imp args} {
 	if {[info exists ::WikitWub::IMTOC($imp)]} {
-	    return [Http Redir $r "http://[dict get $r host]/$::WikitWub::IMTOC($imp)"]
+	    return [Http Redir $r "http://[dict get $r host]/[string trim $::WikitWub::IMTOC($imp) /]"]
 	} else {
 	    return [Http NotFound $r]
 	}
@@ -2041,6 +2041,7 @@ namespace eval WikitWub {
     proc /reloadTOC {r} {
 	variable TOCchange 
 	variable docroot
+	variable pageURL
 
 	set tocf [file join $docroot TOC]
 
@@ -2058,7 +2059,7 @@ namespace eval WikitWub {
 	set TOC [string trim $TOC]
 	unset -nocomplain IMTOC
 	if { [string length $TOC] } {
-	    lassign [WFormat FormatWikiToc $TOC] TOC IMTOCl
+	    lassign [WFormat FormatWikiToc $TOC $pageURL] TOC IMTOCl
 	    array set IMTOC $IMTOCl
 	}
 
@@ -2081,7 +2082,8 @@ namespace eval WikitWub {
 
 	variable WELCOME
 	catch {set WELCOME [::fileutil::cat $wf]}
-	set WELCOME [string trim $WELCOME]
+	variable mount
+	set WELCOME [string map [list %M% $mount] [string trim $WELCOME]]
 
 	set R http://[dict get $r host]/4
 	return [redir $r $R [<a> href $R "Loaded MOTD"]]
@@ -2719,9 +2721,10 @@ namespace eval WikitWub {
 	if {[catch {
 	    variable TOC [::fileutil::cat [file join $docroot TOC]]
 	    variable IMTOC
+	    variable pageURL
 	    unset -nocomplain IMTOC
 	    if {[string length $TOC]} {
-		lassign [WFormat FormatWikiToc $TOC] TOC IMTOCl
+		lassign [WFormat FormatWikiToc $TOC $pageURL] TOC IMTOCl
 		array set IMTOC $IMTOCl
 	    }
 	} e eo]} {
@@ -2735,6 +2738,7 @@ namespace eval WikitWub {
 	# set welcome message, if any
 	catch {
 	    variable WELCOME [::fileutil::cat [file join $docroot html welcome.html]]
+	    set WELCOME [string map [list %M% $mount] $WELCOME]
 	}
 
 	catch {[WDB GetContent 9]}
