@@ -674,7 +674,7 @@ namespace eval ::WFormat {
     #set lre  {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])} ; # "
     set prelre {\[\m(https?|ftp|news|mailto|file|irc):([^\s:\]][^\]]*?)]} ; # "
     set lre  {\m(https?|ftp|news|mailto|file|irc):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ; # "
-    set lre2 {\m(https?|ftp|news|mailto|file|irc):([^\s:][^\s%]*[^\]\)\s\.,!\?;:'>"]%\|%[^%]*?%\|%)} ; # "
+    set lre2 {\m(https?|ftp|news|mailto|file|irc):([^\s:]\S*[^\]\)\s\.,!\?;:'>"]%\|%[^%]+%\|%)} ; # "
     set ire {<<include:(.*?)>>}
 
 #    set blre "\\\[\0\1u\2(\[^\0\]*)\0\\\]"
@@ -1806,7 +1806,7 @@ namespace eval ::WFormat {
     array get urls
   }
 
-  proc FormatWikiToc { C } {
+  proc FormatWikiToc { C prefix } {
     variable protected
     if { [string length $C] == 0 } {
       return ""
@@ -1833,8 +1833,8 @@ namespace eval ::WFormat {
         set link [string trim $link {[]}]
         if { [string length $opt] } {
           set p [WDB LookupPage $link]
-          set toce "<a class='toc' href='/$p'>[armour_quote $opt]</a>"
-          lappend imtoc [string trim $imurl] $p
+          set toce "<a class='toc' href='[file join $prefix $p]'>[armour_quote $opt]</a>"
+          lappend imtoc [string trim $imurl] [file join $prefix $p]
         } else {
           set toce ""
         }
