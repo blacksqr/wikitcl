@@ -436,7 +436,7 @@ namespace eval WDB {
 	variable db
 
 	set fields name
-	set stmttxt "SELECT a.id, a.name, a.date FROM pages a, pages_content b WHERE a.id > 11 AND b.id > 11 AND a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
+	set stmttxt "SELECT a.id, a.name, a.date FROM pages a, pages_content b WHERE a.id > 9 AND b.id > 9 AND a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
 	if {$long} {
 	    foreach k [split $key " "] {
 		append stmttxt " AND (lower(a.name) GLOB lower(\"*$k*\") OR lower(b.content) GLOB lower(\"*$k*\"))"

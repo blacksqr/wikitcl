@@ -50,7 +50,7 @@ namespace eval WikitWub {
     variable pagecaching 0
     variable inline_html 0
     variable include_pages 0
-    variable markup_language wikit
+    variable markup_language creole
 
     # sortable - include javascripts and CSS for sortable table.
     proc sortable {r} {
@@ -911,6 +911,38 @@ namespace eval WikitWub {
 	}
     }
 
+    # Replace local links with numeric external links for creole, 
+    # otherwise a link will always go through the search
+    proc creole_replace_links { text } {
+	variable pageURL
+	regsub {\n\{\{\{} $text \x8E text
+	regsub {\}\}\}\n} $text \x8E text
+	set rC ""
+	foreach {b fb} [split $text \x8E] {
+	    set prev_idx 0
+	    foreach {ip0 ip1} [regexp -all -inline -indices {\[\[([^\]]+)\]\]} $b] {
+		lassign $ip1 idx0 idx1
+		set m1 [string range $b $idx0 $idx1]
+		if {[regexp {(https?|ftp|news|mailto|file|irc):[^\s:]\S*} $m1]} {
+		    lassign $ip0 idx0 idx1
+		    append rC [string range $b $prev_idx $idx1]
+		    set prev_idx [expr {$idx1+1}]
+		} else {
+		    lassign $ip0 idx0 idx1
+		    set id [WDB LookupPage $m1]
+		    append rC [string range $b $prev_idx [expr {$idx0-1}]] \[\[ [file join $pageURL $id]|$m1 \]\]
+		    set prev_idx [expr {$idx1+1}]
+		    
+		}
+	    }
+	    append rC [string range $b $prev_idx end]
+	    if {[string length $fb]} {
+		append rC "\n\{\{\{$fb\}\}\}\n"
+	    }
+	}
+	return $rC
+    }
+
     proc translate {name C ext {preview 0}} {
 	variable markup_language
 	switch -exact -- $ext {
@@ -936,7 +968,7 @@ namespace eval WikitWub {
 	    }
 	    default {
 		switch -exact -- $markup_language {
-		    creole { return [list "<script type='text/javascript'>var creole_content = \"[string map {\n \\n \" \\"} $C]\";</script>"] ;# " } 
+		    creole { return [list "<script type='text/javascript'>var creole_content = \"[string map {\n \\n \" \\"} [creole_replace_links $C]]\";</script>"] ;# " } 
 		    stx { 
 			set ::stx2html::local ::WikitWub::stx2html_local
 			return [list [stx2html::translate $C]] 
@@ -1040,7 +1072,6 @@ namespace eval WikitWub {
 		set changes [WDB ChangeSetSize $N $version]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
-		puts "C=$C"
 		lassign [translate $name $C .html] C U T BR
 		append R $C
 		set pcdate $cdate
@@ -2175,16 +2206,12 @@ namespace eval WikitWub {
 		return $stx2html_refs
 	    }
 	    creole {
-		puts "text=$text"
 		regsub {\n\{\{\{} $text \x8E text
 		regsub {\}\}\}\n} $text \x8E text
 		set refs {}
 		foreach {b -} [split $text \x8E] {
-		    puts "b=$b"
 		    foreach {m0 m1} [regexp -all -inline {\[\[([^\]]+)\]\]} $b] {
-			puts "  m1=$m1"
 			if {![regexp {(https?|ftp|news|mailto|file|irc):[^\s:]\S*} $m1]} {
-			    puts "  id=[WDB LookupPage $m1]"
 			    lappend refs [WDB LookupPage $m1]
 			}
 		    }
