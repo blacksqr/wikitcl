@@ -1451,9 +1451,10 @@ namespace eval WikitWub {
     }
 
     proc /whoami {r} {
+	variable pageURL
 	set nick [who $r]
 	if {[string length $nick]} {
-	    set C "You are '$nick'."
+	    set C "You are '[<a> href [file join $pageURL $nick] $nick]'."
 	} else {
 	    set C "You are not logged in. Login is required to edit a page. You will be asked to provided a user-name the next time you edit a page."
 	}
