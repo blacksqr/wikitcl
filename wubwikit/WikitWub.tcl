@@ -589,6 +589,19 @@ namespace eval WikitWub {
 		    content-type text/html]
     }
 
+    proc /vars {r args} {
+	set result {}
+	set ns [namespace current]
+	foreach n [info vars ${ns}::*] {
+	    if {[catch {
+		append result [<dt> $n] [<dd> [armour [set $n]]] \n
+	    } e eo]} {
+		append result [<dt> $n] [<dd> "$e ($eo)"] \n
+	    }
+	}
+	return [Http Ok $r [<dl> $result]]
+    }
+
     proc /cclear {r args} {
 	Cache clear
 	variable mount; variable pageURL
@@ -1760,7 +1773,7 @@ namespace eval WikitWub {
     }
 
     proc /edit/save {r N C O A save cancel preview } {
-
+	variable mount
 	puts "edit-save@[clock seconds] start"
 
 	variable detect_robots
@@ -1910,9 +1923,9 @@ namespace eval WikitWub {
 	    # Only actually save the page if the user selected "save"
 	    invalidate $r $N
 	    invalidate $r 4
-	    invalidate $r _ref/$N
+	    invalidate $r [file join $mount ref]/$N
 	    invalidate $r rss.xml; WikitRss clear
-	    invalidate $r _summary/$N
+	    invalidate $r [file join $mount summary]/$N
 
 	    # if this page did not exist before:
 	    # remove all referencing pages.
@@ -2511,12 +2524,12 @@ namespace eval WikitWub {
 		set Title [armour $name]
 	    }
 	    1 {
-		set backRef _/ref?N=$N
+		set backRef [file join $mount ref]?N=$N
 		set Refs "[<a> href $backRef Reference] - "
 		set Title [<a> href $backRef title "click to see reference to this page" $name]
 	    }
 	    default {
-		set backRef _/ref?N=$N
+		set backRef [file join $mount ref]?N=$N
 		set Refs "[llength $refs] [<a> href $backRef {References to this page}]"
 		set Title [<a> href $backRef title "click to see [llength $refs] references to this page" $name]
 		Debug.wikit {backrefs: backRef:'$backRef' Refs:'$Refs' Title:'$Title'} 10
@@ -2604,6 +2617,7 @@ namespace eval WikitWub {
     variable detect_robots 1
 
     proc init {args} {
+	Debug.wikit {init: $args}
 	variable {*}$args
 	
 	Convert Namespace ::WikitWub	;# add wiki-local conversions
@@ -2769,17 +2783,7 @@ array set ::env [array get _env]; unset _env
 proc pest {req} {return 0}	;# default [pest] catcher
 catch {source [file join [file dirname [info script]] pest.tcl]}
 
-#### set up appropriate debug levels (negative means off)
-Debug setting log 10 error 10 query -10 wikit -10 direct -10 convert -10 cookies -10 socket -10 WDB -10 WDBpagecache 1
+Debug.log {RESTART: [clock format [clock second]]}
 
-#### Source local config script (not under version control)
-catch {source [file join [file dirname [info script]] local.tcl]} r eo
-Debug.log {RESTART: [clock format [clock second]] '$r' ($eo)}
-
-if {[info exists ::Site::wikitwub]} {
-    set configs $::Site::wikitwub
-} else {
-    set configs {}
-}
-
-Site start application WikitWub {*}$configs nubs wikit.nub home [file normalize [file dirname [info script]]] ini wikit.ini
+# Initialize Site
+Site start application WikitWub home [file normalize [file dirname [info script]]] ini wikit.ini

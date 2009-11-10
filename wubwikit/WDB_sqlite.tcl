@@ -4,8 +4,6 @@ package require tdbc::sqlite3
 package provide WDB 1.0
 package provide WDB_sqlite 1.0
 
-Debug on WDB 10
-
 if {0} {
     CREATE TABLE pages (
 			id INT NOT NULL,
@@ -1104,6 +1102,7 @@ namespace eval WDB {
 	dict for {n v} $args {
 	    set $n $v
 	}
+	Debug.WDB {Opening sqlite3 tdbc at $db $file}
 	tdbc::sqlite3::connection create $db $file 
 	[statement "enable_foreign_keys"] execute
     }
