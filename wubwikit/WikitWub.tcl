@@ -35,6 +35,11 @@ set API(WikitWub) {
     maxAge {max age of login cookie (default "next month")}
     cookie {name of login cookie (default "wikit_e")}
     language {html natural language (default "en")}
+    markup_language {Set markup language to be used. Can be wikit, stx or creole. (default: wikit)}
+    edit_template {Set text to be used on first edit of a page.}
+    hidereadonly {Hide the readonly message. (default: false)}
+    inline_html {Allow inline html in wikit markup. (default: false)}
+    include_pages {Allow other wiki pages to be include in a wiki page in wikit markup. (default: false)}
 }
 
 proc ::stx2html::local {what} {
@@ -50,7 +55,10 @@ namespace eval WikitWub {
     variable pagecaching 0
     variable inline_html 0
     variable include_pages 0
-    variable markup_language creole
+    variable markup_language wikit
+    variable edit_template "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
+    variable hidereadonly 0
+    variable text_url "wiki.tcl.tk"
 
     variable perms {}
     proc perms {r op} {
@@ -126,7 +134,7 @@ namespace eval WikitWub {
     template page {$name} {
 	[<div> class container [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href / class logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]]
+		[<div> class logo [<a> href / class logo $::WikitWub::text_url]]
 		[<div> id title class title [tclarmour $Title]]
 		[<div> id updated class updated $updated]
 	    }]]
@@ -300,7 +308,7 @@ namespace eval WikitWub {
     template edit {Editing [armour $name]} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]
+		[<div> class logo $::WikitWub::text_url]
 		[If {$as_comment} {
 		    [<div> class title "Comment on [tclarmour [Ref $N]]"]
 		}]
@@ -1956,11 +1964,8 @@ namespace eval WikitWub {
 	} else {
 	    set C [armour [WDB GetContent $N]]
 	    if {$C eq ""} {
-		if {[info exists ::starkit_edit_template]} {
-		    set C $::starkit_edit_template
-		} else {
-		    set C "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
-		}
+		variable edit_template
+		set C $edit_template
 	    }
 	}
 
@@ -2030,10 +2035,7 @@ namespace eval WikitWub {
 	set menu [menus Recent Help WhoAmI]
 	set footer [menus Recent Help Search]
 
-	if {[info exists ::starkit_wikittitle]} {
-	    set Title $::starkit_wikittitle
-	    set name $::starkit_wikittitle
-	} elseif {[info exists wiki_title] && $wiki_title ne ""} {
+	if {[info exists wiki_title] && $wiki_title ne ""} {
 	    set Title $wiki_title
 	    set name $wiki_title
 	} else {
@@ -2262,12 +2264,12 @@ namespace eval WikitWub {
 	variable mount
 	variable motd
 	variable TOC
-	variable readonly
 	variable protected
 	variable readonly
 	variable bullet
+	variable hidereadonly
 
-	if {$readonly ne "" && (![info exists ::starkit_hidereadonly] || !$::starkit_hidereadonly)} {
+	if {$readonly ne "" && !$hidereadonly} {
 	    set ro "<it>(Read Only Mode: $readonly)</it>"
 	} else {
 	    set ro ""
@@ -2409,6 +2411,7 @@ namespace eval WikitWub {
     proc /searchp {r} {
 	variable mount
 	variable pageURL
+	variable text_url
 	# search page
 	Debug.wikit {do: search page}
 	set qd [Dict get? $r -Query]
@@ -2443,7 +2446,7 @@ namespace eval WikitWub {
 		append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
 	    }
 	    set q [string trimright $term *]
-	    append q "%20site:" [expr {[info exists ::starkit_url]?"http://$::starkit_url":"http://wiki.tcl.tk"}]
+	    append q "%20site:" $text_url
 	    append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
 	} else {
 	    # send a search page
@@ -2577,10 +2580,7 @@ namespace eval WikitWub {
 	    lappend menu [<a> href [file join $mount edit]?N=$N Edit]
 	    lappend footer [<a> href [file join $mount edit]?N=$N Edit]
 
-	    if {[info exists ::starkit_wikittitle]} {
-		set Title $::starkit_wikittitle
-		set name $::starkit_wikittitle
-	    } elseif {[info exists wiki_title] && $wiki_title ne ""} {
+	    if {[info exists wiki_title] && $wiki_title ne ""} {
 		set Title $wiki_title
 		set name $wiki_title
 	    } else {
@@ -2813,10 +2813,12 @@ namespace eval WikitWub {
 	set ::roflag $roflag
 
 	# initialize RSS feeder
+	variable wiki_title
+	variable text_url
 	catch {
 	    WikitRss new \
-		[expr {[info exists ::starkit_wikittitle]?$::starkit_wikittitle:"Tcler's Wiki"}] \
-		[expr {[info exists ::starkit_url]?"http://$::starkit_url/":"http://wiki.tcl.tk/"}]
+		[expr {([info exists wiki_title] &&  $wiki_title ne "")?$wiki_title:"Tcler's Wiki"}] \
+		"http://$text_url/"
 	}
 
 	variable pagecaching
