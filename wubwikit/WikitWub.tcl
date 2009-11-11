@@ -25,8 +25,8 @@ package provide WikitWub 1.0
 
 set API(WikitWub) {
     {A Wub interface to tcl wikit}
-    base {place where wiki lives (default: same directory as WikitWub.tcl, or parent of starkit mountpoint}
-    wikitroot {where the wikit lives (default: $base/data}
+    base {place where wiki lives (default: same directory as WikitWub.tcl, or parent of starkit mountpoint)}
+    wikitroot {where the wikit lives (default: $base/data)}
     docroot {where ancillary documents live (default: $base/docroot)}
     wikidb {wikit's metakit DB name (default wikit.tkd) - no obvious need to change this.}
     history {history directory}
@@ -42,7 +42,7 @@ proc ::stx2html::local {what} {
     if {[info exists ::WikitWub::stx2html_collect_refs] && $::WikitWub::stx2html_collect_refs} {
 	lappend  ::WikitWub::stx2html_refs $id
     }
-    return [<a> href /$id $what]
+    return [<a> href [file join $::WikitWub::pageURL $id] $what]
 }
 
 namespace eval WikitWub {
@@ -52,15 +52,30 @@ namespace eval WikitWub {
     variable include_pages 0
     variable markup_language creole
 
+    variable perms {}
+    proc perms {r op} {
+	variable perms
+	if {![dict exists $perms $op]} return
+
+	set userid ""; set pass ""
+	lassign [Http Credentials $r] userid pass
+	Debug.wikit {perms $op ($userid,$pass)}
+	if {"$userid,$pass" ni [dict get $perms $op]} {
+	    set challenge "Please login to $op"
+	    set content "Please login to $op"
+	    return -level 1 [Http Unauthorized $r [Http BasicAuth $challenge] $content x-text/html-fragment]
+	}
+    }
+
     # sortable - include javascripts and CSS for sortable table.
     proc sortable {r} {
-#	foreach js {common css standardista-table-sorting} {
-#	    dict lappend r -headers [<script> src /$js.js]
-#	}
+	#	foreach js {common css standardista-table-sorting} {
+	#	    dict lappend r -headers [<script> src /$js.js]
+	#	}
 	dict lappend r -headers [<style> media all "@import url(/sorttable.css);"]
 	return $r
     }
-
+    
     proc <P> {args} {
 	puts stderr "<P> $args"
 	return [<p> {*}$args]
@@ -103,48 +118,40 @@ namespace eval WikitWub {
 	[<h1> "The Wiki is currently in Maintenance Mode"]
 	[<p> "No new edits can be accepted at the moment."]
 	[<p> "Reason: $readonly"]
-	[<p> [<a> href /$N "Return to the page you were reading."]]
+	[<p> [<a> href [file join $pageURL $N] "Return to the page you were reading."]]
     }
 
     # standard page decoration
     template page {$name} {
-	[div container {
-	    [div header {
-		[div logo [<a> href / class logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]]
+	[<div> class container [subst {
+	    [<div> class header [subst {
+		[<div> class logo [<a> href / class logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]]
 		[<div> id title class title [tclarmour $Title]]
 		[<div> id updated class updated $updated]
-	    }]
+	    }]]
 	    [expr {[info exists ro]?$ro:""}]
-	    [divID wrapper {
-		[divID content {[tclarmour $C]}]
-	    }]
-	    [divID menu_area {
-		[divID wiki_menu {[menuUL $menu]}]
+	    [<div> id wrapper [<div> id content $C]]
+	    [<div> id menu_area [subst {
+		[<div> id wiki_menu [menuUL $menu]]
 		[expr {[info exists gsearch]?[gsearchF $query]:[searchF]}]
-		[div navigation {
-		    [divID page_toc $T]
-		}]
-		[div extra {
-		    [divID wiki_toc $TOC]
-		}]
-	    }]
-	    [div footer {
-		[<p> id footer [variable bullet; join $footer $bullet]]
-	    }]
-	}]
+		[<div> class navigation [<div> id page_toc $T]]
+		[<div> class extra [<div> id wiki_toc $TOC]]
+	    }]]
+	    [<div> class footer [<p> id footer [variable bullet; join $footer $bullet]]]
+	}]]
     }
 
     # page sent when constructing a reference page
     template refs {References to $N} {
-	[div container {
-	    [div header {[<h1> "References to [Ref $N]"]}]
-	    [div {wrapper content} {[tclarmour $C]}]
+	[<div> class container [subst {
+	    [<div> class header [<h1> "References to [Ref $N]"]]
+	    [<div> class wrapper [<div> class content $C]]
 	    [<hr> noshade]
-	    [div footer {
+	    [<div> class footer [subst {
 		[<p> id footer [variable bullet; join $footer $bullet]]
 		[searchF]
-	    }]
-	}]
+	    }]]
+	}]]
     }
 
     # page sent when constructing a transcluded reference page
@@ -157,8 +164,8 @@ namespace eval WikitWub {
 	[tclarmour $C]
     }
 
-#		<button type='button' class='editbutton' id='savebutton' onclick='' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png' alt='Save'></button><span id='tip_save' class='tip'>Save</span>
-#		<button type='button' class='editbutton' id='cancelbutton' onclick='editCancel();' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png' alt='Cancel'></button><span id='tip_cancel' class='tip'>Cancel</span>
+    #		<button type='button' class='editbutton' id='savebutton' onclick='' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png' alt='Save'></button><span id='tip_save' class='tip'>Save</span>
+    #		<button type='button' class='editbutton' id='cancelbutton' onclick='editCancel();' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png' alt='Cancel'></button><span id='tip_cancel' class='tip'>Cancel</span>
     
     set quick_reference(creole) {
 	[<br>]
@@ -215,9 +222,12 @@ namespace eval WikitWub {
     }
 
     set edit_toolbar(creole) {
-	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
-	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N,"creole");' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
-	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
+	[<submit> save class editbutton id savebutton value "Save your changes" onmouseout "popUp(event,'tip_save')" onmouseover "popUp(event,'tip_save')" [<img> src /page_save.png]] [<span> id tip_save class tip Save]
+
+	[<button> preview class editbutton id previewbutton onclick "previewPage($N,'creole');" onmouseout "popUp(event,'tip_preview')" onmouseover "popUp(event,'tip_preview')" [<img> src /page_white_magnify.png]] [<span> id tip_preview class tip Preview]
+
+	[<submit> cancel class editbutton id cancelbutton value Cancel onmouseout "popUp(event,'tip_cancel')" onmouseover "popUp(event,'tip_cancel')" [<img> src /cancel.png]] [<span> id tip_cancel class tip Cancel]
+
 	&nbsp; &nbsp; &nbsp;
 	[toolbar_edit_button bold            text_bold.png           "Bold"]
 	[toolbar_edit_button italic          text_italic.png         "Italic"]
@@ -233,7 +243,8 @@ namespace eval WikitWub {
 	[toolbar_edit_button code            script_code.png         "Script"]
 	[toolbar_edit_button table           table.png               "Table"]
 	&nbsp; &nbsp; &nbsp;
-	<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
+
+	[<button> helpbutton type button class editbutton id helpbutton onclick "editHelp();" onmouseout "popUp(event,'tip_help')" onmouseover "popUp(event,'tip_help')" [<img> src /help.png]] [<span> id tip_help class tip Help]
     }
 
     set edit_toolbar(wikit) {
@@ -286,25 +297,25 @@ namespace eval WikitWub {
 
     # page sent when editing a page
     template edit {Editing [armour $name]} {
-	[div edit {
-	    [div header {
-		[div logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]
+	[<div> class edit [subst {
+	    [<div> class header [subst {
+		[<div> class logo [expr {[info exists ::starkit_url]?$::starkit_url:"wiki.tcl.tk"}]]
 		[If {$as_comment} {
-		    [div title "Comment on [tclarmour [Ref $N]]"]
+		    [<div> class title "Comment on [tclarmour [Ref $N]]"]
 		}]
 		[If {!$as_comment} {
-		    [div title "Edit [tclarmour [Ref $N]]"]
+		    [<div> class title "Edit [tclarmour [Ref $N]]"]
 		}]
 		[If {$as_comment} {
-		    [div updated "Enter your comment, then press Save below"]
+		    [<div> class updated "Enter your comment, then press Save below"]
 		}]
 		[If {!$as_comment} {
-		    [div updated "Make your changes, then press Save below"]
+		    [<div> class updated "Make your changes, then press Save below"]
 		}]
-	    }]
-	    [div editcontents {
+	    }]]
+	    [<div> class editcontents [subst {
 		[set disabled [expr {$nick eq ""}]
-		 <form> edit method post action edit/save {
+		 <form> edit method post action [file join $mount edit/save] {
 		     [<div> id helptext "[<hr>] [subst $quick_reference($markup_language)]"]
 		     [<div> class previewarea_pre id previewarea_pre ""]
 		     [<div> class previewarea id previewarea ""]
@@ -315,7 +326,7 @@ namespace eval WikitWub {
 		     [<hidden> _charset_ {}]
 		     [<hidden> N $N]
 		     [<hidden> A $as_comment]
-                     <input name='save' type='submit' value='Save your changes'>
+		     <input name='save' type='submit' value='Save your changes'>
 		     <input name='cancel' type='submit' value='Cancel'>
 		     <button type='button' id='previewbutton' onclick='previewPage($N,"$markup_language");'>Preview</button>
 		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
@@ -330,15 +341,15 @@ namespace eval WikitWub {
 		[If {$nick ne ""} {
 		    (you are: [<b> $nick])
 		}]
-	    }]
-	}]
+	    }]]
+	}]]
     }
 
     # page sent to enable login
     template login {login} {
 	[<p> "Please choose a nickname that your edit will be identified by."]
 	[if {0} {[<p> "You can optionally enter a password that will reserve that nickname for you."]}]
-	[<form> login method post action edit/login {
+	[<form> login method post action [file join $mount edit/login] {
 	    [<fieldset> login title Login {
 		[<text> nickname title "Nickname"]
 		[<input> name save type submit value "Login" {}]
@@ -397,28 +408,7 @@ namespace eval WikitWub {
     variable TOCchange 0
     variable WELCOME ""
     variable WELCOMEchange 0
-
-    proc div {ids content} {
-	set divs ""
-	foreach id $ids {
-	    append divs "<div class='$id'>\n"
-	}
-	append divs [uplevel 1 subst [list $content]]
-	append divs "\n"
-	append divs [string repeat "\n</div>" [llength $ids]]
-	return $divs
-    }
-
-    proc divID {ids content} {
-	set divs ""
-	foreach id $ids {
-	    append divs "<div id='$id'>\n"
-	}
-	append divs [uplevel 1 subst [list $content]]
-	append divs "\n"
-	append divs [string repeat "\n</div>" [llength $ids]]
-	return $divs
-    }
+    variable wiki_title	;# leave unset to take default
 
     proc menuUL { l } {
 	set m "<ul id='menu'>\n"
@@ -491,7 +481,7 @@ namespace eval WikitWub {
 
 		try {
 		    if (typeof(creole_content) != "undefined")
-		        render_creole_in_id('content', creole_content);
+		    render_creole_in_id('content', creole_content);
 		}
 		catch (e){}
 
@@ -590,6 +580,7 @@ namespace eval WikitWub {
     }
 
     proc /vars {r args} {
+	perms $r admin
 	set result {}
 	set ns [namespace current]
 	foreach n [info vars ${ns}::*] {
@@ -603,17 +594,20 @@ namespace eval WikitWub {
     }
 
     proc /cclear {r args} {
+	perms $r admin
 	Cache clear
 	variable mount; variable pageURL
 	return [Http Redir $r "http://[dict get $r host][file join $pageURL 4]"]
     }
 
     proc /cache {r args} {
+	perms $r admin
 	set C [Html dict2table [Cache::2dict] {-url -stale -hits -unmod -ifmod -when -size}]
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
     }
 
     proc /block {r args} {
+	perms $r admin
 	set C [Html dict2table [Block blockdict] {-site -when -why}]
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
     }
@@ -674,11 +668,12 @@ namespace eval WikitWub {
     }
 
     proc WhoUrl { who {ip 1} } {
+	variable pageURL
 	if {$who ne "" &&
 	    [regexp {^(.+)[,@](.*)} $who - who_nick who_ip]
 	    && $who_nick ne ""
 	} {
-	    set who "[<a> href /[WDB LookupPage $who_nick] $who_nick]"
+	    set who "[<a> href [file join $pageURL [WDB LookupPage $who_nick]] $who_nick]"
 	    if {$ip} {
 		append who @[<a> rel nofollow target _blank href http://ip-lookup.net/index.php?ip=$who_ip $who_ip]
 	    }
@@ -690,6 +685,7 @@ namespace eval WikitWub {
     variable delta [subst \u0394]
     variable delta [subst \u25B2]
     proc RecentChanges {} {
+	variable pageURL
 	variable delta
 	set results {}
 	set result {}
@@ -735,7 +731,7 @@ namespace eval WikitWub {
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
 
-	    lappend result [list "[<a> href /$id [armour $name]] [<a> class delta rel nofollow href _/diff?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href _/summary?N=$id [string repeat $actimg [edit_activity $id]]]]]
+	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]] [<a> class delta rel nofollow href _/diff?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href _/summary?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
 	if { [llength $result] } {
@@ -752,6 +748,7 @@ namespace eval WikitWub {
     }
 
     proc /cleared { r } {
+	perms $r read
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -798,7 +795,7 @@ namespace eval WikitWub {
 	set T ""
 	set N 0
 	set updated ""
-        set menu [menus Home Recent Help WhoAmI]
+	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help Search]
 
 	set C [join $results "\n"]
@@ -981,17 +978,23 @@ namespace eval WikitWub {
 	    }
 	    default {
 		switch -exact -- $markup_language {
-		    creole { return [list "<script type='text/javascript'>var creole_content = \"[string map {\n \\n \" \\"} [creole_replace_links $C]]\";</script>"] ;# " } 
+		    creole {
+			set cc [string map {\n \\n ' \\'} [creole_replace_links $C]]
+			set cc [<script> type text/javascript "var creole_content = '$cc';"]
+			return [list $cc]
+		    }
 		    stx { 
 			set ::stx2html::local ::WikitWub::stx2html_local
 			return [list [stx2html::translate $C]] 
 		    }
-		    wikit { return [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview] }
+		    wikit {
+			return [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview]
+		    }
 		}
 	    }
 	}
     }
-    
+
     proc summary_diff { N V W {rss 0} } {
 	Debug.wikit {summary_diff N:$N V:$V W:$W rss:$rss}
 	set t1 [split [get_page_with_version $N $V 0] "\n"]
@@ -1053,6 +1056,7 @@ namespace eval WikitWub {
     }
 
     proc /summary {r N {D 10}} {
+	perms $r read
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -1115,6 +1119,7 @@ namespace eval WikitWub {
     }
 
     proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
+	perms $r read
 	# If T is zero, D contains version to compare with
 	# If T is non zero, D contains a number of days and /diff must
 	Debug.wikit {/diff N:$N V:$V D:$D W:$W T:$T}
@@ -1123,14 +1128,14 @@ namespace eval WikitWub {
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
-    
+	
 	set ext [file extension $N]	;# file extension?
 	set N [file rootname $N]	;# it's a simple single page
 
 	if {![string is integer -strict $N]
 	    || ![string is integer -strict $V]
 	    || ![string is integer -strict $D]
-            || $N < 0
+	    || $N < 0
 	    || $N >= [WDB PageCount]
 	    || $ext ni {"" .txt .str .code}
 	} {
@@ -1150,7 +1155,7 @@ namespace eval WikitWub {
 	if {$V < 0} {
 	    set V $nver	;# default
 	}
-    
+	
 	# If T is zero, D contains version to compare with
 	# If T is non zero, D contains a number of days and /diff must
 	# search for a version $D days older than version $V
@@ -1312,7 +1317,7 @@ namespace eval WikitWub {
 		}
 	    }
 	}
-    
+	
 	variable menus
 	variable TOC
 	if {![string length $updated]} {
@@ -1330,6 +1335,7 @@ namespace eval WikitWub {
     }
 
     proc /revision {r N {V -1} {A 0}} {
+	perms $r read
 	Debug.wikit {/page $args}
 
 	variable mount
@@ -1345,7 +1351,7 @@ namespace eval WikitWub {
 	if {![string is integer -strict $N]
 	    || ![string is integer -strict $V]
 	    || ![string is integer -strict $A]
-            || $N < 0
+	    || $N < 0
 	    || $N >= [WDB PageCount]
 	    || $V < 0
 	    || $ext ni {"" .txt .str .code}
@@ -1406,6 +1412,7 @@ namespace eval WikitWub {
 
     # /history - revision history
     proc /history {r N {S 0} {L 25}} {
+	perms $r read
 	Debug.wikit {/history $N $S $L}
 
 	variable mount; variable pageURL
@@ -1555,11 +1562,11 @@ namespace eval WikitWub {
     variable bullet " &bull; "
 
     proc menus { args } {
-        variable menus
+	variable menus
 	variable mount; variable pageURL
 	if {![info exists menus(Recent)]} {
 	    # Init common menu items
-	    set menus(Home)   [<a> href "/" Home]
+	    set menus(Home)   [<a> href $pageURL Home]
 	    set menus(Recent) [<a> href [file join $pageURL 4] "Recent changes"]
 	    set menus(Help)   [<a> href [file join $pageURL 3] "Help"]
 	    set menus(HR)     <br>
@@ -1615,6 +1622,7 @@ namespace eval WikitWub {
     }
 
     proc /edit/login {r {nickname ""} {R ""}} {
+	perms $r write
 	variable mount
 	set path [file split [dict get $r -path]]
 	set N [lindex $path end]
@@ -1677,8 +1685,8 @@ namespace eval WikitWub {
 
 	set N [WDB PageByName $page]
 
-        # No matches, retry with decoded string
-        if {[llength $N] == 0} {
+	# No matches, retry with decoded string
+	if {[llength $N] == 0} {
 	    set N [WDB PageByName [Query decode $page]]
 	}
 
@@ -1713,6 +1721,8 @@ namespace eval WikitWub {
     }
 
     proc /search {r {S ""} args} {
+	perms $r read
+
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -1731,6 +1741,8 @@ namespace eval WikitWub {
     }
 
     proc /gsearch {r {S ""}} {
+	perms $r read
+
 	set name "Search"
 	set Title "Search"
 	set updated "powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'</img>"
@@ -1761,6 +1773,7 @@ namespace eval WikitWub {
     }
 
     proc /preview { r N O } {
+	perms $r read
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -1773,6 +1786,7 @@ namespace eval WikitWub {
     }
 
     proc /edit/save {r N C O A save cancel preview } {
+	perms $r write
 	variable mount
 	puts "edit-save@[clock seconds] start"
 
@@ -1950,6 +1964,7 @@ namespace eval WikitWub {
     }
 
     proc /map {r imp args} {
+	perms $r read
 	if {[info exists ::WikitWub::IMTOC($imp)]} {
 	    return [Http Redir $r "http://[dict get $r host]/[string trim $::WikitWub::IMTOC($imp) /]"]
 	} else {
@@ -1961,9 +1976,12 @@ namespace eval WikitWub {
     proc /reload {r} {
 	foreach {} {}
     }
-    
+
     # called to generate an edit page
     proc /edit {r N A args} {
+	perms $r write
+	variable mount
+	variable pageURL
 	variable detect_robots
 	variable markup_language
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
@@ -2021,6 +2039,7 @@ namespace eval WikitWub {
     }
 
     proc /motd {r} {
+	perms $r read
 	variable motd
 	variable docroot
 
@@ -2039,6 +2058,7 @@ namespace eval WikitWub {
     }
 
     proc /reloadTOC {r} {
+	perms $r admin
 	variable TOCchange 
 	variable docroot
 	variable pageURL
@@ -2068,6 +2088,7 @@ namespace eval WikitWub {
     }
 
     proc /reloadWELCOME {r} {
+	perms $r admin
 	variable WELCOMEchange
 	variable docroot
 	set wf [file join $docroot html welcome.html]
@@ -2090,6 +2111,7 @@ namespace eval WikitWub {
     }
 
     proc /reloadCSS {r} {
+	perms $r admin
 	invalidate $r wikit.css
 	invalidate $r ie6.css
 	set R [dict get $r -url]
@@ -2097,9 +2119,11 @@ namespace eval WikitWub {
     }
 
     proc /welcome {r} {
+	perms $r read
 	variable TOC
 	variable WELCOME
 	variable protected
+	variable wiki_title
 
 	if {[info exists ::starkit_welcomezero] && $::starkit_welcomezero} {
 	    return [Http Redir $r "http://[dict get $r host]/0"]
@@ -2111,6 +2135,9 @@ namespace eval WikitWub {
 	if {[info exists ::starkit_wikittitle]} {
 	    set Title $::starkit_wikittitle
 	    set name $::starkit_wikittitle
+	} elseif {[info exists wiki_title] && $wiki_title ne ""} {
+	    set Title $wiki_title
+	    set name $wiki_title
 	} else {
 	    set Title "Welcome to the Tclers Wiki!"
 	    set name "Welcome to the Tclers Wiki!"
@@ -2150,6 +2177,7 @@ namespace eval WikitWub {
 
     # called to generate a page with references
     proc /ref {r N A} {
+	perms $r read
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -2350,11 +2378,21 @@ namespace eval WikitWub {
     }
 
     proc do {r} {
+	perms $r read
 	# decompose name
+	variable pageURL
 	variable mount
-	set term [file tail [dict get $r -path]]
+	lassign [Url urlsuffix $r $pageURL] result r term path
+	if {!$result} {
+	    return $r	;# URL not in our domain
+	}
+	if {$term eq "/"} {
+	    return [/welcome $r]
+	}
+
 	set N [file rootname $term]	;# it's a simple single page
 	set ext [file extension $term]	;# file extension?
+	Debug.wikit {WIKI DO: result:$result term:$term path:$path N:$N ext:'$ext'}
 
 	# strip fancy terminator shortcuts off end
 	set fancy [string index $N end]
@@ -2554,7 +2592,7 @@ namespace eval WikitWub {
 	    }
 	    if {[string length $updated]} {
 		variable delta
-		append updated " " [<a> class delta href _/diff?N=$N#diff0 $delta]
+		append updated " " [<a> class delta href [file join $mount diff]?N=$N#diff0 $delta]
 	    }
 	}
 
@@ -2563,6 +2601,7 @@ namespace eval WikitWub {
 
 	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help Search WhoAmI]
+
 	if {![info exists protected($N)]} {
 	    lappend menu {*}[menus HR]
 	    if {!$::roflag && $readonly eq {}} {
@@ -2703,7 +2742,7 @@ namespace eval WikitWub {
 	}	
 
 	WDB WikiDatabase file $wikitdbpath shared 1
-    
+	
 	package require utf8
 	variable utf8re [::utf8::makeUtf8Regexp]
 	variable utf8clean
