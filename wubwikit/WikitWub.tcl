@@ -55,6 +55,7 @@ namespace eval WikitWub {
     variable perms {}
     proc perms {r op} {
 	variable perms
+	Debug.wikit {perms $op [dict get? $perms $op]}
 	if {![dict exists $perms $op]} return
 
 	set userid ""; set pass ""
@@ -63,7 +64,7 @@ namespace eval WikitWub {
 	if {"$userid,$pass" ni [dict get $perms $op]} {
 	    set challenge "Please login to $op"
 	    set content "Please login to $op"
-	    return -level 1 [Http Unauthorized $r [Http BasicAuth $challenge] $content x-text/html-fragment]
+	    return -code return -level 1 [Http Unauthorized $r [Http BasicAuth $challenge] $content x-text/html-fragment]
 	}
     }
 
@@ -134,7 +135,7 @@ namespace eval WikitWub {
 	    [<div> id menu_area [subst {
 		[<div> id wiki_menu [menuUL $menu]]
 		[expr {[info exists gsearch]?[gsearchF $query]:[searchF]}]
-		[<div> class navigation [<div> id page_toc $T]]
+		[<div> class navigation [<div> id page_toc $page_toc]]
 		[<div> class extra [<div> id wiki_toc $TOC]]
 	    }]]
 	    [<div> class footer [<p> id footer [variable bullet; join $footer $bullet]]]
@@ -393,21 +394,17 @@ namespace eval WikitWub {
 	[<hr> size 1]
     }
 
-    variable searchForm [string map {%S $search %N $N %M $mount} [<form> search method get action [file join %M search] {
+    variable searchForm [string map {%S $search %M $mount} [<form> search method get action [file join %M search] {
 	[<fieldset> sfield title "Construct a new search" {
 	    [<legend> "Enter a Search Phrase"]
 	    [<text> S title "Append an asterisk (*) to search page contents" [armour %S]]
 	    [<checkbox> SC title "search page contents" value 1; set _disabled ""]
 	    [<hidden> _charset_]
-	    [<hidden> N %N]
 	}]
     }]]
 
     variable motd ""
     variable TOC ""
-    variable TOCchange 0
-    variable WELCOME ""
-    variable WELCOMEchange 0
     variable wiki_title	;# leave unset to take default
 
     proc menuUL { l } {
@@ -517,10 +514,11 @@ namespace eval WikitWub {
 
     # protected pages
     variable protected
-    array set protected {Search 2 Changes 4 HoneyPot 5 Something 7 TOC 8 Init 9}
+    array set protected {Welcome 0 Admin 1 OldSearch 2 Login 3 Changes 4 HoneyPot 5 Something6 6 Something7 7 TOC 8 Init 9}
     foreach {n v} [array get protected] {
 	set protected($v) $n
     }
+    variable rprotected {1 3 9}
 
     # html suffix to be sent on every page
     variable htmlsuffix
@@ -554,7 +552,6 @@ namespace eval WikitWub {
 
 	    # add in some wikit-wide headers
 	    variable head
-	    variable protected
 	    append content $head
 
 	    append content </head> \n
@@ -681,72 +678,6 @@ namespace eval WikitWub {
 	return $who
     }
 
-    # Special page: Recent Changes.
-    variable delta [subst \u0394]
-    variable delta [subst \u25B2]
-    proc RecentChanges {} {
-	variable pageURL
-	variable delta
-	set results {}
-	set result {}
-	set lastDay 0
-	set threshold [expr {[clock seconds] - 7 * 86400}]
-	set deletesAdded 0
-	set activityHeaderAdded 0
-
-	foreach record [WDB RecentChanges $threshold] {
-
-	    dict with record {}
-
-	    # these are fake pages, don't list them
-	    if {$id < 10} continue
-
-	    # only report last change to a page on each day
-	    set day [expr {$date/86400}]
-
-	    # insert a header for each new date
-	    if {$day != $lastDay} {
-
-		if { [llength $result] } {
-		    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
-		    set result {}
-
-		    if { !$deletesAdded } {
-			lappend results [<p> [<a> class cleared href _/cleared "Cleared pages (title and/or page)"]]
-			set deletesAdded 1
-		    }
-		}
-
-		lappend results [<p> ""]
-		set datel [list "[<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]] [<span> class day [clock format $date -gmt 1 -format %A]]" ""]
-		if {!$activityHeaderAdded} {
-		    lappend datel "Activity"
-		    set activityHeaderAdded 1
-		} else {
-		    lappend datel ""
-		}
-		lappend result $datel
-		set lastDay $day
-	    }
-
-	    set actimg "<img class='activity' src='activity.png' alt='*' />"
-
-	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]] [<a> class delta rel nofollow href _/diff?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href _/summary?N=$id [string repeat $actimg [edit_activity $id]]]]]
-	}
-
-	if { [llength $result] } {
-	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
-	    if { !$deletesAdded } {
-		lappend results [<p> [<a> href _/cleared "Cleared pages (title and/or page)"]]
-	    }
-	}
-
-	lappend results [<p> "generated [clock format [clock seconds]]"]
-	set R [join $results \n]
-
-	return $R
-    }
-
     proc /cleared { r } {
 	perms $r read
 	variable detect_robots
@@ -792,7 +723,7 @@ namespace eval WikitWub {
 
 	set name "Cleared pages"
 	set Title "Cleared pages"
-	set T ""
+	set page_toc ""
 	set N 0
 	set updated ""
 	set menu [menus Home Recent Help WhoAmI]
@@ -1110,12 +1041,11 @@ namespace eval WikitWub {
 	lappend menu [<a> href diff?N=$N&T=1&D=1 "Changes last day"]
 	lappend menu [<a> href diff?N=$N&T=1&D=7 "Changes last week"]
 	set footer [menus Home Recent Help Search]
-	set T "" ;# Do not show page TOC, can be one of the diffs.
+	set page_toc "" ;# Do not show page TOC, can be one of the diffs.
 	set C $R
 	set Title [Ref $N]
 	set name "Edit summary for $name"
 	return [sendPage $r page]
-	#return [sendPage [Http CacheableContent $r [clock seconds]] page DCache]
     }
 
     proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
@@ -1330,7 +1260,7 @@ namespace eval WikitWub {
 	lappend menu [<a> href diff?N=$N&T=1&D=1 "Changes last day"]
 	lappend menu [<a> href diff?N=$N&T=1&D=7 "Changes last week"]
 	set footer [menus Home Recent Help Search]
-	set T "" ;# Do not show page TOC, can be one of the diffs.
+	set page_toc "" ;# Do not show page TOC, can be one of the diffs.
 	return [sendPage $r]
     }
 
@@ -1534,7 +1464,7 @@ namespace eval WikitWub {
 	#	}
 
 	set updated ""
-	set T ""
+	set page_toc ""
 	variable TOC
 	return [sendPage $r]
     }
@@ -1567,10 +1497,10 @@ namespace eval WikitWub {
 	if {![info exists menus(Recent)]} {
 	    # Init common menu items
 	    set menus(Home)   [<a> href $pageURL Home]
-	    set menus(Recent) [<a> href [file join $pageURL 4] "Recent changes"]
+	    set menus(Recent) [<a> href [file join $mount recent] "Recent changes"]
 	    set menus(Help)   [<a> href [file join $pageURL 3] "Help"]
 	    set menus(HR)     <br>
-	    set menus(Search) [<a> href [file join $pageURL 2] "Search"]
+	    set menus(Search) [<a> href [file join $mount searchp] "Search"]
 	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
 	}
 	set m {}
@@ -1605,7 +1535,7 @@ namespace eval WikitWub {
 	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help Search]
 	set updated ""
-	set T ""
+	set page_toc ""
 	variable TOC
 	return [sendPage $r]
     }
@@ -1667,7 +1597,7 @@ namespace eval WikitWub {
     }
 
     proc invalidate {r url} {
-	dict set r -path "/[string trimright $url /]"
+	dict set r -path [string trimright $url /]
 	set url [Url url $r]
 	Debug.wikit {invalidating $url} 3
 	return [Cache delete $url]
@@ -1717,27 +1647,7 @@ namespace eval WikitWub {
 
 	# ambiguous match or no match - make it a keyword search
 	Debug.wikit {locate - kw search}
-	return 2	;# the search page
-    }
-
-    proc /search {r {S ""} args} {
-	perms $r read
-
-	variable detect_robots
-	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
-	    return [robot $r]
-	}
-
-	if {$S eq "" && [llength $args] > 0} {
-	    set S [lindex $args 0]
-	}
-
-	Debug.wikit {/search: '$S'}
-	dict set r -prefix "/$S"
-	dict set r -suffix $S
-
-	dict append r -path /2
-	return [WikitWub do $r]
+	return -1	;# the search page
     }
 
     proc /gsearch {r {S ""}} {
@@ -1755,7 +1665,7 @@ namespace eval WikitWub {
 	variable query $S
 	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help]
-	set T ""
+	set page_toc ""
 	set r [sendPage $r]
 	unset gsearch
 	return $r
@@ -1788,6 +1698,10 @@ namespace eval WikitWub {
     proc /edit/save {r N C O A save cancel preview } {
 	perms $r write
 	variable mount
+	variable pageURL
+
+	Debug.wikit {/edit/save N:$N A:$A O:$O}
+
 	puts "edit-save@[clock seconds] start"
 
 	variable detect_robots
@@ -1796,7 +1710,6 @@ namespace eval WikitWub {
 	    return [robot $r]
 	}
 
-	Debug.wikit {/edit/save $N}
 	if { [string tolower $cancel] eq "cancel" } {
 	    set url http://[Url host $r]/$N
 	    puts "edit-save@[clock seconds] canceled"
@@ -1806,15 +1719,19 @@ namespace eval WikitWub {
 	variable readonly
 	if {$readonly ne ""} {
 	    puts "edit-save@[clock seconds] read-only"
+	    Debug.wikit {/edit/save failed wiki is readonly}
 	    return [sendPage $r ro]
 	}
 
 	if {![string is integer -strict $N]} {
 	    puts "edit-save@[clock seconds] $N no integer"
+	    Debug.wikit {/edit/save failed can only save to page by number}
 	    return [Http NotFound $r]
 	}
+
 	if {$N < 0 || $N >= [WDB PageCount]} {
 	    puts "edit-save@[clock seconds] $N not found"
+	    Debug.wikit {/edit/save failed page out of range}
 	    return [Http NotFound $r]
 	}
 
@@ -1822,6 +1739,7 @@ namespace eval WikitWub {
 	set page [WDB GetContent $N]
 	if {$name eq ""} {
 	    puts "edit-save@[clock seconds] $N not a valid page"
+	    Debug.wikit {/edit/save failed $N is not a valid page}
 	    return [Http NotFound $er [subst {
 		[<h2> "$N is not a valid page."]
 		[<p> "[armour $r]([armour $eo])"]
@@ -1832,131 +1750,140 @@ namespace eval WikitWub {
 	set nick [who $r]
 	set when [expr {[dict get $r -received] / 1000000}]
 
-	Debug.wikit {/edit/save N:$N [expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
+	Debug.wikit {/edit/save N:$N C?:[expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
 
 	# if there is new page content, save it now
-	variable protected
-	variable mount; variable pageURL
 	set url http://[Url host $r][file join $pageURL $N]
-	if {$N ne ""
-	    && $C ne ""
-	    && ![info exists protected($N)]
-	} {
-
-	    puts "edit-save@[clock seconds] check conflicts"
-
-	    # added 2002-06-13 - edit conflict detection
-	    if {$O ne [list $date $who]} {
-		#lassign [split [lassign $O ewhen] @] enick eip
-		if {$who eq "$nick@[dict get $r -ipaddr]"} {
-		    # this is a ghostly conflict-with-self - log and ignore
-		    Debug.wikit "Conflict on Edit of $N: '$O' ne '[list $date $who]' at date $when"
-		    #set url http://[dict get $r host]/$N
-		    #return [redir $r $url [<a> href $url "Edited Page"]]
-		} else {
-		    Debug.wikit {conflict $N}
-		    set X [list $date $who]
-		    puts "edit-save@[clock seconds] conflict"
-		    return [sendPage $r conflict {NoCache Conflict}]
-		}
-	    }
-
-	    puts "edit-save@[clock seconds] normalize"
-
-	    # newline-normalize content
-	    set C [string map {\r\n \n \r \n} $C]
-
-	    puts "edit-save@[clock seconds] check utf8"
-	    # check the content for utf8 correctness
-	    # this metadata is set by Query parse/cconvert
-	    set point [Dict get? [Query metadata [dict get $r -Query] C] -bad]
-	    if {$point ne ""
-		&& $point < [string length $C] - 1
-	    } {
-		if {$point >= 0} {
-		    incr point
-		    binary scan [string index $C $point] H* bogus
-		    set C [string replace $C $point $point "<BOGUS 0x$bogus>"]
-		    set E [string range $C [expr {$point-50}] [expr {$point-1}]]
-		} else {
-		    set E ""
-		}
-		Debug.wikit {badutf $N}
-		puts "edit-save@[clock seconds] badutf"
-		return [sendPage $r badutf]
-	    }
-
-	    puts "edit-save@[clock seconds] check if only commenting"
-	    # save the page into the db.
-	    set who $nick@[dict get $r -ipaddr]
-	    if {[string is integer -strict $A] && $A} {
-		# Look for category at end of page using following styles:
-		# ----\n[Category ...]
-		# ----\n!!!!!!\n%|Category...|%\n!!!!!!
-		set Cl [split [string trimright [WDB GetContent $N] \n] \n]
-		if {[string trim [lindex $Cl end]] eq "!!!!!!" && 
-		    [string trim [lindex $Cl end-2]] eq "!!!!!!" && 
-		    [string match "----*" [string trim [lindex $Cl end-3]]] && 
-		    [string match "%|*Category*|%" [string trim [lindex $Cl end-1]]]} {
-		    set Cl [linsert $Cl end-4 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
-		} elseif {[string match "<<categories>>*" [lindex $Cl end]]} {
-		    set Cl [linsert $Cl end-1 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
-		} else {
-		    lappend Cl ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C
-		}
-		set C [join $Cl \n]
-	    }
-	    puts "edit-save@[clock seconds] remove RA"
-	    set C [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C]
-	    puts "edit-save@[clock seconds] check if real changes"
-	    if {$C eq [WDB GetContent $N]} {
-		Debug.wikit {No change, not saving  $N}
-		puts "edit-save@[clock seconds] unchanged"
-		return [redir $r $url [<a> href $url "Unchanged Page"]]
-	    }
-	    Debug.wikit {SAVING $N}
-
-	    puts "edit-save@[clock seconds] save it"
-	    if {[catch {
-		WDB SavePage $N $C $who $name $when
-	    } err eo]} {
-		set readonly $err
-	    }
-	    puts "edit-save@[clock seconds] check pagecaching"
-	    variable pagecaching
-	    if {$pagecaching} {
-		if {[WDB pagecache exists $N]} {
-		    WDB pagecache delete $N
-		}
-		if {[WDB pagecache exists 4]} {
-		    WDB pagecache delete 4
-		}
-	    }
-
-	    puts "edit-save@[clock seconds] invalidate"
-	    # Only actually save the page if the user selected "save"
-	    invalidate $r $N
-	    invalidate $r 4
-	    invalidate $r [file join $mount ref]/$N
-	    invalidate $r rss.xml; WikitRss clear
-	    invalidate $r [file join $mount summary]/$N
-
-	    # if this page did not exist before:
-	    # remove all referencing pages.
-	    #
-	    # this makes sure that cache entries point to a filled-in page
-	    # from now on, instead of a "[...]" link to a first-time edit page
-	    puts "edit-save@[clock seconds] invalidate refs"
-	    variable include_pages
-	    if {$date == 0 || $include_pages} {
-		foreach from [WDB ReferencesTo $N] {
-		    invalidate $r $from
-		}
-	    }
-	    puts "edit-save@[clock seconds] done saving"
+	if {$N eq "" || $C eq ""} {
+	    return [redir $r $url [<a> href $url "Edited Page"]]
 	}
 
-	Debug.wikit {save done $N}
+	variable protected
+	if {[info exists protected($N)]} {
+	    perms $r admin
+	    Debug.wikit {/edit/save protected page OK}
+	}
+
+	puts "edit-save@[clock seconds] check conflicts"
+
+	# added 2002-06-13 - edit conflict detection
+	if {$O ne [list $date $who]} {
+	    #lassign [split [lassign $O ewhen] @] enick eip
+	    if {$who eq "$nick@[dict get $r -ipaddr]"} {
+		# this is a ghostly conflict-with-self - log and ignore
+		Debug.wikit "Conflict on Edit of $N: '$O' ne '[list $date $who]' at date $when"
+		#set url http://[dict get $r host]/$N
+		#return [redir $r $url [<a> href $url "Edited Page"]]
+	    } else {
+		Debug.wikit {conflict $N}
+		set X [list $date $who]
+		puts "edit-save@[clock seconds] conflict"
+		return [sendPage $r conflict {NoCache Conflict}]
+	    }
+	}
+	
+	puts "edit-save@[clock seconds] normalize"
+
+	# newline-normalize content
+	set C [string map {\r\n \n \r \n} $C]
+	
+	puts "edit-save@[clock seconds] check utf8"
+	# check the content for utf8 correctness
+	# this metadata is set by Query parse/cconvert
+	set point [Dict get? [Query metadata [dict get $r -Query] C] -bad]
+	if {$point ne ""
+	    && $point < [string length $C] - 1
+	} {
+	    if {$point >= 0} {
+		incr point
+		binary scan [string index $C $point] H* bogus
+		set C [string replace $C $point $point "<BOGUS 0x$bogus>"]
+		set E [string range $C [expr {$point-50}] [expr {$point-1}]]
+	    } else {
+		set E ""
+	    }
+	    Debug.wikit {badutf $N}
+	    puts "edit-save@[clock seconds] badutf"
+	    return [sendPage $r badutf]
+	}
+	
+	puts "edit-save@[clock seconds] check if only commenting"
+	# save the page into the db.
+	set who $nick@[dict get $r -ipaddr]
+	if {[string is integer -strict $A] && $A} {
+	    # Look for category at end of page using following styles:
+	    # ----\n[Category ...]
+	    # ----\n!!!!!!\n%|Category...|%\n!!!!!!
+	    set Cl [split [string trimright [WDB GetContent $N] \n] \n]
+	    if {[string trim [lindex $Cl end]] eq "!!!!!!" && 
+		[string trim [lindex $Cl end-2]] eq "!!!!!!" && 
+		[string match "----*" [string trim [lindex $Cl end-3]]] && 
+		[string match "%|*Category*|%" [string trim [lindex $Cl end-1]]]} {
+		set Cl [linsert $Cl end-4 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
+	    } elseif {[string match "<<categories>>*" [lindex $Cl end]]} {
+		set Cl [linsert $Cl end-1 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
+	    } else {
+		lappend Cl ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C
+	    }
+	    set C [join $Cl \n]
+	}
+	puts "edit-save@[clock seconds] remove RA"
+	set C [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C]
+	puts "edit-save@[clock seconds] check if real changes"
+	if {$C eq [WDB GetContent $N]} {
+	    Debug.wikit {/edit/save failed: No change, not saving  $N}
+	    puts "edit-save@[clock seconds] unchanged"
+	    return [redir $r $url [<a> href $url "Unchanged Page"]]
+	}
+	Debug.wikit {/edit/save SAVING $N}
+	
+	puts "edit-save@[clock seconds] save it"
+	if {[catch {
+	    WDB SavePage $N $C $who $name $when
+	} err eo]} {
+	    set readonly $err
+	}
+	puts "edit-save@[clock seconds] check pagecaching"
+	variable pagecaching
+	if {$pagecaching} {
+	    Debug.wikit {/edit/save clearing pagecache for $N and 4}
+	    if {[WDB pagecache exists $N]} {
+		WDB pagecache delete $N
+	    }
+	    if {[WDB pagecache exists recent]} {
+		WDB pagecache delete recent
+	    }
+	}
+
+	# give effect to editing of TOC
+	variable protected
+	if {$N == $protected(TOC)} {
+	    reloadTOC
+	}
+
+	puts "edit-save@[clock seconds] invalidate"
+	# Only actually save the page if the user selected "save"
+	invalidate $r [file join $pageURL $N]
+	invalidate $r [file join $mount recent]
+	invalidate $r [file join $mount ref]/$N
+	invalidate $r rss.xml; WikitRss clear
+	invalidate $r [file join $mount summary]/$N
+
+	# if this page did not exist before:
+	# remove all referencing pages.
+	#
+	# this makes sure that cache entries point to a filled-in page
+	# from now on, instead of a "[...]" link to a first-time edit page
+	puts "edit-save@[clock seconds] invalidate refs"
+	variable include_pages
+	if {$date == 0 || $include_pages} {
+	    foreach from [WDB ReferencesTo $N] {
+		invalidate $r $from
+	    }
+	}
+	puts "edit-save@[clock seconds] done saving"
+
+	Debug.wikit {/edit/save complete $N}
 	# instead of redirecting, return the generated page with a Content-Location tag
 	#return [do $r $N]
 	puts "edit-save@[clock seconds] done"
@@ -1979,7 +1906,8 @@ namespace eval WikitWub {
 
     # called to generate an edit page
     proc /edit {r N A args} {
-	perms $r write
+	Debug.wikit {edit N:$N A:$A ($args)}
+
 	variable mount
 	variable pageURL
 	variable detect_robots
@@ -1987,9 +1915,9 @@ namespace eval WikitWub {
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
+	perms $r write
 
 	variable readonly
-	variable protected
 	if {$readonly ne ""} {
 	    return [sendPage $r ro]
 	}
@@ -1997,9 +1925,12 @@ namespace eval WikitWub {
 	if {![string is integer -strict $N]} {
 	    return [Http NotFound $r]
 	}
+
+	variable protected
 	if {[info exists protected($N)]} {
-	    return [Http Forbidden $r]
+	    perms $r admin
 	}
+
 	if {$N < 0 || $N >= [WDB PageCount]} {
 	    return [Http NotFound $r]
 	}
@@ -2057,57 +1988,24 @@ namespace eval WikitWub {
 	return [redir $r $R [<a> href $R "Loaded MOTD"]]
     }
 
-    proc /reloadTOC {r} {
-	perms $r admin
-	variable TOCchange 
-	variable docroot
-	variable pageURL
-
-	set tocf [file join $docroot TOC]
-
-	set changed [file mtime $tocf]
-	if {$changed <= $TOCchange} {
-	    set R http://[dict get $r host]/4
-	    return [redir $r $R [<a> href $R "No Change"]]
-	}
-
-	set TOCchange $changed
-
-	variable TOC
-	variable IMTOC
-	catch {set TOC [::fileutil::cat $tocf]}
-	set TOC [string trim $TOC]
-	unset -nocomplain IMTOC
-	if { [string length $TOC] } {
-	    lassign [WFormat FormatWikiToc $TOC $pageURL] TOC IMTOCl
-	    array set IMTOC $IMTOCl
-	}
-
-	set R http://[dict get $r host]/4
-	return [redir $r $R [<a> href $R "Loaded MOTD"]]
-    }
-
-    proc /reloadWELCOME {r} {
-	perms $r admin
-	variable WELCOMEchange
-	variable docroot
-	set wf [file join $docroot html welcome.html]
-
-	set changed [file mtime $wf]
-	if {$changed <= $WELCOMEchange} {
-	    set R http://[dict get $r host]/4
-	    return [redir $r $R [<a> href $R "No Change"]]
-	}
-	
-	set WELCOMEchange $changed
-
-	variable WELCOME
-	catch {set WELCOME [::fileutil::cat $wf]}
+    proc reloadTOC {} {
 	variable mount
-	set WELCOME [string map [list %M% $mount] [string trim $WELCOME]]
+	variable pageURL
+	variable protected
+	variable TOC [string trim [WDB GetContent $protected(TOC)]]
+	variable IMTOC
+	if {[catch {
+	    unset -nocomplain IMTOC
 
-	set R http://[dict get $r host]/4
-	return [redir $r $R [<a> href $R "Loaded MOTD"]]
+	    if {[string length $TOC]} {
+		lassign [WFormat FormatWikiToc $TOC $pageURL] TOC IMTOCl
+		array set IMTOC $IMTOCl
+	    }
+	} e eo]} {
+	    set TOC ""
+	    unset -nocomplain IMTOC
+	    error "$e ($eo)"
+	}
     }
 
     proc /reloadCSS {r} {
@@ -2146,7 +2044,7 @@ namespace eval WikitWub {
 	set updated ""
 	set ro ""
 	set C $WELCOME
-	set T ""
+	set page_toc ""
 
 	return [sendPage $r]
     }
@@ -2226,9 +2124,9 @@ namespace eval WikitWub {
 	set name "References to $N"
 	set Title "References to [Ref $N]"
 	set updated ""
-	set T ""
 	set tplt page
-	if { $A } {
+	set page_toc ""
+	if {$A} {
 	    set tplt refs_tc
 	}
 	variable TOC
@@ -2280,41 +2178,6 @@ namespace eval WikitWub {
 	return [list /$id $name $date]
     }
 
-    proc search {key date} {
-	Debug.wikit {search: '$key'}
-	set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
-
-	# tclLog "SearchResults key <$key> long <$searchLong>"
-	set rdate $date
-	set result "Searched for \"[bold $key]\" (in page titles"
-
-	if {$long} {
-	    append result { and contents}
-	}
-	append result "):\n\n"
-	set max 100
-	set count 0
-	foreach record [WDB Search $key $long $date $max] {
-	    dict with record {}
-
-	    # these are fake pages, don't list them
-	    if {$id == 2 || $id == 4 || $id == 5} continue
-	    append result [list_item "[timestamp $date] . . . [wiki_link $id $name]"]
-	    set rdate $date
-	    incr count
-	}
-
-	if {$count == 0} {
-	    append result [list_item [bold [italic "No matches found"]]]
-	    set rdate 0
-	} else {
-	    append result [list_item [italic "Displayed $count matches"]]
-	    set rdate 0
-	}
-
-	return [list $result $rdate $long]
-    }
-
     proc pageXML {N} {
 	lassign [WDB GetPage $N name date who] name date who
 	set page [WDB GetContent $N]
@@ -2330,7 +2193,7 @@ namespace eval WikitWub {
 	}]]
     }
 
-    proc fromCache {r N ext} {
+    proc fromCache {r N {ext ""}} {
 	variable pagecaching
 	if {$pagecaching && $ext eq "" && [WDB pagecache exists $N]} {
 	    set p [WDB pagecache fetch $N]
@@ -2374,14 +2237,253 @@ namespace eval WikitWub {
     variable trailers {@ _/edit ! _/ref - _/diff + _/history}
 
     proc generated { r } {
-	return "Generated in [expr {int([clock microseconds] - [dict get $r -received])/1000}]ms"
+	set genmsg "Generated in [expr {int([clock microseconds] - [dict get $r -received])/1000}]ms"
+	if {[dict exist $r -caching]} {
+	    append genmsg " " [dict get $r -caching]
+	}
+	return $genmsg
+    }
+
+    proc makePage {r name C args} {
+	set query ""
+	set menu {}
+	set footer {}
+	set cacheit 0
+	set page_toc ""
+	set updated ""
+	set Title $name
+	dict for {n v} $args {
+	    set $n $v
+	}
+	set menu [list {*}[menus Home Recent Help WhoAmI] {*}$menu]
+	set footer [list {*}[menus Home Recent Help Search WhoAmI] {*}$footer]
+
+	variable pageURL
+	variable mount
+	variable motd
+	variable TOC
+	variable readonly
+	variable protected
+	variable readonly
+	variable bullet
+
+	if {$readonly ne "" && (![info exists ::starkit_hidereadonly] || !$::starkit_hidereadonly)} {
+	    set ro "<it>(Read Only Mode: $readonly)</it>"
+	} else {
+	    set ro ""
+	}
+
+	if {$cacheit} {
+	    Debug.wikit {do sending page as CacheableContent}
+	    set result [sendPage [Http CacheableContent $r $date] page DCache]
+	    variable pagecaching
+	    if {$pagecaching} {
+		if {[WDB pagecache exists $N]} {
+		    WDB pagecache delete $N
+		}
+		WDB pagecache insert $N [dict get $result -content] [dict get $result content-type] [clock milliseconds] [dict get? $result -title]
+	    }
+	    return $result
+	} else {
+	    Debug.wikit {do sending $N sans caching}
+	    return [sendPage $r]
+	}
+    }
+
+    # Special page: Recent Changes.
+    variable delta [subst \u0394]
+    variable delta [subst \u25B2]
+    proc /recent {r} {
+	# try cached version
+	lassign [fromCache $r recent] cached result
+	if {$cached} {
+	    return $result
+	}
+
+	variable mount
+	variable pageURL
+	variable delta
+	variable motd
+
+	set C $motd	;# contents includes motd
+	set results {}
+	set result {}
+	set lastDay 0
+	set threshold [expr {[clock seconds] - 7 * 86400}]
+	set deletesAdded 0
+	set activityHeaderAdded 0
+
+	foreach record [WDB RecentChanges $threshold] {
+
+	    dict with record {}
+
+	    # these are fake pages, don't list them
+	    if {$id < 10} continue
+
+	    # only report last change to a page on each day
+	    set day [expr {$date/86400}]
+
+	    # insert a header for each new date
+	    if {$day != $lastDay} {
+
+		if { [llength $result] } {
+		    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
+		    set result {}
+
+		    if { !$deletesAdded } {
+			lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages (title and/or page)"]]
+			set deletesAdded 1
+		    }
+		}
+
+		lappend results [<p> ""]
+		set datel [list "[<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]] [<span> class day [clock format $date -gmt 1 -format %A]]" ""]
+		if {!$activityHeaderAdded} {
+		    lappend datel "Activity"
+		    set activityHeaderAdded 1
+		} else {
+		    lappend datel ""
+		}
+		lappend result $datel
+		set lastDay $day
+	    }
+
+	    set actimg "<img class='activity' src='activity.png' alt='*' />"
+
+	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]] [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
+	}
+
+	if { [llength $result] } {
+	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
+	    if { !$deletesAdded } {
+		lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages (title and/or page)"]]
+	    }
+	}
+
+	lappend results [<p> "generated [clock format [clock seconds]]"]
+	append C \n [join $results \n]
+
+	# Recent Changes page
+	Debug.wikit {do: recent changes page}
+	set name "Recent Changes"
+
+	return [makePage $r $name $C Title "Recent Changes" N [file join $mount recent]]
+    }
+
+    proc search {key date} {
+	Debug.wikit {search: '$key'}
+	set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
+
+	# tclLog "SearchResults key <$key> long <$searchLong>"
+	set rdate $date
+	set result "Searched for \"[bold $key]\" (in page titles"
+
+	if {$long} {
+	    append result { and contents}
+	}
+	append result "):\n\n"
+	set max 100
+	set count 0
+	variable protected
+	foreach record [WDB Search $key $long $date $max] {
+	    dict with record {}
+
+	    # these are admin pages, don't list them
+	    if {$id in [array names protected]} continue
+	    append result [list_item "[timestamp $date] . . . [wiki_link $id $name]"]
+	    set rdate $date
+	    incr count
+	}
+
+	if {$count == 0} {
+	    append result [list_item [bold [italic "No matches found"]]]
+	    set rdate 0
+	} else {
+	    append result [list_item [italic "Displayed $count matches"]]
+	    set rdate 0
+	}
+
+	return [list $result $rdate $long]
+    }
+
+    proc /searchp {r} {
+	variable mount
+	variable pageURL
+	# search page
+	Debug.wikit {do: search page}
+	set qd [Dict get? $r -Query]
+	if {[Query exists $qd S]
+	    && [set term [Query value $qd S]] ne ""
+	} {
+	    # search page with search term supplied
+	    set search [armour $term]
+	    
+	    # determine search date
+	    if {[Query exists $qd F]} {
+		set qdate [Query value $qd F]
+		if {![string is integer -strict $qdate]} {
+		    set qdate 0
+		}
+	    } else {
+		set qdate 0
+	    }
+	    
+	    lassign [search $term $qdate] C nqdate long
+	    lassign [translate "Search" $C .html] C U T BR
+	    if { $nqdate } {
+		append C [<p> [<a> href "search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
+	    }
+	    if { $long } {
+		append C <p> 
+		append C [<a> href "search?S=[armour [string trimright $term *]]&_charset_=utf-8" "Repeat search in titles only"]
+		append C ", or remove trailing asterisks from the search string to search the titles only.</p>"
+	    } else {
+		append C <p> 
+		append C [<a> href "search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
+		append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
+	    }
+	    set q [string trimright $term *]
+	    append q "%20site:" [expr {[info exists ::starkit_url]?"http://$::starkit_url":"http://wiki.tcl.tk"}]
+	    append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
+	} else {
+	    # send a search page
+	    set search ""
+	    set C ""
+	}
+	
+	variable searchForm; set C "[subst $searchForm]$C"
+	
+	set name "Search"
+	set cacheit 0	;# don't cache searches
+	return [makePage $r $name $C search $search]
+    }
+
+    proc /search {r {S ""} args} {
+	perms $r read
+
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
+	if {$S eq "" && [llength $args] > 0} {
+	    set S [lindex $args 0]
+	}
+
+	Debug.wikit {/search: '$S'}
+	dict set r -prefix "/$S"
+	dict set r -suffix $S
+
+	return [/searchp $r]
     }
 
     proc do {r} {
 	perms $r read
-	# decompose name
 	variable pageURL
 	variable mount
+	variable readonly
+
+	# decompose name
 	lassign [Url urlsuffix $r $pageURL] result r term path
 	if {!$result} {
 	    return $r	;# URL not in our domain
@@ -2405,12 +2507,14 @@ namespace eval WikitWub {
 	# handle searches
 	if {![string is integer -strict $N]} {
 	    set N [locate $term]
-	    if {$N == 2} {
+	    if {$N < 0} {
 		# locate has given up - can't find a page - go to search
+		Debug.wikit {do: can't find '$term' ... search for it}
 		return [Http Redir $r /[file join $mount search] S [Query decode $term$fancy]]
 	    } elseif {$N ne $term} {
 		# we really should redirect
 		variable detect_robots
+		Debug.wikit {do: can't find '$N' ne '$term' ... redirect}
 		if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 		    # try to make robots always use the canonical form
 		    return [Http Moved $r "http://[dict get $r host]/$N"]
@@ -2430,212 +2534,135 @@ namespace eval WikitWub {
 
 	Filter $r $N	;# filter out selected pages
 
+	# prevent some pages from being readable by any but admin
+	variable rprotected
+	if {$N in $rprotected} {
+	    perms $r admin
+	}
+
 	set date [clock seconds]	;# default date is now
 	set name ""	;# no default page name
 	set who ""	;# no default editor
 	set cacheit 1	;# default is to cache
-	set T ""
+	set page_toc ""	;# default is no page toc
 	set BR {}
 
-	switch -- $N {
-	    2 {
-		# search page
-		set qd [Dict get? $r -Query]
-		if {[Query exists $qd S]
-		    && [set term [Query value $qd S]] ne ""
-		} {
-		    # search page with search term supplied
-		    set search [armour $term]
-
-		    # determine search date
-		    if {[Query exists $qd F]} {
-			set qdate [Query value $qd F]
-			if {![string is integer -strict $qdate]} {
-			    set qdate 0
-			}
-		    } else {
-			set qdate 0
-		    }
-
-		    lassign [search $term $qdate] C nqdate long
-		    lassign [translate "Search" $C .html] C U T BR
-		    if { $nqdate } {
-			append C [<p> [<a> href "search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
-		    }
-		    if { $long } {
-			append C <p> 
-			append C [<a> href "search?S=[armour [string trimright $term *]]&_charset_=utf-8" "Repeat search in titles only"]
-			append C ", or remove trailing asterisks from the search string to search the titles only.</p>"
-		    } else {
-			append C <p> 
-			append C [<a> href "search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
-			append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
-		    }
-		    set q [string trimright $term *]
-		    append q "%20site:" [expr {[info exists ::starkit_url]?"http://$::starkit_url":"http://wiki.tcl.tk"}]
-		    append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
-		} else {
-		    # send a search page
-		    set search ""
-		    set C ""
-		}
-
-		variable searchForm; set C "[subst $searchForm]$C"
-
-		set name "Search"
-		set cacheit 0	;# don't cache searches
-	    }
-
-	    4 {
-		# Recent Changes page
-		variable motd
-		set C "${motd}[RecentChanges]"
-		set name "Recent Changes"
-
-		# try cached version
-		lassign [fromCache $r $N $ext] cached result
-		if {$cached} {
-		    return $result
-		}
-	    }
-
-	    default {
-
-		# simple page - non search term
-		if {$N < 0 || $N >= [WDB PageCount]} {
-		    return [Http NotFound $r]
-		}
-
-		# try cached version
-		lassign [fromCache $r $N $ext] cached result
-		if {$cached} {
-		    return $result
-		}
-
-		# set up a few standard URLs an strings
-		lassign [WDB GetPage $N name date who] name date who
-		if {$name eq ""} {
-		    return [Http NotFound $r]
-		}
-
-		# fetch page contents
-		set content [WDB GetContent $N]
-		switch -- $ext {
-		    .txt -
-		    .str -
-		    .code {
-			return [Http NoCache [Http Ok $r [translate $name $content $ext] text/plain]]
-		    }
-		    .xml {
-			set C "<?xml version='1.0'?>"
-			append C \n [pageXML $N]
-			return [Http NoCache [Http Ok $r [translate $name $C $ext] text/xml]]
-		    }
-		    default {
-			dict set r content-location "http://[Url host $r]/$N"
-			lassign [translate $name $content $ext] C U T BR IH
-			variable include_pages
-			if {$include_pages} {
-			    set C [IncludePages $C $IH]
-			}
-			foreach {containerid bref} $BR {
-			    if {[string length $bref]} {
-				set brefpage [WDB LookupPage $bref]
-			    } else {
-				set brefpage $N
-			    }
-			    dict lappend r -postload [<script> "getBackRefs($brefpage,'$containerid')"]
-			}
-			set C [string map [list <<TOC>> $T] $C]
-		    }
-		}
-	    }
+	# simple page - non search term
+	if {$N < 0 || $N >= [WDB PageCount]} {
+	    Debug.wikit {do: invalid page}
+	    return [Http NotFound $r]
 	}
-	
-	Debug.wikit {located: $N}
-	
-	# set up backrefs
-	set refs {1}
-	Debug.wikit {[llength $refs] backrefs to $N}
-	switch -- [llength $refs] {
-	    0 {
-		set backRef ""
-		set Refs ""
-		set Title [armour $name]
+
+	# try cached version
+	lassign [fromCache $r $N $ext] cached result
+	if {$cached} {
+	    Debug.wikit {do: cached version of $N $ext}
+	    return $result
+	}
+
+	# set up a few standard URLs an strings
+	lassign [WDB GetPage $N name date who] name date who
+	if {$name eq ""} {
+	    Debug.wikit {do: can't find $N in DB}
+	    return [Http NotFound $r]
+	}
+
+	# fetch page contents
+	set content [WDB GetContent $N]
+	if {$N == 0} {
+	    # page 0 is HTML and is the Welcome page
+	    set C [string map [list %M% $mount] $content]
+	    set menu [menus Recent Help WhoAmI]
+	    set footer [menus Recent Help Search]
+	    lappend menu [<a> href [file join $mount edit]?N=$N Edit]
+	    lappend footer [<a> href [file join $mount edit]?N=$N Edit]
+
+	    if {[info exists ::starkit_wikittitle]} {
+		set Title $::starkit_wikittitle
+		set name $::starkit_wikittitle
+	    } elseif {[info exists wiki_title] && $wiki_title ne ""} {
+		set Title $wiki_title
+		set name $wiki_title
+	    } else {
+		set Title "Welcome to the Tclers Wiki!"
+		set name "Welcome to the Tclers Wiki!"
 	    }
-	    1 {
-		set backRef [file join $mount ref]?N=$N
-		set Refs "[<a> href $backRef Reference] - "
-		set Title [<a> href $backRef title "click to see reference to this page" $name]
+	} else {
+	    switch -- $ext {
+		.txt -
+		.str -
+		.code {
+		    return [Http NoCache [Http Ok $r [translate $name $content $ext] text/plain]]
+		}
+		.xml {
+		    set C "<?xml version='1.0'?>"
+		    append C \n [pageXML $N]
+		    return [Http NoCache [Http Ok $r [translate $name $C $ext] text/xml]]
+		}
+		default {
+		    Debug.wikit {do: $N is a normal page}
+		    dict set r content-location "http://[Url host $r]/$N"
+		    lassign [translate $name $content $ext] C U page_toc BR IH
+		    variable include_pages
+		    if {$include_pages} {
+			set C [IncludePages $C $IH]
+		    }
+		    foreach {containerid bref} $BR {
+			if {[string length $bref]} {
+			    set brefpage [WDB LookupPage $bref]
+			} else {
+			    set brefpage $N
+			}
+			dict lappend r -postload [<script> "getBackRefs($brefpage,'$containerid')"]
+		    }
+		    set C [string map [list <<TOC>> $page_toc] $C]
+		}
 	    }
-	    default {
-		set backRef [file join $mount ref]?N=$N
-		set Refs "[llength $refs] [<a> href $backRef {References to this page}]"
-		set Title [<a> href $backRef title "click to see [llength $refs] references to this page" $name]
-		Debug.wikit {backrefs: backRef:'$backRef' Refs:'$Refs' Title:'$Title'} 10
+	    Debug.wikit {do has translated $N}
+	
+	    # set up backrefs
+	    set backRef [file join $mount ref]?N=$N
+	    #set Refs "[<a> href $backRef Reference] - "
+	    set Title [<a> href $backRef title "click to see reference to this page" $name]
+
+	    # add extra menu and footer elements
+	    set menu {}
+	    set footer {}
+	    variable protected
+	    variable perms
+	    if {[dict size $perms] > 0 || ![info exists protected($N)]} {
+		lappend menu {*}[menus HR]
+		if {!$::roflag && $readonly eq {}} {
+		    lappend menu [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
+		    lappend footer [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
+		    lappend menu [<a> href [file join $mount edit]?N=$N Edit]
+		    lappend footer [<a> href [file join $mount edit]?N=$N Edit]
+		}
+		lappend menu [<a> href [file join $mount history]?N=$N "History"]
+		lappend menu [<a> href [file join $mount summary]?N=$N "Edit summary"]
+		lappend menu [<a> href $backRef References]
 	    }
 	}
 
 	# arrange the page's tail
 	set updated ""
-	if {$N != 4} {
-	    if {$date != 0} {
-		set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
-		set updated "Updated $update"
-	    }
-
-	    if {$who ne "" &&
-		[regexp {^(.+)[,@]} $who - who_nick]
-		&& $who_nick ne ""
-	    } {
-		append updated " by [<a> href /[WDB LookupPage $who_nick] $who_nick]"
-	    }
-	    if {[string length $updated]} {
-		variable delta
-		append updated " " [<a> class delta href [file join $mount diff]?N=$N#diff0 $delta]
-	    }
+	if {$date != 0} {
+	    set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
+	    set updated "Updated $update"
 	}
 
-	variable protected
-	variable readonly
-
-	set menu [menus Home Recent Help WhoAmI]
-	set footer [menus Home Recent Help Search WhoAmI]
-
-	if {![info exists protected($N)]} {
-	    lappend menu {*}[menus HR]
-	    if {!$::roflag && $readonly eq {}} {
-		lappend menu [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
-		lappend footer [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
-		lappend menu [<a> href [file join $mount edit]?N=$N Edit]
-		lappend footer [<a> href [file join $mount edit]?N=$N Edit]
-	    }
-	    lappend menu [<a> href [file join $mount history]?N=$N "History"]
-	    lappend menu [<a> href [file join $mount summary]?N=$N "Edit summary"]
-	    lappend menu [<a> href $backRef References]
+	if {$who ne "" &&
+	    [regexp {^(.+)[,@]} $who - who_nick]
+	    && $who_nick ne ""
+	} {
+	    append updated " by [<a> href /[WDB LookupPage $who_nick] $who_nick]"
+	}
+	if {[string length $updated]} {
+	    variable delta
+	    append updated " " [<a> class delta href [file join $mount diff]?N=$N#diff0 $delta]
 	}
 
-	variable TOC
-	variable readonly
-	if {$readonly ne "" && (![info exists ::starkit_hidereadonly] || !$::starkit_hidereadonly)} {
-	    set ro "<it>(Read Only Mode: $readonly)</it>"
-	} else {
-	    set ro ""
-	}
-
-	if {$cacheit} {
-	    set result [sendPage [Http CacheableContent $r $date] page DCache]
-	    variable pagecaching
-	    if {$pagecaching} {
-		if {[WDB pagecache exists $N]} {
-		    WDB pagecache delete $N
-		}
-		WDB pagecache insert $N [dict get $result -content] [dict get $result content-type] [clock milliseconds] [dict get? $result -title]
-	    }
-	    return $result
-	} else {
-	    return [sendPage $r]
-	}
+	return [makePage $r $name $C menu $menu footer $footer cacheit $cacheit updated $updated Title $Title date $date page_toc $page_toc]
     }
 
     # Site WikitWub-specific defaults
