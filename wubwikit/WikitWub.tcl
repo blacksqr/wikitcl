@@ -36,7 +36,7 @@ set API(WikitWub) {
     cookie {name of login cookie (default "wikit_e")}
     language {html natural language (default "en")}
     markup_language {Set markup language to be used. Can be wikit, stx or creole. (default: wikit)}
-    edit_template {Set text to be used on first edit of a page.}
+    empty_template {Set text to be used on first edit of a page.}
     hidereadonly {Hide the readonly message. (default: false)}
     inline_html {Allow inline html in wikit markup. (default: false)}
     include_pages {Allow other wiki pages to be include in a wiki page in wikit markup. (default: false)}
@@ -56,9 +56,9 @@ namespace eval WikitWub {
     variable inline_html 0
     variable include_pages 0
     variable markup_language wikit
-    variable edit_template "This is an empty page.\n\nEnter page contents here or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
     variable hidereadonly 0
     variable text_url "wiki.tcl.tk"
+    variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above,  or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
 
     variable perms {}
     proc perms {r op} {
@@ -124,6 +124,13 @@ namespace eval WikitWub {
 	}
 	set templates($name) $template
 	variable titles; set titles($name) $title
+    }
+
+    template empty {} {
+	This is an empty page.
+
+	Enter page contents here or click cancel to leave it empty.
+	<<categories>>Enter Category Here
     }
 
     # return a search form
@@ -331,6 +338,15 @@ namespace eval WikitWub {
 	<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
     }
 
+    template upload {} {
+	[<form> upload enctype multipart/form-data method post action [file join $::WikitWub::mount edit/save] {
+	    [<label> for C [<submit> submit Upload]][<file> C title {Upload Content} ""]
+	    [<hidden> N $N]
+	    [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
+	    [<hidden> A 0]
+	}]
+    }
+
     # page sent when editing a page
     template edit {Editing [armour $name]} {
 	[<div> class edit [subst {
@@ -349,6 +365,7 @@ namespace eval WikitWub {
 		    [<div> class updated "Make your changes, then press Save below"]
 		}]
 	    }]]
+	    [If {$C eq ""} [template upload]]
 	    [<div> class editcontents [subst {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action [file join $::WikitWub::mount edit/save] {
@@ -357,7 +374,7 @@ namespace eval WikitWub {
 		     [<div> class previewarea id previewarea ""]
 		     [<div> class previewarea_post id previewarea_post ""]
 		     [<div> class toolbar [subst [template edit_toolbar_$markup_language]]]
-		     [<textarea> C id editarea rows 35 cols 72 compact 0 style width:100% [tclarmour $C]]
+		     [<textarea> C id editarea rows 35 cols 72 compact 0 style width:100% [expr {($C eq "")?$::WikitWub::empty_template:[tclarmour $C]}]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
 		     [<hidden> N $N]
@@ -520,13 +537,11 @@ namespace eval WikitWub {
 	<meta name="verify-v1" content="89v39Uh9xwxtWiYmK2JcYDszlGjUVT1Tq0QX+7H8AD0=">
     }]
 
-    # protected pages
-    variable protected
-    array set protected {Welcome 0 Admin 1 OldSearch 2 Login 3 Changes 4 HoneyPot 5 Something6 6 Something7 7 TOC 8 Init 9}
-    foreach {n v} [array get protected] {
-	set protected($v) $n
-    }
-    variable rprotected {1 3 9}
+    # protected pages - these can't be edited (resp read) by non-admin
+    variable protected_pages {Welcome Admin TOC}
+    variable rprotected_pages {Admin TOC}
+    variable protected {}
+    variable rprotected {}
 
     # html suffix to be sent on every page
     variable htmlsuffix
@@ -1017,10 +1032,15 @@ namespace eval WikitWub {
     }
 
     proc /summary {r N {D 10}} {
-	perms $r read
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
+	}
+
+	perms $r read
+	variable rprotected
+	if {[dict exists $rprotected $N]} {
+	    perms $r admin
 	}
 
 	variable delta
@@ -1073,15 +1093,21 @@ namespace eval WikitWub {
     }
 
     proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
-	perms $r read
-	# If T is zero, D contains version to compare with
-	# If T is non zero, D contains a number of days and /diff must
-	Debug.wikit {/diff N:$N V:$V D:$D W:$W T:$T}
-	variable mount; variable pageURL
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
+
+	perms $r read
+	variable rprotected
+	if {[dict exists $rprotected $N]} {
+	    perms $r admin
+	}
+
+	# If T is zero, D contains version to compare with
+	# If T is non zero, D contains a number of days and /diff must
+	Debug.wikit {/diff N:$N V:$V D:$D W:$W T:$T}
+	variable mount; variable pageURL
 	
 	set ext [file extension $N]	;# file extension?
 	set N [file rootname $N]	;# it's a simple single page
@@ -1283,15 +1309,21 @@ namespace eval WikitWub {
     }
 
     proc /revision {r N {V -1} {A 0}} {
-	perms $r read
-	Debug.wikit {/page $args}
-
-	variable mount
 	variable detect_robots
-	variable markup_language
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
+
+	perms $r read
+	variable rprotected
+	if {[dict exists $rprotected $N]} {
+	    perms $r admin
+	}
+
+	Debug.wikit {/page $args}
+
+	variable mount
+	variable markup_language
 
 	set ext [file extension $N]	;# file extension?
 	set N [file rootname $N]	;# it's a simple single page
@@ -1355,16 +1387,21 @@ namespace eval WikitWub {
 
     # /history - revision history
     proc /history {r N {S 0} {L 25}} {
-	perms $r read
-	Debug.wikit {/history $N $S $L}
-
-	variable mount; variable pageURL
 	variable detect_robots
-	variable markup_language
-
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
+
+	perms $r read
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
+	Debug.wikit {/history $N $S $L}
+
+	variable mount; variable pageURL
+	variable markup_language
 
 	if {![string is integer -strict $N]
 	    || ![string is integer -strict $S]
@@ -1657,10 +1694,15 @@ namespace eval WikitWub {
     }
 
     proc /preview { r N O } {
-	perms $r read
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
+	}
+
+	perms $r read
+	variable rprotected
+	if {[dict exists $rprotected $N]} {
+	    perms $r admin
 	}
 
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
@@ -1671,10 +1713,15 @@ namespace eval WikitWub {
     }
 
     proc /included { r N } {
-	perms $r read
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
+	}
+
+	perms $r read
+	variable rprotected
+	if {[dict exists $rprotected $N]} {
+	    perms $r admin
 	}
 
 	set O [WDB GetContent $N]
@@ -1683,12 +1730,13 @@ namespace eval WikitWub {
 	return [sendPage $r preview_tc]
     }
 
-    proc /edit/save {r N C O A save cancel preview } {
+    proc /edit/save {r N C O A save cancel preview} {
 	perms $r write
 	variable mount
 	variable pageURL
 
-	Debug.wikit {/edit/save N:$N A:$A O:$O}
+	Debug.wikit {/edit/save N:$N A:$A O:$O upload:$upload ($args)}
+	Debug.wikit {Query: [dict get $r -Query] / [dict get $r -entity]}
 
 	puts "edit-save@[clock seconds] start"
 
@@ -1747,7 +1795,7 @@ namespace eval WikitWub {
 	}
 
 	variable protected
-	if {[info exists protected($N)]} {
+	if {[dict exists $protected $N]} {
 	    perms $r admin
 	    Debug.wikit {/edit/save protected page OK}
 	}
@@ -1845,7 +1893,7 @@ namespace eval WikitWub {
 
 	# give effect to editing of TOC
 	variable protected
-	if {$N == $protected(TOC)} {
+	if {$N == [dict get? $protected TOC]} {
 	    reloadTOC
 	}
 
@@ -1880,6 +1928,7 @@ namespace eval WikitWub {
 
     proc /map {r imp args} {
 	perms $r read
+
 	if {[info exists ::WikitWub::IMTOC($imp)]} {
 	    return [Http Redir $r "http://[dict get $r host]/[string trim $::WikitWub::IMTOC($imp) /]"]
 	} else {
@@ -1915,7 +1964,7 @@ namespace eval WikitWub {
 	}
 
 	variable protected
-	if {[info exists protected($N)]} {
+	if {[dict exists $protected $N]} {
 	    perms $r admin
 	}
 
@@ -1943,10 +1992,6 @@ namespace eval WikitWub {
 	    set C [armour "<enter your comment here and a header with your wiki nickname and timestamp will be inserted for you>"]
 	} else {
 	    set C [armour [WDB GetContent $N]]
-	    if {$C eq ""} {
-		variable edit_template
-		set C $edit_template
-	    }
 	}
 
 	return [sendPage $r edit]
@@ -1975,9 +2020,10 @@ namespace eval WikitWub {
 	variable mount
 	variable pageURL
 	variable protected
-	variable TOC [string trim [WDB GetContent $protected(TOC)]]
+	variable TOC
 	variable IMTOC
 	if {[catch {
+	    set TOC [string trim [WDB GetContent [dict get $protected TOC]]]
 	    unset -nocomplain IMTOC
 
 	    if {[string length $TOC]} {
@@ -1987,7 +2033,7 @@ namespace eval WikitWub {
 	} e eo]} {
 	    set TOC ""
 	    unset -nocomplain IMTOC
-	    error "$e ($eo)"
+	    Debug.error {Wikit Loading TOC: $e ($eo)}
 	}
     }
 
@@ -2001,15 +2047,15 @@ namespace eval WikitWub {
 
     proc /welcome {r} {
 	perms $r read
+
 	variable TOC
-	variable WELCOME
-	variable protected
 	variable wiki_title
+	variable protected
 
 	if {[info exists ::starkit_welcomezero] && $::starkit_welcomezero} {
 	    return [Http Redir $r "http://[dict get $r host]/0"]
 	}
-	
+
 	if {[info exists wiki_title] && $wiki_title ne ""} {
 	    set Title $wiki_title
 	    set name $wiki_title
@@ -2018,7 +2064,7 @@ namespace eval WikitWub {
 	    set name "Welcome to the Tclers Wiki!"
 	}
 
-	set C $WELCOME
+	set C [string trim [WDB GetContent [dict get? $protected Welcome]]]
 	set menu [menus Recent Help WhoAmI]
 	set footer [menus Recent Help Search]
 
@@ -2051,10 +2097,14 @@ namespace eval WikitWub {
 
     # called to generate a page with references
     proc /ref {r N A} {
-	perms $r read
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
+	}
+
+	perms $r read
+	if {[dict exists $rprotected $N]} {
+	    perms $r admin
 	}
 
 	if { ![string is integer -strict $A] } {
@@ -2196,13 +2246,13 @@ namespace eval WikitWub {
 		    continue
 		}
 	    }
-#	    set ihcontent [WDB GetContent $N]
-#	    set IHC [WFormat TextToStream $ihcontent]
-#	    lassign [WFormat StreamToHTML $IHC / ::WikitWub::InfoProc 1] IHC
-#	    set IHC [string trim $IHC \n]
-#	    if {[string match "<p></p>*" $IHC]} {
-#		set IHC [string range $IHC 7 end]
-#	    }
+	    #	    set ihcontent [WDB GetContent $N]
+	    #	    set IHC [WFormat TextToStream $ihcontent]
+	    #	    lassign [WFormat StreamToHTML $IHC / ::WikitWub::InfoProc 1] IHC
+	    #	    set IHC [string trim $IHC \n]
+	    #	    if {[string match "<p></p>*" $IHC]} {
+	    #		set IHC [string range $IHC 7 end]
+	    #	    }
 	    dict lappend r -postload [<script> "getIncluded($N,'included$cnt');"]
 	    set idx [string first "@@@@@@@@@@$ih@@@@@@@@@@" $C]
 	    set tC [string range $C 0 [expr {$idx-1}]]
@@ -2234,6 +2284,7 @@ namespace eval WikitWub {
 	    return $result
 	}
 
+	variable rprotected
 	variable mount
 	variable pageURL
 	variable delta
@@ -2248,11 +2299,10 @@ namespace eval WikitWub {
 	set activityHeaderAdded 0
 
 	foreach record [WDB RecentChanges $threshold] {
-
 	    dict with record {}
 
 	    # these are fake pages, don't list them
-	    if {$id < 10} continue
+	    if {[dict exists $rprotected $id]} continue
 
 	    # only report last change to a page on each day
 	    set day [expr {$date/86400}]
@@ -2325,7 +2375,7 @@ namespace eval WikitWub {
 	    dict with record {}
 
 	    # these are admin pages, don't list them
-	    if {$id in [array names protected]} continue
+	    if {[dict exists $protected $id]} continue
 	    append result [list_item "[timestamp $date] . . . [wiki_link $id $name]"]
 	    set rdate $date
 	    incr count
@@ -2393,17 +2443,18 @@ namespace eval WikitWub {
 	set name "Search"
 	set Title "Search"
 	set menu [menus Home Recent Help WhoAmI]
-	set footer [menus Home Recent Help]
+	set footer [menus Home Recent Help Search WhoAmI]
+
 	return [sendPage $r spage]
     }
 
     proc /search {r {S ""} args} {
-	perms $r read
-
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
+
+	perms $r read
 
 	if {$S eq "" && [llength $args] > 0} {
 	    set S [lindex $args 0]
@@ -2418,6 +2469,7 @@ namespace eval WikitWub {
 
     proc do {r} {
 	perms $r read
+
 	variable pageURL
 	variable mount
 	variable readonly
@@ -2507,21 +2559,10 @@ namespace eval WikitWub {
 
 	# fetch page contents
 	set content [WDB GetContent $N]
-	if {$N == 0} {
+	variable protected
+	if {$N == [dict get $protected Welcome]} {
 	    # page 0 is HTML and is the Welcome page
-	    set C [string map [list %M% $mount] $content]
-	    set menu [menus Recent Help WhoAmI]
-	    set footer [menus Recent Help Search]
-	    lappend menu [<a> href [file join $mount edit]?N=$N Edit]
-	    lappend footer [<a> href [file join $mount edit]?N=$N Edit]
-
-	    if {[info exists wiki_title] && $wiki_title ne ""} {
-		set Title $wiki_title
-		set name $wiki_title
-	    } else {
-		set Title "Welcome to the Tclers Wiki!"
-		set name "Welcome to the Tclers Wiki!"
-	    }
+	    return [/welcome $r]
 	} else {
 	    switch -- $ext {
 		.txt -
@@ -2565,7 +2606,7 @@ namespace eval WikitWub {
 	    set footer {}
 	    variable protected
 	    variable perms
-	    if {[dict size $perms] > 0 || ![info exists protected($N)]} {
+	    if {[dict size $perms] > 0 || ![dict exists $protected $N]} {
 		lappend menu {*}[menus HR]
 		if {!$::roflag && $readonly eq {}} {
 		    lappend menu [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
@@ -2737,31 +2778,40 @@ namespace eval WikitWub {
 	    variable motd [::fileutil::cat [file join $docroot motd]]
 	}
 
-	# set table of contents (if any) to be displayed on in left column menu
-	if {[catch {
-	    variable TOC [::fileutil::cat [file join $docroot TOC]]
-	    variable IMTOC
-	    variable pageURL
-	    unset -nocomplain IMTOC
-	    if {[string length $TOC]} {
-		lassign [WFormat FormatWikiToc $TOC $pageURL] TOC IMTOCl
-		array set IMTOC $IMTOCl
+	variable protected_pages
+	variable protected
+	foreach n $protected_pages {
+	    set v [WDB LookupPage $n]
+	    if {$v ne ""} {
+		dict set protected $n $v
 	    }
-	} e eo]} {
-	    Debug.error {Wiki TOC loading: $e $eo}
-	    if {![info exists TOC]} {
-		set TOC ""
-	    }
-	    unset -nocomplain IMTOC
+	}
+	foreach {n v} [dict keys $protected] {
+	    dict set protected $v $n
 	}
 
-	# set welcome message, if any
-	catch {
-	    variable WELCOME [::fileutil::cat [file join $docroot html welcome.html]]
-	    set WELCOME [string map [list %M% $mount] $WELCOME]
+	Debug on WDB
+	variable rprotected_pages
+	variable rprotected
+	foreach n $rprotected_pages {
+	    set v [WDB LookupPage $n]
+	    if {$v ne ""} {
+		dict set rprotected $n $v
+	    }
 	}
+	foreach {n v} [dict keys $rprotected] {
+	    dict set rprotected $v $n
+	}
+	Debug off WDB
 
-	catch {[WDB GetContent 9]}
+	# load the TOC page from the wiki
+	set TOCp [dict get? $protected TOC]
+	if {$TOCp ne ""} {
+	    variable TOC [WDB GetContent $TOCp]
+	} else {
+	    variable TOC ""
+	}
+	reloadTOC
 
 	variable roflag 
 	set ::roflag $roflag
