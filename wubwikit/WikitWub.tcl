@@ -2443,7 +2443,7 @@ namespace eval WikitWub {
 	set name "Search"
 	set Title "Search"
 	set menu [menus Home Recent Help WhoAmI]
-	set footer [menus Home Recent Help Search WhoAmI]
+	set footer [menus Home Recent Help]
 
 	return [sendPage $r spage]
     }
