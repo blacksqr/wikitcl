@@ -1761,33 +1761,6 @@ namespace eval ::WFormat {
           regexp {[0-9]+} $id id
           set pages($id) ""          
         }
-      } elseif {[string equal $mode "INCLUDE"]} {
-        if {$::WikitWub::include_pages} {
-          set id [string trim $text]
-          if {[string is integer -strict $id]} {
-            set pages($id) ""
-          } else {
-            set info [eval $ip [list $id]]
-            foreach {id name date} $info break
-            if {$id == ""} {continue}
-            regexp {[0-9]+} $id id
-            set pages($id) ""
-          }
-        }
-      } elseif {$mode eq "INLINEHTML"} {
-        foreach {match0 match1} [regexp -all -indices -inline {<<include:(.*?)>>} $text] {
-          lassign $match1 idx10 idx11
-          set id [string trim [string range $text $idx10 $idx11]]
-          if {[string is integer -strict $id]} {
-            set pages($id) ""
-          } else {
-            set info [eval $ip [list $id]]
-            foreach {id name date} $info break
-            if {$id == ""} {continue}
-            regexp {[0-9]+} $id id
-            set pages($id) ""
-          }
-        }
       }
     }
 

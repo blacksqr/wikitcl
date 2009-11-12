@@ -852,6 +852,12 @@ function getBackRefs(page,containerid)
 {
     ajaxpage("/_/ref", "N=" + page + "&A=1", containerid)
 }
+
+function getIncluded(page,containerid)
+{
+    ajaxpage("/_/included", "N=" + page, containerid)
+}
+
 /**
 *
 *  URL encode / decode

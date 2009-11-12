@@ -1703,6 +1703,19 @@ namespace eval WikitWub {
 	return [sendPage $r preview_tc]
     }
 
+    proc /included { r N } {
+	perms $r read
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
+	set O [WDB GetContent $N]
+	lassign [translate preview $O .html 1] C U T BR
+	set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
+	return [sendPage $r preview_tc]
+    }
+
     proc /edit/save {r N C O A save cancel preview } {
 	perms $r write
 	variable mount
@@ -2210,7 +2223,8 @@ namespace eval WikitWub {
 
     proc Filter {req term} {}
 
-    proc IncludePages {C IH} {
+    proc IncludePages {r C IH} {
+	set cnt 0
 	foreach ih $IH {
 	    if {[string is integer -strict $ih]} {
 		set N $ih
@@ -2220,20 +2234,22 @@ namespace eval WikitWub {
 		    continue
 		}
 	    }
-	    set ihcontent [WDB GetContent $N]
-	    set IHC [WFormat TextToStream $ihcontent]
-	    lassign [WFormat StreamToHTML $IHC / ::WikitWub::InfoProc 1] IHC
-	    set IHC [string trim $IHC \n]
-	    if {[string match "<p></p>*" $IHC]} {
-		set IHC [string range $IHC 7 end]
-	    }
+#	    set ihcontent [WDB GetContent $N]
+#	    set IHC [WFormat TextToStream $ihcontent]
+#	    lassign [WFormat StreamToHTML $IHC / ::WikitWub::InfoProc 1] IHC
+#	    set IHC [string trim $IHC \n]
+#	    if {[string match "<p></p>*" $IHC]} {
+#		set IHC [string range $IHC 7 end]
+#	    }
+	    dict lappend r -postload [<script> "getIncluded($N,'included$cnt');"]
 	    set idx [string first "@@@@@@@@@@$ih@@@@@@@@@@" $C]
 	    set tC [string range $C 0 [expr {$idx-1}]]
-	    append tC $IHC
+	    append tC "<span id='included$cnt'></span>"
 	    append tC [string range $C [expr {$idx+20+[string length $ih]}] end]
 	    set C $tC
+	    incr cnt
 	}
-	return $C
+	return [list $r $C]
     }
 
     variable trailers {@ _/edit ! _/ref - _/diff + _/history}
@@ -2605,7 +2621,7 @@ namespace eval WikitWub {
 		    lassign [translate $name $content $ext] C U page_toc BR IH
 		    variable include_pages
 		    if {$include_pages} {
-			set C [IncludePages $C $IH]
+			lassign [IncludePages $r $C $IH] r C
 		    }
 		    foreach {containerid bref} $BR {
 			if {[string length $bref]} {
@@ -2613,7 +2629,7 @@ namespace eval WikitWub {
 			} else {
 			    set brefpage $N
 			}
-			dict lappend r -postload [<script> "getBackRefs($brefpage,'$containerid')"]
+			dict lappend r -postload [<script> "getBackRefs($brefpage,'$containerid');"]
 		    }
 		    set C [string map [list <<TOC>> $page_toc] $C]
 		}
