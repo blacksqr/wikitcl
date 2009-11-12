@@ -257,7 +257,7 @@ namespace eval WikitWub {
 	}]]
     }
 
-    set edit_toolbar(creole) {
+    template edit_toolbar_creole {} {
 	[<submit> save class editbutton id savebutton value "Save your changes" onmouseout "popUp(event,'tip_save')" onmouseover "popUp(event,'tip_save')" [<img> src /page_save.png]] [<span> id tip_save class tip Save]
 
 	[<button> preview class editbutton id previewbutton onclick "previewPage($N,'creole');" onmouseout "popUp(event,'tip_preview')" onmouseover "popUp(event,'tip_preview')" [<img> src /page_white_magnify.png]] [<span> id tip_preview class tip Preview]
@@ -283,7 +283,7 @@ namespace eval WikitWub {
 	[<button> helpbutton type button class editbutton id helpbutton onclick "editHelp();" onmouseout "popUp(event,'tip_help')" onmouseover "popUp(event,'tip_help')" [<img> src /help.png]] [<span> id tip_help class tip Help]
     }
 
-    set edit_toolbar(wikit) {
+    template edit_toolbar_wikit {} {
 	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
 	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N,"wikit");' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
 	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
@@ -307,7 +307,7 @@ namespace eval WikitWub {
 	<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
     }
 
-    set edit_toolbar(stx) {
+    template edit_toolbar_stx {} {
 	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
 	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N,"stx");' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
 	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
@@ -356,7 +356,7 @@ namespace eval WikitWub {
 		     [<div> class previewarea_pre id previewarea_pre ""]
 		     [<div> class previewarea id previewarea ""]
 		     [<div> class previewarea_post id previewarea_post ""]
-		     [<div> class toolbar [subst $edit_toolbar($markup_language)]]
+		     [<div> class toolbar [subst [template edit_toolbar_$markup_language]]]
 		     [<textarea> C id editarea rows 35 cols 72 compact 0 style width:100% [tclarmour $C]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
@@ -1949,7 +1949,6 @@ namespace eval WikitWub {
 	    }
 	}
 
-	variable edit_toolbar
 	return [sendPage $r edit]
     }
 
