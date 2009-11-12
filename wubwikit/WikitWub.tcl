@@ -2392,6 +2392,9 @@ namespace eval WikitWub {
 	variable searchForm; set C "[subst $searchForm]$C"
 	
 	set name "Search"
+	set Title "Search"
+	set menu [menus Home Recent Help WhoAmI]
+	set footer [menus Home Recent Help]
 	return [sendPage $r spage]
     }
 
