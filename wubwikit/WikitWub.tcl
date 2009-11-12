@@ -93,12 +93,6 @@ namespace eval WikitWub {
     variable templates
     variable titles
 
-    # record a page template
-    proc template {name title template} {
-	variable templates; set templates($name) $template
-	variable titles; set titles($name) $title
-    }
-
     proc toolbar_edit_button {action img alt} {
 	variable markup_language
 	return [format {<button type='button' class='editbutton' onClick='%1$s("editarea", "%4$s");' onmouseout='popUp(event,"tip_%1$s")' onmouseover='popUp(event,"tip_%1$s")'><img src='/%3$s'></button><span id='tip_%1$s' class='tip'>%2$s</span>} $action $alt $img $markup_language]
@@ -122,32 +116,65 @@ namespace eval WikitWub {
 	return $r
     }
 
-    # Page sent when Wiki is in Read-Only Mode
+    # record a page template
+    proc template {name {title ""} {template ""}} {
+	variable templates
+	if {$template eq ""} {
+	    return $templates($name)
+	}
+	set templates($name) $template
+	variable titles; set titles($name) $title
+    }
+
+    # return a search form
+    template searchF {} {
+	[<form> searchform action [file join $::WikitWub::mount search] {
+	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} [tclarmour [expr {[info exists query]?$query:"Search in titles"}]]]
+	    [<hidden> _charset_ ""]
+	}]
+	[<form> gsearchform method get action [file join $::WikitWub::mount gsearch] {
+	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} [tclarmour [expr {[info exists query]?$query:"Search in pages"}]]]
+	    [<hidden> _charset_ ""]
+	}]
+    }
+
+    # Page sent on edit when Wiki is in Read-Only Mode
     template ro {Wiki is currently Read-Only} {
 	[<h1> "The Wiki is currently in Maintenance Mode"]
 	[<p> "No new edits can be accepted at the moment."]
-	[<p> "Reason: $readonly"]
-	[<p> [<a> href [file join $pageURL $N] "Return to the page you were reading."]]
+	[<p> "Reason: $::WikitWub::readonly"]
+	[<p> [<a> href [file join $::WikitWub::pageURL $N] "Return to the page you were reading."]]
+    }
+
+    template menu {} {
+	[<div> id menu_area [<div> id wiki_menu [menuUL $menu]][subst [template searchF]][<div> class navigation [<div> id page_toc [expr {[info exists page_toc]?$page_toc:""}]]][<div> class extra [<div> id wiki_toc $::WikitWub::TOC]]]
+    }
+
+    template footer {} {
+	[<div> class footer [<p> id footer [variable bullet; join $footer $bullet]]]
+    }
+
+    template header {} {
+	[<div> class header [subst {
+	    [<div> class logo [<a> href / class logo $::WikitWub::text_url]]
+	    [<div> id title class title [tclarmour $Title]]
+	    [expr {[info exists subtitle]?[<div> id updated class updated $subtitle]:""}]
+	}]]
     }
 
     # standard page decoration
     template page {$name} {
-	[<div> class container [subst {
-	    [<div> class header [subst {
-		[<div> class logo [<a> href / class logo $::WikitWub::text_url]]
-		[<div> id title class title [tclarmour $Title]]
-		[<div> id updated class updated $updated]
-	    }]]
-	    [expr {[info exists ro]?$ro:""}]
+	[<div> class container [subst [template header]][subst {
+	    [expr {[info exists ::WikitWub::ro]?$::WikitWub::ro:""}]
 	    [<div> id wrapper [<div> id content $C]]
-	    [<div> id menu_area [subst {
-		[<div> id wiki_menu [menuUL $menu]]
-		[expr {[info exists gsearch]?[gsearchF $query]:[searchF]}]
-		[<div> class navigation [<div> id page_toc $page_toc]]
-		[<div> class extra [<div> id wiki_toc $TOC]]
-	    }]]
-	    [<div> class footer [<p> id footer [variable bullet; join $footer $bullet]]]
-	}]]
+	}][subst [template menu]][subst [template footer]]]
+    }
+
+    # system page decoration
+    template spage {$name} {
+	[<div> class container [subst [template header]][subst {
+	    [<div> id wrapper [<div> id content $C]]
+	}][subst [template menu]][subst [template footer]]]
     }
 
     # page sent when constructing a reference page
@@ -156,10 +183,7 @@ namespace eval WikitWub {
 	    [<div> class header [<h1> "References to [Ref $N]"]]
 	    [<div> class wrapper [<div> class content $C]]
 	    [<hr> noshade]
-	    [<div> class footer [subst {
-		[<p> id footer [variable bullet; join $footer $bullet]]
-		[searchF]
-	    }]]
+	    [<div> class footer [<p> id footer [variable bullet; join $footer $bullet]][subst [template searchF]]]
 	}]]
     }
 
@@ -173,61 +197,64 @@ namespace eval WikitWub {
 	[tclarmour $C]
     }
 
-    #		<button type='button' class='editbutton' id='savebutton' onclick='' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png' alt='Save'></button><span id='tip_save' class='tip'>Save</span>
-    #		<button type='button' class='editbutton' id='cancelbutton' onclick='editCancel();' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png' alt='Cancel'></button><span id='tip_cancel' class='tip'>Cancel</span>
-    
-    set quick_reference(creole) {
-	[<br>]
-	[<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
-	[<br>]
-	<ul>
-	<li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]].</li>
-	<li>[<b> BULLETS] are lines with an asterisk (*) and a space - the item must be one (wrapped) line</li>
-	<li>[<b> "NUMBERED LISTS"] are lines a hash (#) and a space - the item must be one (wrapped) line</li>
-	<li>[<b> PARAGRAPHS] are split with empty lines</li>
-	<li>[<b> "UNFORMATTED TEXT"] starts with a line containng {{{ and ends with a line containing }}}</li>
-	<li>[<b> HIGHLIGHTS] are indicated by  - use ** for [<b> **bold**], three // for [<b> {//}][<i> italics][<b> {//}].</li>
-	<li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
-	<li>[<b> HEADERS] can be specified with lines containing <b>==Header level 1==</b>, <b>===Header level 2===</b> or <b>====Header level 3====</b></li>
-	<li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>|=header|=header|=header|</tt></b></li>
-	</ul>
+    template qr_creole {} {
+	[<div> id helptext [subst {
+	    [<br>]
+	    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
+	    [<br>]
+	    <ul>
+	    <li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]].</li>
+	    <li>[<b> BULLETS] are lines with an asterisk (*) and a space - the item must be one (wrapped) line</li>
+	    <li>[<b> "NUMBERED LISTS"] are lines a hash (#) and a space - the item must be one (wrapped) line</li>
+	    <li>[<b> PARAGRAPHS] are split with empty lines</li>
+	    <li>[<b> "UNFORMATTED TEXT"] starts with a line containng {{{ and ends with a line containing }}}</li>
+	    <li>[<b> HIGHLIGHTS] are indicated by  - use ** for [<b> **bold**], three // for [<b> {//}][<i> italics][<b> {//}].</li>
+	    <li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
+	    <li>[<b> HEADERS] can be specified with lines containing <b>==Header level 1==</b>, <b>===Header level 2===</b> or <b>====Header level 3====</b></li>
+	    <li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>|=header|=header|=header|</tt></b></li>
+	    </ul>
+	}]]
     }
 
-    set quick_reference(wikit) {
-	[<br>]
-	[<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
-	[<br>]
-	<ul>
-	<li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.</li>
-	<li>[<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line</li>
-	<li>[<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line</li>
-	<li>[<b> PARAGRAPHS] are split with empty lines</li>
-	<li>[<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt></li>
-	<li>[<b> "FIXED WIDTH FORMATTED"] text is enclosed in lines containing <tt>===</tt></li>
-	<li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].</li>
-	<li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
-	<li>[<b> HEADERS] can be specified with lines containing <b>**Header level 1**</b>, <b>***Header level 2***</b> or <b>****Header level 3****</b></li>
-	<li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>%|data|data|data|%</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>&amp;|data|data|data|&amp;</tt></b></li>
-	<li>[<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b></li>
-	<li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, back references to any page can be included with a line containing <b><tt>&lt;&lt;backrefs:Wiki formatting rules&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[backrefs:Wiki formatting rules\]</tt></b></li>
-	</ul>
+    template qr_wikit {} {
+	[<div> id helptext [subst {
+	    [<br>]
+	    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
+	    [<br>]
+	    <ul>
+	    <li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.</li>
+	    <li>[<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line</li>
+	    <li>[<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line</li>
+	    <li>[<b> PARAGRAPHS] are split with empty lines</li>
+	    <li>[<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt></li>
+	    <li>[<b> "FIXED WIDTH FORMATTED"] text is enclosed in lines containing <tt>===</tt></li>
+	    <li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].</li>
+	    <li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
+	    <li>[<b> HEADERS] can be specified with lines containing <b>**Header level 1**</b>, <b>***Header level 2***</b> or <b>****Header level 3****</b></li>
+	    <li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>%|data|data|data|%</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>&amp;|data|data|data|&amp;</tt></b></li>
+	    <li>[<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b></li>
+	    <li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, back references to any page can be included with a line containing <b><tt>&lt;&lt;backrefs:Wiki formatting rules&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[backrefs:Wiki formatting rules\]</tt></b></li>
+	    </ul>
+	}]]
     }
 
-    set quick_reference(stx) {
-	[<br>]
-	[<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
-	[<br>]
-	<ul>
-	<li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]].</li>
-	<li>[<b> BULLETS] are lines with an asterisk (*) and a space - the item must be one (wrapped) line</li>
-	<li>[<b> "NUMBERED LISTS"] are lines a hash (#) and a space - the item must be one (wrapped) line</li>
-	<li>[<b> PARAGRAPHS] are split with empty lines</li>
-	<li>[<b> "UNFORMATTED TEXT"] starts with white space</li>
-	<li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> ''bold''], three for [<b> {'''}][<i> italics][<b> {'''}].</li>
-	<li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
-	<li>[<b> HEADERS] can be specified with lines containing <b>=Header level 1=</b>, <b>==Header level 2==</b> or <b>===Header level 3===</b></li>
-	<li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data</tt></b>, a <b>header</b> row as <b><tt>|+header|header|header</tt></b></li>
-	</ul>
+    template qr_stx {} {
+	[<div> id helptext [subst {
+	    [<br>]
+	    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
+	    [<br>]
+	    <ul>
+	    <li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]].</li>
+	    <li>[<b> BULLETS] are lines with an asterisk (*) and a space - the item must be one (wrapped) line</li>
+	    <li>[<b> "NUMBERED LISTS"] are lines a hash (#) and a space - the item must be one (wrapped) line</li>
+	    <li>[<b> PARAGRAPHS] are split with empty lines</li>
+	    <li>[<b> "UNFORMATTED TEXT"] starts with white space</li>
+	    <li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> ''bold''], three for [<b> {'''}][<i> italics][<b> {'''}].</li>
+	    <li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
+	    <li>[<b> HEADERS] can be specified with lines containing <b>=Header level 1=</b>, <b>==Header level 2==</b> or <b>===Header level 3===</b></li>
+	    <li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data</tt></b>, a <b>header</b> row as <b><tt>|+header|header|header</tt></b></li>
+	    </ul>
+	}]]
     }
 
     set edit_toolbar(creole) {
@@ -324,8 +351,8 @@ namespace eval WikitWub {
 	    }]]
 	    [<div> class editcontents [subst {
 		[set disabled [expr {$nick eq ""}]
-		 <form> edit method post action [file join $mount edit/save] {
-		     [<div> id helptext "[<hr>] [subst $quick_reference($markup_language)]"]
+		 <form> edit method post action [file join $::WikitWub::mount edit/save] {
+		     [subst [template qr_$markup_language]]
 		     [<div> class previewarea_pre id previewarea_pre ""]
 		     [<div> class previewarea id previewarea ""]
 		     [<div> class previewarea_post id previewarea_post ""]
@@ -424,33 +451,6 @@ namespace eval WikitWub {
 	    }
 	}
 	append m "</ul>"
-    }
-
-    # return a search form
-    proc searchF {} {
-	variable mount
-	set result [<form> searchform method get action [file join $mount search] {
-	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
-	    [<hidden> _charset_ ""]
-	}]
-	append result \n [<form> gsearchform method get action [file join $mount gsearch] {
-	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} "Search in pages"]
-	    [<hidden> _charset_ ""]
-	}] \n
-	return $result
-    }
-
-    proc gsearchF {Q} {
-	variable mount
-	set result [<form> searchform action [file join $mount search] {
-	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
-	    [<hidden> _charset_ ""]
-	}]
-	append result \n [<form> gsearchform method get action [file join $mount gsearch] {
-	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} [tclarmour $Q]]
-	    [<hidden> _charset_ ""]
-	}] \n
-	return $result
     }
 
     variable maxAge "next month"	;# maximum age of login cookie
@@ -686,6 +686,32 @@ namespace eval WikitWub {
 	return $who
     }
 
+    variable menus
+    variable bullet " &bull; "
+
+    proc menus { args } {
+	variable menus
+	variable mount; variable pageURL
+	if {![info exists menus(Recent)]} {
+	    # Init common menu items
+	    set menus(Home)   [<a> href $pageURL Home]
+	    set menus(Recent) [<a> href [file join $mount recent] "Recent changes"]
+	    set menus(Help)   [<a> href [file join $pageURL 3] "Help"]
+	    set menus(HR)     <br>
+	    set menus(Search) [<a> href [file join $mount searchp] "Search"]
+	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
+	}
+	set m {}
+	foreach arg $args {
+	    if {[string match "<*" $arg]} {
+		lappend m $arg
+	    } elseif {$arg ne ""} {
+		lappend m $menus($arg)
+	    }
+	}
+	return $m
+    }
+
     proc /cleared { r } {
 	perms $r read
 	variable detect_robots
@@ -729,17 +755,13 @@ namespace eval WikitWub {
 	    lappend results </ul>
 	}
 
-	set name "Cleared pages"
+	# sendPage vars
 	set Title "Cleared pages"
-	set page_toc ""
-	set N 0
-	set updated ""
 	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help Search]
-
 	set C [join $results "\n"]
-	variable TOC
-	return [sendPage $r]
+
+	return [sendPage $r spage]
     }
 
     proc mark_annotate_start {N lineVersion who time} {
@@ -1037,23 +1059,16 @@ namespace eval WikitWub {
 	    }
 	}
 	append R </ul> \n
-	
-	set menu {}
-	variable menus
-	variable TOC
-	set updated "Edit summary"
-	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [<a> href history?N=$N History]
-	lappend menu [<a> href summary?N=$N "Edit summary"]
-	lappend menu [<a> href diff?N=$N "Last change"]
-	lappend menu [<a> href diff?N=$N&T=1&D=1 "Changes last day"]
-	lappend menu [<a> href diff?N=$N&T=1&D=7 "Changes last week"]
-	set footer [menus Home Recent Help Search]
-	set page_toc "" ;# Do not show page TOC, can be one of the diffs.
+
+	# sendPage vars
+	set menu [menus Home Recent Help WhoAmI HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"] [menus Home Recent Help Search]]
+
 	set C $R
 	set Title [Ref $N]
 	set name "Edit summary for $name"
-	return [sendPage $r page]
+	set subtitle "Edit summary"
+
+	return [sendPage $r spage]
     }
 
     proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
@@ -1097,7 +1112,7 @@ namespace eval WikitWub {
 	# If T is zero, D contains version to compare with
 	# If T is non zero, D contains a number of days and /diff must
 	# search for a version $D days older than version $V
-	set updated ""
+	set subtitle ""
 	if {$T == 0} {
 	    if {$D < 0} {
 		set D [expr {$nver - 1}]	;# default
@@ -1114,11 +1129,11 @@ namespace eval WikitWub {
 
 	    if {$V == $nver} {
 		if {$D==1} {
-		    set updated "Changes last day"
+		    set subtitle "Changes last day"
 		} elseif {$D==7} {
-		    set updated "Changes last week"
+		    set subtitle "Changes last week"
 		} else {
-		    set updated "Changes last $D days"
+		    set subtitle "Changes last $D days"
 		}
 	    }
 
@@ -1256,20 +1271,14 @@ namespace eval WikitWub {
 	    }
 	}
 	
-	variable menus
-	variable TOC
-	if {![string length $updated]} {
-	    set updated "Difference between version $V and $D"
-	}
-	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [<a> href history?N=$N History]
-	lappend menu [<a> href summary?N=$N "Edit summary"]
-	lappend menu [<a> href diff?N=$N "Last change"]
-	lappend menu [<a> href diff?N=$N&T=1&D=1 "Changes last day"]
-	lappend menu [<a> href diff?N=$N&T=1&D=7 "Changes last week"]
+	set menu [menus Home Recent Help WhoAmI HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"]]
 	set footer [menus Home Recent Help Search]
-	set page_toc "" ;# Do not show page TOC, can be one of the diffs.
-	return [sendPage $r]
+
+	if {![string length $subtitle]} {
+	    set subtitle "Difference between version $V and $D"
+	}
+
+	return [sendPage $r spage]
     }
 
     proc /revision {r N {V -1} {A 0}} {
@@ -1302,9 +1311,7 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
-	variable menus
-	set menu [menus Home Recent Help WhoAmI HR]
-	lappend menu [<a> href history?N=$N History]
+	set menu [menus Home Recent Help WhoAmI HR [<a> href history?N=$N History]]
 
 	set name [WDB GetPage $N name]
 	if {$V >= 0} {
@@ -1342,10 +1349,7 @@ namespace eval WikitWub {
 	}
 
 	set footer [menus Home Recent Help Search]
-	set updated ""
-	set T ""
-	variable TOC
-	return [sendPage $r]
+	return [sendPage $r spage]
     }
 
     # /history - revision history
@@ -1370,35 +1374,24 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
-	set name "Change history of [WDB GetPage $N name]"
-	set Title "Change history of [Ref $N]"
-
-	set menu [menus Home Recent Help WhoAmI HR]
 	set C ""
-	#	set links ""
+	set menu {}
 	if {$S > 0} {
 	    set pstart [expr {$S - $L}]
 	    if {$pstart < 0} {
 		set pstart 0
 	    }
 	    lappend menu [<a> href "history?N=$N&S=$pstart&L=$L" "Previous $L"]
-	    #	    append links [<a> href "$N?S=$pstart&L=$L" "Previous $L"]
 	}
 	set nstart [expr {$S + $L}]
 	set nver [WDB Versions $N]
 	if {$nstart < $nver} {
-	    #	    if {$links ne {}} {
-	    #		append links { - }
-	    #	    }
 	    lappend menu [<a> href "history?N=$N&S=$nstart&L=$L" "Next $L"]
-	    #	    append links [<a> href "$N?S=$nstart&L=$L" "Next $L"]
 	}
-	set footer [menus Home Recent Help Search]
-	#	if {$links ne {}} {
-	#	    append C <p> $links </p> \n
-	#	}
+
 	set versions [WDB ListPageVersions $N $L $S]
 	set name [WDB GetPage $N name]
+
 	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
 	if {$markup_language eq "wikit"} {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1}
@@ -1467,14 +1460,13 @@ namespace eval WikitWub {
 	}
 	append C </tbody></table> \n
 
-	#	if {$links ne {}} {
-	#	    append C <p> $links </p> \n
-	#	}
+	# sendPage vars
+	set name "Change history of [WDB GetPage $N name]"
+	set Title "Change history of [Ref $N]"
+	set footer [menus Home Recent Help Search]
+	set menu [menus Home Recent Help WhoAmI HR {*}$menu]
 
-	set updated ""
-	set page_toc ""
-	variable TOC
-	return [sendPage $r]
+	return [sendPage $r spage]
     }
 
     # Ref - utility proc to generate an <A> from a page id
@@ -1496,30 +1488,6 @@ namespace eval WikitWub {
 	<p>$content</p>
     }
 
-    variable menus
-    variable bullet " &bull; "
-
-    proc menus { args } {
-	variable menus
-	variable mount; variable pageURL
-	if {![info exists menus(Recent)]} {
-	    # Init common menu items
-	    set menus(Home)   [<a> href $pageURL Home]
-	    set menus(Recent) [<a> href [file join $mount recent] "Recent changes"]
-	    set menus(Help)   [<a> href [file join $pageURL 3] "Help"]
-	    set menus(HR)     <br>
-	    set menus(Search) [<a> href [file join $mount searchp] "Search"]
-	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
-	}
-	set m {}
-	foreach arg $args {
-	    if {$arg ne ""} {
-		lappend m $menus($arg)
-	    }
-	}
-	return $m
-    }
-
     proc redir {r url content} {
 	variable redir
 	return [Http NoCache [Http SeeOther $r $url [subst $redir]]]
@@ -1538,14 +1506,13 @@ namespace eval WikitWub {
 	} else {
 	    set C "You are not logged in. Login is required to edit a page. You will be asked to provided a user-name the next time you edit a page."
 	}
+
+	# sendPage vars
 	set name "Who Am I?"
 	set Title "Who Am I?"
 	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help Search]
-	set updated ""
-	set page_toc ""
-	variable TOC
-	return [sendPage $r]
+	return [sendPage $r spage]
     }
 
     proc /logout {r} {
@@ -1663,20 +1630,18 @@ namespace eval WikitWub {
 
 	set name "Search"
 	set Title "Search"
-	set updated "powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'</img>"
+	set subtitle "powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'</img>"
 	set C [<script> src "http://www.google.com/jsapi?key=$::google_jsapi_key"]
 	append C \n
 	append C [<script> {google.load('search', '1');}]
 	append C \n
-	variable TOC
-	variable gsearch 1
+
+	# sendPage vars
 	variable query $S
 	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help]
-	set page_toc ""
-	set r [sendPage $r]
-	unset gsearch
-	return $r
+
+	return [sendPage $r spage]
     }
 
     proc who {r} {
@@ -1700,6 +1665,7 @@ namespace eval WikitWub {
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
 	lassign [translate preview $O .html 1] C U T BR
 	set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
+
 	return [sendPage $r preview_tc]
     }
 
@@ -1982,7 +1948,6 @@ namespace eval WikitWub {
 	    }
 	}
 
-	variable quick_reference
 	variable edit_toolbar
 	return [sendPage $r edit]
     }
@@ -2045,9 +2010,6 @@ namespace eval WikitWub {
 	    return [Http Redir $r "http://[dict get $r host]/0"]
 	}
 	
-	set menu [menus Recent Help WhoAmI]
-	set footer [menus Recent Help Search]
-
 	if {[info exists wiki_title] && $wiki_title ne ""} {
 	    set Title $wiki_title
 	    set name $wiki_title
@@ -2056,12 +2018,11 @@ namespace eval WikitWub {
 	    set name "Welcome to the Tclers Wiki!"
 	}
 
-	set updated ""
-	set ro ""
 	set C $WELCOME
-	set page_toc ""
+	set menu [menus Recent Help WhoAmI]
+	set footer [menus Recent Help Search]
 
-	return [sendPage $r]
+	return [sendPage $r spage]
     }
 
     # list2table - convert list into sortable HTML table
@@ -2133,18 +2094,19 @@ namespace eval WikitWub {
 	    # include javascripts and CSS for sortable table.
 	    set r [sortable $r]
 	} 
+
+	# sendPage vars
 	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help Search]
 
 	set name "References to $N"
 	set Title "References to [Ref $N]"
-	set updated ""
-	set tplt page
-	set page_toc ""
+
+	set tplt spage
 	if {$A} {
 	    set tplt refs_tc
 	}
-	variable TOC
+
 	return [sendPage $r $tplt]
     }
 
@@ -2262,52 +2224,6 @@ namespace eval WikitWub {
 	return $genmsg
     }
 
-    proc makePage {r name C args} {
-	set query ""
-	set menu {}
-	set footer {}
-	set cacheit 0
-	set page_toc ""
-	set updated ""
-	set Title $name
-	dict for {n v} $args {
-	    set $n $v
-	}
-	set menu [list {*}[menus Home Recent Help WhoAmI] {*}$menu]
-	set footer [list {*}[menus Home Recent Help Search WhoAmI] {*}$footer]
-
-	variable pageURL
-	variable mount
-	variable motd
-	variable TOC
-	variable protected
-	variable readonly
-	variable bullet
-	variable hidereadonly
-
-	if {$readonly ne "" && !$hidereadonly} {
-	    set ro "<it>(Read Only Mode: $readonly)</it>"
-	} else {
-	    set ro ""
-	}
-
-	if {$cacheit} {
-	    Debug.wikit {do sending page as CacheableContent}
-	    set result [sendPage [Http CacheableContent $r $date] page DCache]
-	    variable pagecaching
-	    if {$pagecaching} {
-		if {[WDB pagecache exists $N]} {
-		    WDB pagecache delete $N
-		}
-		WDB pagecache insert $N [dict get $result -content] [dict get $result content-type] [clock milliseconds] [dict get? $result -title]
-	    }
-	    return $result
-	} else {
-	    Debug.wikit {do sending $N sans caching}
-	    return [sendPage $r]
-	}
-    }
-
     # Special page: Recent Changes.
     variable delta [subst \u0394]
     variable delta [subst \u25B2]
@@ -2381,11 +2297,13 @@ namespace eval WikitWub {
 	lappend results [<p> "generated [clock format [clock seconds]]"]
 	append C \n [join $results \n]
 
-	# Recent Changes page
-	Debug.wikit {do: recent changes page}
+	# sendPage vars
 	set name "Recent Changes"
+	set Title "Recent Changes"
+	set menu [menus Home Recent Help WhoAmI]
+	set footer [menus Home Recent Help Search WhoAmI]
 
-	return [makePage $r $name $C Title "Recent Changes" N [file join $mount recent]]
+	return [sendPage $r spage]
     }
 
     proc search {key date} {
@@ -2473,8 +2391,7 @@ namespace eval WikitWub {
 	variable searchForm; set C "[subst $searchForm]$C"
 	
 	set name "Search"
-	set cacheit 0	;# don't cache searches
-	return [makePage $r $name $C search $search]
+	return [sendPage $r spage]
     }
 
     proc /search {r {S ""} args} {
@@ -2562,7 +2479,6 @@ namespace eval WikitWub {
 	set date [clock seconds]	;# default date is now
 	set name ""	;# no default page name
 	set who ""	;# no default editor
-	set cacheit 1	;# default is to cache
 	set page_toc ""	;# default is no page toc
 	set BR {}
 
@@ -2635,7 +2551,7 @@ namespace eval WikitWub {
 		}
 	    }
 	    Debug.wikit {do has translated $N}
-	
+	    
 	    # set up backrefs
 	    set backRef [file join $mount ref]?N=$N
 	    #set Refs "[<a> href $backRef Reference] - "
@@ -2661,24 +2577,43 @@ namespace eval WikitWub {
 	}
 
 	# arrange the page's tail
-	set updated ""
+	set subtitle ""
 	if {$date != 0} {
 	    set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
-	    set updated "Updated $update"
+	    set subtitle "Updated $update"
 	}
 
 	if {$who ne "" &&
 	    [regexp {^(.+)[,@]} $who - who_nick]
 	    && $who_nick ne ""
 	} {
-	    append updated " by [<a> href /[WDB LookupPage $who_nick] $who_nick]"
+	    append subtitle " by [<a> href /[WDB LookupPage $who_nick] $who_nick]"
 	}
-	if {[string length $updated]} {
+	if {[string length $subtitle]} {
 	    variable delta
-	    append updated " " [<a> class delta href [file join $mount diff]?N=$N#diff0 $delta]
+	    append subtitle " " [<a> class delta href [file join $mount diff]?N=$N#diff0 $delta]
 	}
 
-	return [makePage $r $name $C menu $menu footer $footer cacheit $cacheit updated $updated Title $Title date $date page_toc $page_toc]
+	# sendPage vars
+	set menu [menus Home Recent Help WhoAmI {*}$menu]
+	set footer [menus Home Recent Help Search WhoAmI {*}$footer]
+
+	if {$readonly ne "" && !$hidereadonly} {
+	    set ro "<it>(Read Only Mode: $readonly)</it>"
+	} else {
+	    set ro ""
+	}
+
+	set result [sendPage [Http CacheableContent $r $date] page DCache]
+
+	variable pagecaching
+	if {$pagecaching} {
+	    if {[WDB pagecache exists $N]} {
+		WDB pagecache delete $N
+	    }
+	    WDB pagecache insert $N [dict get $result -content] [dict get $result content-type] [clock milliseconds] [dict get? $result -title]
+	}
+	return $result
     }
 
     # Site WikitWub-specific defaults
