@@ -1061,7 +1061,8 @@ namespace eval WikitWub {
 	append R </ul> \n
 
 	# sendPage vars
-	set menu [menus Home Recent Help WhoAmI HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"] [menus Home Recent Help Search]]
+	set menu [menus Home Recent Help WhoAmI HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"] Search]
+	set footer [menus Home Recent Help Search]
 
 	set C $R
 	set Title [Ref $N]
