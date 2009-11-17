@@ -538,8 +538,8 @@ namespace eval WikitWub {
     }]
 
     # protected pages - these can't be edited (resp read) by non-admin
-    variable protected_pages {Welcome Admin TOC}
-    variable rprotected_pages {Admin TOC}
+    variable protected_pages {ADMIN:Welcome ADMIN:TOC}
+    variable rprotected_pages {ADMIN:TOC}
     variable protected {}
     variable rprotected {}
 
@@ -642,7 +642,6 @@ namespace eval WikitWub {
 
 	foreach record [WDB AllPages] {
 	    set id [dict get $record id]
-	    if {$id < 11} continue
 	    append map [Sitemap location $p $id mtime [dict get $record date]] \n
 	}
 
@@ -738,9 +737,6 @@ namespace eval WikitWub {
 	set lastDay 0
 	foreach record [WDB Cleared] {
 	    dict with record {}
-
-	    # these are fake pages, don't list them
-	    if {$id < 11} continue
 
 	    set day [expr {$date/86400}]
 
@@ -1893,7 +1889,7 @@ namespace eval WikitWub {
 
 	# give effect to editing of TOC
 	variable protected
-	if {$N == [dict get? $protected TOC]} {
+	if {$N == [dict get? $protected ADMIN:TOC]} {
 	    reloadTOC
 	}
 
@@ -2022,18 +2018,23 @@ namespace eval WikitWub {
 	variable protected
 	variable TOC
 	variable IMTOC
-	if {[catch {
-	    set TOC [string trim [WDB GetContent [dict get $protected TOC]]]
-	    unset -nocomplain IMTOC
-
-	    if {[string length $TOC]} {
-		lassign [WFormat FormatWikiToc $TOC $pageURL] TOC IMTOCl
-		array set IMTOC $IMTOCl
+	set TOCp [dict get? $protected ADMIN:TOC]
+	if {$TOCp ne ""} {
+	    if {[catch {
+		set TOC [string trim [WDB GetContent $TOCp]]
+		unset -nocomplain IMTOC
+		
+		if {[string length $TOC]} {
+		    lassign [WFormat FormatWikiToc $TOC $pageURL] TOC IMTOCl
+		    array set IMTOC $IMTOCl
+		}
+	    } e eo]} {
+		set TOC ""
+		unset -nocomplain IMTOC
+		Debug.error {Wikit Loading TOC: $e ($eo)}
 	    }
-	} e eo]} {
+	} else {
 	    set TOC ""
-	    unset -nocomplain IMTOC
-	    Debug.error {Wikit Loading TOC: $e ($eo)}
 	}
     }
 
@@ -2064,7 +2065,7 @@ namespace eval WikitWub {
 	    set name "Welcome to the Tclers Wiki!"
 	}
 
-	set C [string trim [WDB GetContent [dict get? $protected Welcome]]]
+	set C [string trim [WDB GetContent [dict get? $protected ADMIN:Welcome]]]
 	set menu [menus Recent Help WhoAmI]
 	set footer [menus Recent Help Search]
 
@@ -2103,6 +2104,7 @@ namespace eval WikitWub {
 	}
 
 	perms $r read
+	variable rprotected
 	if {[dict exists $rprotected $N]} {
 	    perms $r admin
 	}
@@ -2560,7 +2562,7 @@ namespace eval WikitWub {
 	# fetch page contents
 	set content [WDB GetContent $N]
 	variable protected
-	if {$N == [dict get $protected Welcome]} {
+	if {$N == [dict get? $protected ADMIN:Welcome]} {
 	    # page 0 is HTML and is the Welcome page
 	    return [/welcome $r]
 	} else {
@@ -2786,7 +2788,7 @@ namespace eval WikitWub {
 		dict set protected $n $v
 	    }
 	}
-	foreach {n v} [dict keys $protected] {
+	foreach {n v} $protected {
 	    dict set protected $v $n
 	}
 
@@ -2799,18 +2801,12 @@ namespace eval WikitWub {
 		dict set rprotected $n $v
 	    }
 	}
-	foreach {n v} [dict keys $rprotected] {
+	foreach {n v} $rprotected {
 	    dict set rprotected $v $n
 	}
 	Debug off WDB
 
 	# load the TOC page from the wiki
-	set TOCp [dict get? $protected TOC]
-	if {$TOCp ne ""} {
-	    variable TOC [WDB GetContent $TOCp]
-	} else {
-	    variable TOC ""
-	}
 	reloadTOC
 
 	variable roflag 
