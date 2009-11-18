@@ -806,8 +806,12 @@ function googleQuery() {
  *    ajaxpage
  *    loadpage
  ***********************************************/
-    
+
 function ajaxpage(url, postData, containerid){
+    ajaxpage(url, postData, containerid, 0);
+}
+    
+function ajaxpage(url, postData, containerid, creole){
     var page_request = false
     if (window.XMLHttpRequest) // if Mozilla, Safari etc
         page_request = new XMLHttpRequest()
@@ -826,7 +830,7 @@ function ajaxpage(url, postData, containerid){
         return false
 
     page_request.onreadystatechange=function(){
-	loadpage(page_request, containerid)
+	    loadpage(page_request, containerid, creole)
     }
     if (postData.length) {
 	page_request.open('POST', url, true);
@@ -840,10 +844,15 @@ function ajaxpage(url, postData, containerid){
     }
 }
 
-function loadpage(page_request, containerid){
+function loadpage(page_request, containerid, creole){
     if (page_request.readyState == 4 && (page_request.status==200 || window.location.href.indexOf("http")==-1)) {
 	if (page_request.responseText.length) {
-	    document.getElementById(containerid).innerHTML = page_request.responseText;
+	    if (creole) {
+		render_creole_in_id(containerid, page_request.responseText, new Array());
+	    }
+	    else {
+		document.getElementById(containerid).innerHTML = page_request.responseText;
+	    }
 	}
     }
 }
@@ -944,7 +953,7 @@ function previewPage(page, markup_language)
     var txt = document.getElementById("editarea").value;
     if (markup_language == "creole") {
 	document.getElementById("previewarea").innerHTML = "";
-	render_creole_in_id("previewarea", txt);
+	render_creole_in_id("previewarea", txt, new Array());
     }
     else {
 	ajaxpage("/_/preview", "N=" + page + "&O="+Url.encode(txt), "previewarea");

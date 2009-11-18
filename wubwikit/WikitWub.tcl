@@ -230,16 +230,6 @@ namespace eval WikitWub {
 	}]]
     }
 
-    # page sent when constructing a transcluded reference page
-    template refs_tc {References to $N} {
-	[tclarmour $C]
-    }
-
-    # page sent when constructing a transcluded reference page
-    template preview_tc {Preview of $N} {
-	[tclarmour $C]
-    }
-
     template qr_creole {} {
 	[<div> id helptext [subst {
 	    [<br>]
@@ -303,7 +293,7 @@ namespace eval WikitWub {
     template edit_toolbar_creole {} {
 	[<submit> save class editbutton id savebutton value "Save your changes" onmouseout "popUp(event,'tip_save')" onmouseover "popUp(event,'tip_save')" [<img> src /page_save.png]] [<span> id tip_save class tip Save]
 
-	[<button> preview class editbutton id previewbutton onclick "previewPage($N,'creole');" onmouseout "popUp(event,'tip_preview')" onmouseover "popUp(event,'tip_preview')" [<img> src /page_white_magnify.png]] [<span> id tip_preview class tip Preview]
+	[<button> preview type button class editbutton id previewbutton onclick "previewPage($N,'creole');" onmouseout "popUp(event,'tip_preview')" onmouseover "popUp(event,'tip_preview')" [<img> src /page_white_magnify.png]] [<span> id tip_preview class tip Preview]
 
 	[<submit> cancel class editbutton id cancelbutton value Cancel onmouseout "popUp(event,'tip_cancel')" onmouseover "popUp(event,'tip_cancel')" [<img> src /cancel.png]] [<span> id tip_cancel class tip Cancel]
 
@@ -539,7 +529,7 @@ namespace eval WikitWub {
 
 		try {
 		    if (typeof(creole_content) != "undefined")
-		    render_creole_in_id('content', creole_content);
+		    render_creole_in_id('content', creole_content, creole_transclude);
 		}
 		catch (e){}
 
@@ -933,11 +923,13 @@ namespace eval WikitWub {
 
     # Replace local links with numeric external links for creole, 
     # otherwise a link will always go through the search
-    proc creole_replace_links { text } {
+    proc creole_replace_links {N text} {
 	variable pageURL
 	regsub {\n\{\{\{} $text \x8E text
 	regsub {\}\}\}\n} $text \x8E text
 	set rC ""
+	set trcld {}
+	set trcld_id 0
 	foreach {b fb} [split $text \x8E] {
 	    set prev_idx 0
 	    foreach {ip0 ip1} [regexp -all -inline -indices {\[\[([^\]]+)\]\]} $b] {
@@ -946,6 +938,30 @@ namespace eval WikitWub {
 		if {[regexp {(https?|ftp|news|mailto|file|irc):[^\s:]\S*} $m1]} {
 		    lassign $ip0 idx0 idx1
 		    append rC [string range $b $prev_idx $idx1]
+		    set prev_idx [expr {$idx1+1}]
+		} elseif {$m1 eq ".backrefs"} {
+		    lassign $ip0 idx0 idx1
+		    append rC [string range $b $prev_idx [expr {$idx0-1}]]
+		    append rC "<<<cwtid$trcld_id>>>"
+		    lappend trcld "\"/_/ref\"" "\"N=$N&A=1\"" "\"cwtid$trcld_id\"" 0
+		    set prev_idx [expr {$idx1+1}]
+		    incr trcld_id
+		} elseif {[string match ".include *" $m1]} {
+		    set ih [string trim [string range $m1 8 end]]
+		    if {[string is integer -strict $ih]} {
+			set NI $ih
+		    } else {
+			set NI [WDB PageByName $ih]
+		    }
+		    lassign $ip0 idx0 idx1
+		    append rC [string range $b $prev_idx [expr {$idx0-1}]]
+		    if {[llength $NI]} {
+			append rC "<<<cwtid$trcld_id>>>"
+			lappend trcld "\"/_/included\"" "\"N=$NI\"" "\"cwtid$trcld_id\"" 1
+			incr trcld_id		    
+		    } else {
+			append rc "\[\[.include $ih\]\]"
+		    }
 		    set prev_idx [expr {$idx1+1}]
 		} else {
 		    lassign $ip0 idx0 idx1
@@ -960,10 +976,10 @@ namespace eval WikitWub {
 		append rC "\n\{\{\{$fb\}\}\}\n"
 	    }
 	}
-	return $rC
+	return [list $rC $trcld]
     }
 
-    proc translate {name C ext {preview 0}} {
+    proc translate {N name C ext {preview 0}} {
 	variable markup_language
 	switch -exact -- $ext {
 	    .txt {
@@ -989,9 +1005,19 @@ namespace eval WikitWub {
 	    default {
 		switch -exact -- $markup_language {
 		    creole {
-			set cc [string map {\n \\n ' \\'} [creole_replace_links $C]]
-			set cc [<script> type text/javascript "var creole_content = '$cc';"]
-			return [list $cc]
+			lassign [creole_replace_links $N $C] C trcld
+			if {$preview} {
+			    return [list $C]
+			} else {
+			    set cc [string map {\n \\n ' \\'} $C]
+			    set cc [<script> type text/javascript "var creole_content = '$cc';"]
+			    if {[llength $trcld]} {
+				append cc [<script> type text/javascript "var creole_transclude = new Array([join $trcld ,]);"]
+			    } else {
+				append cc [<script> type text/javascript "var creole_transclude = new Array();"]
+			    }
+			    return [list $cc]
+			}
 		    }
 		    stx { 
 			set ::stx2html::local ::WikitWub::stx2html_local
@@ -1104,7 +1130,7 @@ namespace eval WikitWub {
 		set changes [WDB ChangeSetSize $N $version]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
-		lassign [translate $name $C .html] C U T BR
+		lassign [translate $N $name $C .html] C U T BR
 		append R $C
 		set pcdate $cdate
 		set pcwho $cwho
@@ -1387,7 +1413,7 @@ namespace eval WikitWub {
 		.txt -
 		.code -
 		.str {
-		    return [Http NoCache [Http Ok $r [translate $name $C $ext] text/plain]]
+		    return [Http NoCache [Http Ok $r [translate $N $name $C $ext] text/plain]]
 		}
 		default {
 		    if {$A} {
@@ -1397,7 +1423,7 @@ namespace eval WikitWub {
 			set Title "Version $V of [Ref $N]"
 			set name "Version $V of $name"
 		    }
-		    lassign [translate $name $C $ext] C U T BR
+		    lassign [translate $N $name $C $ext] C U T BR
 		    if { $V > 0 } {
 			lappend menu [<a> href "revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
 		    }
@@ -1740,10 +1766,10 @@ namespace eval WikitWub {
 	}
 
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
-	lassign [translate preview $O .html 1] C U T BR
+	lassign [translate $N preview $O .html 1] C U T BR
 	set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
 
-	return [sendPage $r preview_tc]
+	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
     }
 
     proc /included { r N } {
@@ -1759,9 +1785,10 @@ namespace eval WikitWub {
 	}
 
 	set O [WDB GetContent $N]
-	lassign [translate preview $O .html 1] C U T BR
+	lassign [translate $N preview $O .html 1] C U T BR
 	set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
-	return [sendPage $r preview_tc]
+
+	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
     }
 
     proc /edit/save {r N C O A save cancel preview upload} {
@@ -1769,7 +1796,7 @@ namespace eval WikitWub {
 	variable mount
 	variable pageURL
 
-	Debug.wikit {/edit/save N:$N A:$A O:$O upload:$upload ($args)}
+	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview}
 	Debug.wikit {Query: [dict get $r -Query] / [dict get $r -entity]}
 
 	puts "edit-save@[clock seconds] start"
@@ -2211,12 +2238,11 @@ namespace eval WikitWub {
 	set name "References to $N"
 	set Title "References to [Ref $N]"
 
-	set tplt spage
 	if {$A} {
-	    set tplt refs_tc
+	    return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
+	} else {
+	    return [sendPage $r spage]
 	}
-
-	return [sendPage $r $tplt]
     }
 
     proc GetRefs {text} {
@@ -2228,7 +2254,7 @@ namespace eval WikitWub {
 	    stx {
 		variable stx2html_refs {}
 		variable stx2html_collect_refs 1
-		stx2html::translate $text
+		stx2html::translate -1 $text
 		variable stx2html_collect_refs 0
 		return $stx2html_refs
 	    }
@@ -2243,7 +2269,7 @@ namespace eval WikitWub {
 			}
 		    }
 		}
-		return $refs
+		return [lsort -integer -unique $refs]
 	    }
 	}
     }
@@ -2267,7 +2293,7 @@ namespace eval WikitWub {
     proc pageXML {N} {
 	lassign [WDB GetPage $N name date who] name date who
 	set page [WDB GetContent $N]
-	lassign [translate $name $page .html] parsed - toc backrefs
+	lassign [translate $N $name $page .html] parsed - toc backrefs
 	return [<page> [subst { 
 	    [<name> [xmlarmour $name]]
 	    [<content> [xmlarmour $page]]
@@ -2475,7 +2501,7 @@ namespace eval WikitWub {
 	    }
 	    
 	    lassign [search $term $qdate] C nqdate long
-	    lassign [translate "Search" $C .html] C U T BR
+	    lassign [translate -1 "Search" $C .html] C U T BR
 	    if { $nqdate } {
 		append C [<p> [<a> href "search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
 	    }
@@ -2629,17 +2655,17 @@ namespace eval WikitWub {
 		.txt -
 		.str -
 		.code {
-		    return [Http NoCache [Http Ok $r [translate $name $content $ext] text/plain]]
+		    return [Http NoCache [Http Ok $r [translate $N $name $content $ext] text/plain]]
 		}
 		.xml {
 		    set C "<?xml version='1.0'?>"
 		    append C \n [pageXML $N]
-		    return [Http NoCache [Http Ok $r [translate $name $C $ext] text/xml]]
+		    return [Http NoCache [Http Ok $r [translate $N $name $C $ext] text/xml]]
 		}
 		default {
 		    Debug.wikit {do: $N is a normal page}
 		    dict set r content-location "http://[Url host $r]/$N"
-		    lassign [translate $name $content $ext] C U page_toc BR IH
+		    lassign [translate $N $name $content $ext] C U page_toc BR IH
 		    variable include_pages
 		    if {$include_pages} {
 			lassign [IncludePages $r $C $IH] r C
@@ -2703,6 +2729,7 @@ namespace eval WikitWub {
 	set menu [menus Home Recent Help WhoAmI {*}$menu]
 	set footer [menus Home Recent Help Search WhoAmI {*}$footer]
 
+	variable hidereadonly
 	if {$readonly ne "" && !$hidereadonly} {
 	    set ro "<it>(Read Only Mode: $readonly)</it>"
 	} else {

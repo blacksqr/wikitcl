@@ -1,4 +1,4 @@
-function render_creole_in_id(id, content) {
+function render_creole_in_id(id, content, transclude_info) {
     var div = document.getElementById(id);
     var options = {};
     var creole = new Parse.Simple.Creole(options);
@@ -9,6 +9,13 @@ function render_creole_in_id(id, content) {
     content = content.replace(/&#x7D;/gi, "}");
     content = content.replace(/&#x24;/gi, "$");
     creole.parse(div, content, options);
+    for(i=0; i<transclude_info.length; i+=4) {
+	var url = transclude_info[i];
+	var postdata = transclude_info[i+1];
+	var spanid = transclude_info[i+2];
+	var as_creole = transclude_info[i+3];
+	ajaxpage(url, postdata, spanid, as_creole);
+    }
 }
 
 /*
@@ -102,6 +109,10 @@ Parse.Simple.Base.Rule.prototype = {
         var target;
         if (this.tag) {
             target = document.createElement(this.tag);
+	    if (this.tag == "span") {
+		target.id = data;
+		data = null;
+	    }
             node.appendChild(target);
         }
         else { target = node; }
@@ -224,6 +235,8 @@ Parse.Simple.Creole = function(options) {
         tt: { tag: 'tt',
             regex: /\{\{\{(.*?\}\}\}+)/, capture: 1,
             replaceRegex: /\}\}\}$/, replaceString: '' },
+        span: { tag: 'span',
+	    regex: /\<\<\<(.*?)\>\>\>+/, capture: 1 },
 
         ulist: { tag: 'ul', capture: 0,
             regex: /(^|\n)([ \t]*\*[^*#].*(\n|$)([ \t]*[^\s*#].*(\n|$))*([ \t]*[*#]{2}.*(\n|$))*)+/ },
@@ -368,7 +381,7 @@ Parse.Simple.Creole = function(options) {
         [ g.escapedSequence, g.strong, g.em, g.br, g.rawUri,
             g.namedUri, g.namedInterwikiLink, g.namedLink,
             g.unnamedUri, g.unnamedInterwikiLink, g.unnamedLink,
-            g.tt, g.img ];
+	    g.tt, g.span, g.img ];
 
     g.root = {
         children: [ g.h1, g.h2, g.h3, g.h4, g.h5, g.h6,
