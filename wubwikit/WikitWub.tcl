@@ -60,7 +60,15 @@ namespace eval WikitWub {
     variable text_url "wiki.tcl.tk"
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
 
-    variable perms {}
+    variable perms {}	;# dict of operation -> names, names->passwords
+    # perms dict is of the form:
+    # op {name password name1 {} name2 {}}
+    # name1 password
+    # name2 {name3 password ...}
+
+    # search the perms dict for a name and password matching those given
+    # the search is rooted at the operation dict entry.
+
     proc permsrch {userid pass el} {
 	variable perms
 	upvar 1 looked looked
@@ -88,6 +96,7 @@ namespace eval WikitWub {
 	return 0
     }
 
+    # using HTTP Auth, obtain and check a password, issue a challenge if none match
     proc perms {r op} {
 	variable perms
 	Debug.wikit {perms $op [dict get? $perms $op]}
