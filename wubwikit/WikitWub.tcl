@@ -61,6 +61,33 @@ namespace eval WikitWub {
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
 
     variable perms {}
+    proc permsrch {userid pass el} {
+	variable perms
+	upvar 1 looked looked
+
+	if {![dict exists $perms $el]} {return 0}	;# there is no $el
+
+	if {[dict exists $looked $el]} {return 0}	;# already checked $el
+	dict set looked $el 1	;# record traversal of $el
+
+	if {[llength [dict get $perms $el]]%2} {
+	    # this is a singleton - must be user+password - check it
+	    return [expr {$pass eq [dict get $perms $el]}]
+	}
+
+	# $el is a dict.  traverse it looking for a match, or a group to search
+	dict for {n v} [dict get $perms $el] {
+	    if {$n eq $userid && $v eq $pass} {return 1}
+	    if {$v eq "" && ![dict exists $looked $n]} {
+		if {[permsrch $userid $pass $n]} {
+		    return 1
+		}
+	    }
+	}
+
+	return 0
+    }
+
     proc perms {r op} {
 	variable perms
 	Debug.wikit {perms $op [dict get? $perms $op]}
@@ -71,17 +98,11 @@ namespace eval WikitWub {
 	Debug.wikit {perms $op ($userid,$pass)}
 	set userid [string trim $userid]	;# filter out evil chars
 	set pass [string trim $pass]	;# filter out evil chars
+
 	if {$userid ne "" && $pass ne ""} {
-	    # we have a userid and password
-	    if {[dict get? $perms $op $userid] eq $pass} {
-		# $userid has a $pass explicitly mentioned for this op
-		return
-	    } elseif {[dict exists $perms $op $userid] && [dict get $perms $op $userid] eq ""} {
-		# $userid is mentioned for this op, they must have a password entry
-		# the passwords must match
-		if {[dict get? $perms $userid] eq $pass} {
-		    return
-		}
+	    set looked {}	;# remember password traversal
+	    if {[permsrch $userid $pass $op]} {
+		return 1
 	    }
 	}
 
@@ -769,6 +790,7 @@ namespace eval WikitWub {
 	    } else {
 		set link [<a> href /$id $id]
 	    }
+
 	    append link [<span> class dots ". . ."]
 	    append link [<span> class nick [WhoUrl $who]]
 	    append link [<span> class dots ". . ."]
@@ -783,6 +805,7 @@ namespace eval WikitWub {
 
 	# sendPage vars
 	set Title "Cleared pages"
+	set name "Cleared pages"
 	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help Search]
 	set C [join $results "\n"]
@@ -1677,8 +1700,6 @@ namespace eval WikitWub {
     proc /gsearch {r {S ""}} {
 	perms $r read
 
-	set name "Search"
-	set Title "Search"
 	set subtitle "powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'</img>"
 	set C [<script> src "http://www.google.com/jsapi?key=$::google_jsapi_key"]
 	append C \n
@@ -1687,6 +1708,8 @@ namespace eval WikitWub {
 
 	# sendPage vars
 	variable query $S
+	set name "Search"
+	set Title "Search"
 	set menu [menus Home Recent Help WhoAmI]
 	set footer [menus Home Recent Help]
 
@@ -1941,11 +1964,19 @@ namespace eval WikitWub {
 
     proc /map {r imp args} {
 	perms $r read
-
-	if {[info exists ::WikitWub::IMTOC($imp)]} {
+	variable protected
+	variable IMTOC
+	variable pageURL
+	if {[info exists IMTOC($imp)]} {
 	    return [Http Redir $r "http://[dict get $r host]/[string trim $::WikitWub::IMTOC($imp) /]"]
 	} else {
-	    return [Http NotFound $r]
+	    set TOCp [dict get? $protected ADMIN:TOC]
+	    if {$TOCp ne ""} {
+		return [Http Redir $r [file join $pageURL $TOCp]]
+	    } else {
+		return [Http NotFound $r [<p> "ADMIN:TOC does not exist."]]
+	    }
+
 	}
     }
 
@@ -2069,6 +2100,8 @@ namespace eval WikitWub {
 	variable TOC
 	variable wiki_title
 	variable protected
+	variable mount
+	variable pageURL
 
 	if {[info exists ::starkit_welcomezero] && $::starkit_welcomezero} {
 	    return [Http Redir $r "http://[dict get $r host]/0"]
@@ -2082,8 +2115,15 @@ namespace eval WikitWub {
 	    set name "Welcome to the Tclers Wiki!"
 	}
 
-	set C [string trim [WDB GetContent [dict get? $protected ADMIN:Welcome]]]
-	set menu [menus Recent Help WhoAmI]
+	set N [dict get? $protected ADMIN:Welcome]
+	set C [string trim [WDB GetContent $N]]
+
+	if {$C eq ""} {
+	    set menu [menus Recent Help WhoAmI]
+	    lappend menu [<a> href [file join $mount edit]?N=$N "Create Page"]
+	} else {
+	    set menu [menus Recent Help WhoAmI]
+	}
 	set footer [menus Recent Help Search]
 
 	return [sendPage $r spage]
@@ -2524,12 +2564,12 @@ namespace eval WikitWub {
 	    } elseif {$N ne $term} {
 		# we really should redirect
 		variable detect_robots
-		Debug.wikit {do: can't find '$N' ne '$term' ... redirect}
+		Debug.wikit {do: can't find '$N' ne '$term' ... redirect to '[file join $pageURL $N]'}
 		if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 		    # try to make robots always use the canonical form
-		    return [Http Moved $r "http://[dict get $r host]/$N"]
+		    return [Http Moved $r [file join $pageURL $N]]
 		} else {
-		    return [Http Redir $r "http://[dict get $r host]/$N"]
+		    return [Http Redir $r [file join $pageURL $N]]
 		}
 	    }
 	}
@@ -2581,7 +2621,9 @@ namespace eval WikitWub {
 	variable protected
 	if {$N == [dict get? $protected ADMIN:Welcome]} {
 	    # page 0 is HTML and is the Welcome page
-	    return [/welcome $r]
+	    # it needs to be redirected to the functional page
+	    # as it may reference maps
+	    return [Http Redir $r [file join $mount welcome]]
 	} else {
 	    switch -- $ext {
 		.txt -
