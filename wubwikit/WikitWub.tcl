@@ -58,22 +58,37 @@ namespace eval WikitWub {
     variable markup_language wikit
     variable hidereadonly 0
     variable text_url "wiki.tcl.tk"
-    variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above,  or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
+    variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
 
     variable perms {}
     proc perms {r op} {
 	variable perms
 	Debug.wikit {perms $op [dict get? $perms $op]}
-	if {![dict exists $perms $op]} return
+	if {![dict exists $perms $op]} return	;# there are no $op permissions, just permit it.
 
 	set userid ""; set pass ""
 	lassign [Http Credentials $r] userid pass
 	Debug.wikit {perms $op ($userid,$pass)}
-	if {"$userid,$pass" ni [dict get $perms $op]} {
-	    set challenge "Please login to $op"
-	    set content "Please login to $op"
-	    return -code return -level 1 [Http Unauthorized $r [Http BasicAuth $challenge] $content x-text/html-fragment]
+	set userid [string trim $userid]	;# filter out evil chars
+	set pass [string trim $pass]	;# filter out evil chars
+	if {$userid ne "" && $pass ne ""} {
+	    # we have a userid and password
+	    if {[dict get? $perms $op $userid] eq $pass} {
+		# $userid has a $pass explicitly mentioned for this op
+		return
+	    } elseif {[dict exists $perms $op $userid] && [dict get $perms $op $userid] eq ""} {
+		# $userid is mentioned for this op, they must have a password entry
+		# the passwords must match
+		if {[dict get? $perms $userid] eq $pass} {
+		    return
+		}
+	    }
 	}
+
+	# fall through - no passwords matched - challenge the client to provide user,password
+	set challenge "Please login to $op"
+	set content "Please login to $op"
+	return -code return -level 1 [Http Unauthorized $r [Http BasicAuth $challenge] $content x-text/html-fragment]
     }
 
     # sortable - include javascripts and CSS for sortable table.
@@ -340,7 +355,7 @@ namespace eval WikitWub {
 
     template upload {} {
 	[<form> upload enctype multipart/form-data method post action [file join $::WikitWub::mount edit/save] {
-	    [<label> for C [<submit> submit Upload]][<file> C title {Upload Content} ""]
+	    [<label> for C [<submit> upload Upload]][<file> C title {Upload Content} ""]
 	    [<hidden> N $N]
 	    [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 	    [<hidden> A 0]
@@ -439,7 +454,7 @@ namespace eval WikitWub {
     template conflict {Edit Conflict on $N} {
 	[<h2> "Edit conflict on page $N - [Ref $N $name]"]
 	[<p> "[<b> "Your changes have NOT been saved"] because someone (at IP address $who) saved a change to this page while you were editing."]
-	[<p> [<i> "Please restart a new [<a> href _/edit?N=$N edit] and merge your version (which is shown in full below.)"]]
+	[<p> [<i> "Please restart a new [<a> href [file join $mount edit]?N=$N edit] and merge your version (which is shown in full below.)"]]
 	[<p> "Got '$O' expected '$X'"]
 	[<hr> size 1]
 	[<p> [<pre> [armour $C]]]
@@ -1726,7 +1741,7 @@ namespace eval WikitWub {
 	return [sendPage $r preview_tc]
     }
 
-    proc /edit/save {r N C O A save cancel preview} {
+    proc /edit/save {r N C O A save cancel preview upload} {
 	perms $r write
 	variable mount
 	variable pageURL
@@ -1743,7 +1758,7 @@ namespace eval WikitWub {
 	}
 
 	if { [string tolower $cancel] eq "cancel" } {
-	    set url http://[Url host $r]/$N
+	    set url http://[Url host $r][file join $pageURL $N]
 	    puts "edit-save@[clock seconds] canceled"
 	    return [redir $r $url [<a> href $url "Canceled page edit"]]
 	}
@@ -1816,6 +1831,8 @@ namespace eval WikitWub {
 	
 	puts "edit-save@[clock seconds] normalize"
 
+	#----
+
 	# newline-normalize content
 	set C [string map {\r\n \n \r \n} $C]
 	
@@ -1838,7 +1855,7 @@ namespace eval WikitWub {
 	    puts "edit-save@[clock seconds] badutf"
 	    return [sendPage $r badutf]
 	}
-	
+
 	puts "edit-save@[clock seconds] check if only commenting"
 	# save the page into the db.
 	set who $nick@[dict get $r -ipaddr]
