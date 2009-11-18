@@ -1,4 +1,4 @@
-function render_creole_in_id(id, content, transclude_info) {
+function render_creole_in_id(id, content, transclude_info, categories) {
     var div = document.getElementById(id);
     var options = {};
     var creole = new Parse.Simple.Creole(options);
@@ -16,6 +16,7 @@ function render_creole_in_id(id, content, transclude_info) {
 	var as_creole = transclude_info[i+3];
 	ajaxpage(url, postdata, spanid, as_creole);
     }
+    div.innerHTML += categories;
 }
 
 /*

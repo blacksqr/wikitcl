@@ -538,7 +538,7 @@ namespace eval WikitWub {
 
 		try {
 		    if (typeof(creole_content) != "undefined")
-		    render_creole_in_id('content', creole_content, creole_transclude);
+		    render_creole_in_id('content', creole_content, creole_transclude, creole_categories);
 		}
 		catch (e){}
 
@@ -939,6 +939,7 @@ namespace eval WikitWub {
 	set rC ""
 	set trcld {}
 	set trcld_id 0
+	set categories {}
 	foreach {b fb} [split $text \x8E] {
 	    set prev_idx 0
 	    foreach {ip0 ip1} [regexp -all -inline -indices {\[\[([^\]]+)\]\]} $b] {
@@ -972,12 +973,24 @@ namespace eval WikitWub {
 			append rc "\[\[.include $ih\]\]"
 		    }
 		    set prev_idx [expr {$idx1+1}]
+		} elseif {[string match ".categories *" $m1]} {
+		    lassign $ip0 idx0 idx1
+		    append rC [string range $b $prev_idx [expr {$idx0-1}]]
+		    set prev_idx [expr {$idx1+1}]		    
+		    set catl [split [string trim [string range $m1 12 end]] |]
+		    if {[llength $catl]} {
+			if {[string length $categories]==0} {
+			    append categories "<p></p><hr><div class='centered'><table summary='' class=wikit_table><thead><tr>"
+			}
+			foreach cat $catl {
+			    append categories [<th> [<a> href /[WDB LookupPage $cat] $cat]]
+			}
+		    }
 		} else {
 		    lassign $ip0 idx0 idx1
 		    set id [WDB LookupPage $m1]
 		    append rC [string range $b $prev_idx [expr {$idx0-1}]] \[\[ [file join $pageURL $id]|$m1 \]\]
-		    set prev_idx [expr {$idx1+1}]
-		    
+		    set prev_idx [expr {$idx1+1}]		    
 		}
 	    }
 	    append rC [string range $b $prev_idx end]
@@ -985,7 +998,10 @@ namespace eval WikitWub {
 		append rC "\n\{\{\{$fb\}\}\}\n"
 	    }
 	}
-	return [list $rC $trcld]
+	if {[string length $categories]} {
+	    append categories "</tr></thead></table></div>"
+	}
+	return [list $rC $trcld $categories]
     }
 
     proc translate {N name C ext {preview 0}} {
@@ -1014,17 +1030,14 @@ namespace eval WikitWub {
 	    default {
 		switch -exact -- $markup_language {
 		    creole {
-			lassign [creole_replace_links $N $C] C trcld
+			lassign [creole_replace_links $N $C] C trcld categories
 			if {$preview} {
 			    return [list $C]
 			} else {
 			    set cc [string map {\n \\n ' \\'} $C]
 			    set cc [<script> type text/javascript "var creole_content = '$cc';"]
-			    if {[llength $trcld]} {
-				append cc [<script> type text/javascript "var creole_transclude = new Array([join $trcld ,]);"]
-			    } else {
-				append cc [<script> type text/javascript "var creole_transclude = new Array();"]
-			    }
+			    append cc [<script> type text/javascript "var creole_transclude = new Array([join $trcld ,]);"]
+			    append cc  [<script> type text/javascript "var creole_categories = \"$categories\";"]
 			    return [list $cc]
 			}
 		    }
