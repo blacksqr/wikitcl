@@ -5,23 +5,7 @@ package provide WDB 1.0
 package provide WDB_sqlite 1.0
 
 if {0} {
-    CREATE TABLE changes (
-       id INT NOT NULL,
-       cid INT NOT NULL,
-       date INT NOT NULL,
-       who TEXT NOT NULL,
-       delta TEXT NOT NULL,
-       PRIMARY KEY (id, cid),
-       FOREIGN KEY (id) REFERENCES pages(id));
-    CREATE TABLE diffs (
-       id INT NOT NULL,
-       cid INT NOT NULL,
-       did INT NOT NULL,
-       fromline INT NOT NULL,
-       toline INT NOT NULL,	
-       old TEXT NOT NULL,
-       PRIMARY KEY (id, cid, did),
-       FOREIGN KEY (id, cid) REFERENCES changes(id, cid));
+    PRAGMA foreign_keys = ON;
     CREATE TABLE pages (
        id INT NOT NULL,
        name TEXT NOT NULL,
@@ -39,6 +23,23 @@ if {0} {
        content BLOB NOT NULL,
        PRIMARY KEY (id),
        FOREIGN KEY (id) REFERENCES pages(id));
+    CREATE TABLE changes (
+       id INT NOT NULL,
+       cid INT NOT NULL,
+       date INT NOT NULL,
+       who TEXT NOT NULL,
+       delta TEXT NOT NULL,
+       PRIMARY KEY (id, cid),
+       FOREIGN KEY (id) REFERENCES pages(id));
+    CREATE TABLE diffs (
+       id INT NOT NULL,
+       cid INT NOT NULL,
+       did INT NOT NULL,
+       fromline INT NOT NULL,
+       toline INT NOT NULL,	
+       old TEXT NOT NULL,
+       PRIMARY KEY (id, cid, did),
+       FOREIGN KEY (id, cid) REFERENCES changes(id, cid));
     CREATE TABLE refs (
        fromid INT NOT NULL,
        toid INT NOT NULL,
@@ -63,7 +64,7 @@ namespace eval WDB {
 		"changes_for_pid_lt_date"     { set sql {SELECT * FROM changes WHERE id = :pid AND date < :date ORDER BY date DESC} }
 		"changes_for_pid_version"     { set sql {SELECT * FROM changes WHERE id = :pid AND cid  = :version} }
 		"content_for_pid"             { set sql {SELECT * FROM pages_content WHERE id = :pid} }
-		"binary_for_pid"             { set sql {SELECT * FROM pages_binary WHERE id = :pid} }
+		"binary_for_pid"              { set sql {SELECT * FROM pages_binary WHERE id = :pid} }
 		"count_changes_for_pid"       { set sql {SELECT COUNT(*) FROM changes WHERE id = :pid} }
 		"count_content_for_id"        { set sql {SELECT COUNT(*) FROM pages_content WHERE id = :id} }
 		"count_diffs_for_pid_version" { set sql {SELECT COUNT(*) FROM diffs WHERE id = :pid AND cid = :version} }
@@ -73,7 +74,7 @@ namespace eval WDB {
 		"diffs_for_pid_v"             { set sql {SELECT fromline, toline, old FROM diffs WHERE id = :pid AND cid = :v ORDER BY did DESC} }
 		"insert_change"               { set sql {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, :change)} }
 		"insert_content"              { set sql {INSERT INTO pages_content (id, content) VALUES (:id, :text)} }
-		"insert_binary"              { set sql {INSERT INTO pages_binary (id, content) VALUES (:id, :text)} }
+		"insert_binary"               { set sql {INSERT INTO pages_binary (id, content) VALUES (:id, :text)} }
 		"insert_diff"                 { set sql {INSERT INTO diffs (id, cid, did, fromline, toline, old) VALUES (:id, :version, :i, :from, :to, :old)} }
 		"insert_page"                 { set sql {INSERT INTO pages (id, name, date, who, type) VALUES (:pid, :name, :date, :who, :type)} }
 		"insert_ref"                  { set sql {INSERT INTO refs (fromid, toid) VALUES (:id, :x)} }
