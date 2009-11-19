@@ -1934,8 +1934,12 @@ namespace eval WikitWub {
 		return [sendPage $r badtype]
 	    }
 	} else {
+	    # editing without upload can only create wiki pages
 	    set type text/x-wikit
 	}
+
+	# permit filtering of uploads of given type by means of password
+	perms $r [lindex [string trim $type /] 0]
 
 	if {[string match text/* $type]} {
 	    # newline-normalize content
