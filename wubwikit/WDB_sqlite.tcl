@@ -1013,6 +1013,13 @@ namespace eval WDB {
 	    # avoid creating a log entry and committing if nothing changed
 	    if {$newType eq "" || [string match text/* $newType]} {
 		puts "SavePage@[clock seconds] text page '$newType'/'$type'"
+
+		if {$newdate != ""} {
+		    puts "SavePage@[clock seconds] set date $id $date"
+		    # change the date if requested
+		    [statement "update_page_date_for_id"] execute
+		}
+
 		set text [string trimright $text]
 		set page [GetContent $id]
 		if {$changed || $text != $page} {
