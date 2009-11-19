@@ -196,7 +196,7 @@ namespace eval WikitWub {
 		[<hidden> _charset_ ""]
 	    }]
 	} else {
-	    [<form> searchform action [file join $::WikitWub::mount search] {
+	    [<form> psearchform action [file join $::WikitWub::mount search] {
 		[<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} [tclarmour [expr {[info exists query]?$query:"Search in pages and titles"}]]]
 		[<hidden> _charset_ ""]
 		[<hidden> long 1]
@@ -2598,7 +2598,10 @@ namespace eval WikitWub {
 	    }
 	    set q [string trimright $term *]
 	    append q "%20site:" $text_url
-	    append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
+	    variable gsearch
+	    if {$gsearch} {
+		append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
+	    }
 	} else {
 	    # send a search page
 	    set search ""
