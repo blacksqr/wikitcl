@@ -1988,7 +1988,17 @@ namespace eval WikitWub {
 		} elseif {[string match "<<categories>>*" [lindex $Cl end]]} {
 		    set Cl [linsert $Cl end-1 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
 		} else {
-		    lappend Cl ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C
+		    variable markup_language
+
+		    switch -- $markup_language {
+			creole {
+			    set nn "\[\[$nick\]\]"
+			}
+			default {
+			    set nn "\[\[$nick\]\]"
+			}
+		    }
+		    lappend Cl ---- "'''$nn - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C
 		}
 		set C [join $Cl \n]
 	    }
