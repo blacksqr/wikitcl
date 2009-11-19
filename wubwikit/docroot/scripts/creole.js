@@ -19,6 +19,10 @@ function render_creole_in_id(id, content, transclude_info, categories) {
     div.innerHTML += categories;
 }
 
+String.prototype.trim = function () {
+    return this.replace(/^\s*/, "").replace(/\s*$/, "");
+}
+
 /*
  * JavaScript Creole 1.0 Wiki Markup Parser
  * $Id$
@@ -282,7 +286,7 @@ Parse.Simple.Creole = function(options) {
         namedUri: { regex: '\\[\\[(' + rx.uri + ')\\|(' + rx.linkText + ')\\]\\]',
             build: function(node, r, options) {
                 var link = document.createElement('a');
-                link.href = r[1];
+                link.href = r[1].trim();
                 if (options && options.isPlainUri) {
                     link.appendChild(document.createTextNode(r[2]));
                 }
@@ -299,6 +303,7 @@ Parse.Simple.Creole = function(options) {
                 link.href = options && options.linkFormat
                     ? formatLink(r[1].replace(/~(.)/g, '$1'), options.linkFormat)
                     : r[1].replace(/~(.)/g, '$1');
+		link.href = link.href.trim();
                 this.apply(link, r[2], options);
                 
                 node.appendChild(link);
@@ -344,7 +349,7 @@ Parse.Simple.Creole = function(options) {
                 return g.namedLink.build.call(g.namedLink, node, r, options);
             }
 
-            link.href = formatLink(m[2].replace(/~(.)/g, '$1'), f);
+   	    link.href = formatLink(m[2].replace(/~(.)/g, '$1'), f).trim();
             
             this.apply(link, r[2], options);
             
