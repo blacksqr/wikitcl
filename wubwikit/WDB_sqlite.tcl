@@ -5,45 +5,46 @@ package provide WDB 1.0
 package provide WDB_sqlite 1.0
 
 if {0} {
-    CREATE TABLE pages (
-			id INT NOT NULL,
-			name TEXT NOT NULL,
-			date INT NOT NULL,
-			who TEXT NOT NULL,
-			PRIMARY KEY (id));
-
-    CREATE TABLE pages_content (
-				id INT NOT NULL,
-				content TEXT NOT NULL,
-				PRIMARY KEY (id),
-				FOREIGN KEY (id) REFERENCES pages(id));
-
     CREATE TABLE changes (
-			  id INT NOT NULL,
-			  cid INT NOT NULL,
-			  date INT NOT NULL,
-			  who TEXT NOT NULL,
-			  delta TEXT NOT NULL,
-			  PRIMARY KEY (id, cid),
-			  FOREIGN KEY (id) REFERENCES pages(id));
-    
+       id INT NOT NULL,
+       cid INT NOT NULL,
+       date INT NOT NULL,
+       who TEXT NOT NULL,
+       delta TEXT NOT NULL,
+       PRIMARY KEY (id, cid),
+       FOREIGN KEY (id) REFERENCES pages(id));
     CREATE TABLE diffs (
-			id INT NOT NULL,
-			cid INT NOT NULL,
-			did INT NOT NULL,
-			fromline INT NOT NULL,
-			toline INT NOT NULL,	
-			old TEXT NOT NULL,
-			PRIMARY KEY (id, cid, did),
-			FOREIGN KEY (id, cid) REFERENCES changes(id, cid));
-
+       id INT NOT NULL,
+       cid INT NOT NULL,
+       did INT NOT NULL,
+       fromline INT NOT NULL,
+       toline INT NOT NULL,	
+       old TEXT NOT NULL,
+       PRIMARY KEY (id, cid, did),
+       FOREIGN KEY (id, cid) REFERENCES changes(id, cid));
+    CREATE TABLE pages (
+       id INT NOT NULL,
+       name TEXT NOT NULL,
+       date INT NOT NULL,
+       who TEXT NOT NULL,
+       type TEXT,
+       PRIMARY KEY (id));
+    CREATE TABLE pages_content (
+       id INT NOT NULL,
+       content TEXT NOT NULL,
+       PRIMARY KEY (id),
+       FOREIGN KEY (id) REFERENCES pages(id));
+    CREATE TABLE pages_binary (
+       id INT NOT NULL,
+       content BLOB NOT NULL,
+       PRIMARY KEY (id),
+       FOREIGN KEY (id) REFERENCES pages(id));
     CREATE TABLE refs (
-		       fromid INT NOT NULL,
-		       toid INT NOT NULL,
-		       PRIMARY KEY (fromid, toid),
-		       FOREIGN KEY (fromid) references pages(id),
-		       FOREIGN KEY (toid) references pages(id));
-
+       fromid INT NOT NULL,
+       toid INT NOT NULL,
+       PRIMARY KEY (fromid, toid),
+       FOREIGN KEY (fromid) references pages(id),
+       FOREIGN KEY (toid) references pages(id));
     CREATE INDEX refs_toid_index ON refs (toid);
 }
 
