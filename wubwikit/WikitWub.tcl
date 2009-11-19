@@ -762,7 +762,7 @@ namespace eval WikitWub {
 	    # Init common menu items
 	    set menus(Home)   [<a> href $pageURL Home]
 	    set menus(Recent) [<a> href [file join $mount recent] "Recent changes"]
-	    set menus(Help)   [<a> href [file join $pageURL 3] "Help"]
+	    set menus(Help)   [<a> href [file join $pageURL Help] "Help"]
 	    set menus(HR)     <br>
 	    set menus(Search) [<a> href [file join $mount searchp] "Search"]
 	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
