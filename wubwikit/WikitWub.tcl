@@ -183,16 +183,24 @@ namespace eval WikitWub {
 	Enter page contents here or click cancel to leave it empty.
 	<<categories>>Enter Category Here
     }
-
+    variable gsearch 1
     # return a search form
     template searchF {} {
 	[<form> searchform action [file join $::WikitWub::mount search] {
 	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} [tclarmour [expr {[info exists query]?$query:"Search in titles"}]]]
 	    [<hidden> _charset_ ""]
 	}]
-	[<form> gsearchform method get action [file join $::WikitWub::mount gsearch] {
-	    [<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} [tclarmour [expr {[info exists query]?$query:"Search in pages"}]]]
-	    [<hidden> _charset_ ""]
+	[If {$::WikitWub::gsearch} {
+	    [<form> gsearchform method get action [file join $::WikitWub::mount gsearch] {
+		[<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} [tclarmour [expr {[info exists query]?$query:"Search in pages"}]]]
+		[<hidden> _charset_ ""]
+	    }]
+	} else {
+	    [<form> searchform action [file join $::WikitWub::mount search] {
+		[<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} [tclarmour [expr {[info exists query]?$query:"Search in pages and titles"}]]]
+		[<hidden> _charset_ ""]
+		[<hidden> long 1]
+	    }]
 	}]
     }
 
@@ -2572,6 +2580,9 @@ namespace eval WikitWub {
 	    }
 	    
 	    lassign [search $term $qdate] C nqdate long
+	    if {[dict exists $qd long]} {
+		set long 1
+	    }
 	    lassign [translate -1 "Search" $C .html] C U T BR
 	    if { $nqdate } {
 		append C [<p> [<a> href "search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
@@ -2604,7 +2615,7 @@ namespace eval WikitWub {
 	return [sendPage $r spage]
     }
 
-    proc /search {r {S ""} args} {
+    proc /search {r {S ""} {long 0} args} {
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
