@@ -3,6 +3,9 @@ if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
     source [file join [file dirname [info script]] local_setup.tcl]
 }
 
+package require Mime
+Debug on mime 10
+
 package require fileutil
 package require struct::queue
 
@@ -78,30 +81,31 @@ namespace eval WikitWub {
 	if {[dict exists $looked $el]} {return 0}	;# already checked $el
 	dict set looked $el 1	;# record traversal of $el
 
+	set result 0
 	if {[llength [dict get $perms $el]]%2} {
 	    # this is a singleton - must be user+password - check it
-	    return [expr {$pass eq [dict get $perms $el]}]
-	}
-
-	# $el is a dict.  traverse it looking for a match, or a group to search
-	dict for {n v} [dict get $perms $el] {
-	    if {$n eq $userid && $v eq $pass} {return 1}
-	    if {$v eq "" && ![dict exists $looked $n]} {
-		if {[permsrch $userid $pass $n]} {
-		    return 1
+	    set result [expr {$pass eq [dict get $perms $el]}]
+	} else {
+	    # $el is a dict.  traverse it looking for a match, or a group to search
+	    dict for {n v} [dict get $perms $el] {
+		if {$n eq $userid && $v eq $pass} {return 1}
+		if {$v eq "" && ![dict exists $looked $n]} {
+		    if {[permsrch $userid $pass $n]} {
+			set result 1
+			break
+		    }
 		}
 	    }
 	}
-
-	return 0
+	return $result
     }
 
     # using HTTP Auth, obtain and check a password, issue a challenge if none match
     proc perms {r op} {
 	variable perms
-	Debug.wikit {perms $op [dict get? $perms $op]}
 	if {![dict exists $perms $op]} return	;# there are no $op permissions, just permit it.
 
+	Debug.wikit {perms $op [dict get? $perms $op]}
 	set userid ""; set pass ""
 	lassign [Http Credentials $r] userid pass
 	Debug.wikit {perms $op ($userid,$pass)}
@@ -111,6 +115,7 @@ namespace eval WikitWub {
 	if {$userid ne "" && $pass ne ""} {
 	    set looked {}	;# remember password traversal
 	    if {[permsrch $userid $pass $op]} {
+		Debug.wikit {perms on '$op' ok}
 		return 1
 	    }
 	}
@@ -118,6 +123,7 @@ namespace eval WikitWub {
 	# fall through - no passwords matched - challenge the client to provide user,password
 	set challenge "Please login to $op"
 	set content "Please login to $op"
+	Debug.wikit {perms challenge '$op'}
 	return -code return -level 1 [Http Unauthorized $r [Http BasicAuth $challenge] $content x-text/html-fragment]
     }
 
@@ -374,8 +380,8 @@ namespace eval WikitWub {
     }
 
     template upload {} {
-	[<form> upload enctype multipart/form-data method post action [file join $::WikitWub::mount edit/save] {
-	    [<label> for C [<submit> upload Upload]][<file> C title {Upload Content} ""]
+	[<form> uploadform enctype multipart/form-data method post action [file join $::WikitWub::mount edit/save] {
+	    [<label> for C [<submit> upload value 1 Upload]][<file> C title {Upload Content} ""]
 	    [<hidden> N $N]
 	    [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 	    [<hidden> A 0]
@@ -433,6 +439,10 @@ namespace eval WikitWub {
 	}]]
     }
 
+    template uneditable {Uneditable} {
+	[<p> "Page $N is of type $type which cannot be edited."]
+    }
+
     # page sent to enable login
     template login {login} {
 	[<p> "Please choose a nickname that your edit will be identified by."]
@@ -446,10 +456,17 @@ namespace eval WikitWub {
 	}]
     }
 
+    # page sent on bad upload
+    template badutf {bad type} {
+	[<h2> "Upload of type '$type' on page $N - [Ref $N $name]"]
+	[<p> "[<b> {Your changes have NOT been saved}], because the content your browser sent is of an inappropriate type."]
+	[<hr> size 1]
+    }
+
     # page sent when a browser sent bad utf8
     template badutf {bad UTF-8} {
 	[<h2> "Encoding error on page $N - [Ref $N $name]"]
-	[<p> "[<b> "Your changes have NOT been saved"], because the content your browser sent contains bogus characters. At character number $point"]
+	[<p> "[<b> {Your changes have NOT been saved}], because the content your browser sent contains bogus characters. At character number $point"]
 	[<p> $E]
 	[<p> [<i> "Please check your browser."]]
 	[<hr> size 1]
@@ -1818,7 +1835,7 @@ namespace eval WikitWub {
 	variable mount
 	variable pageURL
 
-	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview}
+	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload}
 	Debug.wikit {Query: [dict get $r -Query] / [dict get $r -entity]}
 
 	puts "edit-save@[clock seconds] start"
@@ -1903,67 +1920,90 @@ namespace eval WikitWub {
 	
 	puts "edit-save@[clock seconds] normalize"
 
-	#----
+	# if upload, check mime type
+	if {$upload ne ""} {
+	    set type [Mime magic $C]
+	    Debug.wikit "Mime magic: $type"
+	    if {$type eq ""} {
+		# we don't know what type - assume wiki text
+		set type text/x-wikit
+	    } elseif {![string match image/* $type]
+		&& [string match text/* $type]
+	    } {
+		Debug.wikit "Bad Type: $type"
+		return [sendPage $r badtype]
+	    }
+	} else {
+	    set type text/x-wikit
+	}
 
-	# newline-normalize content
-	set C [string map {\r\n \n \r \n} $C]
+	if {[string match text/* $type]} {
+	    # newline-normalize content
+	    set C [string map {\r\n \n \r \n} $C]
 	
-	puts "edit-save@[clock seconds] check utf8"
-	# check the content for utf8 correctness
-	# this metadata is set by Query parse/cconvert
-	set point [Dict get? [Query metadata [dict get $r -Query] C] -bad]
-	if {$point ne ""
-	    && $point < [string length $C] - 1
-	} {
-	    if {$point >= 0} {
-		incr point
-		binary scan [string index $C $point] H* bogus
-		set C [string replace $C $point $point "<BOGUS 0x$bogus>"]
-		set E [string range $C [expr {$point-50}] [expr {$point-1}]]
-	    } else {
-		set E ""
+	    puts "edit-save@[clock seconds] check utf8"
+	    # check the content for utf8 correctness
+	    # this metadata is set by Query parse/cconvert
+	    set point [Dict get? [Query metadata [dict get $r -Query] C] -bad]
+	    if {$point ne ""
+		&& $point < [string length $C] - 1
+	    } {
+		if {$point >= 0} {
+		    incr point
+		    binary scan [string index $C $point] H* bogus
+		    set C [string replace $C $point $point "<BOGUS 0x$bogus>"]
+		    set E [string range $C [expr {$point-50}] [expr {$point-1}]]
+		} else {
+		    set E ""
+		}
+		Debug.wikit {badutf $N}
+		puts "edit-save@[clock seconds] badutf"
+		return [sendPage $r badutf]
 	    }
-	    Debug.wikit {badutf $N}
-	    puts "edit-save@[clock seconds] badutf"
-	    return [sendPage $r badutf]
+
+	    puts "edit-save@[clock seconds] check if only commenting"
+	    # save the page into the db.
+	    if {[string is integer -strict $A] && $A} {
+		# Look for category at end of page using following styles:
+		# ----\n[Category ...]
+		# ----\n!!!!!!\n%|Category...|%\n!!!!!!
+		set Cl [split [string trimright [WDB GetContent $N] \n] \n]
+		if {[string trim [lindex $Cl end]] eq "!!!!!!" && 
+		    [string trim [lindex $Cl end-2]] eq "!!!!!!" && 
+		    [string match "----*" [string trim [lindex $Cl end-3]]] && 
+		    [string match "%|*Category*|%" [string trim [lindex $Cl end-1]]]} {
+		    set Cl [linsert $Cl end-4 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
+		} elseif {[string match "<<categories>>*" [lindex $Cl end]]} {
+		    set Cl [linsert $Cl end-1 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
+		} else {
+		    lappend Cl ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C
+		}
+		set C [join $Cl \n]
+	    }
+	    puts "edit-save@[clock seconds] remove RA"
+	    set C [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C]
+	} else {
+	    # check that person is allowed to upload type they've sent
 	}
 
-	puts "edit-save@[clock seconds] check if only commenting"
-	# save the page into the db.
-	set who $nick@[dict get $r -ipaddr]
-	if {[string is integer -strict $A] && $A} {
-	    # Look for category at end of page using following styles:
-	    # ----\n[Category ...]
-	    # ----\n!!!!!!\n%|Category...|%\n!!!!!!
-	    set Cl [split [string trimright [WDB GetContent $N] \n] \n]
-	    if {[string trim [lindex $Cl end]] eq "!!!!!!" && 
-		[string trim [lindex $Cl end-2]] eq "!!!!!!" && 
-		[string match "----*" [string trim [lindex $Cl end-3]]] && 
-		[string match "%|*Category*|%" [string trim [lindex $Cl end-1]]]} {
-		set Cl [linsert $Cl end-4 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
-	    } elseif {[string match "<<categories>>*" [lindex $Cl end]]} {
-		set Cl [linsert $Cl end-1 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
-	    } else {
-		lappend Cl ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C
-	    }
-	    set C [join $Cl \n]
-	}
-	puts "edit-save@[clock seconds] remove RA"
-	set C [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C]
 	puts "edit-save@[clock seconds] check if real changes"
 	if {$C eq [WDB GetContent $N]} {
 	    Debug.wikit {/edit/save failed: No change, not saving  $N}
 	    puts "edit-save@[clock seconds] unchanged"
 	    return [redir $r $url [<a> href $url "Unchanged Page"]]
 	}
-	Debug.wikit {/edit/save SAVING $N}
-	
+
+	Debug.wikit {/edit/save SAVING $N of type:'$type'}
 	puts "edit-save@[clock seconds] save it"
 	if {[catch {
-	    WDB SavePage $N $C $who $name $when
+	    set who $nick@[dict get $r -ipaddr]
+	    WDB SavePage $N $C $who $name $type $when
 	} err eo]} {
 	    set readonly $err
+	    invalidate $r [file join $pageURL $N]
+	    invalidate $r [file join $mount recent]
 	}
+
 	puts "edit-save@[clock seconds] check pagecaching"
 	variable pagecaching
 	if {$pagecaching} {
@@ -2075,7 +2115,11 @@ namespace eval WikitWub {
 	    return [sendPage $r login]
 	}
 
-	lassign [WDB GetPage $N name date who] name date who ;# get the last change author
+	lassign [WDB GetPage $N name date who type] name date who type;# get the last change author
+
+	if {$type ne "" && ![string match text/* $type]} {
+	    return [sendPage $r uneditable]
+	}
 
 	set who_nick ""
 	regexp {^(.+)[,@]} $who - who_nick
@@ -2175,6 +2219,7 @@ namespace eval WikitWub {
 	}
 	set footer [menus Recent Help Search]
 
+	Debug.wikit {/welcome: $N}
 	return [sendPage $r spage]
     }
 
@@ -2575,6 +2620,7 @@ namespace eval WikitWub {
     }
 
     proc do {r} {
+	Debug.wikit {DO}
 	perms $r read
 
 	variable pageURL
@@ -2658,10 +2704,17 @@ namespace eval WikitWub {
 	}
 
 	# set up a few standard URLs an strings
-	lassign [WDB GetPage $N name date who] name date who
+	lassign [WDB GetPage $N name date who type] name date who type
 	if {$name eq ""} {
 	    Debug.wikit {do: can't find $N in DB}
 	    return [Http NotFound $r]
+	} else {
+	    Debug.wikit {do: found $N in DB, type:$type}
+	}
+
+	# binary pages are returned as-is, no decoration
+	if {$type ne "" && ![string match text/* $type]} {
+	    return [Http Ok $r [WDB GetBinary $N] $type]
 	}
 
 	# fetch page contents

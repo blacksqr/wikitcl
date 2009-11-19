@@ -62,6 +62,7 @@ namespace eval WDB {
 		"changes_for_pid_lt_date"     { set sql {SELECT * FROM changes WHERE id = :pid AND date < :date ORDER BY date DESC} }
 		"changes_for_pid_version"     { set sql {SELECT * FROM changes WHERE id = :pid AND cid  = :version} }
 		"content_for_pid"             { set sql {SELECT * FROM pages_content WHERE id = :pid} }
+		"binary_for_pid"             { set sql {SELECT * FROM pages_binary WHERE id = :pid} }
 		"count_changes_for_pid"       { set sql {SELECT COUNT(*) FROM changes WHERE id = :pid} }
 		"count_content_for_id"        { set sql {SELECT COUNT(*) FROM pages_content WHERE id = :id} }
 		"count_diffs_for_pid_version" { set sql {SELECT COUNT(*) FROM diffs WHERE id = :pid AND cid = :version} }
@@ -71,8 +72,9 @@ namespace eval WDB {
 		"diffs_for_pid_v"             { set sql {SELECT fromline, toline, old FROM diffs WHERE id = :pid AND cid = :v ORDER BY did DESC} }
 		"insert_change"               { set sql {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, :change)} }
 		"insert_content"              { set sql {INSERT INTO pages_content (id, content) VALUES (:id, :text)} }
+		"insert_binary"              { set sql {INSERT INTO pages_binary (id, content) VALUES (:id, :text)} }
 		"insert_diff"                 { set sql {INSERT INTO diffs (id, cid, did, fromline, toline, old) VALUES (:id, :version, :i, :from, :to, :old)} }
-		"insert_page"                 { set sql {INSERT INTO pages (id, name, date, who) VALUES (:pid, :name, :date, :who)} }
+		"insert_page"                 { set sql {INSERT INTO pages (id, name, date, who, type) VALUES (:pid, :name, :date, :who, :type)} }
 		"insert_ref"                  { set sql {INSERT INTO refs (fromid, toid) VALUES (:id, :x)} }
 		"page_for_name"               { set sql {SELECT * FROM pages WHERE lower(name) = lower(:name)} }
 		"page_for_name_glob"          { set sql {SELECT * FROM pages WHERE name GLOB :glob} }
@@ -89,6 +91,7 @@ namespace eval WDB {
 		"update_content_for_id"       { set sql {UPDATE pages_content SET content = :text WHERE id = :id} }
 		"update_page_date_for_id"     { set sql {UPDATE pages SET date = :newdate WHERE id = :id} }
 		"update_page_who_for_id"      { set sql {UPDATE pages SET who = :newWho WHERE id = :id} }
+		"update_page_type_for_id"     { set sql {UPDATE pages SET type = :newType WHERE id = :id} }
 		"enable_foreign_keys"         { set sql {PRAGMA foreign_keys = ON} }
 		"cleared_pages"               { set sql {SELECT a.id, a.name, a.date, a.who 
 		                                         FROM pages a, pages_content b 
@@ -241,6 +244,30 @@ namespace eval WDB {
     #----------------------------------------------------------------------------
     proc GetContent {pid} {
 	set rsc [[statement "content_for_pid"] execute]
+	set rsc_next [$rsc nextdict dc]
+	$rsc close
+	if {$rsc_next} {
+	    return [dict get? $dc content]
+	} else {
+	    return ""
+	}
+    }
+
+    #----------------------------------------------------------------------------
+    #
+    # Getbinary --
+    #
+    #	return binary page content
+    #
+    # Parameters:
+    #	pid - the page index of the page whose content we want
+    #
+    # Results:
+    #	the binary content of a page
+    #
+    #----------------------------------------------------------------------------
+    proc GetBinary {pid} {
+	set rsc [[statement "binary_for_pid"] execute]
 	set rsc_next [$rsc nextdict dc]
 	$rsc close
 	if {$rsc_next} {
@@ -948,7 +975,7 @@ namespace eval WDB {
     }
 
     # SavePage - store page $id ($who, $text, $newdate)
-    proc SavePage {id text newWho newName {newdate ""} {commit 1}} {
+    proc SavePage {id text newWho newName newType {newdate ""} {commit 1}} {
 	variable db
 	puts "SavePage@[clock seconds] start"
 
@@ -958,8 +985,7 @@ namespace eval WDB {
 
 	if {[catch {
 	    puts "SavePage@[clock seconds] pagevarsDB"
-	    lassign [GetPage $id name date who] name date who
-	    set page [GetContent $id]
+	    lassign [GetPage $id name date who type] name date who type
 
 	    # Update of page names not possible using Web interface, placed in comments because untested.
 	    #
@@ -983,57 +1009,67 @@ namespace eval WDB {
 	    # 		$pageV set $id name $newName
 	    # 	    }
 
-	    if {$newdate != ""} {
-		puts "SavePage@[clock seconds] set date $id $date"
-		# change the date if requested
-		[statement "update_page_date_for_id"] execute
-	    }
-
 	    # avoid creating a log entry and committing if nothing changed
-	    set text [string trimright $text]
-	    if {$changed || $text != $page} {
-		puts "SavePage@[clock seconds] parse"
-		# make sure it parses before deleting old references
-		set newRefs [::WikitWub::GetRefs $text] ;#[WFormat StreamToRefs [WFormat TextToStream $text] ::WikitWub::InfoProc]
-		puts "SavePage@[clock seconds] delRefs"
-		delRefs $id
-		puts "SavePage@[clock seconds] addRefs $newRefs"
-		addRefs $id $newRefs
+	    if {$newType eq "" || [string match text/* $newType]} {
+		puts "SavePage@[clock seconds] text page '$newType'/'$type'"
+		set text [string trimright $text]
+		set page [GetContent $id]
+		if {$changed || $text != $page} {
+		    puts "SavePage@[clock seconds] parse"
+		    # make sure it parses before deleting old references
+		    set newRefs [::WikitWub::GetRefs $text] ;#[WFormat StreamToRefs [WFormat TextToStream $text] ::WikitWub::InfoProc]
+		    puts "SavePage@[clock seconds] delRefs"
+		    delRefs $id
+		    puts "SavePage@[clock seconds] addRefs $newRefs"
+		    addRefs $id $newRefs
 
-		# If this isn't the first time that the given page has been stored
-		# in the databse, make a change log entry for rollback.
+		    # If this isn't the first time that the given page has been stored
+		    # in the databse, make a change log entry for rollback.
 
-		puts "SavePage@[clock seconds] log change"
-		[statement "update_page_who_for_id"] execute
+		    puts "SavePage@[clock seconds] log change"
+		    [statement "update_page_who_for_id"] execute
 
-		puts "SavePage@[clock seconds] save content"
-		set rsc [[statement "count_content_for_id"] execute]
-		$rsc nextdict d
-		if {[dict get $d COUNT(*)]} {
-		    [statement "update_content_for_id"] execute
-		} else {
-		    [statement "insert_content"] execute
+		    puts "SavePage@[clock seconds] save content"
+		    set rsc [[statement "count_content_for_id"] execute]
+		    $rsc nextdict d
+		    if {[dict get $d COUNT(*)]} {
+			[statement "update_content_for_id"] execute
+		    } else {
+			[statement "insert_content"] execute
+		    }
+		    $rsc close
+		    puts "SavePage@[clock seconds] saved content"
+		    if {$page ne {} || [Versions $id]} {
+			puts "SavePage@[clock seconds] update change log (old: [string length $page], [llength [split $page \n]], new:  [string length $text], [llength [split $text \n]])"
+			UpdateChangeLog $id $name $date $who $page $text
+		    }
+
+		    if {$newType ne "" && $newType ne $type} {
+			[statement update_page_type_for_id] execute
+		    }
+
+		    # Set change date, only if page was actually changed
+		    if {$newdate == ""} {
+			puts "SavePage@[clock seconds] set date"
+			set date [clock seconds]
+			[statement "update_page_date_for_id"] execute
+			set commit 1
+		    }
+		    
+		    puts "SavePage@[clock seconds] done saving"
 		}
-		$rsc close
-		puts "SavePage@[clock seconds] saved content"
-		if {$page ne {} || [Versions $id]} {
-		    puts "SavePage@[clock seconds] update change log (old: [string length $page], [llength [split $page \n]], new:  [string length $text], [llength [split $text \n]])"
-		    UpdateChangeLog $id $name $date $who $page $text
-		}
-
-		# Set change date, only if page was actually changed
-		if {$newdate == ""} {
-		    puts "SavePage@[clock seconds] set date"
-		    set date [clock seconds]
-		    [statement "update_page_date_for_id"] execute
-		    set commit 1
-		}
-
-		puts "SavePage@[clock seconds] done saving"
+	    } else {
+		# must be binary content - can only create these
+		puts "SavePage@[clock seconds] binary content $type->$newType"
+		[statement insert_binary] execute
+		[statement update_page_date_for_id] execute
+		[statement update_page_who_for_id] execute
+		[statement update_page_type_for_id] execute
+		puts "SavePage@[clock seconds] saved binary content $newType"
 	    }
-	} r]} {
+	} r eo]} {
 	    rollback
-	    Debug.error "SavePageDb: '$r'"
+	    Debug.error "SavePageDb: '$r' ($eo)"
 	    error $r
 	}
 
