@@ -3,9 +3,6 @@ if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
     source [file join [file dirname [info script]] local_setup.tcl]
 }
 
-package require Mime
-Debug on mime 10
-
 package require fileutil
 package require struct::queue
 
