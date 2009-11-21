@@ -2229,6 +2229,7 @@ namespace eval WikitWub {
 
 	set N [dict get? $protected ADMIN:Welcome]
 	set C [string trim [WDB GetContent $N]]
+	append C [string map [list %P% $N] {<!-- From Page %P% -->}
 
 	if {$C eq ""} {
 	    set menu [menus Recent Help WhoAmI]
