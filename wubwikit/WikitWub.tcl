@@ -2405,11 +2405,11 @@ namespace eval WikitWub {
 	if {$name eq ""} {
 	    set idlink [file join $mount edit?N=$id] ;# enter edit mode for missing links
 	} else {
-	    if {$type eq "" || [string match "text/*" $type]} {
-		set idlink $id
+	    if {$type ne "" && ![string match "text/*" $type]} {
+		set idlink [file join $mount image?N=$id]
 		set plink $id
 	    } else {
-		set idlink [file join $mount image?N=$id]
+		set idlink $id
 		set plink $id
 	    }
 	}

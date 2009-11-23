@@ -1059,7 +1059,7 @@ namespace eval ::WFormat {
               if {$type ne "" && ![string match "text/*" $type]} {
                 append result $html_frag(a_) $plink $html_frag(tc) $html_frag(i_) $idlink $html_frag(tc) $html_frag(_a)
               } else {
-                append result $html_frag(a_) /$idlink
+                append result $html_frag(a_) $idlink
                 if {$creating_preview} {
                   append result "\" target=\"_blank"
                 }
@@ -1075,11 +1075,11 @@ namespace eval ::WFormat {
             append result [quote $text]
           } else {
             # use ID -- editor link on the brackets.
-            append result $html_frag(a_) $idlink 
+            append result $html_frag(a_) $plink 
             if {$creating_preview} {
               append result "\" target=\"_blank"
             }
-            append result $html_frag(tc) \[ $html_frag(_a) [quote $text] $html_frag(a_) $idlink
+            append result $html_frag(tc) \[ $html_frag(_a) [quote $text] $html_frag(a_) $plink
             if {$creating_preview} {
               append result "\" target=\"_blank"
             }
