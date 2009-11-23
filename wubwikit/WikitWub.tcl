@@ -1715,9 +1715,9 @@ namespace eval WikitWub {
 
     proc invalidate {r url} {
 	dict set r -path [string trimright $url /]
-	set url [Url url $r]
-	Debug.wikit {invalidating $url} 3
-	return [Cache delete $url]
+	set urln [Url url $r]
+	Debug.wikit {invalidating $url->$urln} 3
+	return [Cache delete $urln]
     }
 
     proc locate {page {exact 1}} {
@@ -2066,7 +2066,7 @@ namespace eval WikitWub {
 	variable include_pages
 	if {$date == 0 || $include_pages} {
 	    foreach from [WDB ReferencesTo $N] {
-		invalidate $r $from
+		invalidate $r [file join $pageURL $from]
 	    }
 	}
 	puts "edit-save@[clock seconds] done saving"
@@ -2165,17 +2165,18 @@ namespace eval WikitWub {
 	perms $r read
 	variable motd
 	variable docroot
+	variable mount
 
 	puts "\n\n\n\n\nmotd: [file join $docroot motd]\n\n\n\n\n"
 
 	catch {set motd [::fileutil::cat [file join $docroot motd]]}
 	set motd [string trim $motd]
 
-	invalidate $r 4	;# make the new motd show up
+	invalidate $r [file join $mount recent]
 
 	set R [Http Referer $r]
 	if {$R eq ""} {
-	    set R http://[dict get $r host]/4
+	    set R [file join http://[dict get $r host] $mount recent]
 	}
 	return [redir $r $R [<a> href $R "Loaded MOTD"]]
     }
