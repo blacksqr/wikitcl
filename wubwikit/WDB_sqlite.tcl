@@ -87,6 +87,11 @@ namespace eval WDB {
 		                                         AND a.date > :date 
                                                          AND length(b.content) > 1
                                                          ORDER BY a.date DESC} }
+		"binary_gt_date_with_content"  { set sql {SELECT * 
+		                                          FROM pages a, pages_binary b 
+		                                          WHERE a.id = b.id 
+		                                          AND a.date > :date
+                                                          ORDER BY a.date DESC} }
 		"pages_gt_date"               { set sql {SELECT * FROM pages WHERE date > :date ORDER BY id} }
 		"refs_to_pid"                 { set sql {SELECT fromid FROM refs WHERE toid = :pid ORDER BY fromid ASC} }
 		"update_change_delta"         { set sql {UPDATE changes SET delta = :change WHERE id = :id AND cid = :version} }
@@ -415,7 +420,13 @@ namespace eval WDB {
 		break
 	    }
 	}
-	return $result
+	[statement "binary_gt_date_with_content"] foreach -as dicts d {
+	    lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who]]
+	    if {[llength  $result] >= 200} {
+		break
+	    }
+	}
+	return [lrange [lsort -integer -decreasing -index 5 $result] 0 100]
     }
 
     #----------------------------------------------------------------------------
@@ -1070,6 +1081,7 @@ namespace eval WDB {
 	    } else {
 		# must be binary content - can only create these
 		puts "SavePage@[clock seconds] binary content $type->$newType"
+		set date [clock seconds]
 		[statement insert_binary] execute
 		[statement update_page_date_for_id] execute
 		[statement update_page_who_for_id] execute
