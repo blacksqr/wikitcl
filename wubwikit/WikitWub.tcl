@@ -1632,7 +1632,7 @@ namespace eval WikitWub {
 
     proc redir {r url content} {
 	variable redir
-	return [Http NoCache [Http SeeOther $r $url [subst $redir]]]
+	return [Http NoCache [Http Found $r $url [subst $redir]]]
     }
 
     proc /who {r} {
@@ -1904,7 +1904,8 @@ namespace eval WikitWub {
 	# if there is new page content, save it now
 	set url http://[Url host $r][file join $pageURL $N]
 	if {$N eq "" || $C eq ""} {
-	    return [redir $r $url [<a> href $url "Edited Page"]]
+	    return [Http NoCache [Http SeeOther $r $url [subst $redir]]]
+	    #return [redir $r $url [<a> href $url "Edited Page"]]
 	}
 
 	variable protected
@@ -2054,7 +2055,7 @@ namespace eval WikitWub {
 	invalidate $r [file join $pageURL $N]
 	invalidate $r [file join $mount recent]
 	invalidate $r [file join $mount ref]/$N
-	invalidate $r rss.xml; WikitRss clear
+	invalidate $r /rss.xml; WikitRss clear
 	invalidate $r [file join $mount summary]/$N
 
 	# if this page did not exist before:
