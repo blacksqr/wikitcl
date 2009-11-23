@@ -1819,6 +1819,7 @@ namespace eval WikitWub {
     proc /included { r N } {
 	variable detect_robots
 	variable pageURL
+	variable mount
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
@@ -2779,113 +2780,139 @@ namespace eval WikitWub {
 
 	# binary pages are returned as-is, no decoration
 	if {$type ne "" && ![string match text/* $type]} {
-	    return [Http Ok $r [WDB GetBinary $N] $type]
-	}
-
-	# fetch page contents
-	set content [WDB GetContent $N]
-	variable protected
-	if {$N == [dict get? $protected ADMIN:Welcome]} {
-	    # page 0 is HTML and is the Welcome page
-	    # it needs to be redirected to the functional page
-	    # as it may reference maps
-	    return [Http Redir $r [file join $mount welcome]]
-	} else {
-	    switch -- $ext {
-		.txt -
-		.str -
-		.code {
-		    return [Http NoCache [Http Ok $r [translate $N $name $content $ext] text/plain]]
-		}
-		.xml {
-		    set C "<?xml version='1.0'?>"
-		    append C \n [pageXML $N]
-		    return [Http NoCache [Http Ok $r [translate $N $name $C $ext] text/xml]]
-		}
-		default {
-		    Debug.wikit {do: $N is a normal page}
-		    dict set r content-location "http://[Url host $r]/$N"
-		    lassign [translate $N $name $content $ext] C U page_toc BR IH
-		    variable include_pages
-		    if {$include_pages} {
-			lassign [IncludePages $r $C $IH] r C
-		    }
-		    foreach {containerid bref} $BR {
-			if {[string length $bref]} {
-			    set brefpage [WDB LookupPage $bref]
-			} else {
-			    set brefpage $N
-			}
-			dict lappend r -postload [<script> "getBackRefs($brefpage,'$containerid');"]
-		    }
-		    set C [string map [list <<TOC>> $page_toc] $C]
-		}
-	    }
-	    Debug.wikit {do has translated $N}
-	    
+	    # Page is <img>, not the image itself
+	    set C [<img> src [file join $pageURL $mount image?N=$N]]
 	    # set up backrefs
 	    set backRef [file join $mount ref]?N=$N
 	    #set Refs "[<a> href $backRef Reference] - "
 	    set Title [<a> href $backRef title "click to see reference to this page" $name]
-
-	    # add extra menu and footer elements
+	    # create menu and footer
 	    set menu {}
 	    set footer {}
 	    variable protected
 	    variable perms
 	    if {[dict size $perms] > 0 || ![dict exists $protected $N]} {
 		lappend menu {*}[menus HR]
-		if {!$::roflag && $readonly eq {}} {
-		    lappend menu [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
-		    lappend footer [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
-		    lappend menu [<a> href [file join $mount edit]?N=$N Edit]
-		    lappend footer [<a> href [file join $mount edit]?N=$N Edit]
-		}
-		lappend menu [<a> href [file join $mount history]?N=$N "History"]
-		lappend menu [<a> href [file join $mount summary]?N=$N "Edit summary"]
 		lappend menu [<a> href $backRef References]
 	    }
-	}
-
-	# arrange the page's tail
-	set subtitle ""
-	if {$date != 0} {
-	    set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
-	    set subtitle "Updated $update"
-	}
-
-	if {$who ne "" &&
-	    [regexp {^(.+)[,@]} $who - who_nick]
-	    && $who_nick ne ""
-	} {
-	    append subtitle " by [<a> href /[WDB LookupPage $who_nick] $who_nick]"
-	}
-	if {[string length $subtitle]} {
-	    variable delta
-	    append subtitle " " [<a> class delta href [file join $mount diff]?N=$N#diff0 $delta]
-	}
-
-	# sendPage vars
-	set menu [menus Home Recent Help WhoAmI {*}$menu]
-	set footer [menus Home Recent Help Search WhoAmI {*}$footer]
-
-	variable hidereadonly
-	if {$readonly ne "" && !$hidereadonly} {
-	    set ro "<it>(Read Only Mode: $readonly)</it>"
-	} else {
-	    set ro ""
-	}
-
-	set result [sendPage [Http CacheableContent $r $date] page DCache]
-
-	variable pagecaching
-	if {$pagecaching} {
-	    if {[WDB pagecache exists $N]} {
-		WDB pagecache delete $N
+	    set menu [menus Home Recent Help WhoAmI {*}$menu]
+	    set footer [menus Home Recent Help Search WhoAmI {*}$footer]
+	    # add read only header if needed
+	    variable hidereadonly
+	    if {$readonly ne "" && !$hidereadonly} {
+		set ro "<it>(Read Only Mode: $readonly)</it>"
+	    } else {
+		set ro ""
 	    }
-	    WDB pagecache insert $N [dict get $result -content] [dict get $result content-type] [clock milliseconds] [dict get? $result -title]
+	    set result [sendPage [Http CacheableContent $r $date] page DCache]
+	    return $result
+	    #return [Http Ok $r [WDB GetBinary $N] $type]
+	} else {
+	    # fetch page contents
+	    set content [WDB GetContent $N]
+	    variable protected
+	    if {$N == [dict get? $protected ADMIN:Welcome]} {
+		# page 0 is HTML and is the Welcome page
+		# it needs to be redirected to the functional page
+		# as it may reference maps
+		return [Http Redir $r [file join $mount welcome]]
+	    } else {
+		switch -- $ext {
+		    .txt -
+		    .str -
+		    .code {
+			return [Http NoCache [Http Ok $r [translate $N $name $content $ext] text/plain]]
+		    }
+		    .xml {
+			set C "<?xml version='1.0'?>"
+			append C \n [pageXML $N]
+			return [Http NoCache [Http Ok $r [translate $N $name $C $ext] text/xml]]
+		    }
+		    default {
+			Debug.wikit {do: $N is a normal page}
+			dict set r content-location "http://[Url host $r]/$N"
+			lassign [translate $N $name $content $ext] C U page_toc BR IH
+			variable include_pages
+			if {$include_pages} {
+			    lassign [IncludePages $r $C $IH] r C
+			}
+			foreach {containerid bref} $BR {
+			    if {[string length $bref]} {
+				set brefpage [WDB LookupPage $bref]
+			    } else {
+				set brefpage $N
+			    }
+			    dict lappend r -postload [<script> "getBackRefs($brefpage,'$containerid');"]
+			}
+			set C [string map [list <<TOC>> $page_toc] $C]
+		    }
+		}
+		Debug.wikit {do has translated $N}
+		
+		# set up backrefs
+		set backRef [file join $mount ref]?N=$N
+		#set Refs "[<a> href $backRef Reference] - "
+		set Title [<a> href $backRef title "click to see reference to this page" $name]
+
+		# add extra menu and footer elements
+		set menu {}
+		set footer {}
+		variable protected
+		variable perms
+		if {[dict size $perms] > 0 || ![dict exists $protected $N]} {
+		    lappend menu {*}[menus HR]
+		    if {!$::roflag && $readonly eq {}} {
+			lappend menu [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
+			lappend footer [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
+			lappend menu [<a> href [file join $mount edit]?N=$N Edit]
+			lappend footer [<a> href [file join $mount edit]?N=$N Edit]
+		    }
+		    lappend menu [<a> href [file join $mount history]?N=$N "History"]
+		    lappend menu [<a> href [file join $mount summary]?N=$N "Edit summary"]
+		    lappend menu [<a> href $backRef References]
+		}
+	    }
+
+	    # arrange the page's tail
+	    set subtitle ""
+	    if {$date != 0} {
+		set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
+		set subtitle "Updated $update"
+	    }
+
+	    if {$who ne "" &&
+		[regexp {^(.+)[,@]} $who - who_nick]
+		&& $who_nick ne ""
+	    } {
+		append subtitle " by [<a> href /[WDB LookupPage $who_nick] $who_nick]"
+	    }
+	    if {[string length $subtitle]} {
+		variable delta
+		append subtitle " " [<a> class delta href [file join $mount diff]?N=$N#diff0 $delta]
+	    }
+
+	    # sendPage vars
+	    set menu [menus Home Recent Help WhoAmI {*}$menu]
+	    set footer [menus Home Recent Help Search WhoAmI {*}$footer]
+
+	    variable hidereadonly
+	    if {$readonly ne "" && !$hidereadonly} {
+		set ro "<it>(Read Only Mode: $readonly)</it>"
+	    } else {
+		set ro ""
+	    }
+
+	    set result [sendPage [Http CacheableContent $r $date] page DCache]
+
+	    variable pagecaching
+	    if {$pagecaching} {
+		if {[WDB pagecache exists $N]} {
+		    WDB pagecache delete $N
+		}
+		WDB pagecache insert $N [dict get $result -content] [dict get $result content-type] [clock milliseconds] [dict get? $result -title]
+	    }
+	    return $result
 	}
-	return $result
     }
 
     # Site WikitWub-specific defaults
