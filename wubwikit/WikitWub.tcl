@@ -1834,13 +1834,34 @@ namespace eval WikitWub {
 	    set U {}
 	    set T {}
 	    set BR {}
-	    set C [<img> src [file join $pageURL $N]]
+	    set C [<img> src [file join $pageURL $mount image?N=$N]]
 	} else {
 	    set O [WDB GetContent $N]
 	    lassign [translate $N preview $O .html 1] C U T BR
 	    set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
 	}
 	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
+    }
+
+    proc /image { r N } {
+	variable detect_robots
+	variable pageURL
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
+	perms $r read
+	variable rprotected
+	if {[dict exists $rprotected $N]} {
+	    perms $r admin
+	}
+
+	lassign [WDB GetPage $N type] type
+	if {$type ne "" && ![string match text/* $type]} {
+	    return [Http Ok $r [WDB GetBinary $N] $type]
+	} else {
+	    return [Http NotFound $r]
+	}
     }
 
     proc /edit/save {r N C O A save cancel preview upload} {
@@ -2375,17 +2396,22 @@ namespace eval WikitWub {
     # returns a list: /$id (with suffix of @ if the page is new), $name, modification $date
     proc InfoProc {ref {query_only 0}} {
 	variable pageURL
+	variable mount
 	set id [WDB LookupPage $ref $query_only]
 	if {$query_only} {
 	    return $id
 	}
 	lassign [WDB GetPage $id name date type] name date type
 	if {$name eq ""} {
-	    set id _/edit?N=$id ;# enter edit mode for missing links
+	    set idlink [file join $mount edit?N=$id] ;# enter edit mode for missing links
 	} else {
-	    set id /$id	;# add a leading / which format.tcl will strip
+	    if {$type eq "" || ![string match "text/*" $type]} {
+		set idlink /$id
+	    } else {
+		set idlink [file join $mount image?N=$id]
+	    }
 	}
-	return [list $id $name $date $type [file join $pageURL $id]]
+	return [list $id $name $date $type [file join $pageURL $idlink]]
     }
 
     proc pageXML {N} {
@@ -2655,7 +2681,7 @@ namespace eval WikitWub {
 
 	return [/searchp $r]
     }
-
+    
     proc do {r} {
 	Debug.wikit {DO}
 	perms $r read

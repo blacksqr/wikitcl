@@ -1039,8 +1039,6 @@ namespace eval ::WFormat {
           set info [eval $ip [list $link]]
           foreach {id name date type idlink} $info break
 
-          puts [join $info "     |     "]
-
           if {$id == ""} {
             # not found, don't turn into an URL
             append result "\[[quote $text]\]"
