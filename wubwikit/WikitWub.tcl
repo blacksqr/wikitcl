@@ -956,6 +956,7 @@ namespace eval WikitWub {
     # otherwise a link will always go through the search
     proc creole_replace_links {N text} {
 	variable pageURL
+	variable mount
 	regsub {\n\{\{\{} $text \x8E text
 	regsub {\}\}\}\n} $text \x8E text
 	set rC ""
@@ -1011,7 +1012,16 @@ namespace eval WikitWub {
 		} else {
 		    lassign $ip0 idx0 idx1
 		    set id [WDB LookupPage $m1]
-		    append rC [string range $b $prev_idx [expr {$idx0-1}]] \[\[ [file join $pageURL $id]|$m1 \]\]
+		    if {$id ne ""} {
+			lassign [WDB GetPage $id type] type
+			if {$type ne "" && ![string match "text/*" $type]} {
+			    append rC [string range $b $prev_idx [expr {$idx0-1}]] \{\{ [file join $pageURL $mount image?N=$id]|$m1 \}\}
+			} else {
+			    append rC [string range $b $prev_idx [expr {$idx0-1}]] \[\[ [file join $pageURL $id]|$m1 \]\]
+			}
+		    } else {
+			append rC [string range $b $prev_idx [expr {$idx0-1}]] \[\[ [file join $pageURL $id]|$m1 \]\]
+		    }
 		    set prev_idx [expr {$idx1+1}]		    
 		}
 	    }
