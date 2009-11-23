@@ -1037,7 +1037,7 @@ namespace eval ::WFormat {
           }
 
           set info [eval $ip [list $link]]
-          foreach {id name date} $info break
+          foreach {id name date type idlink} $info break
 
           if {$id == ""} {
             # not found, don't turn into an URL
@@ -1046,19 +1046,26 @@ namespace eval ::WFormat {
           }
 
           #regsub {^/} $id {} id
-          set id [string trim $id /]
+          #set id [string trim $id /]
           if {$date > 0} {
             # exists, use ID
             if { $mode eq "G" } {
               append result $html_frag(A_) /_/ref?N=$id
+              if {$creating_preview} {
+                append result "\" target=\"_blank"
+              }
+              append result $html_frag(tc) [quote $text] $html_frag(_a)
             } else {
-              append result $html_frag(a_) /$id
+              if {$type ne "" && ![string match "text/*" $type]} {
+                append result $html_frag(i_) $idlink $html_frag(tc)
+              } else {
+                append result $html_frag(a_) /$idlink
+                if {$creating_preview} {
+                  append result "\" target=\"_blank"
+                }
+                append result $html_frag(tc) [quote $text] $html_frag(_a)
+              }
             }
-            if {$creating_preview} {
-              append result "\" target=\"_blank"
-            }
-            append result $html_frag(tc) \
-              [quote $text] $html_frag(_a)
             continue
           }
 
@@ -1068,20 +1075,17 @@ namespace eval ::WFormat {
             append result [quote $text]
           } else {
             # use ID -- editor link on the brackets.
-            append result \
-              $html_frag(a_) /$id 
+            append result $html_frag(a_) $idlink 
             if {$creating_preview} {
               append result "\" target=\"_blank"
             }
-            append result $html_frag(tc) \[ $html_frag(_a) \
-              [quote $text] \
-              $html_frag(a_) /$id 
+            append result $html_frag(tc) \[ $html_frag(_a) [quote $text] $html_frag(a_) $idlink
             if {$creating_preview} {
               append result "\" target=\"_blank"
             }
             append result $html_frag(tc) \] $html_frag(_a) \
-            }
           }
+        }
         INCLUDE {
           set text [string trim $text]
           if {$::WikitWub::include_pages} {

@@ -1818,6 +1818,7 @@ namespace eval WikitWub {
 
     proc /included { r N } {
 	variable detect_robots
+	variable pageURL
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
@@ -1828,10 +1829,17 @@ namespace eval WikitWub {
 	    perms $r admin
 	}
 
-	set O [WDB GetContent $N]
-	lassign [translate $N preview $O .html 1] C U T BR
-	set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
-
+	lassign [WDB GetPage $N type] type
+	if {$type ne "" && ![string match text/* $type]} {
+	    set U {}
+	    set T {}
+	    set BR {}
+	    set C [<img> src [file join $pageURL $N]]
+	} else {
+	    set O [WDB GetContent $N]
+	    lassign [translate $N preview $O .html 1] C U T BR
+	    set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
+	}
 	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
     }
 
@@ -2364,17 +2372,18 @@ namespace eval WikitWub {
     # InfoProc {name} - lookup $name in db,
     # returns a list: /$id (with suffix of @ if the page is new), $name, modification $date
     proc InfoProc {ref {query_only 0}} {
+	variable pageURL
 	set id [WDB LookupPage $ref $query_only]
 	if {$query_only} {
 	    return $id
 	}
-	lassign [WDB GetPage $id name date] name date
+	lassign [WDB GetPage $id name date type] name date type
 	if {$name eq ""} {
 	    set id _/edit?N=$id ;# enter edit mode for missing links
 	} else {
 	    set id /$id	;# add a leading / which format.tcl will strip
 	}
-	return [list /$id $name $date]
+	return [list $id $name $date type [file join $pageURL $id]]
     }
 
     proc pageXML {N} {
