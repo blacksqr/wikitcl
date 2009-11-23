@@ -2384,7 +2384,7 @@ namespace eval WikitWub {
 	} else {
 	    set id /$id	;# add a leading / which format.tcl will strip
 	}
-	return [list $id $name $date type [file join $pageURL $id]]
+	return [list $id $name $date $type [file join $pageURL $id]]
     }
 
     proc pageXML {N} {

@@ -1039,6 +1039,8 @@ namespace eval ::WFormat {
           set info [eval $ip [list $link]]
           foreach {id name date type idlink} $info break
 
+          puts [join $info "     |     "]
+
           if {$id == ""} {
             # not found, don't turn into an URL
             append result "\[[quote $text]\]"
@@ -1068,7 +1070,7 @@ namespace eval ::WFormat {
             }
             continue
           }
-
+          
           # missing, 
           if { $mode eq "G" } {
             # Insert a plain text
@@ -1083,7 +1085,7 @@ namespace eval ::WFormat {
             if {$creating_preview} {
               append result "\" target=\"_blank"
             }
-            append result $html_frag(tc) \] $html_frag(_a) \
+            append result $html_frag(tc) \] $html_frag(_a)
           }
         }
         INCLUDE {
