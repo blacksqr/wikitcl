@@ -1037,7 +1037,7 @@ namespace eval ::WFormat {
           }
 
           set info [eval $ip [list $link]]
-          foreach {id name date type idlink} $info break
+          foreach {id name date type idlink plink} $info break
 
           if {$id == ""} {
             # not found, don't turn into an URL
@@ -1057,7 +1057,7 @@ namespace eval ::WFormat {
               append result $html_frag(tc) [quote $text] $html_frag(_a)
             } else {
               if {$type ne "" && ![string match "text/*" $type]} {
-                append result $html_frag(i_) $idlink $html_frag(tc)
+                append result $html_frag(a_) $plink $html_frag(tc) $html_frag(i_) $idlink $html_frag(tc) $html_frag(_a)
               } else {
                 append result $html_frag(a_) /$idlink
                 if {$creating_preview} {
