@@ -40,6 +40,9 @@ set API(WikitWub) {
     hidereadonly {Hide the readonly message. (default: false)}
     inline_html {Allow inline html in wikit markup. (default: false)}
     include_pages {Allow other wiki pages to be include in a wiki page in wikit markup. (default: false)}
+    css_prefix {Url prefix for CSS files}
+    script_prefix {Url prefix for JS files}
+    image_prefix {Url prefix for images}
 }
 
 proc ::stx2html::local {what} {
@@ -126,10 +129,8 @@ namespace eval WikitWub {
 
     # sortable - include javascripts and CSS for sortable table.
     proc sortable {r} {
-	#	foreach js {common css standardista-table-sorting} {
-	#	    dict lappend r -headers [<script> src /$js.js]
-	#	}
-	dict lappend r -headers [<style> media all "@import url(/sorttable.css);"]
+	variable css_prefix
+	dict lappend r -headers [<style> media all "@import url([file join $css_prefix sorttable.css]);"]
 	return $r
     }
     
@@ -535,29 +536,28 @@ namespace eval WikitWub {
 
     # header sent with each page
     #<meta name='robots' content='index,nofollow' />
-    variable head [subst {
-
-	[<link> rel stylesheet             href "/wikit_screen.css"       media "screen"   type "text/css" title "With TOC"]
-	[<link> rel "alternate stylesheet" href "/wikit_screen_notoc.css" media "screen"   type "text/css" title "Without TOC"]
-	[<link> rel stylesheet             href "/wikit_print.css"        media "print"    type "text/css"]
-	[<link> rel stylesheet             href "/wikit_handheld.css"     media "handheld" type "text/css"]
-	[<link> rel stylesheet             href "/tooltips.css"                            type "text/css"]
+    variable head {
+	[<link> rel stylesheet href [file join $css_prefix wikit_screen.css] media screen type text/css title "With TOC"]
+	[<link> rel "alternate stylesheet" href [file join $css_prefix wikit_screen_notoc.css] media screen type text/css title "Without TOC"]
+	[<link> rel stylesheet href [file join $css_prefix wikit_print.css] media print type text/css]
+	[<link> rel stylesheet href [file join $css_prefix wikit_handheld.css] media handheld type text/css]
+	[<link> rel stylesheet href [file join $css_prefix tooltips.css] type text/css]
 	
-	[<link> rel alternate type "application/rss+xml" title RSS href /rss.xml]
+	[<link> rel alternate type application/rss+xml title RSS href /_/rss.xml]
 	<!--\[if lte IE 6\]>
-	[<style> media all "@import '/ie6.css';"]
+	[<style> media all "@import '[file join $css_prefix ie6.css]';"]
 	<!\[endif\]-->
 	<!--\[if gte IE 7\]>
-	[<style> media all "@import '/ie7.css';"]
+	[<style> media all "@import '[file join $css_prefix ie7.css]';"]
 	<!\[endif\]-->
-	[<script> {
+	[<script> [string map [list %JP% $script_prefix] {
 	    function init() {
 		// quit if this function has already been called
 		if (arguments.callee.done) return;
-
+		
 		// flag this function so we don't do the same thing twice
 		arguments.callee.done = true;
-
+		
 		try {
 		    if (typeof(creole_content) != "undefined")
 		    render_creole_in_id('content', creole_content, creole_transclude, creole_categories);
@@ -585,14 +585,14 @@ namespace eval WikitWub {
 	    /* for Internet Explorer */
 	    /*@cc_on @*/
 	    /*@if (@_win32)
-	    document.write("<script defer src='_/ie_onload1.JS'><\/script>");
+	    document.write("<script defer src='%JP%/ie_onload1.JS'><\/script>");
 	    /*@end @*/
 	    
 	    /* for other browsers */
 	    window.onload = init;
-	}]
+	}]]
 	<meta name="verify-v1" content="89v39Uh9xwxtWiYmK2JcYDszlGjUVT1Tq0QX+7H8AD0=">
-    }]
+    }
 
     # protected pages - these can't be edited (resp read) by non-admin
     variable protected_pages {ADMIN:Welcome ADMIN:TOC}
@@ -602,58 +602,65 @@ namespace eval WikitWub {
 
     # html suffix to be sent on every page
     variable htmlsuffix
-    set htmlsuffix(wikit) [<script> src /wiki.js]\n
-    set htmlsuffix(stx) [<script> src /wiki.js]\n
-    set htmlsuffix(creole) [<script> src /wiki.js][<script> src /creole.js]\n
 
     # convertor from wiki to html
     proc .x-text/wiki.text/html {rsp} {
-	set rspcontent [dict get $rsp -content]
 
-	if {[string match "<!DOCTYPE*" $rspcontent]} {
-	    # the content is already fully HTML
-	    set content $rspcontent
-	} else {
-	    variable htmlhead
-	    set content "${htmlhead}\n"
+	# one-shot - initialize $head
+	variable head
+	variable script_prefix
+	variable css_prefix
+	set head [subst $head]
 
-	    variable language
-	    append content "<html lang='$language'>" \n
+	proc .x-text/wiki.text/html {rsp} {
+	    set rspcontent [dict get $rsp -content]
+	    
+	    if {[string match "<!DOCTYPE*" $rspcontent]} {
+		# the content is already fully HTML
+		set content $rspcontent
+	    } else {
+		variable htmlhead
+		set content "${htmlhead}\n"
+		
+		variable language
+		append content "<html lang='$language'>" \n
+		
+		append content <head> \n
+		if {[dict exists $rsp -headers]} {
+		    append content [join [dict get $rsp -headers] \n] \n
+		    dict unset rsp -headers
+		}
+		set title [dict get? $rsp -title]
+		if {$title ne ""} {
+		    append content [<title> $title] \n
+		}
 
-	    append content <head> \n
-	    if {[dict exists $rsp -headers]} {
-		append content [join [dict get $rsp -headers] \n] \n
-		dict unset rsp -headers
+		# add in some wikit-wide headers
+		variable head
+		append content $head
+
+		append content </head> \n
+
+		append content <body> \n
+		append content $rspcontent
+		variable markup_language
+		variable htmlsuffix
+		append content $htmlsuffix($markup_language)
+
+		if {[dict exists $rsp -postload]} {
+		    append content [join [dict get $rsp -postload] \n]
+		}
+
+		append content </body> \n
+		append content </html> \n
 	    }
-	    set title [dict get? $rsp -title]
-	    if {$title ne ""} {
-		append content [<title> $title] \n
-	    }
 
-	    # add in some wikit-wide headers
-	    variable head
-	    append content $head
-
-	    append content </head> \n
-
-	    append content <body> \n
-	    append content $rspcontent
-	    variable markup_language
-	    variable htmlsuffix
-	    append content $htmlsuffix($markup_language)
-
-	    if {[dict exists $rsp -postload]} {
-		append content [join [dict get $rsp -postload] \n]
-	    }
-
-	    append content </body> \n
-	    append content </html> \n
+	    return [dict replace $rsp \
+			-content $content \
+			-raw 1 \
+			content-type text/html]
 	}
-
-	return [dict replace $rsp \
-		    -content $content \
-		    -raw 1 \
-		    content-type text/html]
+	return [.x-text/wiki.text/html $rsp]
     }
 
     proc /vars {r args} {
@@ -2087,7 +2094,7 @@ namespace eval WikitWub {
 	invalidate $r [file join $pageURL $N]
 	invalidate $r [file join $mount recent]
 	invalidate $r [file join $mount ref]/$N
-	invalidate $r /rss.xml; WikitRss clear
+	invalidate $r /_/rss.xml; WikitRss clear
 	invalidate $r [file join $mount summary]/$N
 
 	# if this page did not exist before:
@@ -2943,11 +2950,31 @@ namespace eval WikitWub {
     variable upflag ""			;# no URL syncing
     variable roflag 0
     variable detect_robots 1
+    variable css_prefix ""
+    variable script_prefix ""
+    variable image_prefix ""
 
     proc init {args} {
 	Debug.wikit {init: $args}
 	variable {*}$args
-	
+
+	# set up static content prefixes
+	variable css_prefix
+	if {$css_prefix eq ""} {
+	    set css_prefix /css/
+	}
+	foreach v {script image} {
+	    variable ${v}_prefix
+	    if {[set ${v}_prefix] eq ""} {
+		set ${v}_prefix /$v 
+	    }
+	}
+
+	variable htmlsuffix
+	set htmlsuffix(wikit) [<script> src [file join $script_prefix wiki.js]]\n
+	set htmlsuffix(stx) [<script> src [file join $script_prefix wiki.js]]\n
+	set htmlsuffix(creole) [<script> src [file join $script_prefix wiki.js]][<script> src [file join $script_prefix creole.js]]\n
+
 	Convert Namespace ::WikitWub	;# add wiki-local conversions
 	
 	variable base
