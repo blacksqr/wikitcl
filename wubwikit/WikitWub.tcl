@@ -40,6 +40,7 @@ set API(WikitWub) {
     hidereadonly {Hide the readonly message. (default: false)}
     inline_html {Allow inline html in wikit markup. (default: false)}
     include_pages {Allow other wiki pages to be include in a wiki page in wikit markup. (default: false)}
+    welcomezero {Use page 0 as welcome page. (default: false)}
     css_prefix {Url prefix for CSS files}
     script_prefix {Url prefix for JS files}
     image_prefix {Url prefix for images}
@@ -2263,8 +2264,9 @@ namespace eval WikitWub {
 	variable protected
 	variable mount
 	variable pageURL
+	variable welcomezero
 
-	if {[info exists ::starkit_welcomezero] && $::starkit_welcomezero} {
+	if {[info exists welcomezero] && $welcomezero} {
 	    return [Http Redir $r "http://[dict get $r host]/0"]
 	}
 
