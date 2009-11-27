@@ -1442,7 +1442,7 @@ namespace eval WikitWub {
 	    perms $r admin
 	}
 
-	Debug.wikit {/page $args}
+	Debug.wikit {/revision N=$N V=$V A=$A}
 
 	variable mount
 	variable markup_language
