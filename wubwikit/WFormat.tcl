@@ -1113,7 +1113,7 @@ namespace eval ::WFormat {
 	  if { $in_header } {
 	    append tocheader [quote $text]
 	  }
-          if {[regexp -nocase {\.(gif|jpg|jpeg|png)$} $link]} {
+          if {[regexp -nocase {\.(gif|jpg|jpeg|png)\??.*$} $link]} {
             append result $html_frag(i_) $link $html_frag(tc)
           } else {
             if {$text ne $link} {
