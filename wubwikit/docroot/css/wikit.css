@@ -309,6 +309,10 @@ a.delta {
  margin-left: 0.5em;
 }
 
+img.imglink {
+    border-style: none;
+}
+
 span.delta {
  font-size: 70%;
  color: #D3D3D3;
