@@ -415,13 +415,13 @@ namespace eval WDB {
     proc RecentChanges {date} {
 	set result {}
 	[statement "pages_gt_date_with_content"] foreach -as dicts d {
-	    lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who]]
+	    lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who] type [dict get? $d type]]
 	    if {[llength  $result] >= 100} {
 		break
 	    }
 	}
 	[statement "binary_gt_date_with_content"] foreach -as dicts d {
-	    lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who]]
+	    lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who] type [dict get? $d type]]
 	    if {[llength  $result] >= 200} {
 		break
 	    }
