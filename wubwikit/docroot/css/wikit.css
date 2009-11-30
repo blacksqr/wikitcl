@@ -435,10 +435,10 @@ img.ptoc {
 }
 
 div.toc2 {
-    background: url('join.gif') top left no-repeat;
+    background: url('/join.gif') top left no-repeat;
 }
 div.toc3 {
-    background: url('joinbottom.gif') top left no-repeat;
+    background: url('/joinbottom.gif') top left no-repeat;
 }
 A.toc {
     color: black;
