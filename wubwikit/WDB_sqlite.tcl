@@ -474,36 +474,51 @@ namespace eval WDB {
 	variable db
 
 	set fields name
-	set stmttxt "SELECT a.id, a.name, a.date FROM pages a, pages_content b WHERE a.id > 9 AND b.id > 9 AND a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
+	set stmttxt "SELECT a.id, a.name, a.date FROM pages a, pages_content b WHERE a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
+	set stmtimg "SELECT a.id, a.name, a.date FROM pages a, pages_binary b WHERE a.id = b.id"
 	if {$long} {
 	    foreach k [split $key " "] {
 		append stmttxt " AND (lower(a.name) GLOB lower(\"*$k*\") OR lower(b.content) GLOB lower(\"*$k*\"))"
+		append stmtimg " AND lower(a.name) GLOB lower(\"*$k*\")"
 	    }
 	} else {
 	    foreach k [split $key " "] {
 		append stmttxt " AND lower(a.name) GLOB lower(\"*$k*\")"
+		append stmtimg " AND lower(a.name) GLOB lower(\"*$k*\")"
 	    }
 	}
 	if {$date > 0} {
 	    append stmttxt " AND a.date >= $date"
+	    append stmtimg " AND a.date >= $date"
 	} else {
 	    append stmttxt " AND a.date > 0"
+	    append stmtimg " AND a.date > 0"
 	}
 	append stmttxt " ORDER BY a.date DESC"
-	set stmt [$db prepare $stmttxt]
-	set rs [$stmt execute]
+	append stmtimg " ORDER BY a.date DESC"
+
 	set results {}
 	set n 0
-	while {$n < $max && [$rs nextdict d]} {
+	$db foreach -as dicts d $stmttxt {
 	    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date]]
 	    incr n
+	    if {$n >= $max} {
+		break
+	    }
 	}
-	$rs close
-	$stmt close
+
+	set n 0
+	$db foreach -as dicts d $stmtimg {
+	    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date]]
+	    incr n
+	    if {$n >= $max} {
+		break
+	    }
+	}
 
 	Debug.WDB {Search '$key' $long $date -> $results}
 
-	return $results
+	return [lrange [lsort -integer -decreasing -index 5 $results] 0 $max]
     }
 
     #----------------------------------------------------------------------------  
