@@ -446,6 +446,18 @@ namespace eval WikitWub {
 	}]]
     }
 
+    # page sent when editing a page
+    template edit_binary {Editing [armour $name]} {
+	[<div> class edit [subst {
+	    [<div> class header [subst {
+		[<div> class logo $::WikitWub::text_url]
+		[<div> class title "Edit [tclarmour [Ref $N]]"]
+		[<div> class updated "Select a file, then press Upload"]
+	    }]]
+	    [subst [template upload]]
+	}]]
+    }
+
     template uneditable {Uneditable} {
 	[<p> "Page $N is of type $type which cannot be edited."]
     }
@@ -464,9 +476,16 @@ namespace eval WikitWub {
     }
 
     # page sent on bad upload
-    template badutf {bad type} {
+    template badtype {bad type} {
 	[<h2> "Upload of type '$type' on page $N - [Ref $N $name]"]
 	[<p> "[<b> {Your changes have NOT been saved}], because the content your browser sent is of an inappropriate type."]
+	[<hr> size 1]
+    }
+
+    # page sent when upload changes type
+    template badnewtype {bad type} {
+	[<h2> "Upload of type '$type' on page $N - [Ref $N $name]"]
+	[<p> "[<b> {Your changes have NOT been saved}], because the content your browser sent is of a different type ($otype) than the contents already in the data base ($type)."]
 	[<hr> size 1]
     }
 
@@ -905,42 +924,6 @@ namespace eval WikitWub {
     }
 
     # Markup language dependent code
-
-    proc list_item {txt} {
-	variable markup_language
-	switch -exact -- $markup_language {
-	    creole -
-	    stx { return "* $txt\n" }
-	    wikit { return "   * $txt\n" }
-	}
-    }
-
-    proc bold {txt} {
-	variable markup_language
-	switch -exact -- $markup_language {
-	    creole { return "**$txt**" }
-	    stx { return "''$txt''" }
-	    wikit { return "'''$txt'''" }
-	}
-    }
-
-    proc italic {txt} {
-	variable markup_language
-	switch -exact -- $markup_language {
-	    creole { return "//$txt//" }
-	    stx { return "'''$txt'''" }
-	    wikit { return "''$txt''" }
-	}
-    }
-
-    proc wiki_link {id txt} {
-	variable markup_language
-	switch -exact -- $markup_language {
-	    creole { return "\[\[/$id|$txt\]\]" }
-	    stx -
-	    wikit { return "\[$txt\]" }
-	}
-    }
 
     proc mark_new {N V txt} {
 	variable markup_language
@@ -1549,74 +1532,100 @@ namespace eval WikitWub {
 	    lappend menu [<a> href "history?N=$N&S=$nstart&L=$L" "Next $L"]
 	}
 
-	set versions [WDB ListPageVersions $N $L $S]
-	set name [WDB GetPage $N name]
+	lassign [WDB GetPage $N name] name type
 
 	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
-	if {$markup_language eq "wikit"} {
-	    set histheaders {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1}
+	if {$type eq "" || [string match "text/*" $type]} {
+	    if {$markup_language eq "wikit"} {
+		set histheaders {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1}
+	    } else {
+		set histheaders {Rev 1 Date 1 {Modified by} 1 {Word compare} 3 WikiText 1}
+	    }
 	} else {
-	    set histheaders {Rev 1 Date 1 {Modified by} 1 {Word compare} 3 WikiText 1}
+	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1}
 	}
 	foreach {column span} $histheaders {
 	    append C [<th> class [lindex $column 0] colspan $span $column]
 	}
 	append C "</tr></thead><tbody>\n"
-	set rowcnt 0
-	foreach row $versions {
-	    lassign $row vn date who
-	    set prev [expr {$vn-1}]
-	    set next [expr {$vn+1}]
-	    set curr $nver
-	    if { $rowcnt % 2 } {
-		append C "<tr class='odd'>"
-	    } else {
-		append C "<tr class='even'>"
-	    }
-	    append C [<td> class Rev [<a> href "revision?N=$N&V=$vn" rel nofollow $vn]]
-	    append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
-	    append C [<td> class Who [WhoUrl $who]]
-	    
-	    if {$markup_language eq "wikit"} {
+	if {$type eq "" || [string match "text/*" $type]} {
+	    set rowcnt 0
+	    set versions [WDB ListPageVersions $N $L $S]
+	    foreach row $versions {
+		lassign $row vn date who
+		set prev [expr {$vn-1}]
+		set next [expr {$vn+1}]
+		set curr $nver
+		if { $rowcnt % 2 } {
+		    append C "<tr class='odd'>"
+		} else {
+		    append C "<tr class='even'>"
+		}
+		append C [<td> class Rev [<a> href "revision?N=$N&V=$vn" rel nofollow $vn]]
+		append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
+		append C [<td> class Who [WhoUrl $who]]
+		
+		if {$markup_language eq "wikit"} {
+		    if { $prev >= 0 } {
+			append C [<td> class Line1 [<a> href "diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
+		    } else {
+			append C <td></td>
+		    }
+		    if { $next <= $nver } {
+			append C [<td> class Line2 [<a> href "diff?N=$N&V=$vn&D=$next#diff0" $next]]
+		    } else {
+			append C <td></td>
+		    }
+		    if { $vn != $curr } {
+			append C [<td> class Line3 [<a> href "diff?N=$N&V=$curr&D=$vn#diff0" Current]]
+		    } else {
+			append C <td></td>
+		    }
+		}
+
 		if { $prev >= 0 } {
-		    append C [<td> class Line1 [<a> href "diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
+		    append C [<td> class Word1 [<a> href "diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
 		} else {
 		    append C <td></td>
 		}
 		if { $next <= $nver } {
-		    append C [<td> class Line2 [<a> href "diff?N=$N&V=$vn&D=$next#diff0" $next]]
+		    append C [<td> class Word2 [<a> href "diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
 		} else {
 		    append C <td></td>
 		}
 		if { $vn != $curr } {
-		    append C [<td> class Line3 [<a> href "diff?N=$N&V=$curr&D=$vn#diff0" Current]]
+		    append C [<td> class Word3 [<a> href "diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
 		} else {
 		    append C <td></td>
 		}
+		
+		if {$markup_language eq "wikit"} {
+		    append C [<td> class Annotated [<a> href "revision?N=$N&V=$vn&A=1" $vn]]
+		}
+		append C [<td> class WikiText [<a> href "revision?N=$N.txt&V=$vn" $vn]]
+		append C </tr> \n
+		incr rowcnt
 	    }
-
-	    if { $prev >= 0 } {
-		append C [<td> class Word1 [<a> href "diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
-	    } else {
-		append C <td></td>
+	} else {
+	    set rowcnt 0
+	    set versions [WDB ListPageVersionsBinary $N $L $S]
+	    foreach row $versions {
+		lassign $row vn date who
+		set prev [expr {$vn-1}]
+		set next [expr {$vn+1}]
+		set curr $nver
+		if { $rowcnt % 2 } {
+		    append C "<tr class='odd'>"
+		} else {
+		    append C "<tr class='even'>"
+		}
+		append C [<td> class Rev $vn]
+		append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
+		append C [<td> class Who [WhoUrl $who]]
+		append C [<td> class Image [<img> src [file join $pageURL $mount image?N=$N&V=$vn]]]
+		append C </tr> \n
+		incr rowcnt
 	    }
-	    if { $next <= $nver } {
-		append C [<td> class Word2 [<a> href "diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
-	    } else {
-		append C <td></td>
-	    }
-	    if { $vn != $curr } {
-		append C [<td> class Word3 [<a> href "diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
-	    } else {
-		append C <td></td>
-	    }
-	    
-	    if {$markup_language eq "wikit"} {
-		append C [<td> class Annotated [<a> href "revision?N=$N&V=$vn&A=1" $vn]]
-	    }
-	    append C [<td> class WikiText [<a> href "revision?N=$N.txt&V=$vn" $vn]]
-	    append C </tr> \n
-	    incr rowcnt
 	}
 	append C </tbody></table> \n
 
@@ -1862,7 +1871,7 @@ namespace eval WikitWub {
 	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
     }
 
-    proc /image { r N } {
+    proc /image { r N {V -1} } {
 	variable detect_robots
 	variable pageURL
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
@@ -1877,7 +1886,13 @@ namespace eval WikitWub {
 
 	lassign [WDB GetPage $N type] type
 	if {$type ne "" && ![string match text/* $type]} {
-	    return [Http Ok $r [WDB GetBinary $N] $type]
+	    if {[string is integer -strict $V] && $V >= 0} {
+		lassign [WDB GetBinary $N $V] C type
+		return [Http Ok $r $C $type]
+	    } else {
+		lassign [WDB GetBinary $N $V] C type
+		return [Http Ok $r $C $type]
+	    }
 	} else {
 	    return [Http NotFound $r]
 	}
@@ -1924,7 +1939,7 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
-	lassign [WDB GetPage $N name date who] name date who
+	lassign [WDB GetPage $N name date who type ] name date who otype
 	set page [WDB GetContent $N]
 	if {$name eq ""} {
 	    puts "edit-save@[clock seconds] $N not a valid page"
@@ -1990,6 +2005,10 @@ namespace eval WikitWub {
 	} else {
 	    # editing without upload can only create wiki pages
 	    set type text/x-wikit
+	}
+
+	if {$otype ne "" && [lindex [split $otype /] 0] != [lindex [split $type /] 0]} {
+	    return [sendPage $r badnewtype]	    
 	}
 
 	# permit filtering of uploads of given type by means of password
@@ -2119,6 +2138,31 @@ namespace eval WikitWub {
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
+    proc /delete {r N} {
+	perms $r admin
+	if {![string is integer -strict $N]} {
+	    return [Http NotFound $r]
+	}
+
+	variable protected
+	if {[dict exists $protected $N]} {
+	    return [Http Ok $r "Protected pages can not be delete." text/html]
+	}
+
+	if {$N < 0 || $N >= [WDB PageCount]} {
+	    return [Http NotFound $r]
+	}
+	
+	if {[llength [WDB ReferencesTo $N]]} {
+	    variable mount
+	    return [Http Ok $r "References to page $N still exist, page can not be delete. List of pages referencing this page can be found <a href='[file join $mount ref]?N=$N'>here</a>" text/html]
+	}
+	
+	WDB Delete $N
+
+	return [Http Ok $r "Page $N deleted." text/html]
+    }
+
     proc /map {r imp args} {
 	perms $r read
 	variable protected
@@ -2185,9 +2229,9 @@ namespace eval WikitWub {
 
 	lassign [WDB GetPage $N name date who type] name date who type;# get the last change author
 
-	if {$type ne "" && ![string match text/* $type]} {
-	    return [sendPage $r uneditable]
-	}
+#	if {$type ne "" && ![string match text/* $type]} {
+#	    return [sendPage $r uneditable]
+#	}
 
 	set who_nick ""
 	regexp {^(.+)[,@]} $who - who_nick
@@ -2199,7 +2243,11 @@ namespace eval WikitWub {
 	    set C [armour [WDB GetContent $N]]
 	}
 
-	return [sendPage $r edit]
+	if {$type ne "" && ![string match text/* $type]} {
+	    return [sendPage $r edit_binary]
+	} else {
+	    return [sendPage $r edit]
+	}
     }
 
     proc /motd {r} {
@@ -2315,7 +2363,7 @@ namespace eval WikitWub {
 
     proc timestamp {{t ""}} {
 	if {$t == ""} { set t [clock seconds] }
-	clock format $t -gmt 1 -format {%Y-%m-%d %T}
+	return [clock format $t -gmt 1 -format {%Y-%m-%d %T}]
     }
 
     # called to generate a page with references
@@ -2597,32 +2645,41 @@ namespace eval WikitWub {
 
 	# tclLog "SearchResults key <$key> long <$searchLong>"
 	set rdate $date
-	set result "Searched for \"[bold $key]\" (in page titles"
+	set result "Searched for \"[<b> $key]\" (in page titles"
 
 	if {$long} {
-	    append result { and contents}
+	    append result " and contents"
 	}
-	append result "):\n\n"
+	append result "):<br>\n"
 	set max 100
 	set count 0
 	variable protected
+	variable mount
+	variable pageURL
+	set rlist {}
 	foreach record [WDB Search $key $long $date $max] {
 	    dict with record {}
-
 	    # these are admin pages, don't list them
 	    if {[dict exists $protected $id]} continue
-	    append result [list_item "[timestamp $date] . . . [wiki_link $id $name]"]
+	    if {$type ne "" && ![string match "text/*" $type]} {
+		lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
+	    } else {
+		lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] {}]
+	    }
 	    set rdate $date
 	    incr count
 	}
+	append result [list2table $rlist {Date Name Image} {}]
+	append result "<br>\n"
 
 	if {$count == 0} {
-	    append result [list_item [bold [italic "No matches found"]]]
+	    append result [<b> [<i> "No matches found"]]
 	    set rdate 0
 	} else {
-	    append result [list_item [italic "Displayed $count matches"]]
+	    append result [<b> [<i> "Displayed $count matches"]]
 	    set rdate 0
 	}
+
 
 	return [list $result $rdate $long]
     }
@@ -2651,10 +2708,14 @@ namespace eval WikitWub {
 	    }
 	    
 	    lassign [search $term $qdate] C nqdate long
+	    set r [sortable $r]
 	    if {[dict exists $qd long]} {
 		set long 1
 	    }
-	    lassign [translate -1 "Search" $C .html] C U T BR
+#	    lassign [translate -1 "Search" $C .html] C U T BR
+	    set T {}
+	    set U {}
+	    set BR {}
 	    if { $nqdate } {
 		append C [<p> [<a> href "search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
 	    }
@@ -2820,6 +2881,9 @@ namespace eval WikitWub {
 	    }
 	    set menu [menus Home Recent Help WhoAmI {*}$menu]
 	    set footer [menus Home Recent Help Search WhoAmI {*}$footer]
+	    lappend menu [<a> href [file join $mount edit]?N=$N Edit]
+	    lappend footer [<a> href [file join $mount edit]?N=$N Edit]
+	    lappend menu [<a> href [file join $mount history]?N=$N "History"]
 	    # add read only header if needed
 	    variable hidereadonly
 	    if {$readonly ne "" && !$hidereadonly} {
@@ -2829,7 +2893,6 @@ namespace eval WikitWub {
 	    }
 	    set result [sendPage [Http CacheableContent $r $date] page DCache]
 	    return $result
-	    #return [Http Ok $r [WDB GetBinary $N] $type]
 	} else {
 	    # fetch page contents
 	    set content [WDB GetContent $N]
