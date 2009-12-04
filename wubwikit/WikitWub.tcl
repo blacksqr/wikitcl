@@ -1532,7 +1532,7 @@ namespace eval WikitWub {
 	    lappend menu [<a> href "history?N=$N&S=$nstart&L=$L" "Next $L"]
 	}
 
-	lassign [WDB GetPage $N name] name type
+	lassign [WDB GetPage $N name type] name type
 
 	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
 	if {$type eq "" || [string match "text/*" $type]} {
