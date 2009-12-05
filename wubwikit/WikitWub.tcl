@@ -2612,7 +2612,7 @@ namespace eval WikitWub {
 	    }
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
-	    if {[string length $type]} {
+	    if {[string length $type] && ![string match "text/*" $type]} {
 		set rtype ",[lindex [split $type /] 0]"
 	    } else {
 		set rtype ""
