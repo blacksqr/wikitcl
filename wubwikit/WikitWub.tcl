@@ -2644,11 +2644,11 @@ namespace eval WikitWub {
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
 	    if {[string length $type] && ![string match "text/*" $type]} {
-		set rtype ",[lindex [split $type /] 0]"
+		set rtype ", [lindex [split $type /] 0]"
+		lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype" [WhoUrl $who]]
 	    } else {
-		set rtype ""
+		lappend result [list "[<a> href [file join $pageURL $id] [armour $name]] [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	    }
-	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]] [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who]$rtype [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
 	if { [llength $result] } {
