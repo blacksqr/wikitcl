@@ -1057,7 +1057,15 @@ namespace eval ::WFormat {
               append result $html_frag(tc) [quote $text] $html_frag(_a)
             } else {
               if {$type ne "" && ![string match "text/*" $type]} {
-                append result $html_frag(a_) $plink $html_frag(tc) $html_frag(i_) "$idlink\" class=\"imglink" $html_frag(tc) $html_frag(_a)
+                append result $html_frag(a_) $plink $html_frag(tc) $html_frag(i_) "$idlink\" "
+                puts "text = $text"
+                if {[regexp {width\s*=\s*(\d+)} $text -> width]} {
+                  append result "width=\"$width\" "
+                }
+                if {[regexp {height\s*=\s*(\d+)} $text -> height]} {
+                  append result "height=\"$height\" "
+                }
+                append result "class=\"imglink" $html_frag(tc) $html_frag(_a)
               } else {
                 append result $html_frag(a_) $idlink
                 if {$creating_preview} {

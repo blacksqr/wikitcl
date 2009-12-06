@@ -1890,7 +1890,7 @@ namespace eval WikitWub {
 		lassign [WDB GetBinary $N $V] C type
 		return [Http Ok $r $C $type]
 	    } else {
-		lassign [WDB GetBinary $N $V] C type
+		lassign [WDB GetBinary $N -1] C type
 		return [Http Ok $r $C $type]
 	    }
 	} else {
@@ -2136,6 +2136,37 @@ namespace eval WikitWub {
 	#return [do $r $N]
 	puts "edit-save@[clock seconds] done"
 	return [redir $r $url [<a> href $url "Edited Page"]]
+    }
+
+    proc /revert_last_edit {r N} {
+	perms $r admin
+	if {![string is integer -strict $N]} {
+	    return [Http NotFound $r]
+	}
+
+	variable protected
+	if {[dict exists $protected $N]} {
+	    return [Http Ok $r "Protected pages can not be delete." text/html]
+	}
+
+	if {$N < 0 || $N >= [WDB PageCount]} {
+	    return [Http NotFound $r]
+	}
+	
+	lassign [WDB GetPage $N type] type
+
+	if {$type ne "" && ![string match "text/*" $type]} {
+	    set last_version [expr {[WDB VersionsBinary $N] -1}]
+	    if {$last_version > 0} {
+		set C [get_page_with_version $N $last_version 0]
+		WDB Revert $N $last_version $C 
+	    }
+	} else {
+	    set last_version [expr {[WDB Versions $N] - 1}]
+	    if {$last_version > 0} {
+		WDB RevertBinary $N $last_version
+	    }
+	}
     }
 
     proc /delete {r N} {

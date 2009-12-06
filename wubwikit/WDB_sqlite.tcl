@@ -67,64 +67,67 @@ namespace eval WDB {
 	variable db
 	if {![info exists statements($name)]} {
 	    switch -exact -- $name {
-		"binary_for_pid"               { set sql {SELECT a.type, b.content FROM pages a, pages_binary b WHERE a.id = :pid AND a.id = b.id} }
-		"binary_for_pid_version"       { set sql {SELECT type, content FROM changes_binary WHERE id = :pid AND cid = :version} }
-		"changes_binary_for_pid_desc"  { set sql {SELECT cid, date, who FROM changes_binary WHERE id = :pid ORDER BY cid DESC LIMIT :limit OFFSET :start} }
-		"changes_for_pid_asc"          { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY cid} }
-		"changes_for_pid_desc"         { set sql {SELECT cid, date, who FROM changes WHERE id = :pid ORDER BY cid DESC LIMIT :limit OFFSET :start} }
-		"changes_for_pid_ge_date"      { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY date DESC} }
-		"changes_for_pid_lt_date"      { set sql {SELECT * FROM changes WHERE id = :pid AND date < :date ORDER BY date DESC} }
-		"changes_for_pid_version"      { set sql {SELECT * FROM changes WHERE id = :pid AND cid  = :version} }
-		"content_for_pid"              { set sql {SELECT * FROM pages_content WHERE id = :pid} }
-		"count_binary_for_id"          { set sql {SELECT COUNT(*) FROM pages_binary WHERE id = :id} }
-		"count_changes_binary_for_pid" { set sql {SELECT COUNT(*) FROM changes_binary WHERE id = :pid} }
-		"count_changes_for_pid"        { set sql {SELECT COUNT(*) FROM changes WHERE id = :pid} }
-		"count_content_for_id"         { set sql {SELECT COUNT(*) FROM pages_content WHERE id = :id} }
-		"count_diffs_for_pid_version"  { set sql {SELECT COUNT(*) FROM diffs WHERE id = :pid AND cid = :version} }
-		"count_pages"                  { set sql {SELECT COUNT(*) FROM pages} }
-		"delete_changes"               { set sql {DELETE FROM changes WHERE id = :id} }
-		"delete_changes_binary"        { set sql {DELETE FROM changes_binary WHERE id = :id} }
-		"delete_diffs"                 { set sql {DELETE FROM diffs WHERE id = :id} }
-		"delete_pages_binary"          { set sql {DELETE FROM pages_binary WHERE id = :id} }
-		"delete_pages_content"         { set sql {DELETE FROM pages_content WHERE id = :id} }
-		"delete_refs"                  { set sql {DELETE FROM refs} }
-		"delete_refs_from_id"          { set sql {DELETE FROM refs WHERE fromid = :id} }
-		"delete_refs_to_id"            { set sql {DELETE FROM refs WHERE toid = :id} }
-		"diffs_for_pid_v"              { set sql {SELECT fromline, toline, old FROM diffs WHERE id = :pid AND cid = :v ORDER BY did DESC} }
-		"insert_binary"                { set sql {INSERT INTO pages_binary (id, content) VALUES (:id, :text)} }
-		"insert_change"                { set sql {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, :change)} }
-		"insert_change_binary"         { set sql {INSERT INTO changes_binary (id, cid, date, who, type, content) VALUES (:id, :version, :date, :who, :type, :change)} }
-		"insert_content"               { set sql {INSERT INTO pages_content (id, content) VALUES (:id, :text)} }
-		"insert_diff"                  { set sql {INSERT INTO diffs (id, cid, did, fromline, toline, old) VALUES (:id, :version, :i, :from, :to, :old)} }
-		"insert_page"                  { set sql {INSERT INTO pages (id, name, date, who, type) VALUES (:pid, :name, :date, :who, :type)} }
-		"insert_ref"                   { set sql {INSERT INTO refs (fromid, toid) VALUES (:id, :x)} }
-		"page_for_name"                { set sql {SELECT * FROM pages WHERE lower(name) = lower(:name)} }
-		"page_for_name_glob"           { set sql {SELECT * FROM pages WHERE name GLOB :glob} }
-		"page_for_pid"                 { set sql {SELECT * FROM pages WHERE id = :pid} }
-		"pages_gt_date_with_content"   { set sql {SELECT * 
-		                                          FROM pages a, pages_content b 
-		                                          WHERE a.id = b.id 
-		                                          AND a.date > :date 
-                                                          AND length(b.content) > 1
-                                                          ORDER BY a.date DESC} }
-		"binary_gt_date_with_content"  { set sql {SELECT * 
-		                                           FROM pages a, pages_binary b 
-		                                           WHERE a.id = b.id 
-		                                           AND a.date > :date
-                                                           ORDER BY a.date DESC} }
-		"pages_gt_date"                { set sql {SELECT * FROM pages WHERE date > :date ORDER BY id} }
-		"refs_to_pid"                  { set sql {SELECT fromid FROM refs WHERE toid = :pid ORDER BY fromid ASC} }
-		"update_change_delta"          { set sql {UPDATE changes SET delta = :change WHERE id = :id AND cid = :version} }
-		"update_content_for_id"        { set sql {UPDATE pages_content SET content = :text WHERE id = :id} }
-		"update_page_date_for_id"      { set sql {UPDATE pages SET date = :newdate WHERE id = :id} }
-		"update_page_who_for_id"       { set sql {UPDATE pages SET who = :newWho WHERE id = :id} }
-		"update_page_type_for_id"      { set sql {UPDATE pages SET type = :newType WHERE id = :id} }
-		"update_binary"                { set sql {UPDATE pages_binary SET content = :text WHERE id = :id} }
-		"enable_foreign_keys"          { set sql {PRAGMA foreign_keys = ON} }
-		"cleared_pages"                { set sql {SELECT a.id, a.name, a.date, a.who 
-		                                          FROM pages a, pages_content b 
-                                                          WHERE a.id = b.id AND a.date > 0 AND length(b.content) <= 1 
-                                                          ORDER BY a.date DESC LIMIT 100} }
+		"binary_for_pid"                        { set sql {SELECT a.type, b.content FROM pages a, pages_binary b WHERE a.id = :pid AND a.id = b.id} }
+		"binary_for_pid_version"                { set sql {SELECT * FROM changes_binary WHERE id = :pid AND cid = :version} }
+		"changes_binary_for_pid_desc"           { set sql {SELECT cid, date, who FROM changes_binary WHERE id = :pid ORDER BY cid DESC LIMIT :limit OFFSET :start} }
+		"changes_for_pid_asc"                   { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY cid} }
+		"changes_for_pid_desc"                  { set sql {SELECT cid, date, who FROM changes WHERE id = :pid ORDER BY cid DESC LIMIT :limit OFFSET :start} }
+		"changes_for_pid_ge_date"               { set sql {SELECT * FROM changes WHERE id = :pid ORDER BY date DESC} }
+		"changes_for_pid_lt_date"               { set sql {SELECT * FROM changes WHERE id = :pid AND date < :date ORDER BY date DESC} }
+		"changes_for_pid_version"               { set sql {SELECT * FROM changes WHERE id = :pid AND cid  = :version} }
+		"content_for_pid"                       { set sql {SELECT * FROM pages_content WHERE id = :pid} }
+		"count_binary_for_id"                   { set sql {SELECT COUNT(*) FROM pages_binary WHERE id = :id} }
+		"count_changes_binary_for_pid"          { set sql {SELECT COUNT(*) FROM changes_binary WHERE id = :pid} }
+		"count_changes_for_pid"                 { set sql {SELECT COUNT(*) FROM changes WHERE id = :pid} }
+		"count_content_for_id"                  { set sql {SELECT COUNT(*) FROM pages_content WHERE id = :id} }
+		"count_diffs_for_pid_version"           { set sql {SELECT COUNT(*) FROM diffs WHERE id = :pid AND cid = :version} }
+		"count_pages"                           { set sql {SELECT COUNT(*) FROM pages} }
+		"delete_changes_for_pid_version"        { set sql {DELETE FROM changes WHERE id = :pid AND cid = :cid} }
+		"delete_changes"                        { set sql {DELETE FROM changes WHERE id = :id} }
+		"delete_changes_binary"                 { set sql {DELETE FROM changes_binary WHERE id = :id} }
+		"delete_changes_binary_for_pid_version" { set sql {DELETE FROM changes_binary WHERE id = :pid AND cid = :cid} }
+		"delete_diffs"                          { set sql {DELETE FROM diffs WHERE id = :id} }
+		"delete_diffs_for_pid_version"          { set sql {DELETE FROM diffs WHERE id = :pid AND cid = :cid} }
+		"delete_pages_binary"                   { set sql {DELETE FROM pages_binary WHERE id = :id} }
+		"delete_pages_content"                  { set sql {DELETE FROM pages_content WHERE id = :id} }
+		"delete_refs"                           { set sql {DELETE FROM refs} }
+		"delete_refs_from_id"                   { set sql {DELETE FROM refs WHERE fromid = :id} }
+		"delete_refs_to_id"                     { set sql {DELETE FROM refs WHERE toid = :id} }
+		"diffs_for_pid_v"                       { set sql {SELECT fromline, toline, old FROM diffs WHERE id = :pid AND cid = :v ORDER BY did DESC} }
+		"insert_binary"                         { set sql {INSERT INTO pages_binary (id, content) VALUES (:id, :text)} }
+		"insert_change"                         { set sql {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, :change)} }
+		"insert_change_binary"                  { set sql {INSERT INTO changes_binary (id, cid, date, who, type, content) VALUES (:id, :version, :date, :who, :type, :change)} }
+		"insert_content"                        { set sql {INSERT INTO pages_content (id, content) VALUES (:id, :text)} }
+		"insert_diff"                           { set sql {INSERT INTO diffs (id, cid, did, fromline, toline, old) VALUES (:id, :version, :i, :from, :to, :old)} }
+		"insert_page"                           { set sql {INSERT INTO pages (id, name, date, who, type) VALUES (:pid, :name, :date, :who, :type)} }
+		"insert_ref"                            { set sql {INSERT INTO refs (fromid, toid) VALUES (:id, :x)} }
+		"page_for_name"                         { set sql {SELECT * FROM pages WHERE lower(name) = lower(:name)} }
+		"page_for_name_glob"                    { set sql {SELECT * FROM pages WHERE name GLOB :glob} }
+		"page_for_pid"                          { set sql {SELECT * FROM pages WHERE id = :pid} }
+		"pages_gt_date_with_content"            { set sql {SELECT * 
+		                                                   FROM pages a, pages_content b 
+		                                                   WHERE a.id = b.id 
+		                                                   AND a.date > :date 
+                                                                   AND length(b.content) > 1
+                                                                   ORDER BY a.date DESC} }
+		"binary_gt_date_with_content"           { set sql {SELECT * 
+		                                                   FROM pages a, pages_binary b 
+		                                                   WHERE a.id = b.id 
+		                                                   AND a.date > :date
+                                                                   ORDER BY a.date DESC} }
+		"pages_gt_date"                         { set sql {SELECT * FROM pages WHERE date > :date ORDER BY id} }
+		"refs_to_pid"                           { set sql {SELECT fromid FROM refs WHERE toid = :pid ORDER BY fromid ASC} }
+		"update_change_delta"                   { set sql {UPDATE changes SET delta = :change WHERE id = :id AND cid = :version} }
+		"update_content_for_id"                 { set sql {UPDATE pages_content SET content = :text WHERE id = :id} }
+		"update_page_date_for_id"               { set sql {UPDATE pages SET date = :newdate WHERE id = :id} }
+		"update_page_who_for_id"                { set sql {UPDATE pages SET who = :newWho WHERE id = :id} }
+		"update_page_type_for_id"               { set sql {UPDATE pages SET type = :newType WHERE id = :id} }
+		"update_binary"                         { set sql {UPDATE pages_binary SET content = :text WHERE id = :id} }
+		"enable_foreign_keys"                   { set sql {PRAGMA foreign_keys = ON} }
+		"cleared_pages"                         { set sql {SELECT a.id, a.name, a.date, a.who 
+		                                                   FROM pages a, pages_content b 
+                                                                   WHERE a.id = b.id AND a.date > 0 AND length(b.content) <= 1 
+                                                                   ORDER BY a.date DESC LIMIT 100} }
 		default { error "Unknown statement '$name'" }
 	    }
 	    set statements($name) [$db prepare $sql]
@@ -323,21 +326,81 @@ namespace eval WDB {
 	}
     }
 
+    proc Revert {pid cid last_content} {
+	StartTransaction
+	if {[catch {
+	    # Get last date/who
+	    [statement "changes_for_pid_version"] foreach -as dicts last { break }
+	    # Update pages with last date/who info
+	    set newDate [dict get $last date]
+	    [statement "update_page_date_for_id"] execute
+	    set newWho [dict get $last who]
+	    [statement "update_page_who_for_id"] execute
+	    set newType [dict get $last type]
+	    [statement "update_page_type_for_id"] execute
+	    # Update pages_content with last content
+	    set content $last_content
+	    [statement "update_content_for_id"] execute
+	    # Remove last from changes/diffs
+	    [statement "delete_diffs_for_pid_version"] execute
+	    [statement "delete_changes_for_pid_version"] execute
+	    # Update refs
+	    set newRefs [::WikitWub::GetRefs $last_content]
+	    delRefs $pid
+	    addRefs $pid $newRefs
+	} msg]} {
+	    rollback
+	    error $msg
+	}
+	commit
+    }
+
+    proc RevertBinary {pid cid} {
+	StartTransaction
+	if {[catch {
+	    # Get last date/who/type/content
+	    [statement "binary_for_pid_version"] foreach -as dicts last { break }
+	    # Update pages with last date/who/type
+	    set newDate [dict get $last date]
+	    [statement "update_page_date_for_id"] execute
+	    set newWho [dict get $last who]
+	    [statement "update_page_who_for_id"] execute
+	    set newType [dict get $last type]
+	    [statement "update_page_type_for_id"] execute
+	    # Update pages_binary with last content
+	    set text [dict get $last content]
+	    [statement "update_binary"] execute
+	    # Remove last from changes_binary
+	    [statement "delete_changes_binary_for_pid_version"] execute
+	} msg]} {
+	    rollback
+	    error $msg
+	}
+	commit
+    }
+
     proc Delete { id } {
-	[statement "delete_refs_from_id"] execute
-	[statement "delete_refs_to_id"] execute
-	[statement "delete_changes_binary"] execute
-	[statement "delete_diffs"] execute
-	[statement "delete_changes"] execute
-	[statement "delete_pages_binary"] execute
-	[statement "delete_pages_content"] execute
-	# Keep row in pages table, other code depends on count(*) for page existence checks and id generation
-	set newdate 0
-	[statement "update_page_date_for_id"] execute
-	set newWho ""
-	[statement "update_page_who_for_id"] execute
-	set newType ""
-	[statement "update_page_type_for_id"] execute
+	StartTransaction
+	if {[catch {
+	    [statement "delete_refs_from_id"] execute
+	    [statement "delete_refs_to_id"] execute
+	    [statement "delete_changes_binary"] execute
+	    [statement "delete_diffs"] execute
+	    [statement "delete_changes"] execute
+	    [statement "delete_pages_binary"] execute
+	    [statement "delete_pages_content"] execute
+	    # Keep row in pages table, other code depends on count(*) for page existence checks and id generation
+	    set newdate 0
+	    [statement "update_page_date_for_id"] execute
+	    set newWho ""
+	    [statement "update_page_who_for_id"] execute
+	    set newType ""
+	    [statement "update_page_type_for_id"] execute
+	} msg]} {
+	    rollback
+	    error $msg
+	}
+	commit
     }
 
     #----------------------------------------------------------------------------
