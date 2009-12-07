@@ -563,7 +563,7 @@ namespace eval WikitWub {
 	[<link> rel stylesheet href [file join $css_prefix wikit_handheld.css] media handheld type text/css]
 	[<link> rel stylesheet href [file join $css_prefix tooltips.css] type text/css]
 	
-	[<link> rel alternate type application/rss+xml title RSS href /_/rss.xml]
+	[<link> rel alternate type application/rss+xml title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
 	[<style> media all "@import '[file join $css_prefix ie6.css]';"]
 	<!\[endif\]-->
