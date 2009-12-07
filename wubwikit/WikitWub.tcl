@@ -746,7 +746,12 @@ namespace eval WikitWub {
 
     proc edit_activity {N} {
 
-	set pcdate [WDB GetPage $N date]
+	lassign [WDB GetPage $N date type] pcdate type
+
+	if {$type ne "" && ![string match "text/*" $type]} {
+	    return 1
+	}
+
 	set edate [expr {$pcdate-10*86400}]
 	set first 1
 	set activity 0.0
@@ -1149,11 +1154,20 @@ namespace eval WikitWub {
 	}
 
 	variable delta
+	variable mount
 
 	set N [file rootname $N]	;# it's a simple single page
 	if {![string is integer -strict $N] || $N < 0 || $N >= [WDB PageCount]} {
 	    return [Http NotFound $r]
 	}
+
+	set type [WDB GetPage $N type]
+
+	# For binary pages, show history as summary
+	if {$type ne "" && ![string match "text/*" $type]} {
+	    return [Http Redir $r [file join $mount history?N=$N]]
+	}
+
 	if {![string is integer -strict $D]} {
 	    set D 10
 	}
@@ -1186,7 +1200,7 @@ namespace eval WikitWub {
 	append R </ul> \n
 
 	# sendPage vars
-	set menu [menus Home Recent Help WhoAmI HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"] Search]
+	set menu [menus Home Recent Help WhoAmI HR [<a> href [file join $mount history?N=$N] History] [<a> href [file join $mount summary?N=$N] "Edit summary"] [<a> href [file join $mount diff?N=$N] "Last change"] [<a> href [file join $mount diff?N=$N&T=1&D=1] "Changes last day"] [<a> href [file join $mount diff?N=$N&T=1&D=7] "Changes last week"] Search]
 	set footer [menus Home Recent Help Search]
 
 	set C $R
@@ -1229,6 +1243,13 @@ namespace eval WikitWub {
 
 	if {![string is integer -strict $T]} {
 	    set T 0
+	}
+
+	set type [WDB GetPage $N type]
+
+	# For binary pages, show history as diff
+	if {$type ne "" && ![string match "text/*" $type]} {
+	    return [Http Redir $r [file join $mount history?N=$N]]
 	}
 
 	set nver [WDB Versions $N]
@@ -2643,12 +2664,11 @@ namespace eval WikitWub {
 	    }
 
 	    set actimg "<img class='activity' src='activity.png' alt='*' />"
+	    set rtype ""
 	    if {[string length $type] && ![string match "text/*" $type]} {
-		set rtype " [lindex [split $type /] 0]"
-		lappend result [list "[<a> href [file join $pageURL $id] [armour $name]][<span> class day $rtype]" [WhoUrl $who]]
-	    } else {
-		lappend result [list "[<a> href [file join $pageURL $id] [armour $name]] [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
+		set rtype [<span> class day " [lindex [split $type /] 0]"]
 	    }
+	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
 	if { [llength $result] } {
@@ -2835,7 +2855,7 @@ namespace eval WikitWub {
 	    if {$N < 0} {
 		# locate has given up - can't find a page - go to search
 		Debug.wikit {do: can't find '$term' ... search for it}
-		return [Http Redir $r /[file join $mount search] S [Query decode $term$fancy]]
+		return [Http Redir $r [file join $mount search] S [Query decode $term$fancy]]
 	    } elseif {$N ne $term} {
 		# we really should redirect
 		variable detect_robots
