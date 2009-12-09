@@ -502,7 +502,7 @@ DIV.doctools DT {
     padding-top: 	1ex;
 }
 DIV.doctools UL.toc,UL.toc UL, DIV.doctools UL.toc UL UL {
-    font:		normal 12pt/14pt sans-serif;
+/*    font:		normal 12pt/14pt sans-serif;*/
     list-style:	none;
 }
 DIV.doctools LI.section, DIV.doctools LI.subsection {
