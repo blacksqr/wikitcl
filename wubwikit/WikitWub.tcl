@@ -2084,14 +2084,9 @@ namespace eval WikitWub {
 		    set Cl [linsert $Cl end-1 ---- "'''\[$nick\] - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C {}]
 		} else {
 		    variable markup_language
-
 		    switch -- $markup_language {
-			creole {
-			    set nn "\[\[$nick\]\]"
-			}
-			default {
-			    set nn "\[\[$nick\]\]"
-			}
+			creole { set nn "\[\[$nick\]\]" }
+			default { set nn "\[$nick\]" }
 		    }
 		    lappend Cl ---- "'''$nn - [clock format [clock seconds] -format {%Y-%m-%d %T}]'''" {} $C
 		}
