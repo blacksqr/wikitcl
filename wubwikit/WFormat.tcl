@@ -530,6 +530,7 @@ namespace eval ::WFormat {
   proc linetype {line} {
     # Categorize a line of wiki text based on indentation and prefix
 
+    set oline $line
     set line [string trimright $line]
 
     ## Compat: retain tabs ...
@@ -573,6 +574,17 @@ namespace eval ::WFormat {
     } {
       # Compat: Remove restriction to multiples of 3 spaces.
       if {[regexp $re $line - pfx aux txt]} {
+        #    && string length $pfx % 3 == 0
+        return [list $tag [expr {[string length $pfx]/3}] $txt $aux]
+      }
+    }
+
+    # Sometimes trailing spaces can be significant
+    foreach {tag re} {
+      DL	{^(   +)(.+):   \s*(.*)$}
+    } {
+      # Compat: Remove restriction to multiples of 3 spaces.
+      if {[regexp $re $oline - pfx aux txt]} {
         #    && string length $pfx % 3 == 0
         return [list $tag [expr {[string length $pfx]/3}] $txt $aux]
       }
