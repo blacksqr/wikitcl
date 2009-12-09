@@ -413,7 +413,7 @@ namespace eval WikitWub {
 		    [<div> class updated "Make your changes, then press Save below"]
 		}]
 	    }]]
-	    [If {$C eq ""} [template upload]]
+	    [subst [template upload]]
 	    [<div> class editcontents [subst {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action [file join $::WikitWub::mount edit/save] {
