@@ -5,6 +5,7 @@ if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
 
 package require fileutil
 package require struct::queue
+package require doctools
 
 lappend auto_path [file dirname [info script]]
 
@@ -928,6 +929,21 @@ namespace eval WikitWub {
 	return $n
     }
 
+    proc removeNonWikitMarkup { t } {
+	set r {}
+	set skip 0
+	foreach l [split $t \n] {
+	    if {$l eq "<<doctool>>" || $l eq "<<inlinehtml>>"} {
+		set skip [expr {!$skip}]
+		continue
+	    } elseif {!$skip} {
+		lappend r $l
+	    }
+	    
+	}
+	return [join $r \n]
+    }
+
     # Markup language dependent code
 
     proc mark_new {N V txt} {
@@ -1083,9 +1099,9 @@ namespace eval WikitWub {
 
     proc summary_diff { N V W {rss 0} } {
 	Debug.wikit {summary_diff N:$N V:$V W:$W rss:$rss}
-	set t1 [split [get_page_with_version $N $V 0] "\n"]
+	set t1 [split [removeNonWikitMarkup [get_page_with_version $N $V 0]] \n]
 	set W [expr {$V-1}]
-	set t2 [split [get_page_with_version $N $W 0] "\n"]
+	set t2 [split [removeNonWikitMarkup [get_page_with_version $N $W 0]] \n]
 	set uwt1 [unWhiteSpace $t1]
 	set uwt2 [unWhiteSpace $t2]
 	set p1 0
@@ -1297,12 +1313,16 @@ namespace eval WikitWub {
 
 	set name [WDB GetPage $N name]
 
-	set t1 [split [get_page_with_version $N $V] "\n"]
-
+	set t1 [get_page_with_version $N $V]
+	if {!$W} { set t1 [removeNonWikitMarkup $t1] }
+	set t1 [split $t1 "\n"]
 	if {!$W} { set uwt1 [unWhiteSpace $t1] } else { set uwt1 $t1 }
 
-	set t2 [split [get_page_with_version $N $D] "\n"]
+	set t2 [get_page_with_version $N $V]
+	if {!$W} { set t2 [removeNonWikitMarkup $t2] }
+	set t2 [split $t2 "\n"]
 	if {!$W} { set uwt2 [unWhiteSpace $t2] } else { set uwt2 $t2 }
+
 	set p1 0
 	set p2 0
 	set C ""
@@ -1489,7 +1509,12 @@ namespace eval WikitWub {
 			set Title "Version $V of [Ref $N]"
 			set name "Version $V of $name"
 		    }
-		    lassign [translate $N $name $C $ext] C U T BR
+		    lassign [translate $N $name $C $ext] C U T BR IH DTl
+		    set C [DoctoolPages $r $C $DTl]
+		    variable include_pages
+		    if {$include_pages} {
+			lassign [IncludePages $r $C $IH] r C
+		    }
 		    if { $V > 0 } {
 			lappend menu [<a> href "revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
 		    }
@@ -1927,35 +1952,28 @@ namespace eval WikitWub {
 	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload}
 	Debug.wikit {Query: [dict get $r -Query] / [dict get $r -entity]}
 
-	puts "edit-save@[clock seconds] start"
-
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
-	    puts "edit-save@[clock seconds] robot"
 	    return [robot $r]
 	}
 
 	if { [string tolower $cancel] eq "cancel" } {
 	    set url http://[Url host $r][file join $pageURL $N]
-	    puts "edit-save@[clock seconds] canceled"
 	    return [redir $r $url [<a> href $url "Canceled page edit"]]
 	}
 
 	variable readonly
 	if {$readonly ne ""} {
-	    puts "edit-save@[clock seconds] read-only"
 	    Debug.wikit {/edit/save failed wiki is readonly}
 	    return [sendPage $r ro]
 	}
 
 	if {![string is integer -strict $N]} {
-	    puts "edit-save@[clock seconds] $N no integer"
 	    Debug.wikit {/edit/save failed can only save to page by number}
 	    return [Http NotFound $r]
 	}
 
 	if {$N < 0 || $N >= [WDB PageCount]} {
-	    puts "edit-save@[clock seconds] $N not found"
 	    Debug.wikit {/edit/save failed page out of range}
 	    return [Http NotFound $r]
 	}
@@ -1963,7 +1981,6 @@ namespace eval WikitWub {
 	lassign [WDB GetPage $N name date who type ] name date who otype
 	set page [WDB GetContent $N]
 	if {$name eq ""} {
-	    puts "edit-save@[clock seconds] $N not a valid page"
 	    Debug.wikit {/edit/save failed $N is not a valid page}
 	    return [Http NotFound $er [subst {
 		[<h2> "$N is not a valid page."]
@@ -1990,8 +2007,6 @@ namespace eval WikitWub {
 	    Debug.wikit {/edit/save protected page OK}
 	}
 
-	puts "edit-save@[clock seconds] check conflicts"
-
 	# added 2002-06-13 - edit conflict detection
 	if {$O ne [list $date $who]} {
 	    #lassign [split [lassign $O ewhen] @] enick eip
@@ -2003,13 +2018,10 @@ namespace eval WikitWub {
 	    } else {
 		Debug.wikit {conflict $N}
 		set X [list $date $who]
-		puts "edit-save@[clock seconds] conflict"
 		return [sendPage $r conflict {NoCache Conflict}]
 	    }
 	}
 	
-	puts "edit-save@[clock seconds] normalize"
-
 	# if upload, check mime type
 	if {$upload ne ""} {
 	    set type [Mime magic $C]
@@ -2039,7 +2051,6 @@ namespace eval WikitWub {
 	    # newline-normalize content
 	    set C [string map {\r\n \n \r \n} $C]
 	
-	    puts "edit-save@[clock seconds] check utf8"
 	    # check the content for utf8 correctness
 	    # this metadata is set by Query parse/cconvert
 	    set point [Dict get? [Query metadata [dict get $r -Query] C] -bad]
@@ -2055,11 +2066,9 @@ namespace eval WikitWub {
 		    set E ""
 		}
 		Debug.wikit {badutf $N}
-		puts "edit-save@[clock seconds] badutf"
 		return [sendPage $r badutf]
 	    }
 
-	    puts "edit-save@[clock seconds] check if only commenting"
 	    # save the page into the db.
 	    if {[string is integer -strict $A] && $A} {
 		# Look for category at end of page using following styles:
@@ -2088,21 +2097,17 @@ namespace eval WikitWub {
 		}
 		set C [join $Cl \n]
 	    }
-	    puts "edit-save@[clock seconds] remove RA"
 	    set C [string map {\t "        " "Robert Abitbol" unperson RobertAbitbol unperson Abitbol unperson} $C]
 	} else {
 	    # check that person is allowed to upload type they've sent
 	}
 
-	puts "edit-save@[clock seconds] check if real changes"
 	if {$C eq [WDB GetContent $N]} {
 	    Debug.wikit {/edit/save failed: No change, not saving  $N}
-	    puts "edit-save@[clock seconds] unchanged"
 	    return [redir $r $url [<a> href $url "Unchanged Page"]]
 	}
 
 	Debug.wikit {/edit/save SAVING $N of type:'$type'}
-	puts "edit-save@[clock seconds] save it"
 	if {[catch {
 	    set who $nick@[dict get $r -ipaddr]
 	    WDB SavePage $N $C $who $name $type $when
@@ -2112,7 +2117,6 @@ namespace eval WikitWub {
 	    invalidate $r [file join $mount recent]
 	}
 
-	puts "edit-save@[clock seconds] check pagecaching"
 	variable pagecaching
 	if {$pagecaching} {
 	    Debug.wikit {/edit/save clearing pagecache for $N and 4}
@@ -2130,7 +2134,6 @@ namespace eval WikitWub {
 	    reloadTOC
 	}
 
-	puts "edit-save@[clock seconds] invalidate"
 	# Only actually save the page if the user selected "save"
 	invalidate $r [file join $pageURL $N]
 	invalidate $r [file join $mount recent]
@@ -2143,19 +2146,16 @@ namespace eval WikitWub {
 	#
 	# this makes sure that cache entries point to a filled-in page
 	# from now on, instead of a "[...]" link to a first-time edit page
-	puts "edit-save@[clock seconds] invalidate refs"
 	variable include_pages
 	if {$date == 0 || $include_pages} {
 	    foreach from [WDB ReferencesTo $N] {
 		invalidate $r [file join $pageURL $from]
 	    }
 	}
-	puts "edit-save@[clock seconds] done saving"
 
 	Debug.wikit {/edit/save complete $N}
 	# instead of redirecting, return the generated page with a Content-Location tag
 	#return [do $r $N]
-	puts "edit-save@[clock seconds] done"
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
@@ -2595,6 +2595,18 @@ namespace eval WikitWub {
 	return [list $r $C]
     }
 
+    proc DoctoolPages {r C DTl} {
+	foreach {dtid DT} $DTl {
+	    doctools::new dt -format html
+	    set DT [dt format $DT]
+	    dt destroy
+	    set bidx [string first "<body>" $DT]
+	    set eidx [string first "</body>" $DT]
+	    set DT [string range $DT [expr {$bidx+6}] [expr {$eidx-1}]]
+	    set C [string map [list "@@@@@@@@@@DT$dtid@@@@@@@@@@" $DT] $C]
+	}
+	return $C
+    }
     variable trailers {@ _/edit ! _/ref - _/diff + _/history}
 
     proc generated { r } {
@@ -2968,7 +2980,8 @@ namespace eval WikitWub {
 		    default {
 			Debug.wikit {do: $N is a normal page}
 			dict set r content-location "http://[Url host $r]/$N"
-			lassign [translate $N $name $content $ext] C U page_toc BR IH
+			lassign [translate $N $name $content $ext] C U page_toc BR IH DTl
+			set C [DoctoolPages $r $C $DTl]
 			variable include_pages
 			if {$include_pages} {
 			    lassign [IncludePages $r $C $IH] r C
