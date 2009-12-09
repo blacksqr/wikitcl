@@ -1288,12 +1288,12 @@ namespace eval ::WFormat {
         }
         DOCTOOL {
           set mode T
+          if {$state ne "T"} {
+            append result [subst $html_frag($state$mode)]
+          }
           if {!$doctool_mode} {
             append result "\n@@@@@@@@@@DT$dtid@@@@@@@@@@\n"
             set doctool_mode 1
-          }
-          if {$state ne "T"} {
-            append result [subst $html_frag($state$mode)]
           }
           lappend dt $text
           set state T
