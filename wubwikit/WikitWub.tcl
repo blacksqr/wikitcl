@@ -1318,7 +1318,7 @@ namespace eval WikitWub {
 	set t1 [split $t1 "\n"]
 	if {!$W} { set uwt1 [unWhiteSpace $t1] } else { set uwt1 $t1 }
 
-	set t2 [get_page_with_version $N $V]
+	set t2 [get_page_with_version $N $D]
 	if {!$W} { set t2 [removeNonWikitMarkup $t2] }
 	set t2 [split $t2 "\n"]
 	if {!$W} { set uwt2 [unWhiteSpace $t2] } else { set uwt2 $t2 }
