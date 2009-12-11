@@ -1044,9 +1044,9 @@ namespace eval ::WFormat {
           append result [quote $text]
         }
         b - i - f {
-	  if { $in_header } {
-            append tocheader [quote $text]
-	  }
+#	  if { $in_header } {
+#            append tocheader [quote $text]
+#	  }
           append result $html_frag($mode$text)
         }
         g - G {
