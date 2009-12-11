@@ -1806,6 +1806,7 @@ namespace eval ::WFormat {
     
     foreach {mode text} $s {
       if {[string equal $mode g]} {
+        lassign [split_url_link_text $text] text
         set info [eval $ip [list $text]]
         foreach {id name date} $info break
         if {$id == ""} {continue}
