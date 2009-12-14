@@ -113,7 +113,7 @@ proc parse_command_line {} {
     if {$build_tk} {
 	# Find Tk.
 	set tkdir [lindex [lsort [glob -nocomplain -tails -type d \
-				      -directory $tcltkdir tk$useversion]] end]
+		-directory $tcltkdir tk$useversion]] end]
 	if {$tkdir eq ""} {
 	    puts stderr "tcltk-man-html: couldn't find Tk below $tcltkdir"
 	    exit 1
@@ -233,7 +233,7 @@ proc htmlhead {title header args} {
 }
 proc gencss {} {
     set hBd "1px dotted #11577b"
-    return "
+    return [subst {
 body, div, p, th, td, li, dd, ul, ol, dl, dt, blockquote {
     font-family: Verdana, sans-serif;
 }
@@ -309,7 +309,7 @@ h4 { font-size: 11px; }
     border-top:        1px solid #6A6A6A;
     margin-top:        2em;
 }
-"
+}]
 }
 
 ##
@@ -393,7 +393,7 @@ proc process-text {text} {
 		    {\1\\fI\2\3} ntext]
 	    || [regsub {^([^\\]*)\\fR([^\\]*)\\fR(.*)$} $text \
 		    {\1\\fR\2\3} ntext]
-	} then {
+	} {
 	    manerror "impotent font change: $text"
 	    set text $ntext
 	    continue
@@ -838,6 +838,11 @@ proc cross-reference {ref} {
 	set lref $ref
     } elseif {$ref eq "Tcl"} {
 	set lref $ref
+    } elseif {[regexp {^[A-Z0-9 ?!]+$} $ref]} {
+	if {[info exists manual($manual(name)-id-$ref)]} {
+	    return "<A HREF=\"#$manual($manual(name)-id-$ref)\">$ref</A>"
+	}
+	set lref [string tolower $ref]
     } else {
 	set lref [string tolower $ref]
     }
@@ -1165,7 +1170,7 @@ proc output-directive {line} {
 			    [next-op-is .nf rest]
 			    || [next-op-is .br rest]
 			    || [next-op-is .fi rest]
-			} then {
+			} {
 			    continue
 			}
 			if {
@@ -1173,7 +1178,7 @@ proc output-directive {line} {
 			    || [next-op-is .SS rest]
 			    || [next-op-is .BE rest]
 			    || [next-op-is .SO rest]
-			} then {
+			} {
 			    backup-text 1
 			    break
 			}
@@ -1433,7 +1438,7 @@ proc output-directive {line} {
 }
 ##
 ## merge copyright listings
-## 
+##
 proc merge-copyrights {l1 l2} {
     set merge {}
     set re1 {^Copyright +(?:\(c\)|\\\(co|&copy;) +(\w.*?)(?:all rights reserved)?(?:\. )*$}
@@ -1913,7 +1918,7 @@ proc make-man-pages {html args} {
 		CrtPhImgFmt DoOneEvent GetBitmap GetColor GetCursor GetDash
 		GetJustify GetPixels GetVisual ParseArgv QueueEvent
 	    }
-	} then {
+	} {
 	    foreach item $toc {
 		puts $outfd $item
 	    }
