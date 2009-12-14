@@ -549,3 +549,66 @@ DIV.doctools UL.requirements {
     margin-bottom: 	1em;
     border-bottom:	1px solid black;
 }
+
+DIV.tclnroff pre {
+    background-color:  #f6fcec;
+    border-top:        1px solid #6A6A6A;
+    border-bottom:     1px solid #6A6A6A;
+    padding:           1em;
+    overflow:          auto;
+}
+
+DIV.tclnroff h1, DIV.tclnroff h2, DIV.tclnroff h3, DIV.tclnroff h4 {
+    font-family:       Georgia, serif;
+    padding-left:      1em;
+    margin-top:        1em;
+}
+
+DIV.tclnroff h1 {
+    font-size:         18px;
+    color:             #11577b;
+    border-bottom:     1px dotted #11577b;
+    margin-top:        0px;
+}
+
+DIV.tclnroff h2 {
+    font-size:         14px;
+    color:             #11577b;
+    background-color:  #c5dce8;
+    padding-left:      1em;
+    border:            1px solid #6A6A6A;
+}
+
+DIV.tclnroff h3, DIV.tclnroff h4 {
+    color:             #1674A4;
+    background-color:  #e8f2f6;
+    border-bottom:     1px dotted #11577b;
+    border-top:        1px dotted #11577b;
+}
+
+DIV.tclnroff h3 { font-size: 12px; }
+DIV.tclnroff h4 { font-size: 11px; }
+
+DIV.tclnroff .keylist dt, DIV.tclnroff .arguments dt {
+  width: 20em;
+  float: left;
+  padding: 2px;
+  border-top: 1px solid #999;
+}
+
+DIV.tclnroff .keylist dt { font-weight: bold; }
+
+DIV.tclnroff .keylist dd, DIV.tclnroff .arguments dd {
+  margin-left: 20em;
+  padding: 2px;
+  border-top: 1px solid #999;
+}
+
+DIV.tclnroff .copy {
+    background-color:  #f6fcfc;
+    white-space:       pre;
+    font-size:         80%;
+    border-top:        1px solid #6A6A6A;
+    margin-top:        2em;
+}
+

@@ -40,6 +40,8 @@ set API(WikitWub) {
     empty_template {Set text to be used on first edit of a page.}
     hidereadonly {Hide the readonly message. (default: false)}
     inline_html {Allow inline html in wikit markup. (default: false)}
+    doctool2html {Allow <<doctool>> in wikit markup. (default: false)}
+    tclnroff2html {Allow <<tclnroff>> in wikit markup. (default: false)}
     include_pages {Allow other wiki pages to be include in a wiki page in wikit markup. (default: false)}
     welcomezero {Use page 0 as welcome page. (default: false)}
     css_prefix {Url prefix for CSS files}
@@ -64,6 +66,9 @@ namespace eval WikitWub {
     variable hidereadonly 0
     variable text_url "wiki.tcl.tk"
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
+    variable doctool2html 0
+    variable tclnroff2html 0
+    variable nroffid 0
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -933,7 +938,7 @@ namespace eval WikitWub {
 	set r {}
 	set skip 0
 	foreach l [split $t \n] {
-	    if {$l eq "<<doctool>>" || $l eq "<<inlinehtml>>"} {
+	    if {$l eq "<<doctool>>" || $l eq "<<inlinehtml>>" || $l eq "<<tclnroff>>"} {
 		set skip [expr {!$skip}]
 		continue
 	    } elseif {!$skip} {
@@ -1509,8 +1514,9 @@ namespace eval WikitWub {
 			set Title "Version $V of [Ref $N]"
 			set name "Version $V of $name"
 		    }
-		    lassign [translate $N $name $C $ext] C U T BR IH DTl
+		    lassign [translate $N $name $C $ext] C U T BR IH DTl TNRl
 		    set C [DoctoolPages $r $C $DTl]
+		    set C [TclNRoffPages $r $C $TNRl]
 		    variable include_pages
 		    if {$include_pages} {
 			lassign [IncludePages $r $C $IH] r C
@@ -2602,6 +2608,38 @@ namespace eval WikitWub {
 	}
 	return $C
     }
+
+    proc NRoff2Html {TNR} {
+	variable nroffid
+	set cnroffid [incr nroffid]
+	file mkdir /tmp/nroff$cnroffid
+	set f [open /tmp/nroff$cnroffid/tnr.n w]
+	puts $f $TNR
+	close $f
+	set ip [interp create]
+	$ip eval {set argv {}}
+	$ip eval [list set nroffsubdir /tmp/nroff$cnroffid]
+	if {[catch {$ip eval source [file join [file dirname [info script]] tcltk-man2html.tcl]} msg]} {
+	    set CTNR [armour $msg]
+	} else {
+	    set CTNR [::fileutil::cat [file join /tmp/nroff$cnroffid/Nroff2Wiki/tnr.htm]]
+	}
+	interp delete $ip
+	file delete -force /tmp/nroff$cnroffid
+	return $CTNR
+    }
+
+    proc TclNRoffPages {r C TNRl} {
+	variable nroffid
+	variable tclnroff2html
+	if {$tclnroff2html} {
+	    foreach {tnrid TNR} $TNRl {
+		set C [string map [list "@@@@@@@@@@TNR$tnrid@@@@@@@@@@" [NRoff2Html $TNR]] $C]
+	    }
+	}
+	return $C
+    }
+
     variable trailers {@ _/edit ! _/ref - _/diff + _/history}
 
     proc generated { r } {
@@ -2975,8 +3013,9 @@ namespace eval WikitWub {
 		    default {
 			Debug.wikit {do: $N is a normal page}
 			dict set r content-location "http://[Url host $r]/$N"
-			lassign [translate $N $name $content $ext] C U page_toc BR IH DTl
+			lassign [translate $N $name $content $ext] C U page_toc BR IH DTl TNRl
 			set C [DoctoolPages $r $C $DTl]
+			set C [TclNRoffPages $r $C $TNRl]
 			variable include_pages
 			if {$include_pages} {
 			    lassign [IncludePages $r $C $IH] r C
