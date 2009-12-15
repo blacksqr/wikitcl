@@ -484,7 +484,7 @@ namespace eval WikitWub {
     # page sent on bad upload
     template badtype {bad type} {
 	[<h2> "Upload of type '$type' on page $N - [Ref $N $name]"]
-	[<p> "[<b> {Your changes have NOT been saved}], because the content your browser sent is of an inappropriate type."]
+	[<p> "[<b> {Your changes have NOT been saved}], because the content your browser sent is of an inappropriate type. Only text and images allowed."]
 	[<hr> size 1]
     }
 
@@ -2046,7 +2046,13 @@ namespace eval WikitWub {
 	    set type text/x-wikit
 	}
 
-	if {$otype ne "" && [lindex [split $otype /] 0] != [lindex [split $type /] 0]} {
+	# type must be text/* or image/*
+	if {![string match text/* $type] && ![string match image/* $type]} {
+	    return [sendPage $r badtype]
+	}
+	
+	# text must stay text
+	if {$otype ne "" && [string match text/* $otype] && ![string match text/* $type]} {
 	    return [sendPage $r badnewtype]	    
 	}
 
