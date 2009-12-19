@@ -1509,6 +1509,7 @@ proc make-man-pages {html args} {
 #    close $cssfd
     set manual(short-toc-n) 1
     set manual(short-toc-fp) [open $html/[indexfile] w]
+    puts "nroff2html $manual(short-toc-fp)"
     puts $manual(short-toc-fp) [htmlhead $overall_title $overall_title]
     puts $manual(short-toc-fp) "<DL class=\"keylist\">"
     set manual(merge-copyrights) {}
@@ -1532,6 +1533,7 @@ proc make-man-pages {html args} {
 	set manual(wing-copyrights) {}
 	makedirhier $html/$manual(wing-file)
 	set manual(wing-toc-fp) [open $html/$manual(wing-file)/[indexfile] w]
+	puts "nroff2html $manual(wing-toc-fp)"
 	# whistle
 	puts stderr "scanning section $manual(wing-name)"
 	# put the entry for this section into the short table of contents
@@ -1571,6 +1573,7 @@ proc make-man-pages {html args} {
 		continue
 	    }
 	    set manual(infp) [open $manual(page)]
+	    puts "nroff2html $manual(infp)"
 	    set manual(text) {}
 	    set manual(partial-text) {}
 	    foreach p {.RS .DS .CS .SO} {
@@ -1826,6 +1829,7 @@ proc make-man-pages {html args} {
     file delete -force -- $html/Keywords
     makedirhier $html/Keywords
     set keyfp [open $html/Keywords/[indexfile] w]
+    puts "nroff2html $keyfp"
     puts $keyfp [htmlhead "$tcltkdesc Keywords" "$tcltkdesc Keywords" \
 		     $overall_title "../[indexfile]"]
     set letters {A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
@@ -1849,6 +1853,7 @@ proc make-man-pages {html args} {
 	}
 	# Per-keyword page
 	set afp [open $html/Keywords/$a.htm w]
+	puts "nroff2html $afp"
 	puts $afp [htmlhead "$tcltkdesc Keywords - $a" \
 		       "$tcltkdesc Keywords - $a" \
 		       $overall_title "../[indexfile]"]
@@ -1909,6 +1914,7 @@ proc make-man-pages {html args} {
 	}
 	puts stderr "rescanning page $manual(name) $ntoc/$ntext"
 	set outfd [open $html/$manual(wing-file)/$manual(name).htm w]
+	puts "nroff2html $outfd"
 	puts $outfd [htmlhead "$manual($manual(name)-title)" \
 		$manual(name) $manual(wing-file) "[indexfile]" \
 		$overall_title "../[indexfile]"]

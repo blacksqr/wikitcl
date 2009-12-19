@@ -2618,20 +2618,26 @@ namespace eval WikitWub {
     proc NRoff2Html {TNR} {
 	variable nroffid
 	set cnroffid [incr nroffid]
-	file mkdir /tmp/nroff$cnroffid
-	set f [open /tmp/nroff$cnroffid/tnr.n w]
-	puts $f $TNR
-	close $f
-	set ip [interp create]
-	$ip eval {set argv {}}
-	$ip eval [list set nroffsubdir /tmp/nroff$cnroffid]
-	if {[catch {$ip eval source [file join [file dirname [info script]] tcltk-man2html.tcl]} msg]} {
-	    set CTNR [armour $msg]
-	} else {
-	    set CTNR [::fileutil::cat [file join /tmp/nroff$cnroffid/Nroff2Wiki/tnr.htm]]
+	puts "chan names 1: [chan names]"
+	if {[catch {
+	    file mkdir /tmp/nroff$cnroffid
+	    set f [open /tmp/nroff$cnroffid/tnr.n w]
+	    puts $f $TNR
+	    close $f
+	    set ip [interp create]
+	    $ip eval {set argv {}}
+	    $ip eval [list set nroffsubdir /tmp/nroff$cnroffid]
+	    if {[catch {$ip eval source [file join [file dirname [info script]] tcltk-man2html.tcl]} msg]} {
+		set CTNR [armour $msg]
+	    } else {
+		set CTNR [::fileutil::cat [file join /tmp/nroff$cnroffid/Nroff2Wiki/tnr.htm]]
+	    }
+	    interp delete $ip
+	    file delete -force /tmp/nroff$cnroffid
+	} msg]} {
+	    set CTNR [armour $CTNR]
 	}
-	interp delete $ip
-	file delete -force /tmp/nroff$cnroffid
+	puts "chan names 2: [chan names]"
 	return $CTNR
     }
 
