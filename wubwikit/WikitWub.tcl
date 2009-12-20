@@ -57,6 +57,9 @@ proc ::stx2html::local {what} {
     return [<a> href [file join $::WikitWub::pageURL $id] $what]
 }
 
+Debug define wikit
+Debug define WDB
+
 namespace eval WikitWub {
     variable readonly ""
     variable pagecaching 0
@@ -3325,9 +3328,6 @@ proc pest {req} {return 0}	;# default [pest] catcher
 catch {source [file join [file dirname [info script]] pest.tcl]}
 
 Debug.log {RESTART: [clock format [clock second]]}
-
-Debug on wikit
-Debug on WDB
 
 # Initialize Site
 Site start application WikitWub home [file normalize [file dirname [info script]]] ini wikit.ini
