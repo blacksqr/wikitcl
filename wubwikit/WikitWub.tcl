@@ -614,7 +614,7 @@ namespace eval WikitWub {
 	    /* for Internet Explorer */
 	    /*@cc_on @*/
 	    /*@if (@_win32)
-	    document.write("<script defer src='%JP%/ie_onload1.JS'><\/script>");
+	    document.write("<script defer src='/%JP%/ie_onload1.JS'><\/script>");
 	    /*@end @*/
 	    
 	    /* for other browsers */
