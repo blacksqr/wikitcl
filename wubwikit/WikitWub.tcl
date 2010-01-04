@@ -2006,6 +2006,7 @@ namespace eval WikitWub {
 	# if there is new page content, save it now
 	set url http://[Url host $r][file join $pageURL $N]
 	if {$N eq "" || $C eq ""} {
+	    variable redir
 	    return [Http NoCache [Http SeeOther $r $url [subst $redir]]]
 	    #return [redir $r $url [<a> href $url "Edited Page"]]
 	}
