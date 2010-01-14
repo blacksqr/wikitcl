@@ -200,7 +200,7 @@ namespace eval WikitWub {
 	}]
 	[If {$::WikitWub::gsearch} {
 	    [<form> gsearchform method get action [file join $::WikitWub::mount gsearch] {
-		[<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} [tclarmour [expr {[info exists query]?$query:"Search in pages"}]]]
+		<input id='googletxt' onfocus='clearGoogle();' onblur='setGoogle();' name='S' type='text' value='[tclarmour [expr {[info exists query]?$query:"Search in pages"}]]' tabindex='1'>
 		[<hidden> _charset_ ""]
 	    }]
 	} else {
