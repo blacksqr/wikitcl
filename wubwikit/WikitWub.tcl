@@ -195,7 +195,7 @@ namespace eval WikitWub {
     # return a search form
     template searchF {} {
 	[<form> searchform action [file join $::WikitWub::mount search] {
-	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} [tclarmour [expr {[info exists query]?$query:"Search in titles"}]]]
+	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
 	    [<hidden> _charset_ ""]
 	}]
 	[If {$::WikitWub::gsearch} {
@@ -205,7 +205,7 @@ namespace eval WikitWub {
 	    }]
 	} else {
 	    [<form> psearchform action [file join $::WikitWub::mount search] {
-		[<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} [tclarmour [expr {[info exists query]?$query:"Search in pages and titles"}]]]
+		[<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in pages and titles"]
 		[<hidden> _charset_ ""]
 		[<hidden> long 1]
 	    }]
