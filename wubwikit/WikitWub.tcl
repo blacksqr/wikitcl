@@ -1459,7 +1459,13 @@ namespace eval WikitWub {
 	    set subtitle "Difference between version $V and $D"
 	}
 
+	set C [replace_toc $C]
+
 	return [sendPage $r spage]
+    }
+
+    proc replace_toc { C } {
+	return [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
     }
 
     proc /revision {r N {V -1} {A 0}} {
@@ -1893,8 +1899,7 @@ namespace eval WikitWub {
 
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
 	lassign [translate $N preview $O .html 1] C U T BR
-	set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
-
+	set C [replace_toc $C]
 	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
     }
 
@@ -1921,7 +1926,7 @@ namespace eval WikitWub {
 	} else {
 	    set O [WDB GetContent $N]
 	    lassign [translate $N preview $O .html 1] C U T BR
-	    set C [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
+	    set C [replace_toc $C]
 	}
 	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
     }
