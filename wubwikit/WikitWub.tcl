@@ -2900,7 +2900,7 @@ namespace eval WikitWub {
 	    } else {
 		set qdate 0
 	    }
-	    if {[regexp {^(.*)\*+$} $key x key]} {
+	    if {[regexp {^(.*)\*+$} $key]} {
 		variable wikitdbpath
 		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath $key $qdate 100] r+]
 		chan configure $cfd -blocking 0
