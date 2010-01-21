@@ -2756,7 +2756,7 @@ namespace eval WikitWub {
 	return [sendPage $r spage]
     }
 
-    proc search {key date} {
+    proc search {key date {external 0} {external_result {}}} {
 	Debug.wikit {search: '$key'}
 	set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
 
@@ -2774,7 +2774,12 @@ namespace eval WikitWub {
 	variable mount
 	variable pageURL
 	set rlist {}
-	foreach record [WDB Search $key $long $date $max] {
+	if {$external} {
+	    set eresult $external_result
+	} else {
+	    set eresult [WDB Search $key $long $date $max]
+	}
+	foreach record $eresult {
 	    dict with record {}
 	    # these are admin pages, don't list them
 	    if {[dict exists $protected $id]} continue
@@ -2801,7 +2806,7 @@ namespace eval WikitWub {
 	return [list $result $rdate $long]
     }
 
-    proc /searchp {r} {
+    proc /searchp {r {external 0} {external_result {}}} {
 	variable mount
 	variable pageURL
 	variable text_url
@@ -2824,7 +2829,7 @@ namespace eval WikitWub {
 		set qdate 0
 	    }
 	    
-	    lassign [search $term $qdate] C nqdate long
+	    lassign [search $term $qdate $external $external_result] C nqdate long
 	    set r [sortable $r]
 	    if {[dict exists $qd long]} {
 		set long 1
@@ -2883,9 +2888,47 @@ namespace eval WikitWub {
 	dict set r -prefix "/$S"
 	dict set r -suffix $S
 
-	return [/searchp $r]
+	set qd [Dict get? $r -Query]
+	if {[Query exists $qd S]
+	    && [set key [Query value $qd S]] ne ""
+	} {
+	    if {[Query exists $qd F]} {
+		set qdate [Query value $qd F]
+		if {![string is integer -strict $qdate]} {
+		    set qdate 0
+		}
+	    } else {
+		set qdate 0
+	    }
+	    if {[regexp {^(.*)\*+$} $key x key]} {
+		variable wikitdbpath
+		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath $key $qdate 100] r+]
+		chan configure $cfd -blocking 0
+		chan event $cfd readable [list ::WikitWub::resume_suspended $cfd $r $key $qdate]
+		return [Httpd Suspend $r]
+	    }
+	    return [/searchp $r 0]
+	} else {
+	    return [/searchp $r 0]	    
+	}
     }
-    
+
+    proc resume_suspended {fd r key date} {
+	variable eresult
+	Debug.wikit {resume suspended: $r $key $date}
+	append eresult($fd) [read $fd]
+	Debug.wikit {resume suspended: $eresult(fd)}
+	if {[chan eof $fd]} {
+	    # the process has finished
+	    if {[catch {chan close $fd} res eo]} {
+		Debug.image {CONVERT ERROR: $res}
+		set r [Http ServerError $r $res $eo]
+	    }
+	    Httpd Resume [Http NoCache [Http Ok [/searchp $r 1 $eresult($fd)]]]
+	    unset eresult($fd)
+	}
+    }
+
     proc do {r} {
 	Debug.wikit {DO}
 	perms $r read
@@ -3235,6 +3278,7 @@ namespace eval WikitWub {
 	}
 	
 	# initialize wikit DB
+	variable wikitdbpath
 	if {![info exists wikitdbpath] || $wikitdbpath eq ""} {
 	    if {[info exists ::starkit_wikitdbpath]} {
 		set wikitdbpath $::starkit_wikitdbpath
