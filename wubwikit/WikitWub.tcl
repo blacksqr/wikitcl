@@ -6,6 +6,7 @@ if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
 package require fileutil
 package require struct::queue
 package require doctools
+package require HTTP
 
 lappend auto_path [file dirname [info script]]
 
@@ -471,6 +472,27 @@ namespace eval WikitWub {
 	[<p> "Page $N is of type $type which cannot be edited."]
     }
 
+    # page sent when creating a new page
+    template new {Create a new page} {
+	[<div> class edit [subst {
+	    [<div> class header [subst {
+		[<div> class logo $::WikitWub::text_url]
+		[<div> class title "Create new page"]
+		[<div> class updated "Enter title, then press Create below"]
+	    }]]
+	    [<div> class edittitle [subst {
+		[recaptcha_form \
+		      pre <br>[<text> T title "Page title" size 80]<br><br> \
+		      post "<br>[<hidden> _charset_ {}]<input name='create' type='submit' value='Create new page'><input name='cancel' type='submit' value='Cancel'>" \
+		      qargs {T create cancel} \
+		      pass ::WikitWub::new_page_pass]
+		[If {$nick ne ""} {
+		    (you are: [<b> $nick])
+		}]
+	    }]]
+	}]]
+    }
+
     # page sent to enable login
     template login {login} {
 	[<p> "Please choose a nickname that your edit will be identified by."]
@@ -812,6 +834,7 @@ namespace eval WikitWub {
 	    set menus(HR)     <br>
 	    set menus(Search) [<a> href [file join $mount searchp] "Search"]
 	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
+	    set menus(New)    [<a> href [file join $mount new] "Create new page"]
 	}
 	set m {}
 	foreach arg $args {
@@ -868,8 +891,8 @@ namespace eval WikitWub {
 	# sendPage vars
 	set Title "Cleared pages"
 	set name "Cleared pages"
-	set menu [menus Home Recent Help WhoAmI]
-	set footer [menus Home Recent Help Search]
+	set menu [menus Home Recent Help WhoAmI New]
+	set footer [menus Home Recent Help New Search]
 	set C [join $results "\n"]
 
 	return [sendPage $r spage]
@@ -1224,8 +1247,8 @@ namespace eval WikitWub {
 	append R </ul> \n
 
 	# sendPage vars
-	set menu [menus Home Recent Help WhoAmI HR [<a> href [file join $mount history?N=$N] History] [<a> href [file join $mount summary?N=$N] "Edit summary"] [<a> href [file join $mount diff?N=$N] "Last change"] [<a> href [file join $mount diff?N=$N&T=1&D=1] "Changes last day"] [<a> href [file join $mount diff?N=$N&T=1&D=7] "Changes last week"] Search]
-	set footer [menus Home Recent Help Search]
+	set menu [menus Home Recent Help WhoAmI New HR [<a> href [file join $mount history?N=$N] History] [<a> href [file join $mount summary?N=$N] "Edit summary"] [<a> href [file join $mount diff?N=$N] "Last change"] [<a> href [file join $mount diff?N=$N&T=1&D=1] "Changes last day"] [<a> href [file join $mount diff?N=$N&T=1&D=7] "Changes last week"] Search]
+	set footer [menus Home Recent Help New Search]
 
 	set C $R
 	set Title [Ref $N]
@@ -1452,8 +1475,8 @@ namespace eval WikitWub {
 	    }
 	}
 	
-	set menu [menus Home Recent Help WhoAmI HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"]]
-	set footer [menus Home Recent Help Search]
+	set menu [menus Home Recent Help WhoAmI New HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"]]
+	set footer [menus Home Recent Help New Search]
 
 	if {![string length $subtitle]} {
 	    set subtitle "Difference between version $V and $D"
@@ -1504,7 +1527,7 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
-	set menu [menus Home Recent Help WhoAmI HR [<a> href history?N=$N History]]
+	set menu [menus Home Recent Help WhoAmI New HR [<a> href history?N=$N History]]
 
 	set name [WDB GetPage $N name]
 	if {$V >= 0} {
@@ -1547,7 +1570,7 @@ namespace eval WikitWub {
 	    }
 	}
 
-	set footer [menus Home Recent Help Search]
+	set footer [menus Home Recent Help New Search]
 	return [sendPage $r spage]
     }
 
@@ -1693,8 +1716,8 @@ namespace eval WikitWub {
 	# sendPage vars
 	set name "Change history of [WDB GetPage $N name]"
 	set Title "Change history of [Ref $N]"
-	set footer [menus Home Recent Help Search]
-	set menu [menus Home Recent Help WhoAmI HR {*}$menu]
+	set footer [menus Home Recent Help New Search]
+	set menu [menus Home Recent Help WhoAmI New HR {*}$menu]
 
 	return [sendPage $r spage]
     }
@@ -1740,8 +1763,8 @@ namespace eval WikitWub {
 	# sendPage vars
 	set name "Who Am I?"
 	set Title "Who Am I?"
-	set menu [menus Home Recent Help WhoAmI]
-	set footer [menus Home Recent Help Search]
+	set menu [menus Home Recent Help WhoAmI New]
+	set footer [menus Home Recent Help New Search]
 	return [sendPage $r spage]
     }
 
@@ -1868,8 +1891,8 @@ namespace eval WikitWub {
 	variable query $S
 	set name "Search"
 	set Title "Search"
-	set menu [menus Home Recent Help WhoAmI]
-	set footer [menus Home Recent Help]
+	set menu [menus Home Recent Help WhoAmI New]
+	set footer [menus Home Recent Help New]
 
 	return [sendPage $r spage]
     }
@@ -2249,9 +2272,144 @@ namespace eval WikitWub {
 	}
     }
 
+    variable recaptcha_id 0
+    variable recaptcha_params
+    proc recaptcha_form {args} {
+	variable recaptcha_id
+	variable recaptcha_params
+	set pre ""
+	set post ""
+	set pass ""
+	set fail ""
+	set qargs ""
+	set theme "white"
+	foreach {k v} $args {
+	    set $k $v
+	}
+
+	set recaptcha_params([incr recaptcha_id]) [dict create pre $pre post $post pass $pass fail $fail qargs $qargs theme $theme]
+
+	proc /recaptcha_val_$recaptcha_id [list r {*}$qargs rcid recaptcha_challenge_field recaptcha_response_field] {
+	    variable recaptcha_params
+	    set entity [Query encodeL privatekey $::WikitWub::recaptcha_private remoteip [dict get $r -ipaddr] challenge $recaptcha_challenge_field response $recaptcha_response_field]
+	    set consumer [list ::WikitWub::recaptcha_resume $r $rcid]
+	    set params [dict create]
+	    foreach q [dict get $recaptcha_params($rcid) qargs] {
+		upvar 0 $q val
+		dict set params $q $val
+	    }
+	    dict set recaptcha_params($rcid) params $params
+	    set V [HTTP new http://api-verify.recaptcha.net/ $consumer post [list /verify $entity content-type application/x-www-form-urlencoded]]
+	    
+	    return [Http Suspend $r]
+	}
+
+	set C "
+	    <form action='[file join $::WikitWub::mount recaptcha_val_$recaptcha_id]' method='post'>
+	    <!-- ... your form code here ... -->
+	    $pre
+	    <script type='text/javascript'> var RecaptchaOptions = {theme : '$theme'}; </script>
+	    <script type='text/javascript' src='http://api.recaptcha.net/challenge?k=$::WikitWub::recaptcha_public'></script>
+	    <noscript>
+	    <iframe src='http://api.recaptcha.net/noscript?k=::WikitWub::recaptcha_public'
+	    height='300' width='500' frameborder='0'></iframe><br>
+	    <textarea name='recaptcha_challenge_field' rows='3' cols='40'>
+	    </textarea>
+	    <input type='hidden' name='recaptcha_response_field' 
+	    value='manual_challenge'>
+	    </noscript>
+	    <!-- ... more of your form code here ... -->
+            $post
+	    <input type='hidden' name='rcid' 
+	    value='$recaptcha_id'>
+	    </form>"
+    }
+    
+    proc recaptcha_resume {r rcid v} {
+	variable recaptcha_params
+	set result [split [dict get $v -content] \n]
+	set pass [lindex $result 0]
+	if {$pass eq "true"} {
+	    if {[llength [dict get $recaptcha_params($rcid) pass]]} {
+		if {[catch {{*}[dict get $recaptcha_params($rcid) pass] $r [dict get $recaptcha_params($rcid) params]} res eo]} {
+		    set r [Http ServerError $r $res $eo]
+		} else {
+		    set r $res
+		}
+	    } else {
+		set r [Http Ok $r "Passed ReCAPTCHA" text/plain]
+	    }
+	} else {
+	    if {[llength [dict get $recaptcha_params($rcid) fail]]} {
+		if {[catch {{*}[dict get $recaptcha_params($rcid) fail] $r [dict get $recaptcha_params($rcid) params]} res eo]} {
+		    set r [Http ServerError $r $res $eo]
+		} else {
+		    set r $res
+		}
+	    } else {
+		set r [Http Ok $r "Failed ReCAPTCHA" text/plain]
+	    }
+	}
+	unset recaptcha_params($rcid)
+	rename ::WikitWub::/recaptcha_val_$rcid {}
+	Httpd Resume [Http NoCache $r]	
+    }
+
     # /reload - direct url to reload numbered pages from fs
     proc /reload {r} {
 	foreach {} {}
+    }
+
+    proc /new {r} {
+	Debug.wikit {edit}
+	variable detect_robots
+	variable mount
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+	perms $r write
+
+	# is the caller logged in?
+	set nick [who $r]
+	
+	if {$nick eq ""} {
+	    set R ""	;# make it return here
+	    # TODO KBK: Perhaps allow anon edits with a CAPTCHA?
+	    # Or at least give a link to the page that gets the cookie back.
+	    return [sendPage $r login]
+	}
+
+	return [sendPage $r new]
+    }
+
+    proc /new/post {r T} {
+	if {T eq ""} {
+	    return [Http NotFound $r]
+	}
+	lassign [InfoProc $T] N
+	variable mount
+	return [Http Redir $r [file join $mount edit?N=$N]]
+    }
+
+    proc new_page_pass {r params} {
+
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
+	variable mount
+	variable pageURL
+	if { [string tolower [dict get $params cancel]] eq "cancel" } {
+	    set url http://[Url host $r][file join $pageURL]
+	    return [redir $r $url [<a> href $url "Canceled page creation"]]
+	}
+	if {[dict get $params T] eq ""} {
+	    return [Http NoCache [Http Ok $r "No title specified"]]
+	}
+	lassign [InfoProc [dict get $params T]] N
+	variable mount
+	return [Http Redir $r [file join $mount edit?N=$N]]
     }
 
     # called to generate an edit page
@@ -2486,8 +2644,8 @@ namespace eval WikitWub {
 	} 
 
 	# sendPage vars
-	set menu [menus Home Recent Help WhoAmI]
-	set footer [menus Home Recent Help Search]
+	set menu [menus Home Recent Help WhoAmI New]
+	set footer [menus Home Recent Help New Search]
 
 	set name "References to $N"
 	set Title "References to [Ref $N]"
@@ -2750,8 +2908,8 @@ namespace eval WikitWub {
 	# sendPage vars
 	set name "Recent Changes"
 	set Title "Recent Changes"
-	set menu [menus Home Recent Help WhoAmI]
-	set footer [menus Home Recent Help Search WhoAmI]
+	set menu [menus Home Recent Help WhoAmI New]
+	set footer [menus Home Recent Help New Search]
 
 	return [sendPage $r spage]
     }
@@ -2866,8 +3024,8 @@ namespace eval WikitWub {
 	
 	set name "Search"
 	set Title "Search"
-	set menu [menus Home Recent Help WhoAmI]
-	set footer [menus Home Recent Help]
+	set menu [menus Home Recent Help WhoAmI New]
+	set footer [menus Home Recent Help New]
 
 	return [sendPage $r spage]
     }
@@ -3039,8 +3197,8 @@ namespace eval WikitWub {
 		lappend menu {*}[menus HR]
 		lappend menu [<a> href $backRef References]
 	    }
-	    set menu [menus Home Recent Help WhoAmI {*}$menu]
-	    set footer [menus Home Recent Help Search WhoAmI {*}$footer]
+	    set menu [menus Home Recent Help WhoAmI New {*}$menu]
+	    set footer [menus Home Recent Help New Search WhoAmI {*}$footer]
 	    lappend menu [<a> href [file join $mount edit]?N=$N Edit]
 	    lappend footer [<a> href [file join $mount edit]?N=$N Edit]
 	    lappend menu [<a> href [file join $mount history]?N=$N "History"]
@@ -3140,8 +3298,8 @@ namespace eval WikitWub {
 	    }
 
 	    # sendPage vars
-	    set menu [menus Home Recent Help WhoAmI {*}$menu]
-	    set footer [menus Home Recent Help Search WhoAmI {*}$footer]
+	    set menu [menus Home Recent Help WhoAmI New {*}$menu]
+	    set footer [menus Home Recent Help New Search {*}$footer]
 
 	    variable hidereadonly
 	    if {$readonly ne "" && !$hidereadonly} {
