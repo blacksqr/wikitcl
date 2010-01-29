@@ -1,4 +1,4 @@
-#### Source local setup script (not under version control)
+### Source local setup script (not under version control)
 if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
     source [file join [file dirname [info script]] local_setup.tcl]
 }
@@ -414,7 +414,12 @@ namespace eval WikitWub {
 		    [<div> class title "Comment on [tclarmour [Ref $N]]"]
 		}]
 		[If {!$as_comment} {
+		    [If {![string length $V]} {
 		    [<div> class title "Edit [tclarmour [Ref $N]]"]
+		    }]
+		    [If {[string length $V]} {
+		    [<div> class title "Revert [tclarmour [Ref $N]] to version $V"]
+		    }]
 		}]
 		[If {$as_comment} {
 		    [<div> class updated "Enter your comment, then press Save below"]
@@ -493,17 +498,35 @@ namespace eval WikitWub {
 	}]]
     }
 
+    # page sent when reverting a page
+    template revert {Revert a page} {
+	[<div> class edit [subst {
+	    [<div> class header [subst {
+		[<div> class logo $::WikitWub::text_url]
+		[<div> class title "Revert page"]
+	    }]]
+	    [<div> class edittitle [subst {
+		[recaptcha_form \
+		     pre "<br>" \
+		     post "<br>[<hidden> _charset_ {}][<hidden> N [armour $N]][<hidden> V [armour $V]]<input name='create' type='submit' value='Revert page'>" \
+		     qargs {N V} \
+		     pass ::WikitWub::revert_pass]
+		[If {$nick ne ""} {
+		    (you are: [<b> $nick])
+		}]
+	    }]]
+	}]]
+    }
+
     # page sent to enable login
     template login {login} {
 	[<p> "Please choose a nickname that your edit will be identified by."]
 	[if {0} {[<p> "You can optionally enter a password that will reserve that nickname for you."]}]
-	[<form> login method post action [file join $mount edit/login] {
-	    [<fieldset> login title Login {
-		[<text> nickname title "Nickname"]
-		[<input> name save type submit value "Login" {}]
-	    }]
-	    [<hidden> R [armour $R]]
-	}]
+	[recaptcha_form \
+	     pre <br>[<text> nickname title "Nickname"][<hidden> R [armour $R]]<br><br> \
+	     post <br>[<input> name save type submit value "Login" {}] \
+	     qargs {nickname save R} \
+	     pass ::WikitWub::login_pass]
     }
 
     # page sent on bad upload
@@ -1491,6 +1514,50 @@ namespace eval WikitWub {
 	return [string map [list "<<TOC>>" [<p> [<b> [<i> "Table of contents will be inserted here."]]]] $C]
     }
 
+    proc /revert {r N V} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
+	if {![string is integer -strict $N]} {
+	    return [Http NotFound $r]
+	}
+	if {$N < 0 || $N >= [WDB PageCount]} {
+	    return [Http NotFound $r]
+	}
+	
+	lassign [WDB GetPage $N type] type
+
+	# No revert for images yet
+	if {$type ne "" && ![string match "text/*" $type]} {
+	    return [Http NotFound $r]
+	}
+
+	# is the caller logged in?
+	set nick [who $r]
+	
+	if {$nick eq ""} {
+	    set R ""	;# make it return here
+	    # TODO KBK: Perhaps allow anon edits with a CAPTCHA?
+	    # Or at least give a link to the page that gets the cookie back.
+	    return [sendPage $r login]
+	}
+
+	return [sendPage $r revert]
+    }
+
+    proc revert_pass {r params} {
+
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+
+	variable mount
+	return [Http Redir $r [file join $mount edit?N=[dict get $params N]&V=[dict get $params V]]]
+    }
+
     proc /revision {r N {V -1} {A 0}} {
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
@@ -1621,9 +1688,9 @@ namespace eval WikitWub {
 	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
 	if {$type eq "" || [string match "text/*" $type]} {
 	    if {$markup_language eq "wikit"} {
-		set histheaders {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1}
+		set histheaders {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1 {Revert to} 1}
 	    } else {
-		set histheaders {Rev 1 Date 1 {Modified by} 1 {Word compare} 3 WikiText 1}
+		set histheaders {Rev 1 Date 1 {Modified by} 1 {Word compare} 3 WikiText 1 {Revert to} 1}
 	    }
 	} else {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1}
@@ -1651,42 +1718,43 @@ namespace eval WikitWub {
 		
 		if {$markup_language eq "wikit"} {
 		    if { $prev >= 0 } {
-			append C [<td> class Line1 [<a> href "diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
+			append C [<td> class Line1 [<a> rel nofollow href "diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
 		    } else {
 			append C <td></td>
 		    }
 		    if { $next <= $nver } {
-			append C [<td> class Line2 [<a> href "diff?N=$N&V=$vn&D=$next#diff0" $next]]
+			append C [<td> class Line2 [<a> rel nofollow href "diff?N=$N&V=$vn&D=$next#diff0" $next]]
 		    } else {
 			append C <td></td>
 		    }
 		    if { $vn != $curr } {
-			append C [<td> class Line3 [<a> href "diff?N=$N&V=$curr&D=$vn#diff0" Current]]
+			append C [<td> class Line3 [<a> rel nofollow href "diff?N=$N&V=$curr&D=$vn#diff0" Current]]
 		    } else {
 			append C <td></td>
 		    }
 		}
 
 		if { $prev >= 0 } {
-		    append C [<td> class Word1 [<a> href "diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
+		    append C [<td> class Word1 [<a> rel nofollow href "diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
 		} else {
 		    append C <td></td>
 		}
 		if { $next <= $nver } {
-		    append C [<td> class Word2 [<a> href "diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
+		    append C [<td> class Word2 [<a> rel nofollow href "diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
 		} else {
 		    append C <td></td>
 		}
 		if { $vn != $curr } {
-		    append C [<td> class Word3 [<a> href "diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
+		    append C [<td> class Word3 [<a> rel nofollow href "diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
 		} else {
 		    append C <td></td>
 		}
 		
 		if {$markup_language eq "wikit"} {
-		    append C [<td> class Annotated [<a> href "revision?N=$N&V=$vn&A=1" $vn]]
+		    append C [<td> class Annotated [<a> rel nofollow href "revision?N=$N&V=$vn&A=1" $vn]]
 		}
-		append C [<td> class WikiText [<a> href "revision?N=$N.txt&V=$vn" $vn]]
+		append C [<td> class WikiText [<a> rel nofollow href "revision?N=$N.txt&V=$vn" $vn]]
+		append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
 		append C </tr> \n
 		incr rowcnt
 	    }
@@ -1822,6 +1890,10 @@ namespace eval WikitWub {
 	}
 
 	return [redir $r $R [<a> href $R "Created Account"]]
+    }
+
+    proc login_pass {r params} {
+	return [/edit/login $r [dict get $params nickname] [dict get $params R]]
     }
 
     proc invalidate {r url} {
@@ -2218,13 +2290,13 @@ namespace eval WikitWub {
 	if {$type ne "" && ![string match "text/*" $type]} {
 	    set last_version [expr {[WDB VersionsBinary $N] -1}]
 	    if {$last_version > 0} {
-		set C [get_page_with_version $N $last_version 0]
-		WDB Revert $N $last_version $C 
+		WDB RevertBinary $N $last_version
 	    }
 	} else {
 	    set last_version [expr {[WDB Versions $N] - 1}]
 	    if {$last_version > 0} {
-		WDB RevertBinary $N $last_version
+		set C [get_page_with_version $N $last_version 0]
+		WDB Revert $N $last_version $C 
 	    }
 	}
     }
@@ -2382,15 +2454,6 @@ namespace eval WikitWub {
 	return [sendPage $r new]
     }
 
-    proc /new/post {r T} {
-	if {T eq ""} {
-	    return [Http NotFound $r]
-	}
-	lassign [InfoProc $T] N
-	variable mount
-	return [Http Redir $r [file join $mount edit?N=$N]]
-    }
-
     proc new_page_pass {r params} {
 
 	variable detect_robots
@@ -2413,7 +2476,7 @@ namespace eval WikitWub {
     }
 
     # called to generate an edit page
-    proc /edit {r N A args} {
+    proc /edit {r N A V args} {
 	Debug.wikit {edit N:$N A:$A ($args)}
 
 	variable mount
@@ -2465,6 +2528,13 @@ namespace eval WikitWub {
 	if {[string is integer -strict $A] && $A} {
 	    set as_comment 1
 	    set C [armour "<enter your comment here and a header with your wiki nickname and timestamp will be inserted for you>"]
+	} elseif {$V ne ""} {
+	    if {![string is integer -strict $V] ||
+		$V < 0 ||
+		$V > [WDB Versions $N]} {
+		return [Http NotFound $r]
+	    }
+	    set C [armour [get_page_with_version $N $V]]
 	} else {
 	    set C [armour [WDB GetContent $N]]
 	}

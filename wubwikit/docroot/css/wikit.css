@@ -185,8 +185,8 @@ tbody tr.odd {
 	background-color: #EEF;
 }
 
-th.Rev, th.Line, th.Word, th.Annotated, th.WikiText,
-td.Rev, td.Line1, td.Line2, td.Word1, td.Word2, td.Annotated, td.WikiText {
+th.Rev, th.Line, th.Word, th.Annotated, th.WikiText, th.Revert,
+td.Rev, td.Line1, td.Line2, td.Word1, td.Word2, td.Annotated, td.WikiText, td.Revert {
 	text-align: right;
 }
 
