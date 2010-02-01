@@ -522,11 +522,13 @@ namespace eval WikitWub {
     template login {login} {
 	[<p> "Please choose a nickname that your edit will be identified by."]
 	[if {0} {[<p> "You can optionally enter a password that will reserve that nickname for you."]}]
-	[recaptcha_form \
-	     pre <br>[<text> nickname title "Nickname"][<hidden> R [armour $R]]<br><br> \
-	     post <br>[<input> name save type submit value "Login" {}] \
-	     qargs {nickname save R} \
-	     pass ::WikitWub::login_pass]
+	[<form> login method post action [file join $mount edit/login] {
+	    [<fieldset> login title Login {
+		[<text> nickname title "Nickname"]
+		[<input> name save type submit value "Login" {}]
+	    }]
+	    [<hidden> R [armour $R]]
+	}]
     }
 
     # page sent on bad upload
