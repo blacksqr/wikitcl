@@ -11,7 +11,7 @@ DESC="Wub Web Server"
 TCLSH=/usr/bin/tclsh
 STARTER="daemon"
 
-test -x $DAEMON || exit 0
+#test -x $DAEMON || exit 0
 
 # Include tclhttpd defaults if available
 if [ -f /etc/default/wub ] ; then
