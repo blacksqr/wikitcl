@@ -22,6 +22,8 @@ package require WDB_sqlite
 #package require WDB_mk
 package require WikitRss
 package require WFormat
+package require Direct
+package require ReCAPTCHA
 
 package provide WikitWub 1.0
 
@@ -48,6 +50,8 @@ set API(WikitWub) {
     css_prefix {Url prefix for CSS files}
     script_prefix {Url prefix for JS files}
     image_prefix {Url prefix for images}
+    recaptcha_public {Set public ReCaptcha key. This will enable 'Create new page' and 'Revert' link. (default not set)}
+    recaptcha_private {Set private ReCaptcha key. This will enable 'Create new page' and 'Revert' link. (default not set)}
 }
 
 proc ::stx2html::local {what} {
@@ -73,6 +77,8 @@ namespace eval WikitWub {
     variable doctool2html 0
     variable tclnroff2html 0
     variable nroffid 0
+    variable recaptcha_public ""
+    variable recaptcha_private ""
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -486,11 +492,11 @@ namespace eval WikitWub {
 		[<div> class updated "Enter title, then press Create below"]
 	    }]]
 	    [<div> class edittitle [subst {
-		[recaptcha_form \
-		      pre <br>[<text> T title "Page title" size 80]<br><br> \
-		      post "<br>[<hidden> _charset_ {}]<input name='create' type='submit' value='Create new page'><input name='cancel' type='submit' value='Cancel'>" \
-		      qargs {T create cancel} \
-		      pass ::WikitWub::new_page_pass]
+		[[lindex [info class instances ::ReCAPTCHA] 0] form class autoform \
+		     before <br>[<text> T title "Page title" size 80]<br><br> \
+		     after "<br>[<hidden> _charset_ {}]<input name='create' type='submit' value='Create new page'>" \
+		     pass {set r [::WikitWub::new_page_pass $r $args]}]
+		[<div> id result {}]
 		[If {$nick ne ""} {
 		    (you are: [<b> $nick])
 		}]
@@ -503,14 +509,14 @@ namespace eval WikitWub {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
 		[<div> class logo $::WikitWub::text_url]
-		[<div> class title "Revert page"]
+		[<div> class title "Revert page [tclarmour [Ref $N]] to version $V"]
 	    }]]
 	    [<div> class edittitle [subst {
-		[recaptcha_form \
-		     pre "<br>" \
-		     post "<br>[<hidden> _charset_ {}][<hidden> N [armour $N]][<hidden> V [armour $V]]<input name='create' type='submit' value='Revert page'>" \
-		     qargs {N V} \
-		     pass ::WikitWub::revert_pass]
+		[[lindex [info class instances ::ReCAPTCHA] 0] form class autoform \
+		     before <br> \
+		     after "<br>[<hidden> _charset_ {}][<hidden> N [armour $N]][<hidden> V [armour $V]]<input name='create' type='submit' value='Revert page'>" \
+		     pass {set r [::WikitWub::revert_pass $r $args]}]
+		[<div> id result {}]
 		[If {$nick ne ""} {
 		    (you are: [<b> $nick])
 		}]
@@ -859,7 +865,11 @@ namespace eval WikitWub {
 	    set menus(HR)     <br>
 	    set menus(Search) [<a> href [file join $mount searchp] "Search"]
 	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
-	    set menus(New)    [<a> href [file join $mount new] "Create new page"]
+	    if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne ""} {
+		set menus(New)    [<a> href [file join $mount new] "Create new page"]
+	    } else {
+		set menus(New) ""
+	    }
 	}
 	set m {}
 	foreach arg $args {
@@ -1517,6 +1527,9 @@ namespace eval WikitWub {
     }
 
     proc /revert {r N V} {
+	if {![info exists ::WikitWub::recaptcha_public] || $::WikitWub::recaptcha_public eq ""} {
+	    return [Http NotFound $r]	    
+	}
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -1538,14 +1551,12 @@ namespace eval WikitWub {
 
 	# is the caller logged in?
 	set nick [who $r]
-	
 	if {$nick eq ""} {
 	    set R ""	;# make it return here
-	    # TODO KBK: Perhaps allow anon edits with a CAPTCHA?
-	    # Or at least give a link to the page that gets the cookie back.
 	    return [sendPage $r login]
 	}
 
+	set r [jQ form $r .autoform target '#result']
 	return [sendPage $r revert]
     }
 
@@ -1690,9 +1701,12 @@ namespace eval WikitWub {
 	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
 	if {$type eq "" || [string match "text/*" $type]} {
 	    if {$markup_language eq "wikit"} {
-		set histheaders {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1 {Revert to} 1}
+		set histheaders {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1}
 	    } else {
-		set histheaders {Rev 1 Date 1 {Modified by} 1 {Word compare} 3 WikiText 1 {Revert to} 1}
+		set histheaders {Rev 1 Date 1 {Modified by} 1 {Word compare} 3 WikiText 1}
+	    }
+	    if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne ""} {
+		lappend histheaders {Revert to} 1
 	    }
 	} else {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1}
@@ -1756,7 +1770,9 @@ namespace eval WikitWub {
 		    append C [<td> class Annotated [<a> rel nofollow href "revision?N=$N&V=$vn&A=1" $vn]]
 		}
 		append C [<td> class WikiText [<a> rel nofollow href "revision?N=$N.txt&V=$vn" $vn]]
-		append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
+		if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne ""} {
+		    append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
+		}
 		append C </tr> \n
 		incr rowcnt
 	    }
@@ -2346,96 +2362,16 @@ namespace eval WikitWub {
 	}
     }
 
-    variable recaptcha_id 0
-    variable recaptcha_params
-    proc recaptcha_form {args} {
-	variable recaptcha_id
-	variable recaptcha_params
-	set pre ""
-	set post ""
-	set pass ""
-	set fail ""
-	set qargs ""
-	set theme "white"
-	foreach {k v} $args {
-	    set $k $v
-	}
-
-	set recaptcha_params([incr recaptcha_id]) [dict create pre $pre post $post pass $pass fail $fail qargs $qargs theme $theme]
-
-	proc /recaptcha_val_$recaptcha_id [list r {*}$qargs rcid recaptcha_challenge_field recaptcha_response_field] {
-	    variable recaptcha_params
-	    set entity [Query encodeL privatekey $::WikitWub::recaptcha_private remoteip [dict get $r -ipaddr] challenge $recaptcha_challenge_field response $recaptcha_response_field]
-	    set consumer [list ::WikitWub::recaptcha_resume $r $rcid]
-	    set params [dict create]
-	    foreach q [dict get $recaptcha_params($rcid) qargs] {
-		upvar 0 $q val
-		dict set params $q $val
-	    }
-	    dict set recaptcha_params($rcid) params $params
-	    set V [HTTP new http://api-verify.recaptcha.net/ $consumer post [list /verify $entity content-type application/x-www-form-urlencoded]]
-	    
-	    return [Http Suspend $r]
-	}
-
-	set C "
-	    <form action='[file join $::WikitWub::mount recaptcha_val_$recaptcha_id]' method='post'>
-	    <!-- ... your form code here ... -->
-	    $pre
-	    <script type='text/javascript'> var RecaptchaOptions = {theme : '$theme'}; </script>
-	    <script type='text/javascript' src='http://api.recaptcha.net/challenge?k=$::WikitWub::recaptcha_public'></script>
-	    <noscript>
-	    <iframe src='http://api.recaptcha.net/noscript?k=::WikitWub::recaptcha_public'
-	    height='300' width='500' frameborder='0'></iframe><br>
-	    <textarea name='recaptcha_challenge_field' rows='3' cols='40'>
-	    </textarea>
-	    <input type='hidden' name='recaptcha_response_field' 
-	    value='manual_challenge'>
-	    </noscript>
-	    <!-- ... more of your form code here ... -->
-            $post
-	    <input type='hidden' name='rcid' 
-	    value='$recaptcha_id'>
-	    </form>"
-    }
-    
-    proc recaptcha_resume {r rcid v} {
-	variable recaptcha_params
-	set result [split [dict get $v -content] \n]
-	set pass [lindex $result 0]
-	if {$pass eq "true"} {
-	    if {[llength [dict get $recaptcha_params($rcid) pass]]} {
-		if {[catch {{*}[dict get $recaptcha_params($rcid) pass] $r [dict get $recaptcha_params($rcid) params]} res eo]} {
-		    set r [Http ServerError $r $res $eo]
-		} else {
-		    set r $res
-		}
-	    } else {
-		set r [Http Ok $r "Passed ReCAPTCHA" text/plain]
-	    }
-	} else {
-	    if {[llength [dict get $recaptcha_params($rcid) fail]]} {
-		if {[catch {{*}[dict get $recaptcha_params($rcid) fail] $r [dict get $recaptcha_params($rcid) params]} res eo]} {
-		    set r [Http ServerError $r $res $eo]
-		} else {
-		    set r $res
-		}
-	    } else {
-		set r [Http Ok $r "Failed ReCAPTCHA" text/plain]
-	    }
-	}
-	unset recaptcha_params($rcid)
-	rename ::WikitWub::/recaptcha_val_$rcid {}
-	Httpd Resume [Http NoCache $r]	
-    }
-
     # /reload - direct url to reload numbered pages from fs
     proc /reload {r} {
 	foreach {} {}
     }
 
     proc /new {r} {
-	Debug.wikit {edit}
+	if {![info exists ::WikitWub::recaptcha_public] || $::WikitWub::recaptcha_public eq ""} {
+	    return [Http NotFound $r]	    
+	}
+	Debug.wikit {new}
 	variable detect_robots
 	variable mount
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
@@ -2453,6 +2389,7 @@ namespace eval WikitWub {
 	    return [sendPage $r login]
 	}
 
+	set r [jQ form $r .autoform target '#result']
 	return [sendPage $r new]
     }
 
@@ -2465,15 +2402,10 @@ namespace eval WikitWub {
 
 	variable mount
 	variable pageURL
-	if { [string tolower [dict get $params cancel]] eq "cancel" } {
-	    set url http://[Url host $r][file join $pageURL]
-	    return [redir $r $url [<a> href $url "Canceled page creation"]]
-	}
 	if {[dict get $params T] eq ""} {
 	    return [Http NoCache [Http Ok $r "No title specified"]]
 	}
 	lassign [InfoProc [dict get $params T]] N
-	variable mount
 	return [Http Redir $r [file join $mount edit?N=$N]]
     }
 
