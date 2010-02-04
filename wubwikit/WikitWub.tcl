@@ -3078,7 +3078,11 @@ namespace eval WikitWub {
     proc resume_suspended {fd r key date} {
 	variable eresult
 	Debug.wikit {resume suspended: $r $key $date}
-	append eresult($fd) [read $fd]
+	if {![info exists eresult($fd)]} {
+	    set eresult($fd) [read $fd]
+	} else {
+	    append eresult($fd) [read $fd]
+	}
 	Debug.wikit {resume suspended: $eresult(fd)}
 	if {[chan eof $fd]} {
 	    # the process has finished

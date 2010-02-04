@@ -22,7 +22,6 @@ domain /_images/ {File images} root [file join $::Site::docroot images] expires 
 domain /_scripts/ {File scripts} root [file join $::Site::docroot scripts] expires "next week"
 domain /_html/ {File html} root [file join $::Site::docroot html]
 domain /_bin/ {File bin} root [file join $::Site::docroot bin]
-domain /rc/ ReCAPTCHA public $::WikitWub::recaptcha_public private $::WikitWub::recaptcha_private
 #Nub domain /_tiny/ Tiny file tiny.mk
 
 domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
