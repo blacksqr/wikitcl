@@ -212,7 +212,7 @@ namespace eval WikitWub {
 	    }]
 	} else {
 	    [<form> psearchform action [file join $::WikitWub::mount search] {
-		[<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in pages and titles"]
+		[<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} "Search in pages"]
 		[<hidden> _charset_ ""]
 		[<hidden> long 1]
 	    }]
@@ -3061,6 +3061,9 @@ namespace eval WikitWub {
 		}
 	    } else {
 		set qdate 0
+	    }
+	    if {$long eq "1" && [string index $key end] ne "*"} {
+		append key "*"
 	    }
 	    if {[regexp {^(.*)\*+$} $key]} {
 		variable wikitdbpath
