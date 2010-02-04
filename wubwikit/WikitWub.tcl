@@ -3355,6 +3355,10 @@ namespace eval WikitWub {
 	Debug.wikit {init: $args}
 	variable {*}$args
 
+	if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne ""} {
+	    Nub domain /rc/ ReCAPTCHA public $::WikitWub::recaptcha_public private $::WikitWub::recaptcha_private
+	}
+
 	# set up static content prefixes
 	variable css_prefix
 	if {$css_prefix eq ""} {
