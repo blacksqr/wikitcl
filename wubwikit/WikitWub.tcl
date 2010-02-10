@@ -77,8 +77,8 @@ namespace eval WikitWub {
     variable doctool2html 0
     variable tclnroff2html 0
     variable nroffid 0
-    variable recaptcha_public ""
-    variable recaptcha_private ""
+    variable recaptcha_public "<not set>"
+    variable recaptcha_private "<not set>"
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -865,7 +865,7 @@ namespace eval WikitWub {
 	    set menus(HR)     <br>
 	    set menus(Search) [<a> href [file join $mount searchp] "Search"]
 	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
-	    if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne ""} {
+	    if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne "<not set>"} {
 		set menus(New)    [<a> href [file join $mount new] "Create new page"]
 	    } else {
 		set menus(New) ""
@@ -1527,7 +1527,7 @@ namespace eval WikitWub {
     }
 
     proc /revert {r N V} {
-	if {![info exists ::WikitWub::recaptcha_public] || $::WikitWub::recaptcha_public eq ""} {
+	if {![info exists ::WikitWub::recaptcha_public] || $::WikitWub::recaptcha_public eq "<not set>"} {
 	    return [Http NotFound $r]	    
 	}
 	variable detect_robots
@@ -1705,7 +1705,7 @@ namespace eval WikitWub {
 	    } else {
 		set histheaders {Rev 1 Date 1 {Modified by} 1 {Word compare} 3 WikiText 1}
 	    }
-	    if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne ""} {
+	    if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne "<not set>"} {
 		lappend histheaders {Revert to} 1
 	    }
 	} else {
@@ -1770,7 +1770,7 @@ namespace eval WikitWub {
 		    append C [<td> class Annotated [<a> rel nofollow href "revision?N=$N&V=$vn&A=1" $vn]]
 		}
 		append C [<td> class WikiText [<a> rel nofollow href "revision?N=$N.txt&V=$vn" $vn]]
-		if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne ""} {
+		if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne "<not set>"} {
 		    append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
 		}
 		append C </tr> \n
@@ -2368,7 +2368,7 @@ namespace eval WikitWub {
     }
 
     proc /new {r} {
-	if {![info exists ::WikitWub::recaptcha_public] || $::WikitWub::recaptcha_public eq ""} {
+	if {![info exists ::WikitWub::recaptcha_public] || $::WikitWub::recaptcha_public eq "<not set>"} {
 	    return [Http NotFound $r]	    
 	}
 	Debug.wikit {new}
