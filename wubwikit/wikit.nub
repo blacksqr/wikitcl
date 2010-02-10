@@ -23,6 +23,7 @@ domain /_scripts/ {File scripts} root [file join $::Site::docroot scripts] expir
 domain /_html/ {File html} root [file join $::Site::docroot html]
 domain /_bin/ {File bin} root [file join $::Site::docroot bin]
 #Nub domain /_tiny/ Tiny file tiny.mk
+domain /rc/ {ReCAPTCHA ::wikirecaptcha} public $::WikitWub::recaptcha_public private $::WikitWub::recaptcha_private
 
 domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 
