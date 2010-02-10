@@ -492,7 +492,7 @@ namespace eval WikitWub {
 		[<div> class updated "Enter title, then press Create below"]
 	    }]]
 	    [<div> class edittitle [subst {
-		[[lindex [info class instances ::ReCAPTCHA] 0] form class autoform \
+		[::wikirecaptcha form class autoform \
 		     before <br>[<text> T title "Page title" size 80]<br><br> \
 		     after "<br>[<hidden> _charset_ {}]<input name='create' type='submit' value='Create new page'>" \
 		     pass {set r [::WikitWub::new_page_pass $r $args]}]
@@ -512,7 +512,7 @@ namespace eval WikitWub {
 		[<div> class title "Revert page [tclarmour [Ref $N]] to version $V"]
 	    }]]
 	    [<div> class edittitle [subst {
-		[[lindex [info class instances ::ReCAPTCHA] 0] form class autoform \
+		[::wikirecaptcha form class autoform \
 		     before <br> \
 		     after "<br>[<hidden> _charset_ {}][<hidden> N [armour $N]][<hidden> V [armour $V]]<input name='create' type='submit' value='Revert page'>" \
 		     pass {set r [::WikitWub::revert_pass $r $args]}]
@@ -3357,10 +3357,6 @@ namespace eval WikitWub {
     proc init {args} {
 	Debug.wikit {init: $args}
 	variable {*}$args
-
-	if {[info exists ::WikitWub::recaptcha_public] && $::WikitWub::recaptcha_public ne ""} {
-	    Nub domain /rc/ ReCAPTCHA public $::WikitWub::recaptcha_public private $::WikitWub::recaptcha_private
-	}
 
 	# set up static content prefixes
 	variable css_prefix
