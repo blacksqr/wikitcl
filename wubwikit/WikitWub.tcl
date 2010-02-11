@@ -2702,6 +2702,7 @@ namespace eval WikitWub {
 	lassign [WDB GetPage $id name date type] name date type
 	if {$name eq ""} {
 	    set idlink [file join $mount edit?N=$id] ;# enter edit mode for missing links
+	    set plink $id
 	} else {
 	    if {$type ne "" && ![string match "text/*" $type]} {
 		set idlink [file join $mount image?N=$id]
