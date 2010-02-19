@@ -2289,62 +2289,6 @@ namespace eval WikitWub {
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
-    proc /revert_last_edit {r N} {
-	perms $r admin
-	if {![string is integer -strict $N]} {
-	    return [Http NotFound $r]
-	}
-
-	variable protected
-	if {[dict exists $protected $N]} {
-	    return [Http Ok $r "Protected pages can not be delete." text/html]
-	}
-
-	if {$N < 0 || $N >= [WDB PageCount]} {
-	    return [Http NotFound $r]
-	}
-	
-	lassign [WDB GetPage $N type] type
-
-	if {$type ne "" && ![string match "text/*" $type]} {
-	    set last_version [expr {[WDB VersionsBinary $N] -1}]
-	    if {$last_version > 0} {
-		WDB RevertBinary $N $last_version
-	    }
-	} else {
-	    set last_version [expr {[WDB Versions $N] - 1}]
-	    if {$last_version > 0} {
-		set C [get_page_with_version $N $last_version 0]
-		WDB Revert $N $last_version $C 
-	    }
-	}
-    }
-
-    proc /delete {r N} {
-	perms $r admin
-	if {![string is integer -strict $N]} {
-	    return [Http NotFound $r]
-	}
-
-	variable protected
-	if {[dict exists $protected $N]} {
-	    return [Http Ok $r "Protected pages can not be delete." text/html]
-	}
-
-	if {$N < 0 || $N >= [WDB PageCount]} {
-	    return [Http NotFound $r]
-	}
-	
-	if {[llength [WDB ReferencesTo $N]]} {
-	    variable mount
-	    return [Http Ok $r "References to page $N still exist, page can not be delete. List of pages referencing this page can be found <a href='[file join $mount ref]?N=$N'>here</a>" text/html]
-	}
-	
-	WDB Delete $N
-
-	return [Http Ok $r "Page $N deleted." text/html]
-    }
-
     proc /map {r imp args} {
 	perms $r read
 	variable protected
