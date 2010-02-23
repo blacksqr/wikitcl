@@ -2123,7 +2123,7 @@ namespace eval WikitWub {
 	Debug.wikit {/edit/save N:$N C?:[expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
 
 	# if there is new page content, save it now
-	set url http://[Url host $r][file join $pageURL $N]
+	set url [file join http://[Url host $r] $pageURL $N]
 	if {$N eq "" || $C eq ""} {
 	    variable redir
 	    return [Http NoCache [Http SeeOther $r $url [subst $redir]]]
@@ -2265,7 +2265,7 @@ namespace eval WikitWub {
 	}
 
 	# Only actually save the page if the user selected "save"
-	invalidate $r [file join $pageURL $N]
+	invalidate $r [file join / $pageURL $N]
 	invalidate $r [file join $mount recent]
 	invalidate $r [file join $mount ref]/$N
 	invalidate $r /_/rss.xml; WikitRss clear
