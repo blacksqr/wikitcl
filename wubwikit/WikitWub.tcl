@@ -539,6 +539,13 @@ namespace eval WikitWub {
     }
 
     # page sent on bad upload
+    template emptyclear {bad} {
+	[<h2> "Clearing of page $N - [Ref $N $name]"]
+	[<p> "[<b> {Your changes have NOT been saved}], You need to keep at least one character (e.g. a space) when clearing a page."]
+	[<hr> size 1]
+    }
+
+    # page sent on bad upload
     template badtype {bad type} {
 	[<h2> "Upload of type '$type' on page $N - [Ref $N $name]"]
 	[<p> "[<b> {Your changes have NOT been saved}], because the content your browser sent is of an inappropriate type. Only text and images allowed."]
@@ -2125,9 +2132,8 @@ namespace eval WikitWub {
 	# if there is new page content, save it now
 	set url [file join http://[Url host $r] $pageURL $N]
 	if {$N eq "" || $C eq ""} {
-	    variable redir
-	    return [Http NoCache [Http SeeOther $r $url [subst $redir]]]
-	    #return [redir $r $url [<a> href $url "Edited Page"]]
+	    Debug.wikit "Empty page"
+	    return [sendPage $r emptyclear]
 	}
 
 	variable protected
