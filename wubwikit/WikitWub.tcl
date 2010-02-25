@@ -2129,34 +2129,6 @@ namespace eval WikitWub {
 
 	Debug.wikit {/edit/save N:$N C?:[expr {$C ne ""}] who:$nick when:$when - modified:"$date $who" O:$O }
 
-	# if there is new page content, save it now
-	set url [file join http://[Url host $r] $pageURL $N]
-	if {$N eq "" || $C eq ""} {
-	    Debug.wikit "Empty page"
-	    return [sendPage $r emptyclear]
-	}
-
-	variable protected
-	if {[dict exists $protected $N]} {
-	    perms $r admin
-	    Debug.wikit {/edit/save protected page OK}
-	}
-
-	# added 2002-06-13 - edit conflict detection
-	if {$O ne [list $date $who]} {
-	    #lassign [split [lassign $O ewhen] @] enick eip
-	    if {$who eq "$nick@[dict get $r -ipaddr]"} {
-		# this is a ghostly conflict-with-self - log and ignore
-		Debug.wikit "Conflict on Edit of $N: '$O' ne '[list $date $who]' at date $when"
-		#set url http://[dict get $r host]/$N
-		#return [redir $r $url [<a> href $url "Edited Page"]]
-	    } else {
-		Debug.wikit {conflict $N}
-		set X [list $date $who]
-		return [sendPage $r conflict {NoCache Conflict}]
-	    }
-	}
-	
 	# if upload, check mime type
 	if {$upload ne ""} {
 	    set type [Mime magic $C]
@@ -2185,6 +2157,37 @@ namespace eval WikitWub {
 	    return [sendPage $r badnewtype]	    
 	}
 
+	# if there is new page content, save it now
+	set url [file join http://[Url host $r] $pageURL $N]
+	if {$type eq "text/x-wikit" && $C eq ""} {
+	    set C " "
+	}
+	if {$N eq "" || $C eq ""} {
+	    Debug.wikit "Empty page or page number"
+	    return [sendPage $r emptyclear]
+	}
+
+	variable protected
+	if {[dict exists $protected $N]} {
+	    perms $r admin
+	    Debug.wikit {/edit/save protected page OK}
+	}
+
+	# added 2002-06-13 - edit conflict detection
+	if {$O ne [list $date $who]} {
+	    #lassign [split [lassign $O ewhen] @] enick eip
+	    if {$who eq "$nick@[dict get $r -ipaddr]"} {
+		# this is a ghostly conflict-with-self - log and ignore
+		Debug.wikit "Conflict on Edit of $N: '$O' ne '[list $date $who]' at date $when"
+		#set url http://[dict get $r host]/$N
+		#return [redir $r $url [<a> href $url "Edited Page"]]
+	    } else {
+		Debug.wikit {conflict $N}
+		set X [list $date $who]
+		return [sendPage $r conflict {NoCache Conflict}]
+	    }
+	}
+	
 	# permit filtering of uploads of given type by means of password
 	perms $r [lindex [string trim $type /] 0]
 
