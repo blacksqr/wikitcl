@@ -2846,7 +2846,7 @@ namespace eval WikitWub {
 		    set result {}
 
 		    if { !$deletesAdded } {
-			lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages (title and/or page, [number_cleared_today] today)"]]
+			lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages ([number_cleared_today] today)"]]
 			set deletesAdded 1
 		    }
 		}
@@ -2874,7 +2874,7 @@ namespace eval WikitWub {
 	if { [llength $result] } {
 	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
 	    if { !$deletesAdded } {
-		lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages (title and/or page, [number_cleared_today] today)"]]
+		lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages ([number_cleared_today] today)"]]
 	    }
 	}
 
