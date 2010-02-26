@@ -890,6 +890,19 @@ namespace eval WikitWub {
 	return $m
     }
 
+    proc number_cleared_today { } {
+	set l24 [expr {[clock seconds]-86400}]
+	set n 0
+	foreach record [WDB Cleared] {
+	    dict with record {}
+	    if {$date < $l24} {
+		break
+	    }
+	    incr n
+	}
+	return $n
+    }
+
     proc /cleared { r } {
 	perms $r read
 	variable detect_robots
@@ -2833,7 +2846,7 @@ namespace eval WikitWub {
 		    set result {}
 
 		    if { !$deletesAdded } {
-			lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages (title and/or page)"]]
+			lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages (title and/or page, [number_cleared_today] today)"]]
 			set deletesAdded 1
 		    }
 		}
@@ -2861,7 +2874,7 @@ namespace eval WikitWub {
 	if { [llength $result] } {
 	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
 	    if { !$deletesAdded } {
-		lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages (title and/or page)"]]
+		lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages (title and/or page, [number_cleared_today] today)"]]
 	    }
 	}
 
