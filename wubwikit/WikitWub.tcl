@@ -1431,7 +1431,7 @@ namespace eval WikitWub {
 		    }
 		    set d1 [wordlist $d1]
 		    set d2 [wordlist $d2]
-		    foreach {ld1 ld2} [::struct::list::LlongestCommonSubsequence $d1 $d2] {
+		    foreach {ld1 ld2} [::struct::list::LlongestCommonSubsequence2 $d1 $d2 1000] {
 			foreach id1 $ld1 id2 $ld2 {
 			    while { $pd1 < $id1 } {
 				set w [lindex $d1 $pd1]
@@ -1530,7 +1530,7 @@ namespace eval WikitWub {
 		}
 	    }
 	}
-	
+
 	set menu [menus Home Recent Help WhoAmI New HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"]]
 	set footer [menus Home Recent Help New Search]
 
@@ -1552,6 +1552,7 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]	    
 	}
 	variable detect_robots
+	variable mount
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
