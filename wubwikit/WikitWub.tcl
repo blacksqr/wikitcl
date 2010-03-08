@@ -788,17 +788,25 @@ namespace eval WikitWub {
 
     # generate site map
     proc /sitemap {r args} {
-	variable docroot; variable pageURL
-	set p http://[Url host $r]/[string trimleft $pageURL /]
-	set map {}
-	append map [Sitemap location $p "" mtime [file mtime $docroot/html/welcome.html] changefreq weekly] \n
-	append map [Sitemap location $p 4 mtime [clock seconds] changefreq always priority 1.0] \n
-
-	foreach record [WDB AllPages] {
-	    set id [dict get $record id]
-	    append map [Sitemap location $p $id mtime [dict get $record date]] \n
+	variable docroot
+	variable pageURL
+	variable sitemap
+	variable sitemap_date
+	if {![info exists sitemap] || [clock seconds] - $sitemap_date > 86400} {
+	    set p http://[Url host $r]/[string trimleft $pageURL /]
+	    set map {}
+	    append map [Sitemap location $p "" mtime [file mtime $docroot/html/welcome.html] changefreq weekly] \n
+	    append map [Sitemap location $p 4 mtime [clock seconds] changefreq always priority 1.0] \n
+	    
+	    foreach record [WDB AllPages] {
+		set id [dict get $record id]
+		append map [Sitemap location $p $id mtime [dict get $record date]] \n
+	    }
+	    set sitemap $map
+	    set sitemap_date [clock seconds]
+	} else {
+	    set map $sitemap
 	}
-
 	return [Http NoCache [Http Ok $r [Sitemap sitemap $map] text/xml]]
     }
 
