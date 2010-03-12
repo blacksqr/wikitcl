@@ -1114,7 +1114,6 @@ namespace eval ::WFormat {
             } else {
               if {$type ne "" && ![string match "text/*" $type]} {
                 append result $html_frag(a_) $plink $html_frag(tc) $html_frag(i_) "$idlink\" "
-                puts "text = $text"
                 if {[regexp {width\s*=\s*(\d+)} $text -> width]} {
                   append result "width=\"$width\" "
                 }
@@ -1156,7 +1155,7 @@ namespace eval ::WFormat {
             lappend irefs $text
             append result "\n<div class='include'>@@@@@@@@@@$text@@@@@@@@@@</div>\n"
           } else {
-            append result $text
+            append result [quote $text]
           }
         }
         u {
@@ -1198,7 +1197,7 @@ namespace eval ::WFormat {
         V {
           append result $html_frag($state$mode)
           set state $mode
-          append result $text
+          append result [quote $text]
         }
         HD2 - HD3 - HD4 {
           append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
@@ -1381,7 +1380,7 @@ namespace eval ::WFormat {
           append result [subst $html_frag($state$mode)]
           lappend brefs backrefs$backrefid $text
           if { [string length $text]} {
-            set htext "<b>$text</b>"
+            set htext "<b>[quote $text]</b>"
           } else {
             set htext "current page"
           }
