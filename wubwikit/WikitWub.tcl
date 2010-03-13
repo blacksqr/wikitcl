@@ -3217,6 +3217,9 @@ namespace eval WikitWub {
 		    .txt -
 		    .str -
 		    .code {
+			if {$content eq ""} {
+			    set content " "
+			}
 			return [Http NoCache [Http Ok $r [translate $N $name $content $ext] text/plain]]
 		    }
 		    .xml {
