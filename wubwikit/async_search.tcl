@@ -61,7 +61,7 @@ proc Search {db key long date max} {
 }
 
 lassign $argv dbfnm key date max
-tdbc::sqlite3::connection create db $dbfnm
+tdbc::sqlite3::connection create db $dbfnm -isolation readonly
 set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
 puts [Search db $key $long $date $max]
 db close
