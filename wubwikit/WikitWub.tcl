@@ -2838,7 +2838,11 @@ namespace eval WikitWub {
 	set deletesAdded 0
 	set activityHeaderAdded 0
 
-	foreach record [WDB RecentChanges $threshold] {
+	puts "[clock seconds] /recent start query"
+	set records [WDB RecentChanges $threshold]
+
+	puts "[clock seconds] /recent start processing results"
+	foreach record $records {
 	    dict with record {}
 
 	    # these are fake pages, don't list them
@@ -2880,6 +2884,8 @@ namespace eval WikitWub {
 	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	}
 
+	puts "[clock seconds] /recent start processing last results"
+
 	if { [llength $result] } {
 	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
 	    if { !$deletesAdded } {
@@ -2889,6 +2895,8 @@ namespace eval WikitWub {
 
 	lappend results [<p> "generated [clock format [clock seconds]]"]
 	append C \n [join $results \n]
+
+	puts "[clock seconds] /recent send page"
 
 	# sendPage vars
 	set name "Recent Changes"
