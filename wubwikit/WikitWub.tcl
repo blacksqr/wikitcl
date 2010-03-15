@@ -2105,6 +2105,7 @@ namespace eval WikitWub {
 	perms $r write
 	variable mount
 	variable pageURL
+	variable recent_cache
 
 	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload}
 	Debug.wikit {Query: [dict get $r -Query] / [dict get $r -entity]}
@@ -2301,6 +2302,7 @@ namespace eval WikitWub {
 	invalidate $r [file join $mount ref]/$N
 	invalidate $r /_/rss.xml; WikitRss clear
 	invalidate $r [file join $mount summary]/$N
+	unset -nocomplain recent_cache
 
 	# if this page did not exist before:
 	# remove all referencing pages.
@@ -2465,6 +2467,9 @@ namespace eval WikitWub {
 	variable motd
 	variable docroot
 	variable mount
+	variable recent_cache
+
+	unset -nocomplain recent_cache
 
 	puts "\n\n\n\n\nmotd: [file join $docroot motd]\n\n\n\n\n"
 
@@ -2824,79 +2829,88 @@ namespace eval WikitWub {
 	    return $result
 	}
 
+	variable recent_cache
 	variable rprotected
 	variable mount
 	variable pageURL
 	variable delta
 	variable motd
 
-	set C $motd	;# contents includes motd
-	set results {}
-	set result {}
-	set lastDay 0
-	set threshold [expr {[clock seconds] - 7 * 86400}]
-	set deletesAdded 0
-	set activityHeaderAdded 0
+	if {[info exists recent_cache]} {
+	    puts "[clock seconds] /recent from its cache"
+	    set C $recent_cache
+	} else {
 
-	puts "[clock seconds] /recent start query"
-	set records [WDB RecentChanges $threshold]
+	    set C $motd	;# contents includes motd
+	    set results {}
+	    set result {}
+	    set lastDay 0
+	    set threshold [expr {[clock seconds] - 7 * 86400}]
+	    set deletesAdded 0
+	    set activityHeaderAdded 0
 
-	puts "[clock seconds] /recent start processing results"
-	foreach record $records {
-	    dict with record {}
+	    puts "[clock seconds] /recent start query"
+	    set records [WDB RecentChanges $threshold]
 
-	    # these are fake pages, don't list them
-	    if {[dict exists $rprotected $id]} continue
+	    puts "[clock seconds] /recent start processing results"
+	    foreach record $records {
+		dict with record {}
 
-	    # only report last change to a page on each day
-	    set day [expr {$date/86400}]
+		# these are fake pages, don't list them
+		if {[dict exists $rprotected $id]} continue
 
-	    # insert a header for each new date
-	    if {$day != $lastDay} {
+		# only report last change to a page on each day
+		set day [expr {$date/86400}]
 
-		if { [llength $result] } {
-		    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
-		    set result {}
+		# insert a header for each new date
+		if {$day != $lastDay} {
 
-		    if { !$deletesAdded } {
-			lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages ([number_cleared_today] today)"]]
-			set deletesAdded 1
+		    if { [llength $result] } {
+			lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
+			set result {}
+
+			if { !$deletesAdded } {
+			    lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages ([number_cleared_today] today)"]]
+			    set deletesAdded 1
+			}
 		    }
+
+		    lappend results [<p> ""]
+		    set datel [list "[<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]] [<span> class day [clock format $date -gmt 1 -format %A]]" ""]
+		    if {!$activityHeaderAdded} {
+			lappend datel "Activity"
+			set activityHeaderAdded 1
+		    } else {
+			lappend datel ""
+		    }
+		    lappend result $datel
+		    set lastDay $day
 		}
 
-		lappend results [<p> ""]
-		set datel [list "[<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]] [<span> class day [clock format $date -gmt 1 -format %A]]" ""]
-		if {!$activityHeaderAdded} {
-		    lappend datel "Activity"
-		    set activityHeaderAdded 1
-		} else {
-		    lappend datel ""
+		set actimg "<img class='activity' src='activity.png' alt='*' />"
+		set rtype ""
+		if {[string length $type] && ![string match "text/*" $type]} {
+		    set rtype [<span> class day " [lindex [split $type /] 0]"]
 		}
-		lappend result $datel
-		set lastDay $day
+		lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	    }
 
-	    set actimg "<img class='activity' src='activity.png' alt='*' />"
-	    set rtype ""
-	    if {[string length $type] && ![string match "text/*" $type]} {
-		set rtype [<span> class day " [lindex [split $type /] 0]"]
+	    puts "[clock seconds] /recent start processing last results"
+
+	    if { [llength $result] } {
+		lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
+		if { !$deletesAdded } {
+		    lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages ([number_cleared_today] today)"]]
+		}
 	    }
-	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
+
+	    lappend results [<p> "generated [clock format [clock seconds]]"]
+	    append C \n [join $results \n]
+
+	    puts "[clock seconds] /recent send page"
+
+	    set recent_cache $C
 	}
-
-	puts "[clock seconds] /recent start processing last results"
-
-	if { [llength $result] } {
-	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
-	    if { !$deletesAdded } {
-		lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages ([number_cleared_today] today)"]]
-	    }
-	}
-
-	lappend results [<p> "generated [clock format [clock seconds]]"]
-	append C \n [join $results \n]
-
-	puts "[clock seconds] /recent send page"
 
 	# sendPage vars
 	set name "Recent Changes"
