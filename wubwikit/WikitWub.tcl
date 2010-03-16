@@ -1439,7 +1439,7 @@ namespace eval WikitWub {
 		    }
 		    set d1 [wordlist $d1]
 		    set d2 [wordlist $d2]
-		    foreach {ld1 ld2} [::struct::list::LlongestCommonSubsequence2 $d1 $d2 1000] {
+		    foreach {ld1 ld2} [::struct::list::LlongestCommonSubsequence2 $d1 $d2 10] {
 			foreach id1 $ld1 id2 $ld2 {
 			    while { $pd1 < $id1 } {
 				set w [lindex $d1 $pd1]
