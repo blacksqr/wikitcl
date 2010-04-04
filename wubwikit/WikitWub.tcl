@@ -3381,7 +3381,7 @@ namespace eval WikitWub {
 	set htmlsuffix(stx) [<script> src [file join $script_prefix wiki.js]]\n
 	set htmlsuffix(creole) [<script> src [file join $script_prefix wiki.js]][<script> src [file join $script_prefix creole.js]]\n
 
-	Convert Namespace ::WikitWub	;# add wiki-local conversions
+	::convert namespace ::WikitWub	;# add wiki-local conversions
 	
 	variable base
 	variable wikitroot	;# where the wikit lives
