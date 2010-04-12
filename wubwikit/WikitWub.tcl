@@ -881,6 +881,7 @@ namespace eval WikitWub {
 	    set menus(HR)     <br>
 	    set menus(Search) [<a> href [file join $mount searchp] "Search"]
 	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
+	    set menus(Random) [<a> href [file join $mount random] "Random page"]
 	    if {[recaptcha_active]} {
 		set menus(New)    [<a> href [file join $mount new] "Create new page"]
 	    } else {
@@ -955,7 +956,7 @@ namespace eval WikitWub {
 	# sendPage vars
 	set Title "Cleared pages"
 	set name "Cleared pages"
-	set menu [menus Home Recent Help WhoAmI New]
+	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New Search]
 	set C [join $results "\n"]
 
@@ -1311,7 +1312,7 @@ namespace eval WikitWub {
 	append R </ul> \n
 
 	# sendPage vars
-	set menu [menus Home Recent Help WhoAmI New HR [<a> href [file join $mount history?N=$N] History] [<a> href [file join $mount summary?N=$N] "Edit summary"] [<a> href [file join $mount diff?N=$N] "Last change"] [<a> href [file join $mount diff?N=$N&T=1&D=1] "Changes last day"] [<a> href [file join $mount diff?N=$N&T=1&D=7] "Changes last week"] Search]
+	set menu [menus Home Recent Help WhoAmI New Random HR [<a> href [file join $mount history?N=$N] History] [<a> href [file join $mount summary?N=$N] "Edit summary"] [<a> href [file join $mount diff?N=$N] "Last change"] [<a> href [file join $mount diff?N=$N&T=1&D=1] "Changes last day"] [<a> href [file join $mount diff?N=$N&T=1&D=7] "Changes last week"] Search]
 	set footer [menus Home Recent Help New Search]
 
 	set C $R
@@ -1539,7 +1540,7 @@ namespace eval WikitWub {
 	    }
 	}
 
-	set menu [menus Home Recent Help WhoAmI New HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"]]
+	set menu [menus Home Recent Help WhoAmI New Random HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"]]
 	set footer [menus Home Recent Help New Search]
 
 	if {![string length $subtitle]} {
@@ -1637,7 +1638,7 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
-	set menu [menus Home Recent Help WhoAmI New HR [<a> href history?N=$N History]]
+	set menu [menus Home Recent Help WhoAmI New Random HR [<a> href history?N=$N History]]
 
 	set name [WDB GetPage $N name]
 	if {$V >= 0} {
@@ -1680,7 +1681,7 @@ namespace eval WikitWub {
 	    }
 	}
 
-	set footer [menus Home Recent Help New Search]
+	set footer [menus Home Recent Help New Random Search]
 	return [sendPage $r spage]
     }
 
@@ -1832,7 +1833,7 @@ namespace eval WikitWub {
 	# sendPage vars
 	set name "Change history of [WDB GetPage $N name]"
 	set Title "Change history of [Ref $N]"
-	set footer [menus Home Recent Help New Search]
+	set footer [menus Home Recent Help New Random Search]
 	set menu [menus Home Recent Help WhoAmI New HR {*}$menu]
 
 	return [sendPage $r spage]
@@ -1879,7 +1880,7 @@ namespace eval WikitWub {
 	# sendPage vars
 	set name "Who Am I?"
 	set Title "Who Am I?"
-	set menu [menus Home Recent Help WhoAmI New]
+	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New Search]
 	return [sendPage $r spage]
     }
@@ -2011,7 +2012,7 @@ namespace eval WikitWub {
 	variable query $S
 	set name "Search"
 	set Title "Search"
-	set menu [menus Home Recent Help WhoAmI New]
+	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New]
 
 	return [sendPage $r spage]
@@ -2026,6 +2027,31 @@ namespace eval WikitWub {
 	    Debug.wikit {who /edit/ $cl}
 	    return [dict get [Cookies Fetch $r -name $cookie] -value]
 	}
+    }
+
+    proc /random {r} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+	set size 1
+	set pc [WDB PageCount]
+	set n 0
+	while {$size <= 1} {
+	    set N [expr {int(rand()*$pc)}]
+	    lassign [WDB GetPage $N date type] pcdate type
+	    if {($type eq "" || [string match "text/*" $type]) && $pcdate > 0} {
+		if {[string length [WDB GetContent $N]] > 1} {
+		    break
+		}
+	    }
+	    incr n
+	    if {$n > 100} {
+		set N 4
+		break
+	    }
+	}
+	return [Http Redir $r "http://[dict get $r host]/$N"]
     }
 
     proc /preview { r N O } {
@@ -2546,10 +2572,10 @@ namespace eval WikitWub {
 	append C \n [string map [list %P% $N] {<!-- From Page %P% -->}] \n
 
 	if {$C eq ""} {
-	    set menu [menus Recent Help WhoAmI]
+	    set menu [menus Recent Help WhoAmI Random]
 	    lappend menu [<a> href [file join $mount edit]?N=$N "Create Page"]
 	} else {
-	    set menu [menus Recent Help WhoAmI]
+	    set menu [menus Recent Help WhoAmI Random]
 	}
 	set footer [menus Recent Help Search]
 
@@ -2633,7 +2659,7 @@ namespace eval WikitWub {
 	} 
 
 	# sendPage vars
-	set menu [menus Home Recent Help WhoAmI New]
+	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New Search]
 
 	set name "References to $N"
@@ -2915,7 +2941,7 @@ namespace eval WikitWub {
 	# sendPage vars
 	set name "Recent Changes"
 	set Title "Recent Changes"
-	set menu [menus Home Recent Help WhoAmI New]
+	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New Search]
 
 	return [sendPage $r spage]
@@ -3031,7 +3057,7 @@ namespace eval WikitWub {
 	
 	set name "Search"
 	set Title "Search"
-	set menu [menus Home Recent Help WhoAmI New]
+	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New]
 
 	return [sendPage $r spage]
@@ -3211,7 +3237,7 @@ namespace eval WikitWub {
 		lappend menu {*}[menus HR]
 		lappend menu [<a> href $backRef References]
 	    }
-	    set menu [menus Home Recent Help WhoAmI New {*}$menu]
+	    set menu [menus Home Recent Help WhoAmI New Random {*}$menu]
 	    set footer [menus Home Recent Help New Search WhoAmI {*}$footer]
 	    lappend menu [<a> href [file join $mount edit]?N=$N Edit]
 	    lappend footer [<a> href [file join $mount edit]?N=$N Edit]
@@ -3315,7 +3341,7 @@ namespace eval WikitWub {
 	    }
 
 	    # sendPage vars
-	    set menu [menus Home Recent Help WhoAmI New {*}$menu]
+	    set menu [menus Home Recent Help WhoAmI New Random {*}$menu]
 	    set footer [menus Home Recent Help New Search {*}$footer]
 
 	    variable hidereadonly
@@ -3553,6 +3579,8 @@ proc pest {req} {return 0}	;# default [pest] catcher
 catch {source [file join [file dirname [info script]] pest.tcl]}
 
 Debug.log {RESTART: [clock format [clock second]]}
+
+expr srand([clock seconds])
 
 # Initialize Site
 Site start application WikitWub home [file normalize [file dirname [info script]]] ini wikit.ini
