@@ -2326,7 +2326,7 @@ namespace eval WikitWub {
 	invalidate $r [file join / $pageURL $N]
 	invalidate $r [file join $mount recent]
 	invalidate $r [file join $mount ref]/$N
-	invalidate $r /_/rss.xml; WikitRss clear
+	invalidate $r /rss.xml; WikitRss clear
 	invalidate $r [file join $mount summary]/$N
 	unset -nocomplain recent_cache
 
