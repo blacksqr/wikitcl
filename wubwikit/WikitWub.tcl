@@ -3098,7 +3098,7 @@ namespace eval WikitWub {
 	    }
 	    if {[regexp {^(.*)\*+$} $key]} {
 		variable wikitdbpath
-		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath $key $qdate 100] r+]
+		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath [string trimleft $key <] $qdate 100] r+]
 		chan configure $cfd -blocking 0
 		chan event $cfd readable [list ::WikitWub::resume_suspended $cfd $r $key $qdate]
 		return [Httpd Suspend $r]
