@@ -13,6 +13,7 @@ if {0} {
        who TEXT NOT NULL,
        type TEXT,
        PRIMARY KEY (id));
+    CREATE INDEX idx_pages_date ON pages(date)
     CREATE TABLE pages_content (
        id INT NOT NULL,
        content TEXT NOT NULL,
