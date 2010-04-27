@@ -110,12 +110,14 @@ namespace eval WDB {
 		                                                   WHERE a.id = b.id 
 		                                                   AND a.date > :date 
                                                                    AND length(b.content) > 1
-                                                                   ORDER BY a.date DESC} }
+                                                                   ORDER BY a.date DESC
+		                                                   LIMIT 100} }
 		"binary_gt_date_with_content"           { set sql {SELECT * 
 		                                                   FROM pages a, pages_binary b 
 		                                                   WHERE a.id = b.id 
 		                                                   AND a.date > :date
-                                                                   ORDER BY a.date DESC} }
+                                                                   ORDER BY a.date DESC
+		                                                   LIMIT 100} }
 		"pages_gt_date"                         { set sql {SELECT * FROM pages WHERE date > :date ORDER BY id} }
 		"refs_to_pid"                           { set sql {SELECT fromid FROM refs WHERE toid = :pid ORDER BY fromid ASC} }
 		"update_change_delta"                   { set sql {UPDATE changes SET delta = :change WHERE id = :id AND cid = :version} }
