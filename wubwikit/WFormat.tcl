@@ -1859,11 +1859,30 @@ namespace eval ::WFormat {
           lassign [split_url_link_text $cat] link linktext
           set link [string trim $link]
           set linktext [string trim $linktext]
-
-          set info [eval $ip [list $link]]
-          foreach {id name date} $info break
-          if {$id == ""} {continue}
-          
+          if {[string match "Category *" $link]} {
+            set info [eval $ip [list $link]]
+            foreach {id name date} $info break
+            if {$id == ""} {continue}
+          } else {
+            # Check if "Category $link" exists
+            set id [eval $ip [list "Category $link"] 1]
+            if {$id == ""} {
+              # "Category $link" doesn't exist, check $link
+              set id [eval $ip [list $link] 1]
+              if {$id == ""} {
+                # $link doesn't exists
+                continue
+              } else {
+                # $link exists, use it
+                set info [eval $ip [list $link]]
+                foreach {id name date} $info break                  
+              }
+            } else {
+              # "Category $link" exists, use it.
+              set info [eval $ip [list "Category $link"]]
+              foreach {id name date} $info break
+            }
+          }
           regexp {[0-9]+} $id id
           set pages($id) ""          
         }

@@ -10,6 +10,8 @@ package require HTTP
 
 lappend auto_path [file dirname [info script]]
 
+puts "auto_path=$auto_path"
+
 #### initialize Wikit
 package require Site	;# assume Wub/ is already on the path, or in /usr/lib
 
