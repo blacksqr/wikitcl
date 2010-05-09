@@ -37,7 +37,6 @@ set API(WikitWub) {
     wikidb {wikit's metakit DB name (default wikit.tkd) - no obvious need to change this.}
     history {history directory}
     readonly {Message which makes the wikit readonly, and explains why.  (default "")}
-    motd {message of the day (default "")}
     maxAge {max age of login cookie (default "next month")}
     cookie {name of login cookie (default "wikit_e")}
     language {html natural language (default "en")}
@@ -605,7 +604,6 @@ namespace eval WikitWub {
 	}]
     }]]
 
-    variable motd ""
     variable TOC ""
     variable wiki_title	;# leave unset to take default
 
@@ -687,7 +685,7 @@ namespace eval WikitWub {
     }
 
     # protected pages - these can't be edited (resp read) by non-admin
-    variable protected_pages {ADMIN:Welcome ADMIN:TOC}
+    variable protected_pages {ADMIN:Welcome ADMIN:TOC ADMIN:MOTD}
     variable rprotected_pages {ADMIN:TOC}
     variable protected {}
     variable rprotected {}
@@ -2490,27 +2488,14 @@ namespace eval WikitWub {
 	}
     }
 
-    proc /motd {r} {
-	perms $r read
-	variable motd
-	variable docroot
-	variable mount
-	variable recent_cache
-
-	unset -nocomplain recent_cache
-
-	puts "\n\n\n\n\nmotd: [file join $docroot motd]\n\n\n\n\n"
-
-	catch {set motd [::fileutil::cat [file join $docroot motd]]}
-	set motd [string trim $motd]
-
-	invalidate $r [file join $mount recent]
-
-	set R [Http Referer $r]
-	if {$R eq ""} {
-	    set R [file join http://[dict get $r host] $mount recent]
+    proc getMOTD {} {
+	variable protected
+	set MOTDp [dict get? $protected ADMIN:MOTD]
+	if {$MOTDp ne ""} {
+	    return [string trim [WDB GetContent $MOTDp]]
+	} else {
+	    return ""
 	}
-	return [redir $r $R [<a> href $R "Loaded MOTD"]]
     }
 
     proc reloadTOC {} {
@@ -2862,14 +2847,13 @@ namespace eval WikitWub {
 	variable mount
 	variable pageURL
 	variable delta
-	variable motd
 
 	if {[info exists recent_cache]} {
 	    puts "[clock seconds] /recent from its cache"
 	    set C $recent_cache
 	} else {
 
-	    set C $motd	;# contents includes motd
+	    set C [getMOTD] ;# contents includes motd
 	    set results {}
 	    set result {}
 	    set lastDay 0
@@ -3499,11 +3483,6 @@ namespace eval WikitWub {
 	# move utf8 regexp into utf8 package
 	# utf8 package is loaded by Query
 	set ::utf8::utf8re $utf8re
-
-	# set message of the day (if any) to be displayed on /4
-	catch {
-	    variable motd [::fileutil::cat [file join $docroot motd]]
-	}
 
 	variable protected_pages
 	variable protected
