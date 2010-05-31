@@ -175,6 +175,7 @@ namespace eval WikitWub {
 	}
 	dict set r -content [uplevel 1 subst [list $templates($tname)]][<div> class generated [generated $r]]
 	dict set r content-type x-text/wiki
+        dict set r -page-type $tname
 
 	# run http filters
 	foreach pf $http {
@@ -683,6 +684,7 @@ namespace eval WikitWub {
 	}]]
 	<meta name="verify-v1" content="89v39Uh9xwxtWiYmK2JcYDszlGjUVT1Tq0QX+7H8AD0=">
     }
+    variable shead $head
 
     # protected pages - these can't be edited (resp read) by non-admin
     variable protected_pages {ADMIN:Welcome ADMIN:TOC ADMIN:MOTD}
@@ -698,9 +700,11 @@ namespace eval WikitWub {
 
 	# one-shot - initialize $head
 	variable head
+	variable shead
 	variable script_prefix
 	variable css_prefix
 	set head [subst $head]
+	set shead [subst $shead]
 
 	proc .x-text/wiki.text/html {rsp} {
 	    set rspcontent [dict get $rsp -content]
@@ -727,7 +731,12 @@ namespace eval WikitWub {
 
 		# add in some wikit-wide headers
 		variable head
-		append content $head
+		variable shead
+		if {[dict get? $rsp -page-type] eq "page"} {
+		    append content $head
+		} else {
+		    append content $shead
+		}
 
 		append content </head> \n
 
