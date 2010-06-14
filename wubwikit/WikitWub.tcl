@@ -1533,7 +1533,8 @@ namespace eval WikitWub {
 		}
 		default {
 		    set Title [Ref $N]
-		    set name "Difference between version $V and $D for $name"
+		    set name [expr {$W?"Word":"Line"}]
+		    append name " difference between version $V and $D for $name"
 		    if { $W } {
 			set C [WFormat ShowDiffs $C]
 		    } else {
@@ -1553,7 +1554,10 @@ namespace eval WikitWub {
 	set footer [menus Home Recent Help New Search]
 
 	if {![string length $subtitle]} {
-	    set subtitle "Difference between version $V and $D"
+	    set subtitle [expr {$W?"Word":"Line"}]
+	    append subtitle " difference between version $V and $D, switch to "
+	    append subtitle [<a> href "diff?N=$N&V=$V&D=$D&W=[expr {!$W}]#diff0" "[expr $W?"line":"word"] differences"]
+	    append subtitle "."
 	}
 
 	set C [replace_toc $C]
