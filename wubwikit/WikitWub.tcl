@@ -1742,16 +1742,19 @@ namespace eval WikitWub {
 
 	lassign [WDB GetPage $N name type] name type
 
+	append C "<button type='button'' onclick='versionCompare($N, 0);'>Line compare version A and B</button>"
+	append C "<button type='button'' onclick='versionCompare($N, 1);'>Word compare version A and B</button>"
 	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
 	if {$type eq "" || [string match "text/*" $type]} {
 	    if {$markup_language eq "wikit"} {
-		set histheaders {Rev 1 Date 1 {Modified by} 1 {Line compare} 3 {Word compare} 3 Annotated 1 WikiText 1}
+		set histheaders {Rev 1 Date 1 {Modified by} 1 Annotated 1 WikiText 1}
 	    } else {
-		set histheaders {Rev 1 Date 1 {Modified by} 1 {Word compare} 3 WikiText 1}
+		set histheaders {Rev 1 Date 1 {Modified by} 1 WikiText 1}
 	    }
 	    if {[recaptcha_active]} {
 		lappend histheaders {Revert to} 1
 	    }
+	    lappend histheaders A 1 B 1
 	} else {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1}
 	}
@@ -1777,45 +1780,21 @@ namespace eval WikitWub {
 		append C [<td> class Who [WhoUrl $who]]
 		
 		if {$markup_language eq "wikit"} {
-		    if { $prev >= 0 } {
-			append C [<td> class Line1 [<a> rel nofollow href "diff?N=$N&V=$vn&D=$prev#diff0" $prev]]
-		    } else {
-			append C <td></td>
-		    }
-		    if { $next <= $nver } {
-			append C [<td> class Line2 [<a> rel nofollow href "diff?N=$N&V=$vn&D=$next#diff0" $next]]
-		    } else {
-			append C <td></td>
-		    }
-		    if { $vn != $curr } {
-			append C [<td> class Line3 [<a> rel nofollow href "diff?N=$N&V=$curr&D=$vn#diff0" Current]]
-		    } else {
-			append C <td></td>
-		    }
-		}
-
-		if { $prev >= 0 } {
-		    append C [<td> class Word1 [<a> rel nofollow href "diff?N=$N&V=$vn&D=$prev&W=1#diff0" $prev]]
-		} else {
-		    append C <td></td>
-		}
-		if { $next <= $nver } {
-		    append C [<td> class Word2 [<a> rel nofollow href "diff?N=$N&V=$vn&D=$next&W=1#diff0" $next]]
-		} else {
-		    append C <td></td>
-		}
-		if { $vn != $curr } {
-		    append C [<td> class Word3 [<a> rel nofollow href "diff?N=$N&V=$curr&D=$vn&W=1#diff0" Current]]
-		} else {
-		    append C <td></td>
-		}
-		
-		if {$markup_language eq "wikit"} {
 		    append C [<td> class Annotated [<a> rel nofollow href "revision?N=$N&V=$vn&A=1" $vn]]
 		}
 		append C [<td> class WikiText [<a> rel nofollow href "revision?N=$N.txt&V=$vn" $vn]]
 		if {[recaptcha_active]} {
 		    append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
+		}
+		if {$rowcnt == 0} {
+		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn checked="checked" ""]]
+		} else {
+		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn ""]]
+		}
+		if {$rowcnt == 1} {
+		    append C [<td> [<input> id historyB$rowcnt type radio name verB value $vn checked="checked" ""]]
+		} else {
+		    append C [<td> [<input> id historyB$rowcnt type radio name verB value $vn ""]]
 		}
 		append C </tr> \n
 		incr rowcnt
