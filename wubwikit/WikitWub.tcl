@@ -633,7 +633,11 @@ namespace eval WikitWub {
 	[<link> rel stylesheet href [file join $css_prefix wikit_print.css] media print type text/css]
 	[<link> rel stylesheet href [file join $css_prefix wikit_handheld.css] media handheld type text/css]
 	[<link> rel stylesheet href [file join $css_prefix tooltips.css] type text/css]
-	
+
+	<script type="text/javascript" src="sh_main.js"></script>
+	<script type="text/javascript" src="lang/sh_tcl.js"></script>
+	<link type="text/css" rel="stylesheet" href="css/sh_style.css">	
+
 	[<link> rel alternate type application/rss+xml title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
 	[<style> media all "@import '[file join $css_prefix ie6.css]';"]
@@ -740,7 +744,7 @@ namespace eval WikitWub {
 
 		append content </head> \n
 
-		append content <body> \n
+		append content "<body onload='sh_highlightDocument();'>\n"
 		append content $rspcontent
 		variable markup_language
 		variable htmlsuffix
