@@ -1000,7 +1000,7 @@ namespace eval ::WFormat {
     return [list $text $text]
   }
 
-  proc StreamToHTML {s {cgi ""} {ip ""} {creating_preview 0}} {
+  proc StreamToHTML {s {cgi ""} {ip ""} {creating_preview 0} {creating_summary 0}} {
 
     # here so we aren't dependent on cksum unless rendering to HTML
     package require cksum
@@ -1092,7 +1092,7 @@ namespace eval ::WFormat {
             continue
           }
 
-          set info [eval $ip [list $link]]
+          set info [eval $ip [list $link] [expr {$creating_preview||$creating_summary}]]
           foreach {id name date type idlink plink} $info break
 
           if {$id == ""} {
@@ -1137,16 +1137,20 @@ namespace eval ::WFormat {
             # Insert a plain text
             append result [quote $text]
           } else {
-            # use ID -- editor link on the brackets.
-            append result $html_frag(a_) $plink 
-            if {$creating_preview} {
-              append result "\" target=\"_blank"
+            if {$creating_summary} {
+              append result \[ [quote $text] \]
+            } else {
+              # use ID -- editor link on the brackets.
+              append result $html_frag(a_) $plink 
+              if {$creating_preview} {
+                append result "\" target=\"_blank"
+              }
+              append result $html_frag(tc) \[ $html_frag(_a) [quote $text] $html_frag(a_) $plink
+              if {$creating_preview} {
+                append result "\" target=\"_blank"
+              }
+              append result $html_frag(tc) \] $html_frag(_a)
             }
-            append result $html_frag(tc) \[ $html_frag(_a) [quote $text] $html_frag(a_) $plink
-            if {$creating_preview} {
-              append result "\" target=\"_blank"
-            }
-            append result $html_frag(tc) \] $html_frag(_a)
           }
         }
         INCLUDE {

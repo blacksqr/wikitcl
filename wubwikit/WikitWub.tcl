@@ -1157,7 +1157,7 @@ namespace eval WikitWub {
 	return [list $rC $trcld $categories]
     }
 
-    proc translate {N name C ext {preview 0}} {
+    proc translate {N name C ext {preview 0} {summary 0}} {
 	variable markup_language
 	switch -exact -- $ext {
 	    .txt {
@@ -1199,7 +1199,7 @@ namespace eval WikitWub {
 			return [list [stx2html::translate $C]] 
 		    }
 		    wikit {
-			return [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview]
+			return [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview $summary]
 		    }
 		}
 	    }
@@ -1314,7 +1314,7 @@ namespace eval WikitWub {
 		set changes [WDB ChangeSetSize $N $version]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
-		lassign [translate $N $name $C .html] C U T BR
+		lassign [translate $N $name $C .html 0 1] C U T BR
 		append R $C
 		set pcdate $cdate
 		set pcwho $cwho
@@ -2689,7 +2689,7 @@ namespace eval WikitWub {
 	variable pageURL
 	variable mount
 	set id [WDB LookupPage $ref $query_only]
-	if {$query_only} {
+	if {$query_only && ![string is integer -strict $id]} {
 	    return $id
 	}
 	lassign [WDB GetPage $id name date type] name date type
