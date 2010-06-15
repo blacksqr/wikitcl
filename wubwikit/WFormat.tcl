@@ -1092,6 +1092,7 @@ namespace eval ::WFormat {
             continue
           }
 
+          set id ""
           set info [eval $ip [list $link] [expr {$creating_preview||$creating_summary}]]
           foreach {id name date type idlink plink} $info break
 
