@@ -2180,6 +2180,7 @@ namespace eval WikitWub {
 	    if {$type eq ""} {
 		# we don't know what type - assume wiki text
 		set type text/x-wikit
+		set C [encoding convertfrom utf-8 $C]
 	    } elseif {![string match image/* $type]
 		&& [string match text/* $type]
 	    } {
