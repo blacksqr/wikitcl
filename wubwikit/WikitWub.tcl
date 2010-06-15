@@ -1537,8 +1537,7 @@ namespace eval WikitWub {
 		}
 		default {
 		    set Title [Ref $N]
-		    set name [expr {$W?"Word":"Line"}]
-		    append name " difference between version $V and $D for $name"
+		    set name "[expr {$W?"Word":"Line"}] difference between version $V and $D for $name" 
 		    if { $W } {
 			set C [WFormat ShowDiffs $C]
 		    } else {
