@@ -1838,7 +1838,7 @@ namespace eval WikitWub {
     proc Ref {url {name "" } args} {
 	variable pageURL
 	if {$name eq ""} {
-	    set page [lindex [file split $url] end]
+	    set page [lindex [split [string trimright $url /] /] end]
 	    set name [WDB GetPage $page name]
 	    if {$name eq ""} {
 		set name $page
@@ -1894,7 +1894,7 @@ namespace eval WikitWub {
     proc /edit/login {r {nickname ""} {R ""}} {
 	perms $r write
 	variable mount
-	set path [file split [dict get $r -path]]
+	set path [split [dict get $r -path] /]
 	set N [lindex $path end]
 	set suffix /[string trimleft [lindex $path end-1] _]
 	dict set r -suffix $suffix
