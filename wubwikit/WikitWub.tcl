@@ -153,7 +153,7 @@ namespace eval WikitWub {
     }
     
     proc <P> {args} {
-	puts stderr "<P> $args"
+	#puts stderr "<P> $args"
 	return [<p> {*}$args]
     }
 
@@ -440,7 +440,7 @@ namespace eval WikitWub {
 	    [subst [template upload]]
 	    [<div> class editcontents [subst {
 		[set disabled [expr {$nick eq ""}]
-		 <form> edit enctype multipart/form-data method post action [file join $::WikitWub::mount edit/save] {
+		 <form> edit method post action [file join $::WikitWub::mount edit/save] {
 		     [subst [template qr_$markup_language]]
 		     [<div> class previewarea_pre id previewarea_pre ""]
 		     [<div> class previewarea id previewarea ""]
@@ -3236,6 +3236,7 @@ namespace eval WikitWub {
 	} else {
 	    # fetch page contents
 	    set content [WDB GetContent $N]
+
 	    variable protected
 	    if {$N == [dict get? $protected ADMIN:Welcome]} {
 		# page 0 is HTML and is the Welcome page
