@@ -119,6 +119,10 @@ function sh_highlightString(inputString, language) {
         if (style === 'sh_url') {
           clone = a.cloneNode(false);
         }
+        else if (style === 'sh_keyword') {
+          clone = a.cloneNode(false);
+	  clone.href = 'http://wiki.tcl.tk/'+s;
+        }
         else {
           clone = span.cloneNode(false);
         }
