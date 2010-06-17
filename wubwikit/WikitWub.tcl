@@ -440,7 +440,7 @@ namespace eval WikitWub {
 	    [subst [template upload]]
 	    [<div> class editcontents [subst {
 		[set disabled [expr {$nick eq ""}]
-		 <form> edit method post action [file join $::WikitWub::mount edit/save] {
+		 <form> edit enctype multipart/form-data method post action [file join $::WikitWub::mount edit/save] {
 		     [subst [template qr_$markup_language]]
 		     [<div> class previewarea_pre id previewarea_pre ""]
 		     [<div> class previewarea id previewarea ""]
