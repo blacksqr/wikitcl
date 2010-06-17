@@ -27,15 +27,15 @@ domain /rc/ {ReCAPTCHA ::wikirecaptcha} public [Site var? wikitwub recaptcha_pub
 
 domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 
-rewrite {^/$} /_/welcome	;# need to silently redirect welcome page
+rewrite {^//[^/]+/$} /_/welcome	;# need to silently redirect welcome page
 
-rewrite {/[^/]+[.](jpg|gif|png|ico)} {/_images/[file tail [dict get $r -path]]}
-rewrite {/[^/]+[.]css} {/_css/[file tail [dict get $r -path]]}
-rewrite {/css/[^/]+[.]css} {/_css/[file tail [dict get $r -path]]}
-rewrite {/[^/]+[.]gz} {/_bin/[file tail [dict get $r -path]]}
-rewrite {/[^/]+[.]js} {/_scripts/[file tail [dict get $r -path]]}
-rewrite {/doc/.*} {/_docs/[file join {*}[lrange [file split [dict get $r -path]] 2 end]]}
-rewrite {/nub/.*} {/_nub/[file join {*}[lrange [file split [dict get $r -path]] 2 end]]}
+rewrite {^//[^/]+/[^/]+[.](jpg|gif|png|ico)} {/_images/[Url tail [dict get $r -path]]}
+rewrite {^//[^/]+/[^/]+[.]css} {/_css/[Url tail [dict get $r -path]]}
+rewrite {/css/[^/]+[.]css} {/_css/[Url tail [dict get $r -path]]}
+rewrite {^//[^/]+/[^/]+[.]gz} {/_bin/[Url tail [dict get $r -path]]}
+rewrite {^//[^/]+/[^/]+[.]js} {/_scripts/[Url tail [dict get $r -path]]}
+rewrite {/doc/.*} {/_docs/[join {*}[lrange [split [dict get $r -path] /] 2 end] /]}
+rewrite {/nub/.*} {/_nub/[join {*}[lrange [split [dict get $r -path] /] 2 end] /]}
 rewrite {/_sitemap.xml} {/_/sitemap}
 rewrite {/_sitemap} {/_/sitemap}
 
