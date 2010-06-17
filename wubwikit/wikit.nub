@@ -34,8 +34,8 @@ rewrite {^//.+/[^/]+[.]css} {/_css/[Url tail [dict get $r -path]]}
 rewrite {/css/[^/]+[.]css} {/_css/[Url tail [dict get $r -path]]}
 rewrite {^//.+/[^/]+[.]gz} {/_bin/[Url tail [dict get $r -path]]}
 rewrite {^//.+/[^/]+[.]js} {/_scripts/[Url tail [dict get $r -path]]}
-rewrite {/doc/.*} {/_docs/[join {*}[lrange [split [dict get $r -path] /] 2 end] /]}
-rewrite {/nub/.*} {/_nub/[join {*}[lrange [split [dict get $r -path] /] 2 end] /]}
+rewrite {/doc/.*} {/_docs/[Url range [dict get $r -path] 2 end]}
+rewrite {/nub/.*} {/_nub/[Url range [dict get $r -path] 2 end]}
 rewrite {/_sitemap.xml} {/_/sitemap}
 rewrite {/_sitemap} {/_/sitemap}
 
