@@ -2176,14 +2176,15 @@ namespace eval WikitWub {
 	# if upload, check mime type
 	if {$upload ne ""} {
 	    set type [Mime magic $C]
-	    Debug.wikit "Mime magic: $type"
+	    Debug.wikit {Mime magic: $type}
 	    if {$type eq ""} {
 		# we don't know what type - assume wiki text
 		set type text/x-wikit
+		set C [encoding convertfrom utf-8 $C]
 	    } elseif {![string match image/* $type]
 		&& [string match text/* $type]
 	    } {
-		Debug.wikit "Bad Type: $type"
+		Debug.wikit {Bad Type: $type}
 		return [sendPage $r badtype]
 	    }
 	} else {
@@ -2207,7 +2208,7 @@ namespace eval WikitWub {
 	    set C " "
 	}
 	if {$N eq "" || $C eq ""} {
-	    Debug.wikit "Empty page or page number"
+	    Debug.wikit {Empty page or page number}
 	    return [sendPage $r emptyclear]
 	}
 
@@ -2222,7 +2223,7 @@ namespace eval WikitWub {
 	    #lassign [split [lassign $O ewhen] @] enick eip
 	    if {$who eq "$nick@[dict get $r -ipaddr]"} {
 		# this is a ghostly conflict-with-self - log and ignore
-		Debug.wikit "Conflict on Edit of $N: '$O' ne '[list $date $who]' at date $when"
+		Debug.wikit {Conflict on Edit of $N: '$O' ne '[list $date $who]' at date $when}
 		#set url http://[dict get $r host]/$N
 		#return [redir $r $url [<a> href $url "Edited Page"]]
 	    } else {
