@@ -636,6 +636,8 @@ namespace eval WikitWub {
 
 	<script type="text/javascript" src="sh_main.js"></script>
 	<script type="text/javascript" src="lang/sh_tcl.js"></script>
+	<script type="text/javascript" src="lang/sh_c.js"></script>
+	<script type="text/javascript" src="lang/sh_cpp.js"></script>
 	<link type="text/css" rel="stylesheet" href="css/sh_style.css">	
 
 	[<link> rel alternate type application/rss+xml title RSS href /rss.xml]

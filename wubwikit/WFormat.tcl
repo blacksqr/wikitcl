@@ -113,6 +113,7 @@ namespace eval ::WFormat {
     set mode_inlinehtml 0
     set mode_doctool 0
     set mode_tclnroff 0
+    set fixed_lang ""
     set optnum 0	 	  ; # option block number
     set optlen 0	 	  ; # length of option block fixed part
     foreach line [split $text \n] {
@@ -168,7 +169,8 @@ namespace eval ::WFormat {
         HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS - CATEGORY - INLINETOC - INLINEHTML {
           if {$paragraph != {}} {
             if {$mode_fixed} {
-              lappend irep FI {}
+              lappend irep FI $fixed_lang
+              set fixed_lang ""
               set paragraph [join $paragraph \n]
               if {$mode_code} {
                 lappend irep {} $paragraph
@@ -270,13 +272,17 @@ namespace eval ::WFormat {
         FIXED {
           if {$tag eq "CODE"} {
             set mode_code 1
+            if {[string length $txt] > 6} {
+              set fixed_lang [string range $txt 6 end]
+            }
           } else {
             set mode_code 0
           }
           if {$mode_fixed} {
             if {$paragraph ne {}} {
               set paragraph [join $paragraph \n]
-              lappend irep FI {}
+              lappend irep FI $fixed_lang
+              set fixed_lang ""
               if {$mode_code} {
                 lappend irep {} $paragraph
               } else {
@@ -581,7 +587,7 @@ namespace eval ::WFormat {
       INLINEHTML {^<<inlinehtml>>$}
       COMMENT  {^()()(###).*$}
       FIXED  {^()()(===)$}
-      CODE   {^()()(======)$}
+      CODE   {^()()(======(tcl|c|cpp|none|))$}
       DOCTOOL {^<<doctool>>$}
       TCLNROFF {^<<tclnroff>>$}
       OPTION {^()()(\+\+\+)$}
@@ -1309,6 +1315,17 @@ namespace eval ::WFormat {
           } else {
             set oddoreven ""
           }
+          if {$mode eq "FI"} {
+            if {$text eq ""} {
+              set sh_class sh_tcl
+            } elseif {$text eq "none" || $text ni {c cpp tcl}} {
+              set sh_class ""
+            } else {
+              set sh_class sh_$text
+            }
+          } else {
+            set sh_class ""
+          }
           append result [subst $html_frag($state$mode)]
           set state $mode
         }
@@ -1611,7 +1628,7 @@ namespace eval ::WFormat {
     }
 
     # Get rid of spurious newline at start of each quoted area.
-    regsub -all "<pre\ class='sh_tcl'>\n" $result "<pre\ class='sh_tcl'>" result
+    regsub -all {<pre ([^>])>\n} $result {<pre $1>} result
 
     list $result {} $toc $brefs $irefs $dtl $tnrl
   }
@@ -1646,23 +1663,23 @@ namespace eval ::WFormat {
     return
   }
 
-  vs T    T                      <p></p> ;vs T    Q                      <pre\ class='sh_tcl'> ;vs T    U                      <ul\ class='ul3'><li> ;vs T    O                      <ol><li>
+  vs T    T                      <p></p> ;vs T    Q                      <pre\ class='\$sh_class'> ;vs T    U                      <ul\ class='ul3'><li> ;vs T    O                      <ol><li>
   vs Q    T                </pre><p></p> ;vs Q    Q                         \n ;vs Q    U                </pre><ul\ class='ul3'><li> ;vs Q    O                </pre><ol><li>
-  vs U    T                 </ul><p></p> ;vs U    Q                 </ul><pre\ class='sh_tcl'> ;vs U    U                        \n<li> ;vs U    O                 </ul><ol><li>
-  vs O    T                 </ol><p></p> ;vs O    Q                 </ol><pre\ class='sh_tcl'> ;vs O    U                 </ol><ul\ class='ul3'><li> ;vs O    O                        \n<li>
-  vs I    T                 </dl><p></p> ;vs I    Q                 </dl><pre\ class='sh_tcl'> ;vs I    U                 </dl><ul\ class='ul3'><li> ;vs I    O                 </dl><ol><li>
-  vs D    T            </dd></dl><p></p> ;vs D    Q            </dd></dl><pre\ class='sh_tcl'> ;vs D    U            </dd></dl><ul\ class='ul3'><li> ;vs D    O            </dd></dl><ol><li>
-  vs H    T                      <p></p> ;vs H    Q                      <pre\ class='sh_tcl'> ;vs H    U                      <ul\ class='ul3'><li> ;vs H    O                      <ol><li>
-  vs TDE  T </tr></tbody></table><p></p> ;vs TDE  Q </tr></tbody></table><pre\ class='sh_tcl'> ;vs TDE  U </tr></tbody></table><ul\ class='ul3'><li> ;vs TDE  O </tr></tbody></table><ol><li>
-  vs TDEH T </tr></thead></table><p></p> ;vs TDEH Q </tr></thead></table><pre\ class='sh_tcl'> ;vs TDEH U </tr></thead></table><ul\ class='ul3'><li> ;vs TDEH O </tr></thead></table><ol><li>
+  vs U    T                 </ul><p></p> ;vs U    Q                 </ul><pre\ class='\$sh_class'> ;vs U    U                        \n<li> ;vs U    O                 </ul><ol><li>
+  vs O    T                 </ol><p></p> ;vs O    Q                 </ol><pre\ class='\$sh_class'> ;vs O    U                 </ol><ul\ class='ul3'><li> ;vs O    O                        \n<li>
+  vs I    T                 </dl><p></p> ;vs I    Q                 </dl><pre\ class='\$sh_class'> ;vs I    U                 </dl><ul\ class='ul3'><li> ;vs I    O                 </dl><ol><li>
+  vs D    T            </dd></dl><p></p> ;vs D    Q            </dd></dl><pre\ class='\$sh_class'> ;vs D    U            </dd></dl><ul\ class='ul3'><li> ;vs D    O            </dd></dl><ol><li>
+  vs H    T                      <p></p> ;vs H    Q                      <pre\ class='\$sh_class'> ;vs H    U                      <ul\ class='ul3'><li> ;vs H    O                      <ol><li>
+  vs TDE  T </tr></tbody></table><p></p> ;vs TDE  Q </tr></tbody></table><pre\ class='\$sh_class'> ;vs TDE  U </tr></tbody></table><ul\ class='ul3'><li> ;vs TDE  O </tr></tbody></table><ol><li>
+  vs TDEH T </tr></thead></table><p></p> ;vs TDEH Q </tr></thead></table><pre\ class='\$sh_class'> ;vs TDEH U </tr></thead></table><ul\ class='ul3'><li> ;vs TDEH O </tr></thead></table><ol><li>
   vs FE   T                </pre><p></p> ;vs FE   Q                         \n ;vs FE   U                </pre><ul\ class='ul3'><li> ;vs FE   O                </pre><ol><li>
-  vs FI   T                      <p></p> ;vs FI   Q                      <pre\ class='sh_tcl'> ;vs FI   U                      <ul\ class='ul3'><li> ;vs FI   O                      <ol><li>
-  vs L    T              </table><p></p> ;vs L    Q              </table><pre\ class='sh_tcl'> ;vs L    U              </table><ul\ class='ul3'><li> ;vs L    O              </table><ol><li>
-  vs HD2  T                 </h2><p></p> ;vs HD2  Q                 </h2><pre\ class='sh_tcl'> ;vs HD2  U                 </h2><ul\ class='ul3'><li> ;vs HD2  O                 </h2><ol><li>
-  vs HD3  T                 </h3><p></p> ;vs HD3  Q                 </h3><pre\ class='sh_tcl'> ;vs HD3  U                 </h3><ul\ class='ul3'><li> ;vs HD3  O                 </h3><ol><li>
-  vs HD4  T                 </h4><p></p> ;vs HD4  Q                 </h4><pre\ class='sh_tcl'> ;vs HD4  U                 </h4><ul\ class='ul3'><li> ;vs HD4  O                 </h4><ol><li>
-  vs BLS  T                    <p></p>\n ;vs BLS  Q                    \n<pre\ class='sh_tcl'> ;vs BLS  U                    \n<ul\ class='ul3'><li> ;vs BLS  O                    \n<ol><li>
-  vs BLE  T                    <p></p>\n ;vs BLE  Q                    \n<pre\ class='sh_tcl'> ;vs BLE  U                    \n<ul\ class='ul3'><li> ;vs BLE  O                    \n<ol><li>
+  vs FI   T                      <p></p> ;vs FI   Q                      <pre\ class='\$sh_class'> ;vs FI   U                      <ul\ class='ul3'><li> ;vs FI   O                      <ol><li>
+  vs L    T              </table><p></p> ;vs L    Q              </table><pre\ class='\$sh_class'> ;vs L    U              </table><ul\ class='ul3'><li> ;vs L    O              </table><ol><li>
+  vs HD2  T                 </h2><p></p> ;vs HD2  Q                 </h2><pre\ class='\$sh_class'> ;vs HD2  U                 </h2><ul\ class='ul3'><li> ;vs HD2  O                 </h2><ol><li>
+  vs HD3  T                 </h3><p></p> ;vs HD3  Q                 </h3><pre\ class='\$sh_class'> ;vs HD3  U                 </h3><ul\ class='ul3'><li> ;vs HD3  O                 </h3><ol><li>
+  vs HD4  T                 </h4><p></p> ;vs HD4  Q                 </h4><pre\ class='\$sh_class'> ;vs HD4  U                 </h4><ul\ class='ul3'><li> ;vs HD4  O                 </h4><ol><li>
+  vs BLS  T                    <p></p>\n ;vs BLS  Q                    \n<pre\ class='\$sh_class'> ;vs BLS  U                    \n<ul\ class='ul3'><li> ;vs BLS  O                    \n<ol><li>
+  vs BLE  T                    <p></p>\n ;vs BLE  Q                    \n<pre\ class='\$sh_class'> ;vs BLE  U                    \n<ul\ class='ul3'><li> ;vs BLE  O                    \n<ol><li>
 
   vs T    I                      <dl><dt> ;vs T    D                      <dl><dd> ;vs T    H                              "<hr>" ;vs T    _                    {}
   vs Q    I                </pre><dl><dt> ;vs Q    D                </pre><dl><dd> ;vs Q    H                        "</pre><hr>" ;vs Q    _                </pre>
@@ -1772,23 +1789,23 @@ namespace eval ::WFormat {
   vs BLS  TRH     "\n<table summary='' class='wikit_table'><thead><tr>"
   vs BLE  TRH     "\n<table summary='' class='wikit_table'><thead><tr>"
 
-  vs T    FI                      <pre\ class='sh_tcl'> ;vs T   FE                    {} ;
-  vs Q    FI                </pre><pre\ class='sh_tcl'> ;vs Q   FE                </pre> ;
-  vs U    FI                 </ul><pre\ class='sh_tcl'> ;vs U   FE                 </ul> ;
-  vs O    FI                 </ol><pre\ class='sh_tcl'> ;vs O   FE                 </ol> ;
-  vs I    FI                 </dl><pre\ class='sh_tcl'> ;vs I   FE                 </dl> ;
-  vs D    FI            </dd></dl><pre\ class='sh_tcl'> ;vs D   FE            </dd></dl> ;
-  vs H    FI                      <pre\ class='sh_tcl'> ;vs H   FE                    {} ;
-  vs TDE  FI </tr></tbody></table><pre\ class='sh_tcl'> ;vs TDE FE </tr></tbody></table> ;
-  vs TDEH FI </tr></thead></table><pre\ class='sh_tcl'> ;vs TDE FE </tr></thead></table> ;
-  vs FE   FI                </pre><pre\ class='sh_tcl'> ;vs FE  FE                </pre> ;
-  vs FI   FI                      <pre\ class='sh_tcl'> ;vs FI  FE                    {} ;
-  vs L    FI              </table><pre\ class='sh_tcl'> ;vs L   FE              </table> ;
-  vs HD2  FI                 </h2><pre\ class='sh_tcl'> ;vs HD2 FE                 </h2> ;
-  vs HD3  FI                 </h3><pre\ class='sh_tcl'> ;vs HD3 FE                 </h3> ;
-  vs HD4  FI                 </h4><pre\ class='sh_tcl'> ;vs HD4 FE                 </h4> ;
-  vs BLS  FI                    \n<pre\ class='sh_tcl'> ;vs BLS FE                    \n ;
-  vs BLE  FI                    \n<pre\ class='sh_tcl'> ;vs BLE FE                    \n ;
+  vs T    FI                      <pre\ class='\$sh_class'> ;vs T   FE                    {} ;
+  vs Q    FI                </pre><pre\ class='\$sh_class'> ;vs Q   FE                </pre> ;
+  vs U    FI                 </ul><pre\ class='\$sh_class'> ;vs U   FE                 </ul> ;
+  vs O    FI                 </ol><pre\ class='\$sh_class'> ;vs O   FE                 </ol> ;
+  vs I    FI                 </dl><pre\ class='\$sh_class'> ;vs I   FE                 </dl> ;
+  vs D    FI            </dd></dl><pre\ class='\$sh_class'> ;vs D   FE            </dd></dl> ;
+  vs H    FI                      <pre\ class='\$sh_class'> ;vs H   FE                    {} ;
+  vs TDE  FI </tr></tbody></table><pre\ class='\$sh_class'> ;vs TDE FE </tr></tbody></table> ;
+  vs TDEH FI </tr></thead></table><pre\ class='\$sh_class'> ;vs TDE FE </tr></thead></table> ;
+  vs FE   FI                </pre><pre\ class='\$sh_class'> ;vs FE  FE                </pre> ;
+  vs FI   FI                      <pre\ class='\$sh_class'> ;vs FI  FE                    {} ;
+  vs L    FI              </table><pre\ class='\$sh_class'> ;vs L   FE              </table> ;
+  vs HD2  FI                 </h2><pre\ class='\$sh_class'> ;vs HD2 FE                 </h2> ;
+  vs HD3  FI                 </h3><pre\ class='\$sh_class'> ;vs HD3 FE                 </h3> ;
+  vs HD4  FI                 </h4><pre\ class='\$sh_class'> ;vs HD4 FE                 </h4> ;
+  vs BLS  FI                    \n<pre\ class='\$sh_class'> ;vs BLS FE                    \n ;
+  vs BLE  FI                    \n<pre\ class='\$sh_class'> ;vs BLE FE                    \n ;
 
   # Only TR and TDE can go to TD
   # TDE -> TDE is never required.
