@@ -16,7 +16,7 @@ pre.sh_sourceCode .sh_number { color: purple; }                             /* l
 pre.sh_sourceCode .sh_preproc { color: darkblue; font-weight: bold; }       /* e.g., #include, import */
 pre.sh_sourceCode .sh_symbol { color: darkred; }                            /* e.g., <, >, + */
 pre.sh_sourceCode .sh_function { color: black; font-weight: bold; }         /* function calls and declarations */
-pre.sh_sourceCode .sh_cbracket { color: red; }                              /* block brackets (e.g., {, }) */
+pre.sh_sourceCode .sh_cbracket { color: black; }                              /* block brackets (e.g., {, }) */
 pre.sh_sourceCode .sh_todo { font-weight: bold; background-color: cyan; }   /* TODO and FIXME */
 
 /* Predefined variables and functions (for instance glsl) */
@@ -62,5 +62,5 @@ pre.sh_sourceCode .sh_value { color: darkgreen; font-style: italic; }
 
 /* other */
 pre.sh_sourceCode .sh_section { color: black; font-weight: bold; }
-pre.sh_sourceCode .sh_paren { color: red; }
+pre.sh_sourceCode .sh_paren { color: black; }
 pre.sh_sourceCode .sh_attribute { color: darkgreen; }
