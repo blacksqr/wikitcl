@@ -29,7 +29,7 @@ domain /_/ {WikitWub ::wikit}	;# handle direct domain within WikitWub
 
 rewrite {^//[^/]+/$} /_/welcome	;# need to silently redirect welcome page
 
-rewrite {^//.+/[^/]+[.](jpg|gif|png|ico)} {/_images/[Url tail [dict get $r -path]]}
+rewrite {^//[^/]+/[^/]+[.](jpg|gif|png|ico)} {/_images/[Url tail [dict get $r -path]]}
 rewrite {^//.+/[^/]+[.]css} {/_css/[Url tail [dict get $r -path]]}
 rewrite {/css/[^/]+[.]css} {/_css/[Url tail [dict get $r -path]]}
 rewrite {^//.+/[^/]+[.]gz} {/_bin/[Url tail [dict get $r -path]]}
