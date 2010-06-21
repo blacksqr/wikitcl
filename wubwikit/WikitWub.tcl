@@ -2786,7 +2786,7 @@ namespace eval WikitWub {
     proc NRoff2Html {TNR} {
 	variable nroffid
 	set cnroffid [incr nroffid]
-	puts "chan names 1: [chan names]"
+	Debug.wikit {chan names 1: [chan names]}
 	if {[catch {
 	    file mkdir /tmp/nroff$cnroffid
 	    set f [open /tmp/nroff$cnroffid/tnr.n w]
@@ -2805,7 +2805,7 @@ namespace eval WikitWub {
 	} msg]} {
 	    set CTNR [armour $CTNR]
 	}
-	puts "chan names 2: [chan names]"
+	Debug.wikit {chan names 2: [chan names]}
 	return $CTNR
     }
 
@@ -2848,7 +2848,7 @@ namespace eval WikitWub {
 	variable image_prefix
 
 	if {[info exists recent_cache]} {
-	    puts "[clock seconds] /recent from its cache"
+	    Debug.wikit {/recent from its cache}
 	    set C $recent_cache
 	} else {
 
@@ -2860,10 +2860,10 @@ namespace eval WikitWub {
 	    set deletesAdded 0
 	    set activityHeaderAdded 0
 
-	    puts "[clock seconds] /recent start query"
+	    Debug.wikit {/recent start query}
 	    set records [WDB RecentChanges $threshold]
 
-	    puts "[clock seconds] /recent start processing results"
+	    Debug.wikit {/recent start processing results}
 	    foreach record $records {
 		dict with record {}
 
@@ -2906,7 +2906,7 @@ namespace eval WikitWub {
 		lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
 	    }
 
-	    puts "[clock seconds] /recent start processing last results"
+	    Debug.wikit {/recent start processing last results}
 
 	    if { [llength $result] } {
 		lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
@@ -2918,7 +2918,7 @@ namespace eval WikitWub {
 	    lappend results [<p> "generated [clock format [clock seconds]]"]
 	    append C \n [join $results \n]
 
-	    puts "[clock seconds] /recent send page"
+	    Debug.wikit {/recent send page}
 
 	    set recent_cache $C
 	}
