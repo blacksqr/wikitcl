@@ -769,7 +769,7 @@ namespace eval WDB {
 	    # Walk backward through all changes applied to a version
 	    lassign [$changesV get $version date who] lastdate lastwho
 
-	    puts "last: $lastdate/$lastwho     $date/$who"
+	    Debug.wdb {last: $lastdate/$lastwho     $date/$who}
 
 	    set diffsV [$diffV select id $id version $version -sort diff]
 	    set i [$diffsV size]
@@ -951,14 +951,14 @@ namespace eval WDB {
     proc SavePage {id text newWho newName {newdate ""} {commit 1}} {
 	variable pageV
 	variable contentV
-	puts "SavePage@[clock seconds] start"
+	Debug.WDB {SavePage start}
 
 	set changed 0
 
 	StartTransaction
 
 	if {[catch {
-	    puts "SavePage@[clock seconds] pagevarsDB"
+	    Debug.WDB {SavePage pagevarsDB}
 	    lassign [GetPage $id name date who] name date who
 	    set page [GetContent $id]
 
@@ -985,7 +985,7 @@ namespace eval WDB {
 # 	    }
 
 	    if {$newdate != ""} {
-		puts "SavePage@[clock seconds] set date $id $date"
+		Debug.WDB {SavePage set date $id $date}
 		# change the date if requested
 		$pageV set $id date $newdate
 	    }
@@ -993,20 +993,20 @@ namespace eval WDB {
 	    # avoid creating a log entry and committing if nothing changed
 	    set text [string trimright $text]
 	    if {$changed || $text != $page} {
-		puts "SavePage@[clock seconds] parse"
+		Debug.WDB {SavePage parse}
 		# make sure it parses before deleting old references
 		set newRefs [WFormat StreamToRefs [WFormat TextToStream $text] ::WikitWub::InfoProc]
-		puts "SavePage@[clock seconds] delRefs"
+		Debug.WDB {delRefs}
 		delRefs $id
-		puts "SavePage@[clock seconds] addRefs"
+		Debug.WDB {addRefs}
 		addRefs $id $newRefs
 
 		# If this isn't the first time that the given page has been stored
 		# in the databse, make a change log entry for rollback.
 
-		puts "SavePage@[clock seconds] log change"
+		Debug.WDB {log change}
 		$pageV set $id who $newWho
-		puts "SavePage@[clock seconds] save content"
+		Debug.WDB {save content}
 		set selectc [$contentV select id $id]
 		if {[$selectc size]} {
 		    $contentV set [dict get [$selectc get 0] index] content $text
@@ -1015,31 +1015,31 @@ namespace eval WDB {
 		}
 		$selectc close
 		if {$page ne {} || [Versions $id]} {
-		    puts "SavePage@[clock seconds] update change log (old: [string length $page], [llength [split $page \n]], new:  [string length $text], [llength [split $text \n]])"
+		    Debug.WDB {update change log (old: [string length $page], [llength [split $page \n]], new:  [string length $text], [llength [split $text \n]])}
 		    UpdateChangeLog $id $name $date $who $page $text
 		}
 
 		# Set change date, only if page was actually changed
 		if {$newdate == ""} {
-		    puts "SavePage@[clock seconds] set date"
+		    Debug.WDB {set date}
 		    $pageV set $id date [clock seconds]
 		    set commit 1
 		}
 
-		puts "SavePage@[clock seconds] done saving"
+		Debug.WDB {done saving}
 	    }
-	} r]} {
+	} r eo]} {
 	    rollback
-	    Debug.error "SavePageDb: '$r'"
+	    Debug.error {SavePageDb: '$r' ($eo)}
 	    error $r
 	}
 
 	if {$commit} {
-	    puts "SavePage@[clock seconds] commit"
+	    Debug.WDB {commit}
 	    commit
 	}
 
-        puts "SavePage@[clock seconds] done."
+        Debug.WDB {done.}
     }
 
     proc WikiDatabase {args} {
