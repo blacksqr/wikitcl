@@ -6,6 +6,7 @@ package provide WDB_sqlite 1.0
 
 if {0} {
     PRAGMA foreign_keys = ON;
+
     CREATE TABLE pages (
        id INT NOT NULL,
        name TEXT NOT NULL,
@@ -14,16 +15,19 @@ if {0} {
        type TEXT,
        PRIMARY KEY (id));
     CREATE INDEX idx_pages_date ON pages(date)
+
     CREATE TABLE pages_content (
        id INT NOT NULL,
        content TEXT NOT NULL,
        PRIMARY KEY (id),
        FOREIGN KEY (id) REFERENCES pages(id));
+
     CREATE TABLE pages_binary (
        id INT NOT NULL,
        content BLOB NOT NULL,
        PRIMARY KEY (id),
        FOREIGN KEY (id) REFERENCES pages(id));
+
     CREATE TABLE changes (
        id INT NOT NULL,
        cid INT NOT NULL,
@@ -32,6 +36,7 @@ if {0} {
        delta TEXT NOT NULL,
        PRIMARY KEY (id, cid),
        FOREIGN KEY (id) REFERENCES pages(id));
+
     CREATE TABLE diffs (
        id INT NOT NULL,
        cid INT NOT NULL,
@@ -41,6 +46,7 @@ if {0} {
        old TEXT NOT NULL,
        PRIMARY KEY (id, cid, did),
        FOREIGN KEY (id, cid) REFERENCES changes(id, cid));
+
     CREATE TABLE changes_binary (
        id INT NOT NULL,
        cid INT NOT NULL,
@@ -50,6 +56,7 @@ if {0} {
        content BLOB NOT NULL,
        PRIMARY KEY (id, cid),
        FOREIGN KEY (id) REFERENCES pages(id));
+
     CREATE TABLE refs (
        fromid INT NOT NULL,
        toid INT NOT NULL,
@@ -1070,20 +1077,20 @@ namespace eval WDB {
     # SavePage - store page $id ($who, $text, $newdate)
     proc SavePage {id text newWho newName newType {newdate ""} {commit 1}} {
 	variable db
-	puts "SavePage@[clock seconds] start"
+	Debug.WDB {start}
 
 	set changed 0
 
 	StartTransaction
 
 	if {[catch {
-	    puts "SavePage@[clock seconds] pagevarsDB"
+	    Debug.WDB {pagevarsDB}
 	    lassign [GetPage $id name date who type] name date who type
 
 	    # Update of page names not possible using Web interface, placed in comments because untested.
 	    #
 	    # 	    if {$newName != $name} {
-	    # 		puts "SavePage@[clock seconds] new name"
+	    # 		Debug.WDB {new name}
 	    # 		set changed 1
 	    #
 	    # 		# rewrite all pages referencing $id changing old name to new
@@ -1104,10 +1111,10 @@ namespace eval WDB {
 
 	    # avoid creating a log entry and committing if nothing changed
 	    if {$newType eq "" || [string match text/* $newType]} {
-		puts "SavePage@[clock seconds] text page '$newType'/'$type'"
+		Debug.WDB {text page '$newType'/'$type'}
 
 		if {$newdate != ""} {
-		    puts "SavePage@[clock seconds] set date $id $date"
+		    Debug.WDB {set date $id $date}
 		    # change the date if requested
 		    [statement "update_page_date_for_id"] execute
 		}
@@ -1115,21 +1122,21 @@ namespace eval WDB {
 		set text [string trimright $text]
 		set page [GetContent $id]
 		if {$changed || $text != $page} {
-		    puts "SavePage@[clock seconds] parse"
+		    Debug.WDB {parse}
 		    # make sure it parses before deleting old references
 		    set newRefs [::WikitWub::GetRefs $text] ;#[WFormat StreamToRefs [WFormat TextToStream $text] ::WikitWub::InfoProc]
-		    puts "SavePage@[clock seconds] delRefs"
+		    Debug.WDB {delRefs}
 		    delRefs $id
-		    puts "SavePage@[clock seconds] addRefs $newRefs"
+		    Debug.WDB {addRefs $newRefs}
 		    addRefs $id $newRefs
 
 		    # If this isn't the first time that the given page has been stored
 		    # in the databse, make a change log entry for rollback.
 
-		    puts "SavePage@[clock seconds] log change"
+		    Debug.WDB {log change}
 		    [statement "update_page_who_for_id"] execute
 
-		    puts "SavePage@[clock seconds] save content"
+		    Debug.WDB {save content}
 		    set rsc [[statement "count_content_for_id"] execute]
 
 		    $rsc nextdict d
@@ -1139,9 +1146,9 @@ namespace eval WDB {
 		    } else {
 			[statement "insert_content"] execute
 		    }
-		    puts "SavePage@[clock seconds] saved content"
+		    Debug.WDB {saved content}
 		    if {$page ne {} || [Versions $id]} {
-			puts "SavePage@[clock seconds] update change log (old: [string length $page], [llength [split $page \n]], new:  [string length $text], [llength [split $text \n]])"
+			Debug.WDB {update change log (old: [string length $page], [llength [split $page \n]], new:  [string length $text], [llength [split $text \n]])}
 			UpdateChangeLog $id $name $date $who $page $text
 		    }
 
@@ -1151,13 +1158,13 @@ namespace eval WDB {
 
 		    # Set change date, only if page was actually changed
 		    if {$newdate == ""} {
-			puts "SavePage@[clock seconds] set date"
+			Debug.WDB {set date}
 			set date [clock seconds]
 			[statement "update_page_date_for_id"] execute
 			set commit 1
 		    }
 		    
-		    puts "SavePage@[clock seconds] done saving"
+		    Debug.WDB {done saving}
 		}
 	    } else {
 		# must be binary content
@@ -1166,14 +1173,14 @@ namespace eval WDB {
 		$rsc nextdict d
 		$rsc close
 		if {[dict get $d COUNT(*)]} {
-		    puts "SavePage@[clock seconds] update binary content $type->$newType"
+		    Debug.WDB {update binary content $type->$newType}
 		    [statement update_binary] execute
 		} else {
-		    puts "SavePage@[clock seconds] insert binary content $type->$newType"
+		    Debug.WDB {insert binary content $type->$newType}
 		    [statement insert_binary] execute
 		}
 		set version [VersionsBinary $id]
-		puts "SavePage@[clock seconds] insert binary content version = $version, change size = [string length $change], "
+		Debug.WDB {insert binary content version = $version, change size = [string length $change], }
 		if {$change ne {} || $version} {
 		    [statement insert_change_binary] execute
 		}
@@ -1181,20 +1188,20 @@ namespace eval WDB {
 		[statement update_page_date_for_id] execute
 		[statement update_page_who_for_id] execute
 		[statement update_page_type_for_id] execute
-		puts "SavePage@[clock seconds] saved binary content $newType"
+		Debug.WDB {saved binary content $newType}
 	    }
 	} r eo]} {
 	    rollback
-	    Debug.error "SavePageDb: '$r' ($eo)"
+	    Debug.error {SavePageDb: '$r' ($eo)}
 	    error $r
 	}
 
 	if {$commit} {
-	    puts "SavePage@[clock seconds] commit"
+	    Debug.WDB {commit}
 	    commit
 	}
 
-	puts "SavePage@[clock seconds] done."
+	Debug.WDB {done.}
     }
 
     proc pagecache {cmd args} {
@@ -1203,7 +1210,6 @@ namespace eval WDB {
 	switch -exact -- $cmd {
 	    create {
 		Debug.WDB {Create pagecache}
-		puts "WDBpagecache: Create pagecache"
 		if {[file exists $file.pagecache]} {
 		    file delete -force $file.pagecache
 		}
@@ -1213,13 +1219,11 @@ namespace eval WDB {
 	    insert {
 		lassign $args id content ct when title
 		Debug.WDB {Insert pagecache $id}
-		puts "WDBpagecache Insert pagecache $id"
 		[[pagecache_statement "insert"] execute] close
 	    }
 	    exists {
 		lassign $args id
 		Debug.WDB {Exists pagecache $id}
-		puts "WDBpagecache Exists pagecache $id"
 		set rs [[pagecache_statement "exists"] execute]
 		set rsn [$rs nextdict d]
 		set n 0
@@ -1232,7 +1236,6 @@ namespace eval WDB {
 	    fetch {
 		lassign $args id
 		Debug.WDB {Fetch pagecache $id}
-		puts "WDBpagecache Fetch pagecache $id"
 		set rs [[pagecache_statement "fetch"] execute]
 		set d [dict create]
 		$rs nextdict d
@@ -1242,7 +1245,6 @@ namespace eval WDB {
 	    delete {
 		lassign $args id
 		Debug.WDB {Delete pagecache $id}
-		puts "WDBpagecache Delete pagecache $id"
 		[[pagecache_statement "delete"] execute] close
 	    }
 	}
