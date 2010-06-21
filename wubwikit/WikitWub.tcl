@@ -3084,7 +3084,7 @@ namespace eval WikitWub {
 		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath [string trimleft $key <] $qdate 100] r+]
 		chan configure $cfd -blocking 0
 		chan event $cfd readable [list ::WikitWub::resume_suspended $cfd $r $key $qdate]
-		return [Httpd Suspend $r]
+		return [Httpd Suspend $r 120000]	;# give async_search 2 minutes to complete
 	    }
 	    return [/searchp $r 0]
 	} else {
