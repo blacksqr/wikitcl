@@ -59,7 +59,7 @@ DOM element started by the tag. End tags do not have this property.
 @param  language  a language definition object
 @return  an array of tag objects
 */
-function sh_highlightString(inputString, language) {
+function sh_highlightString(inputString, language, language_name) {
   if (/Konqueror/.test(navigator.userAgent)) {
     if (! language.konquered) {
       for (var s = 0; s < language.length; s++) {
@@ -119,7 +119,7 @@ function sh_highlightString(inputString, language) {
         if (style === 'sh_url') {
           clone = a.cloneNode(false);
         }
-        else if (style === 'sh_keyword') {
+        else if (style === 'sh_keyword' && language_name == 'tcl') {
           clone = a.cloneNode(false);
 	  clone.href = 'http://wiki.tcl.tk/'+s;
         }
@@ -454,11 +454,11 @@ the element will have been placed in the "sh_sourceCode" class.
 @param  element  a DOM <pre> element containing the source code to be highlighted
 @param  language  a language definition object
 */
-function sh_highlightElement(element, language) {
+function sh_highlightElement(element, language, language_name) {
   sh_addClass(element, 'sh_sourceCode');
   var originalTags = [];
   var inputString = sh_extractTags(element, originalTags);
-  var highlightTags = sh_highlightString(inputString, language);
+  var highlightTags = sh_highlightString(inputString, language, language_name);
   var tags = sh_mergeTags(originalTags, highlightTags);
   var documentFragment = sh_insertTags(tags, inputString);
   while (element.hasChildNodes()) {
@@ -493,7 +493,7 @@ function sh_load(language, element, prefix, suffix) {
           eval(request.responseText);
           var elements = sh_requests[language];
           for (var i = 0; i < elements.length; i++) {
-            sh_highlightElement(elements[i], sh_languages[language]);
+	      sh_highlightElement(elements[i], sh_languages[language], language);
           }
         }
         else {
@@ -527,7 +527,7 @@ function sh_highlightDocument(prefix, suffix) {
       if (htmlClass.substr(0, 3) === 'sh_') {
         var language = htmlClass.substring(3);
         if (language in sh_languages) {
-          sh_highlightElement(element, sh_languages[language]);
+	    sh_highlightElement(element, sh_languages[language], language);
         }
         else if (typeof(prefix) === 'string' && typeof(suffix) === 'string') {
           sh_load(language, element, prefix, suffix);
