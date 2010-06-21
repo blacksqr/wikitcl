@@ -2845,6 +2845,7 @@ namespace eval WikitWub {
 	variable mount
 	variable pageURL
 	variable delta
+	variable image_prefix
 
 	if {[info exists recent_cache]} {
 	    puts "[clock seconds] /recent from its cache"
