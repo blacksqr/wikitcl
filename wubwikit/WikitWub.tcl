@@ -2897,7 +2897,7 @@ namespace eval WikitWub {
 		    set lastDay $day
 		}
 
-		set actimg "<img class='activity' src='activity.png' alt='*' />"
+		set actimg "<img class='activity' src='/_images/activity.png' alt='*' />"
 		set rtype ""
 		if {[string length $type] && ![string match "text/*" $type]} {
 		    set rtype [<span> class day " [lindex [split $type /] 0]"]
