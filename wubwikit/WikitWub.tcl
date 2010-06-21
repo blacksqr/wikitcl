@@ -634,11 +634,11 @@ namespace eval WikitWub {
 	[<link> rel stylesheet href [file join $css_prefix wikit_handheld.css] media handheld type text/css]
 	[<link> rel stylesheet href [file join $css_prefix tooltips.css] type text/css]
 
-	<script type="text/javascript" src="sh_main.js"></script>
-	<script type="text/javascript" src="lang/sh_tcl.js"></script>
-	<script type="text/javascript" src="lang/sh_c.js"></script>
-	<script type="text/javascript" src="lang/sh_cpp.js"></script>
-	<link type="text/css" rel="stylesheet" href="css/sh_style.css">	
+	<script type="text/javascript" src="[file join $script_prefix sh_main.js]"></script>
+	<script type="text/javascript" src="[file join $script_prefix sh_tcl.js]"></script>
+	<script type="text/javascript" src="[file join $script_prefix sh_c.js]"></script>
+	<script type="text/javascript" src="[file join $script_prefix sh_cpp.js]"></script>
+	<link type="text/css" rel="stylesheet" href="[file join $css_prefix sh_style.css]">
 
 	[<link> rel alternate type application/rss+xml title RSS href /rss.xml]
 	<!--\[if lte IE 6\]>
@@ -2897,7 +2897,7 @@ namespace eval WikitWub {
 		    set lastDay $day
 		}
 
-		set actimg "<img class='activity' src='/_images/activity.png' alt='*' />"
+		set actimg "<img class='activity' src='[file join $image_prefix activity.png]' alt='*' />"
 		set rtype ""
 		if {[string length $type] && ![string match "text/*" $type]} {
 		    set rtype [<span> class day " [lindex [split $type /] 0]"]
@@ -3363,9 +3363,9 @@ namespace eval WikitWub {
     variable upflag ""			;# no URL syncing
     variable roflag 0
     variable detect_robots 1
-    variable css_prefix ""
-    variable script_prefix ""
-    variable image_prefix ""
+    variable css_prefix "/_css"
+    variable script_prefix "/_scripts"
+    variable image_prefix "/_images"
 
     proc init {args} {
 	Debug.wikit {init: $args}
