@@ -3261,12 +3261,16 @@ namespace eval WikitWub {
 			Debug.wikit {do: $N is a normal page}
 			dict set r content-location "http://[Url host $r]/$N"
 			lassign [translate $N $name $content $ext] C U page_toc BR IH DTl TNRl
+			Debug.wikit {do translated}
 			set C [DoctoolPages $r $C $DTl]
+			Debug.wikit {do DoctoolPages}
 			set C [TclNRoffPages $r $C $TNRl]
+			Debug.wikit {do TclNRoffPages}
 			variable include_pages
 			if {$include_pages} {
 			    lassign [IncludePages $r $C $IH] r C
 			}
+			Debug.wikit {do IncludePages}
 			foreach {containerid bref} $BR {
 			    if {[string length $bref]} {
 				set brefpage [WDB LookupPage $bref]
