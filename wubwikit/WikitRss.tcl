@@ -123,7 +123,7 @@ namespace eval WikitRss {
 	set pages [WDB RecentChanges $edate]
 	foreach pager $pages {
 
-	    puts "$pager"
+	    #puts "$pager"
 
 	    dict with pager {}
 
@@ -139,7 +139,7 @@ namespace eval WikitRss {
 	    if {$V > 0} {
 		foreach record [WDB Changes $id $edate] {
 		    dict update record date cdate who cwho delta cdelta version version {}
-		    puts "incr delta [expr {int(abs($cdelta))}]"
+		    #puts "incr delta [expr {int(abs($cdelta))}]"
 		    incr delta [expr {int(abs($cdelta))}]
 		    set C [WikitWub::summary_diff $id $V [expr {$V-1}] 1]
 		    append changes $C\n
