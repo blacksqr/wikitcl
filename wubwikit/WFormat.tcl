@@ -272,11 +272,14 @@ namespace eval ::WFormat {
         FIXED {
           if {$tag eq "CODE"} {
             set mode_code 1
-            if {[string length $txt] > 6} {
+            if {$tag eq "CODE" && [string length $txt] > 6} {
               set fixed_lang [string range $txt 6 end]
             }
           } else {
             set mode_code 0
+            if {[string length $txt] > 3} {
+              set fixed_lang [string range $txt 3 end]
+            }
           }
           if {$mode_fixed} {
             if {$paragraph ne {}} {
@@ -586,7 +589,7 @@ namespace eval ::WFormat {
 
       INLINEHTML {^<<inlinehtml>>$}
       COMMENT  {^()()(###).*$}
-      FIXED  {^()()(===)$}
+      FIXED  {^()()(===(tcl|c|cpp|none|))$}
       CODE   {^()()(======(tcl|c|cpp|none|))$}
       DOCTOOL {^<<doctool>>$}
       TCLNROFF {^<<tclnroff>>$}
