@@ -678,13 +678,19 @@ namespace eval WikitWub {
 	    if (document.addEventListener) {
 		document.addEventListener("DOMContentLoaded", init, false);
 	    }
-	    
-	    /* for Internet Explorer */
+
+	    // for Internet Explorer (using conditional comments)
 	    /*@cc_on @*/
 	    /*@if (@_win32)
-	    document.write("<script defer src='/_/ie_onload1.JS'><\/script>");
+	    document.write("<script id=__ie_onload defer src=javascript:void(0)><\/script>");
+	    var script = document.getElementById("__ie_onload");
+	    script.onreadystatechange = function() {
+		if (this.readyState == "complete") {
+		    init(); // call the onload handler
+		}
+	    };
 	    /*@end @*/
-	    
+	  
 	    /* for other browsers */
 	    window.onload = init;
 	}]]
