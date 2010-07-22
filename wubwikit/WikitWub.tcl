@@ -1,4 +1,6 @@
 ### Source local setup script (not under version control)
+set ::docroot [file join [pwd] docroot]
+puts "docroot = $docroot"
 if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
     source [file join [file dirname [info script]] local_setup.tcl]
 }
@@ -73,7 +75,7 @@ namespace eval WikitWub {
     variable include_pages 0
     variable markup_language wikit
     variable hidereadonly 0
-    variable text_url "wiki.tcl.tk"
+    variable text_url [list "17'th Annual Tcl/Tk Conference<br>Oct 11-15 2010 in Chicago, USA&nbsp;&nbsp;" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk"]
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
     variable doctool2html 0
     variable tclnroff2html 0
@@ -239,7 +241,7 @@ namespace eval WikitWub {
 
     template header {} {
 	[<div> class header [subst {
-	    [<div> class logo [<a> href / class logo $::WikitWub::text_url]]
+	    [<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
 	    [<div> id title class title [tclarmour $Title]]
 	    [expr {[info exists subtitle]?[<div> id updated class updated $subtitle]:""}]
 	}]]
@@ -418,7 +420,7 @@ namespace eval WikitWub {
     template edit {Editing [armour $name]} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo $::WikitWub::text_url]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
 		[If {$as_comment} {
 		    [<div> class title "Comment on [tclarmour [Ref $N]]"]
 		}]
@@ -474,7 +476,7 @@ namespace eval WikitWub {
     template edit_binary {Editing [armour $name]} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo $::WikitWub::text_url]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
 		[<div> class title "Edit [tclarmour [Ref $N]]"]
 		[<div> class updated "Select a file, then press Upload"]
 	    }]]
@@ -490,7 +492,7 @@ namespace eval WikitWub {
     template new {Create a new page} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo $::WikitWub::text_url]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
 		[<div> class title "Create new page"]
 		[<div> class updated "Enter title, then press Create below"]
 	    }]]
@@ -511,7 +513,7 @@ namespace eval WikitWub {
     template revert {Revert a page} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo $::WikitWub::text_url]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
 		[<div> class title "Revert page [tclarmour [Ref $N]] to version $V"]
 	    }]]
 	    [<div> class edittitle [subst {
@@ -2353,10 +2355,13 @@ namespace eval WikitWub {
     }
 
     proc /map {r imp args} {
+	puts "MAP: $imp $args"
 	perms $r read
 	variable protected
 	variable IMTOC
 	variable pageURL
+	parray IMTOC
+	puts "imp=$imp"
 	if {[info exists IMTOC($imp)]} {
 	    return [Http Redir $r "http://[dict get $r host]/[string trim $::WikitWub::IMTOC($imp) /]"]
 	} else {
@@ -3033,7 +3038,7 @@ namespace eval WikitWub {
 		append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
 	    }
 	    set q [string trimright $term *]
-	    append q "%20site:" $text_url
+	    append q "%20site:" [lindex $text_url 2]
 	    variable gsearch
 	    if {$gsearch} {
 		append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
@@ -3525,7 +3530,7 @@ namespace eval WikitWub {
 	catch {
 	    WikitRss new \
 		[expr {([info exists wiki_title] &&  $wiki_title ne "")?$wiki_title:"Tcler's Wiki"}] \
-		"http://$text_url/"
+		[lindex $text_url 2]
 	}
 
 	variable pagecaching
