@@ -75,7 +75,7 @@ namespace eval WikitWub {
     variable include_pages 0
     variable markup_language wikit
     variable hidereadonly 0
-    variable text_url [list "17'th Annual Tcl/Tk Conference<br>Oct 11-15 2010 in Chicago, USA&nbsp;&nbsp;" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk"]
+    variable text_url [list "17'th Annual Tcl/Tk Conference<br>Oct 11-15 2010 in Chicago, USA&nbsp;&nbsp;" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/"]
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
     variable doctool2html 0
     variable tclnroff2html 0
