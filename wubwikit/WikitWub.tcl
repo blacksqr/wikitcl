@@ -53,8 +53,6 @@ set API(WikitWub) {
     css_prefix {Url prefix for CSS files}
     script_prefix {Url prefix for JS files}
     image_prefix {Url prefix for images}
-    recaptcha_public {Set public ReCaptcha key. This will enable 'Create new page' and 'Revert' link. (default not set)}
-    recaptcha_private {Set private ReCaptcha key. This will enable 'Create new page' and 'Revert' link. (default not set)}
 }
 
 proc ::stx2html::local {what} {
@@ -80,8 +78,6 @@ namespace eval WikitWub {
     variable doctool2html 0
     variable tclnroff2html 0
     variable nroffid 0
-    variable recaptcha_public ""
-    variable recaptcha_private ""
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -497,7 +493,7 @@ namespace eval WikitWub {
 		[<div> class updated "Enter title, then press Create below"]
 	    }]]
 	    [<div> class edittitle [subst {
-		[::wikirecaptcha form class autoform \
+		[[lindex [info class instances ::ReCAPTCHA] 0] form class autoform \
 		     before <br>[<text> T title "Page title" size 80]<br><br> \
 		     after "<br>[<hidden> _charset_ {}]<input name='create' type='submit' value='Create new page'>" \
 		     pass {set r [::WikitWub::new_page_pass $r $args]}]
@@ -517,7 +513,7 @@ namespace eval WikitWub {
 		[<div> class title "Revert page [tclarmour [Ref $N]] to version $V"]
 	    }]]
 	    [<div> class edittitle [subst {
-		[::wikirecaptcha form class autoform \
+		[[lindex [info class instances ::ReCAPTCHA] 0] form class autoform \
 		     before <br> \
 		     after "<br>[<hidden> _charset_ {}][<hidden> N [armour $N]][<hidden> V [armour $V]]<input name='create' type='submit' value='Revert page'>" \
 		     pass {set r [::WikitWub::revert_pass $r $args]}]
@@ -2381,7 +2377,7 @@ namespace eval WikitWub {
     }
 
     proc recaptcha_active { } {
-	return [expr {[Site var? wikitwub recaptcha_public] ne ""}]
+	return [llength [info class instances ::ReCAPTCHA]]
     }
 
     proc /new {r} {
@@ -3120,6 +3116,7 @@ namespace eval WikitWub {
     }
 
     proc do {r} {
+
 	Debug.wikit {DO}
 	perms $r read
 
