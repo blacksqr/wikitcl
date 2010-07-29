@@ -3572,4 +3572,4 @@ Debug.log {RESTART: [clock format [clock second]]}
 expr srand([clock seconds])
 
 # Initialize Site
-Site start application WikitWub home [file normalize [file dirname [info script]]] config wikit.config
+Site start home [file normalize [file dirname [info script]]] config wikit.config
