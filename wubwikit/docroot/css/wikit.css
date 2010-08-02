@@ -47,6 +47,11 @@ div.logo {
   background: #ccc url(/_images/plume.png) top right no-repeat;
 }
 
+div.conflogo {
+  float: right;
+  vertical-align: middle;
+}
+
 div.toolbar {
     padding: 3px 0px 0px 0px;
 }

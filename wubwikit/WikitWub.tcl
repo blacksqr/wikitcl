@@ -235,9 +235,10 @@ namespace eval WikitWub {
 	[<div> class footer [<p> id footer [variable bullet; join $footer $bullet]]]
     }
 
+#	    [<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
     template header {} {
 	[<div> class header [subst {
-	    [<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
+	    [<div> class conflogo [<a> href [lindex $::WikitWub::text_url 1] class conflogo [<img> src tclconf2010.jpg]]]
 	    [<div> id title class title [tclarmour $Title]]
 	    [expr {[info exists subtitle]?[<div> id updated class updated $subtitle]:""}]
 	}]]
