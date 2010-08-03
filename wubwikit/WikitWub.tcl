@@ -73,7 +73,8 @@ namespace eval WikitWub {
     variable include_pages 0
     variable markup_language wikit
     variable hidereadonly 0
-    variable text_url [list "17'th Annual Tcl/Tk Conference<br>Oct 11-15 2010 in Chicago, USA&nbsp;&nbsp;" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/"]
+    variable text_url [list "" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/" "tclconf2010.png"]
+#    variable text_url [list "wiki.tcl.tk" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/" "plume.png"]
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
     variable doctool2html 0
     variable tclnroff2html 0
@@ -235,12 +236,11 @@ namespace eval WikitWub {
 	[<div> class footer [<p> id footer [variable bullet; join $footer $bullet]]]
     }
 
-#	    [<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
     template header {} {
 	[<div> class header [subst {
-	    [<div> class conflogo [<a> href [lindex $::WikitWub::text_url 1] class conflogo [<img> src http://wiki.tcl.tk/tclconf2010.jpg]]]
+	    [<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 	    [<div> id title class title [tclarmour $Title]]
-	    [expr {[info exists subtitle]?[<div> id updated class updated $subtitle]:""}]
+	    [<div> id updated class updated [expr {[info exists subtitle]&&[string length $subtitle]?$subtitle:"&nbsp;"}]]
 	}]]
     }
 
@@ -417,7 +417,7 @@ namespace eval WikitWub {
     template edit {Editing [armour $name]} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[If {$as_comment} {
 		    [<div> class title "Comment on [tclarmour [Ref $N]]"]
 		}]
@@ -473,7 +473,7 @@ namespace eval WikitWub {
     template edit_binary {Editing [armour $name]} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Edit [tclarmour [Ref $N]]"]
 		[<div> class updated "Select a file, then press Upload"]
 	    }]]
@@ -489,7 +489,7 @@ namespace eval WikitWub {
     template new {Create a new page} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Create new page"]
 		[<div> class updated "Enter title, then press Create below"]
 	    }]]
@@ -510,7 +510,7 @@ namespace eval WikitWub {
     template revert {Revert a page} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo [lindex $::WikitWub::text_url 0]]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Revert page [tclarmour [Ref $N]] to version $V"]
 	    }]]
 	    [<div> class edittitle [subst {
@@ -2571,7 +2571,6 @@ namespace eval WikitWub {
 	    set menu [menus Recent Help WhoAmI Random]
 	}
 	set footer [menus Recent Help Search]
-
 	Debug.wikit {/welcome: $N}
 	return [sendPage $r spage]
     }
