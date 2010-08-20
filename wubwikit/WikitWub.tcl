@@ -556,7 +556,7 @@ namespace eval WikitWub {
     # page sent when upload changes type
     template badnewtype {bad type} {
 	[<h2> "Upload of type '$type' on page $N - [Ref $N $name]"]
-	[<p> "[<b> {Your changes have NOT been saved}], because the content your browser sent is of a different type ($otype) than the contents already in the data base ($type)."]
+	[<p> "[<b> {Your changes have NOT been saved}], because the content your browser sent is of a different type ($type) than the contents already in the data base ($otype)."]
 	[<hr> size 1]
     }
 
@@ -2206,6 +2206,11 @@ namespace eval WikitWub {
 	
 	# text must stay text
 	if {$otype ne "" && [string match text/* $otype] && ![string match text/* $type]} {
+	    return [sendPage $r badnewtype]	    
+	}
+
+	# Image must stay image
+	if {$otype ne "" && ![string match text/* $otype] && [string match text/* $type]} {
 	    return [sendPage $r badnewtype]	    
 	}
 
