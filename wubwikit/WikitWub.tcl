@@ -7,7 +7,6 @@ if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
 
 package require fileutil
 package require struct::queue
-package require doctools
 package require HTTP
 
 lappend auto_path [file dirname [info script]]
@@ -43,8 +42,6 @@ set API(WikitWub) {
     empty_template {Set text to be used on first edit of a page.}
     hidereadonly {Hide the readonly message. (default: false)}
     inline_html {Allow inline html in wikit markup. (default: false)}
-    doctool2html {Allow <<doctool>> in wikit markup. (default: false)}
-    tclnroff2html {Allow <<tclnroff>> in wikit markup. (default: false)}
     include_pages {Allow other wiki pages to be include in a wiki page in wikit markup. (default: false)}
     welcomezero {Use page 0 as welcome page. (default: false)}
     css_prefix {Url prefix for CSS files}
@@ -64,9 +61,6 @@ namespace eval WikitWub {
     variable text_url [list "" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/" "tclconf2010.png"]
 #    variable text_url [list "wiki.tcl.tk" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/" "plume.png"]
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
-    variable doctool2html 0
-    variable tclnroff2html 0
-    variable nroffid 0
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -942,7 +936,7 @@ namespace eval WikitWub {
 	set r {}
 	set skip 0
 	foreach l [split $t \n] {
-	    if {$l eq "<<doctool>>" || $l eq "<<inlinehtml>>" || $l eq "<<tclnroff>>"} {
+	    if {$l eq "<<inlinehtml>>"} {
 		set skip [expr {!$skip}]
 		continue
 	    } elseif {!$skip} {
@@ -1450,9 +1444,7 @@ namespace eval WikitWub {
 			set Title "Version $V of [Ref $N]"
 			set name "Version $V of $name"
 		    }
-		    lassign [translate $N $name $C $ext] C U T BR IH DTl TNRl
-		    set C [DoctoolPages $r $C $DTl]
-		    set C [TclNRoffPages $r $C $TNRl]
+		    lassign [translate $N $name $C $ext] C U T BR IH
 		    variable include_pages
 		    if {$include_pages} {
 			lassign [IncludePages $r $C $IH] r C
@@ -2512,56 +2504,6 @@ namespace eval WikitWub {
 	return [list $r $C]
     }
 
-    proc DoctoolPages {r C DTl} {
-	foreach {dtid DT} $DTl {
-	    doctools::new dt -format html
-	    set DT [dt format $DT]
-	    dt destroy
-	    set bidx [string first "<body>" $DT]
-	    set eidx [string first "</body>" $DT]
-	    set DT [string range $DT [expr {$bidx+6}] [expr {$eidx-1}]]
-	    set C [string map [list "@@@@@@@@@@DT$dtid@@@@@@@@@@" $DT] $C]
-	}
-	return $C
-    }
-
-    proc NRoff2Html {TNR} {
-	variable nroffid
-	set cnroffid [incr nroffid]
-	Debug.wikit {chan names 1: [chan names]}
-	if {[catch {
-	    file mkdir /tmp/nroff$cnroffid
-	    set f [open /tmp/nroff$cnroffid/tnr.n w]
-	    puts $f $TNR
-	    close $f
-	    set ip [interp create]
-	    $ip eval {set argv {}}
-	    $ip eval [list set nroffsubdir /tmp/nroff$cnroffid]
-	    if {[catch {$ip eval source [file join [file dirname [info script]] tcltk-man2html.tcl]} msg]} {
-		set CTNR [armour $msg]
-	    } else {
-		set CTNR [::fileutil::cat [file join /tmp/nroff$cnroffid/Nroff2Wiki/tnr.htm]]
-	    }
-	    interp delete $ip
-	    file delete -force /tmp/nroff$cnroffid
-	} msg]} {
-	    set CTNR [armour $CTNR]
-	}
-	Debug.wikit {chan names 2: [chan names]}
-	return $CTNR
-    }
-
-    proc TclNRoffPages {r C TNRl} {
-	variable nroffid
-	variable tclnroff2html
-	if {$tclnroff2html} {
-	    foreach {tnrid TNR} $TNRl {
-		set C [string map [list "@@@@@@@@@@TNR$tnrid@@@@@@@@@@" [NRoff2Html $TNR]] $C]
-	    }
-	}
-	return $C
-    }
-
     variable trailers {@ _/edit ! _/ref - _/diff + _/history}
 
     proc generated { r } {
@@ -3005,8 +2947,6 @@ namespace eval WikitWub {
 			dict set r content-location "http://[Url host $r]/$N"
 			lassign [translate $N $name $content $ext] C U page_toc BR IH DTl TNRl
 			Debug.wikit {do translate complete}
-			set C [DoctoolPages $r $C $DTl]
-			set C [TclNRoffPages $r $C $TNRl]
 			variable include_pages
 			if {$include_pages} {
 			    lassign [IncludePages $r $C $IH] r C

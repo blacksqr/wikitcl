@@ -915,7 +915,7 @@ namespace eval WDB {
 
 		set from [dict get $dd fromline]
 		set to [dict get $dd toline]
-		set old [dict get $dd old]
+		set old [dict get? $dd old]
 		
 		# Update 'versions' for all lines that first appeared in the
 		# version following the one being examined
@@ -933,11 +933,8 @@ namespace eval WDB {
 		# being examined and the one being annotated.  Lines that do
 		# not exist in the annotated version are marked with -1.
 
-		if {[llength $old] == 0} {
-		    set m1s {}
-		} else {
-		    set m1s [struct::list repeat [llength $old] -1]
-		}
+		set m1s [struct::list repeat [llength $old] -1]
+		puts "llength whither = [llength $whither] / $from / $to"
 		if {$from <= $to} {
 		    set whither [eval [linsert $m1s 0 \
 					   lreplace $whither[set whither {}] $from $to]]

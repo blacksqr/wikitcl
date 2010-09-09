@@ -111,8 +111,6 @@ namespace eval ::WFormat {
     set mode_code $code   ; # indicates code block (no markup)
     set mode_option 0	  ; # options (fixed option, variable description)
     set mode_inlinehtml 0
-    set mode_doctool 0
-    set mode_tclnroff 0
     set fixed_lang ""
     set optnum 0	 	  ; # option block number
     set optlen 0	 	  ; # length of option block fixed part
@@ -134,12 +132,6 @@ namespace eval ::WFormat {
       }
       if {$mode_inlinehtml && $tag ne "INLINEHTML"} {
         set tag "INLINEHTML_CONTENT"
-      }
-      if {$mode_doctool && $tag ne "DOCTOOL"} {
-        set tag "DOCTOOL_CONTENT"
-      }
-      if {$mode_tclnroff && $tag ne "TCLNROFF"} {
-        set tag "TCLNROFF_CONTENT"
       }
       # Classification tags
       #
@@ -346,18 +338,6 @@ namespace eval ::WFormat {
         }
         INLINEHTML_CONTENT {
           lappend irep INLINEHTML $line
-        }
-        DOCTOOL {
-          set mode_doctool [expr {!$mode_doctool}]
-        }
-        DOCTOOL_CONTENT {
-          lappend irep DOCTOOL $line
-        }
-        TCLNROFF {
-          set mode_tclnroff [expr {!$mode_tclnroff}]
-        }
-        TCLNROFF_CONTENT {
-          lappend irep TCLNROFF $line
         }
         OPTION {
           if {$mode_option} {
@@ -591,8 +571,6 @@ namespace eval ::WFormat {
       COMMENT  {^()()(###).*$}
       FIXED  {^()()(===(tcl|c|cpp|none|))$}
       CODE   {^()()(======(tcl|c|cpp|none|))$}
-      DOCTOOL {^<<doctool>>$}
-      TCLNROFF {^<<tclnroff>>$}
       OPTION {^()()(\+\+\+)$}
       #EVAL {^(\+eval)(\s?)(.+)$}
       BLAME_START {^(>>>>>>)(\s?)(.+)$}
@@ -1027,21 +1005,13 @@ namespace eval ::WFormat {
     set brefs {}
     set in_header 0
     set tocheader ""
-    set doctool_mode 0
-    set tclnroff_mode 0
     set uol {}
     set irefs {}
-    set dtl {}
-    set dt {}
-    set dtid 0
-    set tnrl {}
-    set tnr {}
-    set tnrid 0
 
     variable html_frag
 
     foreach {mode text} $s {
-      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY INLINEHTML DOCTOOL TCLNROFF BACKREFS}} {
+      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY INLINEHTML BACKREFS}} {
         # Unwind uol
         append result </li>
         foreach uo [lreverse $uol] {
@@ -1051,20 +1021,6 @@ namespace eval ::WFormat {
           }
         }
         set uol {}
-      }
-
-      if {$doctool_mode && $mode ne "DOCTOOL"} {
-        lappend dtl $dtid [join $dt \n]
-        set doctool_mode 0
-        set dt {}
-        incr dtid
-      }
-
-      if {$tclnroff_mode && $mode ne "TCLNROFF"} {
-        lappend tnrl $tnrid [join $tnr \n]
-        set tclnroff_mode 0
-        set tnr {}
-        incr tnrid
       }
 
       switch -exact -- $mode {
@@ -1332,30 +1288,6 @@ namespace eval ::WFormat {
           append result [subst $html_frag($state$mode)]
           set state $mode
         }
-        DOCTOOL {
-          set mode T
-          if {$state ne "T"} {
-            append result [subst $html_frag($state$mode)]
-          }
-          if {!$doctool_mode} {
-            append result "\n@@@@@@@@@@DT$dtid@@@@@@@@@@\n"
-            set doctool_mode 1
-          }
-          lappend dt $text
-          set state T
-        }
-        TCLNROFF {
-          set mode T
-          if {$state ne "T"} {
-            append result [subst $html_frag($state$mode)]
-          }
-          if {!$tclnroff_mode} {
-            append result "\n@@@@@@@@@@TNR$tnrid@@@@@@@@@@\n"
-            set tclnroff_mode 1
-          }
-          lappend tnr $text
-          set state T
-        }
         INLINEHTML {
           set mode T
           if {$state ne "T"} {
@@ -1521,20 +1453,6 @@ namespace eval ::WFormat {
       append result $html_frag(${state}_)
     }
 
-    if {$doctool_mode} {
-      lappend dtl $dtid [join $dt \n]
-      set doctool_mode 0
-      set dt {}
-      incr dtid
-    }
-
-    if {$tclnroff_mode} {
-      lappend tnrl $tnrid [join $tnr \n]
-      set tclnroff_mode 0
-      set tnr {}
-      incr tnrid
-    }
-    
     # Create page-TOC
     set toc ""
     if { [llength $tocpos] } {
@@ -1633,7 +1551,7 @@ namespace eval ::WFormat {
     # Get rid of spurious newline at start of each quoted area.
     regsub -all {<pre ([^>])>\n} $result {<pre $1>} result
 
-    list $result {} $toc $brefs $irefs $dtl $tnrl
+    list $result {} $toc $brefs $irefs
   }
 
   proc quote {q} {
