@@ -2004,7 +2004,7 @@ namespace eval WikitWub {
     proc /gsearch {r {S ""}} {
 	perms $r read
 
-	set subtitle "powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'</img>"
+	set subtitle "powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'></img>"
 	set C [<script> src "http://www.google.com/jsapi?key=$::google_jsapi_key"]
 	append C \n
 	append C [<script> {google.load('search', '1');}]
