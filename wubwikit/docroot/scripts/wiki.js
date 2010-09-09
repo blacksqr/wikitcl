@@ -734,7 +734,6 @@ function URLencode(sStr) {
 }
 
 function App(query) {
-    return;
     this.query = query;
     this.resultCount = 0;
     this.siteSearch = new GwebSearch();
