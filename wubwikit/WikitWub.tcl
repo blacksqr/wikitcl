@@ -753,7 +753,7 @@ namespace eval WikitWub {
 	if {$first} {
 	    set activity 10000
 	} else {
-	    set activity [expr {int($activity * 10000.0)}]
+	    set activity [expr {entier($activity * 10000.0)}]
 	}
 
 	set activity [string length $activity]
