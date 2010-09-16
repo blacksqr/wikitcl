@@ -1197,18 +1197,40 @@ namespace eval WikitWub {
 	set t1 [get_page_with_version $N $V]
 	if {!$W} { set t1 [removeNonWikitMarkup $t1] }
 	set t1 [split $t1 "\n"]
-	if {!$W} { set uwt1 [unWhiteSpace $t1] } else { set uwt1 $t1 }
+	if {!$W} {
+	    set uwt1 [unWhiteSpace $t1]
+	} else {
+	    set uwt1 {}
+	    foreach l $t1 {
+		if {[string length $l] != 0} {
+		    lappend uwt1 $l
+		}
+	    }
+	    set t1 $uwt1
+	}
 
 	set t2 [get_page_with_version $N $D]
 	if {!$W} { set t2 [removeNonWikitMarkup $t2] }
 	set t2 [split $t2 "\n"]
-	if {!$W} { set uwt2 [unWhiteSpace $t2] } else { set uwt2 $t2 }
+	if {!$W} {
+	    set uwt2 [unWhiteSpace $t2]
+	} else {
+	    set uwt2 {}
+	    foreach l $t2 {
+		if {[string length $l] != 0} {
+		    lappend uwt2 $l
+		}
+	    }
+	    set t2 $uwt2
+	}
 
 	set p1 0
 	set p2 0
 	set C ""
 
 	foreach {l1 l2} [::struct::list::LlongestCommonSubsequence $uwt1 $uwt2] {
+	    puts "l1=$l1"
+	    puts "l2=$l2"
 	    foreach i1 $l1 i2 $l2 {
 		if { $W && $p1 < $i1 && $p2 < $i2 } {
 		    set d1 ""
