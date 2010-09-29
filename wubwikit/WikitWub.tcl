@@ -3263,4 +3263,12 @@ Debug.log {RESTART: [clock format [clock second]]}
 expr srand([clock seconds])
 
 # Initialize Site
-Site start home [file normalize [file dirname [info script]]] config wikit.config
+set cfg wikit.config
+if {[info exists ::starkit::config_file]} {
+    set cfg $::starkit::config_file
+}
+set local local.tcl
+if {[info exists ::starkit::local_file]} {
+    set local $::starkit::local_file
+}
+Site start home [file normalize [file dirname [info script]]] config $cfg local $local
