@@ -1909,31 +1909,37 @@ namespace eval WikitWub {
 	variable pageURL
 	variable recent_cache
 
+	puts "/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload"
 	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload}
 	Debug.wikit {Query: [dict get $r -Query] / [dict get $r -entity]}
 
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    puts "/edit/save robot detected"
 	    return [robot $r]
 	}
 
 	if { [string tolower $cancel] eq "cancel" } {
+	    puts "/edit/save cancel"
 	    set url http://[Url host $r][file join $pageURL $N]
 	    return [redir $r $url [<a> href $url "Canceled page edit"]]
 	}
 
 	variable readonly
 	if {$readonly ne ""} {
+	    puts "/edit/save readonly"
 	    Debug.wikit {/edit/save failed wiki is readonly}
 	    return [sendPage $r ro]
 	}
 
 	if {![string is integer -strict $N]} {
+	    puts "/edit/save N not integer: $N"
 	    Debug.wikit {/edit/save failed can only save to page by number}
 	    return [Http NotFound $r]
 	}
 
 	if {$N < 0 || $N >= [WDB PageCount]} {
+	    puts "/edit/save N out of range: $N"
 	    Debug.wikit {/edit/save failed page out of range}
 	    return [Http NotFound $r]
 	}
@@ -1941,6 +1947,7 @@ namespace eval WikitWub {
 	lassign [WDB GetPage $N name date who type ] name date who otype
 	set page [WDB GetContent $N]
 	if {$name eq ""} {
+	    puts "/edit/save not a valid page"
 	    Debug.wikit {/edit/save failed $N is not a valid page}
 	    return [Http NotFound $er [subst {
 		[<h2> "$N is not a valid page."]
@@ -1965,6 +1972,7 @@ namespace eval WikitWub {
 	    } elseif {![string match image/* $type]
 		&& [string match text/* $type]
 	    } {
+		puts "/edit/save bad type $type"
 		Debug.wikit {Bad Type: $type}
 		return [sendPage $r badtype]
 	    }
@@ -1972,19 +1980,24 @@ namespace eval WikitWub {
 	    # editing without upload can only create wiki pages
 	    set type text/x-wikit
 	}
+	
+	puts "/edit/save type = $type"
 
 	# type must be text/* or image/*
 	if {![string match text/* $type] && ![string match image/* $type]} {
+	    puts "/edit/save badtype $type (must be image or test)"
 	    return [sendPage $r badtype]
 	}
 	
 	# text must stay text
 	if {$otype ne "" && [string match text/* $otype] && ![string match text/* $type]} {
+	    puts "/edit/save badnewtype: $type / $otype"
 	    return [sendPage $r badnewtype]	    
 	}
 
 	# Image must stay image
 	if {$otype ne "" && ![string match text/* $otype] && [string match text/* $type]} {
+	    puts "/edit/save badnewtype $type / $otype"
 	    return [sendPage $r badnewtype]	    
 	}
 
@@ -1994,13 +2007,16 @@ namespace eval WikitWub {
 	    set C " "
 	}
 	if {$N eq "" || $C eq ""} {
+	    puts "/edit/save empty page or empty page number"
 	    Debug.wikit {Empty page or page number}
 	    return [sendPage $r emptyclear]
 	}
 
 	variable protected
+	puts "/edit/save protected? $protected"
 	if {[dict exists $protected $N]} {
 	    perms $r admin
+	    puts "/edit/save protected ok"
 	    Debug.wikit {/edit/save protected page OK}
 	}
 
@@ -2013,6 +2029,7 @@ namespace eval WikitWub {
 		#set url http://[dict get $r host]/$N
 		#return [redir $r $url [<a> href $url "Edited Page"]]
 	    } else {
+		puts "/edit/save edit conflict"
 		Debug.wikit {conflict $N}
 		set X [list $date $who]
 		return [sendPage $r conflict {NoCache Conflict}]
@@ -2041,6 +2058,7 @@ namespace eval WikitWub {
 		    set E ""
 		}
 		Debug.wikit {badutf $N}
+		puts "/edit/save bad utf"
 		return [sendPage $r badutf]
 	    }
 
@@ -2070,6 +2088,7 @@ namespace eval WikitWub {
 
 	if {$C eq [WDB GetContent $N]} {
 	    Debug.wikit {/edit/save failed: No change, not saving  $N}
+	    puts "/edit/save no change"
 	    return [redir $r $url [<a> href $url "Unchanged Page"]]
 	}
 
@@ -2123,6 +2142,7 @@ namespace eval WikitWub {
 	Debug.wikit {/edit/save complete $N}
 	# instead of redirecting, return the generated page with a Content-Location tag
 	#return [do $r $N]
+	puts "/edit/save done."
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
