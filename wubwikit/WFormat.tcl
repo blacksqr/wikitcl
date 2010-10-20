@@ -582,6 +582,7 @@ namespace eval ::WFormat {
       BACKREFS {^(<<backrefs>>)()(.*)$}
       BACKREFS {^(<<backrefs:)()(.*)>>$}
       INLINETOC {^<<TOC>>$}
+      INLINETOC {^<<toc>>$}
       CATEGORY {^(<<categories>>)()(.*)$}
       DISCUSSION {^(<<discussion>>)()(.*)$}
     } {

@@ -2810,6 +2810,7 @@ namespace eval WikitWub {
 		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath [string trimleft $key <] $qdate 100] r+]
 		chan configure $cfd -blocking 0
 		chan event $cfd readable [list ::WikitWub::resume_suspended $cfd $r $key $qdate]
+		puts "SUSPEND SEARCH $S"
 		return [Httpd Suspend $r 120000]	;# give async_search 2 minutes to complete
 	    }
 	    return [/searchp $r 0]
@@ -2819,6 +2820,7 @@ namespace eval WikitWub {
     }
 
     proc resume_suspended {fd r key date} {
+	puts "RESUME SEARCH"
 	variable eresult
 	Debug.wikit {resume suspended: $r $key $date}
 	append eresult($fd) [read $fd]
