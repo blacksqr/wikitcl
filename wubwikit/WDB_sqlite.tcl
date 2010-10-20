@@ -173,7 +173,7 @@ namespace eval WDB {
 	variable db
 	variable transaction_started 0
 	set now [clock microseconds]
-	puts "END TRANSACTION commit"
+	puts "END TRANSACTION commit @ [clock seconds]"
 	$db commit
 	Debug.WDB {commit: [expr {([clock microseconds] - $now) / 1000000.0}]sec}
     }
@@ -181,7 +181,7 @@ namespace eval WDB {
     proc rollback {} {
 	variable db
 	variable transaction_started 0
-	puts "END TRANSACTION rollback"
+	puts "END TRANSACTION rollback @ [clock seconds]"
 	$db rollback
     }
 
@@ -189,7 +189,7 @@ namespace eval WDB {
 	variable db
 	variable transaction_started
 	if {!$transaction_started} {
-	    puts "BEGIN TRANSACTION"
+	    puts "BEGIN TRANSACTION @ [clock seconds]"
 	    $db begintransaction
 	    set transaction_started 1
 	}
