@@ -987,6 +987,22 @@ function hideEditHelp()
     return false;
 }
 
+function toggleDiscussion(n)
+{
+    try {
+	if (document.getElementById('discussion'+n).style.display =='inline') {
+	    document.getElementById('discussion'+n).style.display = 'none';
+	    document.getElementById('togglediscussionbutton'+n).innerHTML = 'Show discussion';
+	}
+	else {
+	    document.getElementById('discussion'+n).style.display = 'inline';
+	    document.getElementById('togglediscussionbutton'+n).innerHTML = 'Hide discussion';
+	}
+    } catch (e) {}
+	return false;
+}
+
+
 /*
  * edit.js
  */

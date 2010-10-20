@@ -158,7 +158,7 @@ namespace eval ::WFormat {
       ## there is any.
       #
       switch -exact -- $tag {
-        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS - CATEGORY - INLINETOC - INLINEHTML {
+        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS - CATEGORY - DISCUSSION - INLINETOC - INLINEHTML {
           if {$paragraph != {}} {
             if {$mode_fixed} {
               lappend irep FI $fixed_lang
@@ -507,6 +507,9 @@ namespace eval ::WFormat {
         CATEGORY {
           lappend irep CATEGORY $txt
         }
+        DISCUSSION {
+          lappend irep DISCUSSION 0
+        }
         default {
           error "Unknown linetype $tag"
         }
@@ -580,6 +583,7 @@ namespace eval ::WFormat {
       BACKREFS {^(<<backrefs:)()(.*)>>$}
       INLINETOC {^<<TOC>>$}
       CATEGORY {^(<<categories>>)()(.*)$}
+      DISCUSSION {^(<<discussion>>)()(.*)$}
     } {
       # Compat: Remove restriction to multiples of 3 spaces.
       if {[regexp $re $line - pfx aux txt]} {
@@ -1007,11 +1011,13 @@ namespace eval ::WFormat {
     set tocheader ""
     set uol {}
     set irefs {}
+    set in_discussion 0
+    set discussion_cnt 0
 
     variable html_frag
 
     foreach {mode text} $s {
-      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY INLINEHTML BACKREFS}} {
+      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY DISCUSSION INLINEHTML BACKREFS}} {
         # Unwind uol
         append result </li>
         foreach uo [lreverse $uol] {
@@ -1345,9 +1351,26 @@ namespace eval ::WFormat {
           set state T
           incr backrefid
         }
+        DISCUSSION {
+          if {$in_discussion} {
+            append result "</div>"
+            set in_discussion 0
+          } else {
+            set mode T
+            append result $html_frag($state$mode)
+            append result "<hr><button type='button' id='togglediscussionbutton$discussion_cnt' onclick='toggleDiscussion($discussion_cnt);'>Show discussion</button>"
+            append result "<div class='discussion' id='discussion$discussion_cnt'>"
+            incr discussion_cnt
+            set in_discussion 1
+          }
+        }
         CATEGORY {
           set mode T
           append result $html_frag($state$mode)
+          if {$in_discussion} {
+            append result "</div>"
+            set in_discussion 0
+          }
           append result "<hr>"
           append result "<div class='centered'><p></p><table summary='' class='wikit_table'><thead><tr>"
           set text [string map [list "%|%" \1] $text]
@@ -1451,6 +1474,10 @@ namespace eval ::WFormat {
     # Close off the last section.
     if { [info exists html_frag(${state}_)] } {
       append result $html_frag(${state}_)
+    }
+
+    if {$in_discussion} {
+      append result "</div>"
     }
 
     # Create page-TOC

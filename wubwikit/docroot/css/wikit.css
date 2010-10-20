@@ -36,6 +36,10 @@ div.header {
   min-height: 53px;
 }
 
+div.discussion {
+    display: none;
+}
+
 /* div.logo { */
 /*   float: right; */
 /*   vertical-align: middle; */
