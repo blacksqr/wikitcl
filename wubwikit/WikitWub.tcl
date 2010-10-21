@@ -59,7 +59,7 @@ namespace eval WikitWub {
     variable include_pages 0
     variable hidereadonly 0
 #    variable text_url [list "" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/" "tclconf2010.png"]
-    variable text_url [list "" "http://wiki.tcl.tk" "http://wiki.tcl.tk/" "plume.png"]
+    variable text_url [list "wiki.tcl.tk" "http://wiki.tcl.tk" "http://wiki.tcl.tk/" "plume.png"]
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
 
     variable perms {}	;# dict of operation -> names, names->passwords
