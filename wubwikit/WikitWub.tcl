@@ -1050,15 +1050,15 @@ namespace eval WikitWub {
 	    perms $r admin
 	}
 
+	variable delta
+	variable mount
+
 	if {[who $r] eq ""} {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
 	    return [sendPage $r login]
 	}
-
-	variable delta
-	variable mount
 
 	set N [file rootname $N]	;# it's a simple single page
 	if {![string is integer -strict $N] || $N < 0 || $N >= [WDB PageCount]} {
@@ -1127,6 +1127,11 @@ namespace eval WikitWub {
 	    perms $r admin
 	}
 
+	# If T is zero, D contains version to compare with
+	# If T is non zero, D contains a number of days and /diff must
+	Debug.wikit {/diff N:$N V:$V D:$D W:$W T:$T}
+	variable mount; variable pageURL
+	
 	if {[who $r] eq ""} {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
@@ -1134,11 +1139,6 @@ namespace eval WikitWub {
 	    return [sendPage $r login]
 	}
 
-	# If T is zero, D contains version to compare with
-	# If T is non zero, D contains a number of days and /diff must
-	Debug.wikit {/diff N:$N V:$V D:$D W:$W T:$T}
-	variable mount; variable pageURL
-	
 	set ext [file extension $N]	;# file extension?
 	set N [file rootname $N]	;# it's a simple single page
 
@@ -1438,16 +1438,15 @@ namespace eval WikitWub {
 	    perms $r admin
 	}
 
+	Debug.wikit {/revision N=$N V=$V A=$A}
+
+	variable mount
 	if {[who $r] eq ""} {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
 	    return [sendPage $r login]
 	}
-
-	Debug.wikit {/revision N=$N V=$V A=$A}
-
-	variable mount
 
 	set ext [file extension $N]	;# file extension?
 	set N [file rootname $N]	;# it's a simple single page
@@ -1524,16 +1523,16 @@ namespace eval WikitWub {
 	    return [robot $r]
 	}
 
+	Debug.wikit {/history $N $S $L}
+
+	variable mount; variable pageURL
+
 	if {[who $r] eq ""} {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
 	    return [sendPage $r login]
 	}
-
-	Debug.wikit {/history $N $S $L}
-
-	variable mount; variable pageURL
 
 	if {![string is integer -strict $N]
 	    || ![string is integer -strict $S]
@@ -2814,6 +2813,7 @@ namespace eval WikitWub {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
+	    variable mount
 	    return [sendPage $r login]
 	}
 
