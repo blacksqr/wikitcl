@@ -429,7 +429,7 @@ namespace eval WikitWub {
 		[<text> nickname title "Nickname"]
 		[<input> name save type submit value "Login" {}]
 	    }]
-	    [<hidden> R [armour [expr {[info exists R]:$R:[Http Referer $r]}]]]
+	    [<hidden> R [armour [expr {[info exists R]?$R:[Http Referer $r]}]]]
 	}]
     }
 
