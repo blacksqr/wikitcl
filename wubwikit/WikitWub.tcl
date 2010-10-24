@@ -1050,6 +1050,13 @@ namespace eval WikitWub {
 	    perms $r admin
 	}
 
+	if {[who $r] eq ""} {
+	    # this is a call to /login with no args,
+	    # in order to generate the /login page
+	    Debug.wikit {/login - redo with referer}
+	    return [sendPage $r login]
+	}
+
 	variable delta
 	variable mount
 
@@ -1118,6 +1125,13 @@ namespace eval WikitWub {
 	variable rprotected
 	if {[dict exists $rprotected $N]} {
 	    perms $r admin
+	}
+
+	if {[who $r] eq ""} {
+	    # this is a call to /login with no args,
+	    # in order to generate the /login page
+	    Debug.wikit {/login - redo with referer}
+	    return [sendPage $r login]
 	}
 
 	# If T is zero, D contains version to compare with
@@ -1376,6 +1390,13 @@ namespace eval WikitWub {
 	    return [robot $r]
 	}
 
+	# is the caller logged in?
+	set nick [who $r]
+	if {$nick eq ""} {
+	    set R ""	;# make it return here
+	    return [sendPage $r login]
+	}
+
 	if {![string is integer -strict $N]} {
 	    return [Http NotFound $r]
 	}
@@ -1388,13 +1409,6 @@ namespace eval WikitWub {
 	# No revert for images yet
 	if {$type ne "" && ![string match "text/*" $type]} {
 	    return [Http NotFound $r]
-	}
-
-	# is the caller logged in?
-	set nick [who $r]
-	if {$nick eq ""} {
-	    set R ""	;# make it return here
-	    return [sendPage $r login]
 	}
 
 	set r [jQ form $r .autoform target '#result']
@@ -1422,6 +1436,13 @@ namespace eval WikitWub {
 	variable rprotected
 	if {[dict exists $rprotected $N]} {
 	    perms $r admin
+	}
+
+	if {[who $r] eq ""} {
+	    # this is a call to /login with no args,
+	    # in order to generate the /login page
+	    Debug.wikit {/login - redo with referer}
+	    return [sendPage $r login]
 	}
 
 	Debug.wikit {/revision N=$N V=$V A=$A}
@@ -1501,6 +1522,13 @@ namespace eval WikitWub {
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
+	}
+
+	if {[who $r] eq ""} {
+	    # this is a call to /login with no args,
+	    # in order to generate the /login page
+	    Debug.wikit {/login - redo with referer}
+	    return [sendPage $r login]
 	}
 
 	Debug.wikit {/history $N $S $L}
@@ -2781,6 +2809,13 @@ namespace eval WikitWub {
 	}
 
 	perms $r read
+
+	if {[who $r] eq ""} {
+	    # this is a call to /login with no args,
+	    # in order to generate the /login page
+	    Debug.wikit {/login - redo with referer}
+	    return [sendPage $r login]
+	}
 
 	if {$S eq "" && [llength $args] > 0} {
 	    set S [lindex $args 0]
