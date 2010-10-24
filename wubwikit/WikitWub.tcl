@@ -429,7 +429,7 @@ namespace eval WikitWub {
 		[<text> nickname title "Nickname"]
 		[<input> name save type submit value "Login" {}]
 	    }]
-	    [<hidden> R [armour $R]]
+	    [<hidden> R [armour [expr {[info exists R]:$R:[Http Referer $r]}]]]
 	}]
     }
 
@@ -1715,7 +1715,6 @@ namespace eval WikitWub {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
-	    set R [Http Referer $r]
 	    return [sendPage $r login]
 	}
 
