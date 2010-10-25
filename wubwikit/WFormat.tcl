@@ -1359,7 +1359,7 @@ namespace eval ::WFormat {
           } else {
             set mode T
             append result $html_frag($state$mode)
-            append result "<hr><button type='button' id='togglediscussionbutton$discussion_cnt' onclick='toggleDiscussion($discussion_cnt);'>Show discussion</button>"
+            append result "<button type='button' id='togglediscussionbutton$discussion_cnt' onclick='toggleDiscussion($discussion_cnt);'>Show discussion</button>"
             append result "<div class='discussion' id='discussion$discussion_cnt'>"
             incr discussion_cnt
             set in_discussion 1
