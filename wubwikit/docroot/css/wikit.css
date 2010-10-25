@@ -56,17 +56,19 @@ div.logo {
   vertical-align: middle;
   text-align: left;
   height: 40px;
-  font-size: 120%;
   background: #ccc;
-  margin: 0.2em 0.5em 0 0;
 }
 
 div.toolbar {
     padding: 3px 0px 0px 0px;
 }
 
-div.logo a.logo {
+a.logo {
   color: black;
+  background: #ccc;
+  vertical-align: bottom;
+  margin: 0.2em 0.5em 0.5em 0;
+  font-size: 150%;
 }
 
 div.centered {
