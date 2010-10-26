@@ -760,6 +760,9 @@ namespace eval ::WFormat {
                                                  # {'''''italic_bold'''''}        {} {<b><i>italic_bold</i></b>}
                                                  # {`fixed`}                      {} {... to be added ...}
 
+                                                 # double backquote rendered as single
+                                                 regsub -all {``} $text "\4" text
+
                                                  # First get all un-nested hilites
                                                  while {
                                                         [regsub -all {'''([^']+?)'''} $text "\0\1b+\0\\1\0\1b-\0" text] ||
@@ -775,6 +778,9 @@ namespace eval ::WFormat {
                                                  regsub -all {(<<br>>)}   $text "\0br\0" text
                                                  regsub -all {(<<nbsp>>)}   $text "\0nbsp\0" text
                                                  regsub -all {(<<pipe>>)}   $text "|" text
+
+                                                 # double backquote rendered as single
+                                                 regsub -all "\4" $text "`" text
 
                                                  # Normalize brackets ...
                                                  set text [string map {&! [ ]] ]} $text]
