@@ -2808,7 +2808,7 @@ namespace eval WikitWub {
 
 	perms $r read
 
-	if {[who $r] eq ""} {
+	if {0 && [who $r] eq ""} {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
