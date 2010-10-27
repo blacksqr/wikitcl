@@ -1243,8 +1243,6 @@ namespace eval WikitWub {
 	set C ""
 
 	foreach {l1 l2} [::struct::list::LlongestCommonSubsequence $uwt1 $uwt2] {
-	    puts "l1=$l1"
-	    puts "l2=$l2"
 	    foreach i1 $l1 i2 $l2 {
 		if { $W && $p1 < $i1 && $p2 < $i2 } {
 		    set d1 ""
