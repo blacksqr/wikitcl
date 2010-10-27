@@ -958,7 +958,7 @@ namespace eval WikitWub {
     }
 
 
-    proc translate {N name C ext {preview 0} {summary 0}} {
+    proc translate {N name C ext {preview 0} {summary 0} {diff 0}} {
 	switch -exact -- $ext {
 	    .txt {
 		return $C
@@ -973,7 +973,7 @@ namespace eval WikitWub {
 		return $C
 	    }
 	    default {
-		return [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview $summary]
+		return [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview $summary $diff]
 	    }
 	}
     }
@@ -1349,7 +1349,7 @@ namespace eval WikitWub {
 		    if { $W } {
 			set C [WFormat ShowDiffs $C]
 		    } else {
-			lassign [WFormat StreamToHTML [WFormat TextToStream $C] $pageURL ::WikitWub::InfoProc] C U T BR
+			lassign [WFormat StreamToHTML [WFormat TextToStream $C] $pageURL ::WikitWub::InfoProc 0 0 1] C U T BR
 		    }
 		    set tC [<span> class newwikiline "Text added in version $V is highlighted like this"]
 		    append tC , [<span> class oldwikiline "text deleted from version $D is highlighted like this"]

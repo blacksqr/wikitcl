@@ -998,7 +998,7 @@ namespace eval ::WFormat {
     return [list $text $text]
   }
 
-  proc StreamToHTML {s {cgi ""} {ip ""} {creating_preview 0} {creating_summary 0}} {
+  proc StreamToHTML {s {cgi ""} {ip ""} {creating_preview 0} {creating_summary 0} {creating_diffs 0}} {
 
     # here so we aren't dependent on cksum unless rendering to HTML
     package require cksum
@@ -1365,8 +1365,12 @@ namespace eval ::WFormat {
           } else {
             set mode T
             append result $html_frag($state$mode)
-            append result "<button type='button' id='togglediscussionbutton$discussion_cnt' onclick='toggleDiscussion($discussion_cnt);'>Show discussion</button>"
-            append result "<div class='discussion' id='discussion$discussion_cnt'>"
+            if {$creating_diffs} {
+              append result "<div class='diffdiscussion' id='diffdiscussion$discussion_cnt'>"
+            } else {
+              append result "<button type='button' id='togglediscussionbutton$discussion_cnt' onclick='toggleDiscussion($discussion_cnt);'>Show discussion</button>"
+              append result "<div class='discussion' id='discussion$discussion_cnt'>"
+            }
             incr discussion_cnt
             set in_discussion 1
           }
