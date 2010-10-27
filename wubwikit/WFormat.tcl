@@ -114,7 +114,28 @@ namespace eval ::WFormat {
     set fixed_lang ""
     set optnum 0	 	  ; # option block number
     set optlen 0	 	  ; # length of option block fixed part
+    # Preprocess <<discussion>> statements
+    set textl {}
+    set in_discussion 0
     foreach line [split $text \n] {
+      if {[string match "<<discussion>>*" $line]} {
+        if {[string length [string trim $line]] > 14} {
+          if {$in_discussion} {
+            lappend textl "<<discussion>>"
+          }
+          lappend textl "<<discussionheader>>"
+          lappend textl [string range [string trim $line] 14 end]
+          lappend textl "<<discussion>>"
+          set in_discussion 1
+        } else {
+          lappend textl "<<discussion>>"
+          set in_discussion [expr {!$in_discussion}]
+        }
+      } else {
+        lappend textl $line
+      }
+    }
+    foreach line $textl {
       # Per line, classify the it and extract the main textual information.
       foreach {tag depth txt aux} [linetype $line] break ; # lassign
       if {$tag eq "COMMENT"} {
@@ -158,7 +179,7 @@ namespace eval ::WFormat {
       ## there is any.
       #
       switch -exact -- $tag {
-        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS - CATEGORY - DISCUSSION - INLINETOC - INLINEHTML {
+        HR - 1UL - 2UL - 3UL - 4UL - 5UL - 1OL - 2OL - 3OL - 4OL - 5OL - DL - PRE - TBL - CTBL - TBLH - HD2 - HD3 - HD4 - BLAME_START - BLAME_END - CENTERED - BACKREFS - CATEGORY - DISCUSSION - DISCUSSIONHEADER - INLINETOC - INLINEHTML {
           if {$paragraph != {}} {
             if {$mode_fixed} {
               lappend irep FI $fixed_lang
@@ -510,6 +531,9 @@ namespace eval ::WFormat {
         DISCUSSION {
           lappend irep DISCUSSION 0
         }
+        DISCUSSIONHEADER {
+          lappend irep DISCUSSIONHEADER 0
+        }
         default {
           error "Unknown linetype $tag"
         }
@@ -584,7 +608,8 @@ namespace eval ::WFormat {
       INLINETOC {^<<TOC>>$}
       INLINETOC {^<<toc>>$}
       CATEGORY {^(<<categories>>)()(.*)$}
-      DISCUSSION {^(<<discussion>>)()(.*)$}
+      DISCUSSIONHEADER {^(<<discussionheader>>)()()$}
+      DISCUSSION {^(<<discussion>>)()()$}
     } {
       # Compat: Remove restriction to multiples of 3 spaces.
       if {[regexp $re $line - pfx aux txt]} {
@@ -1019,12 +1044,13 @@ namespace eval ::WFormat {
     set uol {}
     set irefs {}
     set in_discussion 0
+    set in_discussion_header 0
     set discussion_cnt 0
 
     variable html_frag
 
     foreach {mode text} $s {
-      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY DISCUSSION INLINEHTML BACKREFS}} {
+      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY DISCUSSION DISCUSSIONHEADER INLINEHTML BACKREFS}} {
         # Unwind uol
         append result </li>
         foreach uo [lreverse $uol] {
@@ -1298,7 +1324,9 @@ namespace eval ::WFormat {
           } else {
             set sh_class ""
           }
-          append result [subst $html_frag($state$mode)]
+          if {$state ne "_"} {
+            append result [subst $html_frag($state$mode)]
+          }
           set state $mode
         }
         INLINEHTML {
@@ -1358,22 +1386,43 @@ namespace eval ::WFormat {
           set state T
           incr backrefid
         }
-        DISCUSSION {
-          if {$in_discussion} {
-            append result "</div>"
-            set in_discussion 0
-          } else {
-            set mode T
+        DISCUSSIONHEADER {
+          set mode T
+          if {$state ne "_"} {
             append result $html_frag($state$mode)
-            if {$creating_diffs} {
-              append result "<div class='diffdiscussion' id='diffdiscussion$discussion_cnt'>"
-            } else {
-              append result "<button type='button' id='togglediscussionbutton$discussion_cnt' onclick='toggleDiscussion($discussion_cnt);'>Show discussion</button>"
-              append result "<div class='discussion' id='discussion$discussion_cnt'>"
-            }
-            incr discussion_cnt
-            set in_discussion 1
           }
+          if {!$creating_diffs} {
+            if {$in_discussion} {
+              append result "</div>"
+              set in_discussion 0
+            }
+            append result "<button type='button' id='togglediscussionbutton$discussion_cnt' onclick='toggleDiscussion($discussion_cnt);'>Show discussion</button>&nbsp;<b>"
+            set in_discussion_header 1
+          }
+          set state _
+        }
+        DISCUSSION {
+          set mode T
+          if {$state ne "_"} {
+            append result $html_frag($state$mode)
+          }
+          if {!$creating_diffs} {
+            if {$in_discussion} {
+              append result "</div>"
+              set in_discussion 0
+            } else {
+              if {$in_discussion_header} {
+                append result "</b>"
+              } else {
+                append result "<button type='button' id='togglediscussionbutton$discussion_cnt' onclick='toggleDiscussion($discussion_cnt);'>Show discussion</button>"
+              }
+              append result "<div class='discussion' id='discussion$discussion_cnt'>"
+              incr discussion_cnt
+              set in_discussion 1
+              set in_discussion_header 0
+            }
+          }
+          set state T
         }
         CATEGORY {
           set mode T

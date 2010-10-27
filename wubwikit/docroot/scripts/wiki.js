@@ -992,11 +992,11 @@ function toggleDiscussion(n)
     try {
 	if (document.getElementById('discussion'+n).style.display =='inline') {
 	    document.getElementById('discussion'+n).style.display = 'none';
-	    document.getElementById('togglediscussionbutton'+n).innerHTML = 'Show discussion';
+	    document.getElementById('togglediscussionbutton'+n).innerHTML = 'Show discussion' + document.getElementById('togglediscussionbutton'+n).innerHTML.substring(15);
 	}
 	else {
 	    document.getElementById('discussion'+n).style.display = 'inline';
-	    document.getElementById('togglediscussionbutton'+n).innerHTML = 'Hide discussion';
+	    document.getElementById('togglediscussionbutton'+n).innerHTML = 'Hide discussion' +  document.getElementById('togglediscussionbutton'+n).innerHTML.substring(15);
 	}
     } catch (e) {}
 	return false;
