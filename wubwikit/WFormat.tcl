@@ -117,8 +117,12 @@ namespace eval ::WFormat {
     # Preprocess <<discussion>> statements
     set textl {}
     set in_discussion 0
+    set in_code 0
     foreach line [split $text \n] {
-      if {[string match "<<discussion>>*" $line]} {
+      if {[lindex [linetype $line] 0] in {FIXED CODE}} {
+        lappend textl $line
+        set in_code [expr {!$in_code}]
+      } elseif {!$in_code && [string match "<<discussion>>*" $line]} {
         if {[string length [string trim $line]] > 14} {
           if {$in_discussion} {
             lappend textl "<<discussion>>"
