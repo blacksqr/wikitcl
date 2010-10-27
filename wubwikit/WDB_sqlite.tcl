@@ -937,7 +937,6 @@ namespace eval WDB {
 		# not exist in the annotated version are marked with -1.
 
 		set m1s [struct::list repeat [llength $old] -1]
-		puts "llength whither = [llength $whither] / $from / $to"
 		if {$from <= $to} {
 		    set whither [eval [linsert $m1s 0 \
 					   lreplace $whither[set whither {}] $from $to]]
