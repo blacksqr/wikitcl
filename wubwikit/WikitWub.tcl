@@ -429,7 +429,7 @@ namespace eval WikitWub {
 		[<text> nickname title "Nickname"]
 		[<input> name save type submit value "Login" {}]
 	    }]
-	    [<hidden> R [armour [expr {[info exists R]?$R:[Http Referer $r]}]]]
+	    [<hidden> R [expr {[info exists R]?$R:[Http Referer $r]}]]
 	}]
     }
 
@@ -1057,6 +1057,7 @@ namespace eval WikitWub {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
+	    set R ""
 	    return [sendPage $r login]
 	}
 
@@ -1136,6 +1137,7 @@ namespace eval WikitWub {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
+	    set R ""
 	    return [sendPage $r login]
 	}
 
@@ -1443,6 +1445,7 @@ namespace eval WikitWub {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
+	    set R ""
 	    return [sendPage $r login]
 	}
 
@@ -1529,6 +1532,7 @@ namespace eval WikitWub {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
 	    Debug.wikit {/login - redo with referer}
+	    set R ""
 	    return [sendPage $r login]
 	}
 
@@ -1675,7 +1679,7 @@ namespace eval WikitWub {
 	if {[string length $nick]} {
 	    set C "You are '[<a> href [file join $pageURL $nick] $nick]'."
 	} else {
-	    set C "You are not logged in. Login is required to edit a page. You will be asked to provided a user-name the next time you edit a page."
+	    set C "You are not logged in. Login is required to edit a page or when accessing non-cached pages. You will be asked to provided a user-name the next time you edit a page or access an non-cached page."
 	}
 
 	# sendPage vars
@@ -1689,9 +1693,14 @@ namespace eval WikitWub {
     proc /logout {r} {
 	variable mount
 	variable cookie
+	variable pageURL
 	set r [Cookies Clear $r path $mount -name $cookie]
 	if {[dict exists $r referer]} {
-	    return [Http Redir $r [dict get $r referer]]	
+	    if {[regexp {^.*/(\d+)$} [dict get $r referer] -> N] || [regexp {N=(\d+)} [dict get $r referer] -> N]} {
+		return [Http Redir $r [file join $pageURL $N]]
+	    } else {
+		return [Http Redir $r [dict get $r referer]]	
+	    }
 	} else {
 	    return [/whoami $r]
 	}
@@ -2805,14 +2814,6 @@ namespace eval WikitWub {
 	}
 
 	perms $r read
-
-	if {0 && [who $r] eq ""} {
-	    # this is a call to /login with no args,
-	    # in order to generate the /login page
-	    Debug.wikit {/login - redo with referer}
-	    variable mount
-	    return [sendPage $r login]
-	}
 
 	if {$S eq "" && [llength $args] > 0} {
 	    set S [lindex $args 0]
