@@ -1400,7 +1400,7 @@ namespace eval ::WFormat {
               append result "</div>"
               set in_discussion 0
             }
-            append result "<button type='button' id='togglediscussionbutton$discussion_cnt' onclick='toggleDiscussion($discussion_cnt);'>Show discussion</button>&nbsp;<b>"
+            append result "<button type='button' id='togglediscussionbutton$discussion_cnt' onclick='toggleDiscussion($discussion_cnt);'>Show</button>&nbsp;<b>"
             set in_discussion_header 1
           }
           set state _
