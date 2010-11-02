@@ -2764,6 +2764,10 @@ namespace eval WikitWub {
 		set qdate 0
 	    }
 	    
+# For now, no long searches.
+	    set long 0
+	    set term [string trim $term *]
+
 	    lassign [search $term $qdate $external $external_result] C nqdate long
 	    set r [sortable $r]
 	    if {[dict exists $qd long]} {
@@ -2838,14 +2842,15 @@ namespace eval WikitWub {
 	    if {$long eq "1" && [string index $key end] ne "*"} {
 		append key "*"
 	    }
-	    if {[regexp {^(.*)\*+$} $key]} {
-		variable wikitdbpath
-		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath [string trimleft $key <] $qdate 100] r+]
-		chan configure $cfd -blocking 0
-		chan event $cfd readable [list ::WikitWub::resume_suspended $cfd $r $key $qdate]
-		puts "SUSPEND SEARCH $S @ [clock seconds]"
-		return [Httpd Suspend $r 120000]	;# give async_search 2 minutes to complete
-	    }
+# For now, disable content search, use the google search instead.
+# 	    if {[regexp {^(.*)\*+$} $key]} {
+# 		variable wikitdbpath
+# 		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath [string trimleft $key <] $qdate 100] r+]
+# 		chan configure $cfd -blocking 0
+# 		chan event $cfd readable [list ::WikitWub::resume_suspended $cfd $r $key $qdate]
+# 		puts "SUSPEND SEARCH $S @ [clock seconds]"
+# 		return [Httpd Suspend $r 120000]	;# give async_search 2 minutes to complete
+# 	    }
 	    return [/searchp $r 0]
 	} else {
 	    return [/searchp $r 0]	    
