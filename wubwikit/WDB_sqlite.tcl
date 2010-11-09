@@ -6,6 +6,7 @@ package provide WDB_sqlite 1.0
 
 if {0} {
     PRAGMA foreign_keys = ON;
+    PRAGMA journal_mode = WAL;
 
     CREATE TABLE pages (
        id INT NOT NULL,
@@ -134,6 +135,7 @@ namespace eval WDB {
 		"update_page_type_for_id"               { set sql {UPDATE pages SET type = :newType WHERE id = :id} }
 		"update_binary"                         { set sql {UPDATE pages_binary SET content = :text WHERE id = :id} }
 		"enable_foreign_keys"                   { set sql {PRAGMA foreign_keys = ON} }
+		"enable_journal_mode_WAL"               { set sql {PRAGMA journal_mode = WAL} }
 		"cleared_pages"                         { set sql {SELECT a.id, a.name, a.date, a.who 
 		                                                   FROM pages a, pages_content b 
                                                                    WHERE a.id = b.id AND a.date > 0 AND length(b.content) <= 1 
@@ -1261,6 +1263,7 @@ namespace eval WDB {
 	Debug.WDB {Opening sqlite3 tdbc at $db $file}
 	tdbc::sqlite3::connection create $db $file 
 	[statement "enable_foreign_keys"] execute
+	[statement "enable_journal_mode_WAL"] execute
     }
 
     namespace export -clear *
