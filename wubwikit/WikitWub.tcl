@@ -2130,6 +2130,7 @@ namespace eval WikitWub {
 	    set who $nick@[dict get $r -ipaddr]
 	    WDB SavePage $N $C $who $name $type $when
 	} err eo]} {
+	    puts "ERROR WHEN SAVING: $err"
 	    set readonly $err
 	    invalidate $r [file join $pageURL $N]
 	    invalidate $r [file join $mount recent]
@@ -2765,8 +2766,8 @@ namespace eval WikitWub {
 	    }
 	    
 # For now, no long searches.
-	    set long 0
-	    set term [string trim $term *]
+#	    set long 0
+#	    set term [string trim $term *]
 
 	    lassign [search $term $qdate $external $external_result] C nqdate long
 	    set r [sortable $r]
@@ -2843,14 +2844,14 @@ namespace eval WikitWub {
 		append key "*"
 	    }
 # For now, disable content search, use the google search instead.
-# 	    if {[regexp {^(.*)\*+$} $key]} {
-# 		variable wikitdbpath
-# 		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath [string trimleft $key <] $qdate 100] r+]
-# 		chan configure $cfd -blocking 0
-# 		chan event $cfd readable [list ::WikitWub::resume_suspended $cfd $r $key $qdate]
-# 		puts "SUSPEND SEARCH $S @ [clock seconds]"
-# 		return [Httpd Suspend $r 120000]	;# give async_search 2 minutes to complete
-# 	    }
+ 	    if {[regexp {^(.*)\*+$} $key]} {
+ 		variable wikitdbpath
+ 		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath [string trimleft $key <] $qdate 100] r+]
+ 		chan configure $cfd -blocking 0
+ 		chan event $cfd readable [list ::WikitWub::resume_suspended $cfd $r $key $qdate]
+ 		puts "SUSPEND SEARCH $S @ [clock seconds]"
+ 		return [Httpd Suspend $r 120000]	;# give async_search 2 minutes to complete
+ 	    }
 	    return [/searchp $r 0]
 	} else {
 	    return [/searchp $r 0]	    
@@ -3331,4 +3332,38 @@ set local local.tcl
 if {[info exists ::starkit::local_file]} {
     set local $::starkit::local_file
 }
+package require Spelunker
+
+proc spelunk { } {
+    global spel
+    set sl [Spelunker sum]
+    puts "================================================================================"
+    puts [clock format [clock seconds]]
+    puts [Spelunker sumcsv]
+    puts "================================================================================"
+    foreach s $sl {
+	lassign $s cnm cs csum
+	if {[info exists spel($cnm)]} {
+	    if {$csum > $spel($cnm)} {
+		puts ">>> $s"
+	    }
+	}
+	set spel($cnm) $csum
+    }
+    after 10000 spelunk
+}
+
+proc mamo { } {
+    set f [open [clock seconds].mi w]
+    puts $f [memory info]
+    close $f
+    memory objs [clock seconds].mo
+    memory active [clock seconds].ma
+    after 10000 mamo
+}
+
+#after 10000 spelunk
+
+#after 10000 mamo
+
 Site start home [file normalize [file dirname [info script]]] config $cfg local $local
