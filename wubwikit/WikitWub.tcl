@@ -493,6 +493,7 @@ namespace eval WikitWub {
 	[<fieldset> sfield title "Construct a new search" {
 	    [<legend> "Enter a Search Phrase"]
 	    [<text> S title "Append an asterisk (*) to search page contents" [armour %S]]
+	    [<input> name submit type submit value "Search" {}]
 	    [<checkbox> SC title "search page contents" value 1; set _disabled ""]
 	    [<hidden> _charset_]
 	}]
@@ -3336,21 +3337,22 @@ package require Spelunker
 
 proc spelunk { } {
     global spel
-    set sl [Spelunker sum]
-    puts "================================================================================"
-    puts [clock format [clock seconds]]
-    puts [Spelunker sumcsv]
-    puts "================================================================================"
-    foreach s $sl {
-	lassign $s cnm cs csum
-	if {[info exists spel($cnm)]} {
-	    if {$csum > $spel($cnm)} {
-		puts ">>> $s"
-	    }
-	}
-	set spel($cnm) $csum
-    }
-    after 10000 spelunk
+    set f [open [clock seconds].sumcsv w]
+    puts $f [Spelunker sumcsv]
+    close $f
+    set f [open [clock seconds].chanscsv w]
+    puts $f [Spelunker chanscsv]
+    close $f
+#     foreach s $sl {
+# 	lassign $s cnm cs csum
+# 	if {[info exists spel($cnm)]} {
+# 	    if {$csum > $spel($cnm)} {
+# 		puts ">>> $s"
+# 	    }
+# 	}
+# 	set spel($cnm) $csum
+#     }
+#    after 10000 spelunk
 }
 
 proc mamo { } {
@@ -3359,7 +3361,7 @@ proc mamo { } {
     close $f
     memory objs [clock seconds].mo
     memory active [clock seconds].ma
-    after 10000 mamo
+#    after 10000 mamo
 }
 
 #after 10000 spelunk
