@@ -40,35 +40,18 @@ div.discussion {
     display: none;
 }
 
-/* div.logo { */
-/*   float: right; */
-/*   vertical-align: middle; */
-/*   text-align: left; */
-/*   padding: 0.75em 50px 0 15px; */
-/*   margin: 0 1.5em 0 0; */
-/*   height: 40px; */
-/*   font-size: 120%; */
-/*   background: #ccc url(/_images/plume.png) top right no-repeat; */
-/* } */
-
 div.logo {
   float: right;
-  vertical-align: middle;
-  text-align: left;
-  height: 40px;
-  background: #ccc;
+}
+
+a.logo {
+  vertical-align: bottom;
+  margin: 0.2em 0.5em 0.5em 0;
+  font-size: 150%;
 }
 
 div.toolbar {
     padding: 3px 0px 0px 0px;
-}
-
-a.logo {
-  color: black;
-  background: #ccc;
-  vertical-align: bottom;
-  margin: 0.2em 0.5em 0.5em 0;
-  font-size: 150%;
 }
 
 div.centered {

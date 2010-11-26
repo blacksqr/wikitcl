@@ -219,7 +219,7 @@ namespace eval WikitWub {
 
     template header {} {
 	[<div> class header [subst {
-	    [<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+	    [<div> class logo [<a> class logo href [lindex $::WikitWub::text_url 1] [lindex $::WikitWub::text_url 0]][<a> href [lindex $::WikitWub::text_url 1] [<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]]]
 	    [<div> id title class title [tclarmour $Title]]
 	    [<div> id updated class updated [expr {[info exists subtitle]&&[string length $subtitle]?$subtitle:"&nbsp;"}]]
 	}]]
@@ -2014,7 +2014,7 @@ namespace eval WikitWub {
 	    # editing without upload can only create wiki pages
 	    set type text/x-wikit
 	}
-	
+
 	puts "/edit/save type = $type"
 
 	# type must be text/* or image/*
