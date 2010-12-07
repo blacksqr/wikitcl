@@ -36,12 +36,20 @@ div.header {
   min-height: 53px;
 }
 
-div.discussion {
-    display: none;
+table.header {
+    border-width: 0px;
 }
 
-div.logo {
-  float: right;
+tr.header {
+    border-width: 0px;
+}
+
+td.header {
+    border-width: 0px;
+}
+
+div.discussion {
+    display: none;
 }
 
 a.logo {
