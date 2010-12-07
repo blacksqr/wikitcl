@@ -219,17 +219,9 @@ namespace eval WikitWub {
 
     template header {} {
 	[<div> class header [subst {
-	    <table class='header' width='100%'>
-	    <tr class='header'>
-	    <td class='header' align='left'>
+	    [<div> class logo [<a> class logo href [lindex $::WikitWub::text_url 1] [lindex $::WikitWub::text_url 0]][<a> href [lindex $::WikitWub::text_url 1] [<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]]]
 	    [<div> id title class title [tclarmour $Title]]
 	    [<div> id updated class updated [expr {[info exists subtitle]&&[string length $subtitle]?$subtitle:"&nbsp;"}]]
-	    </td>
-	    <td class='header' align='right'>
-	    [<div> class logo [<a> class logo href [lindex $::WikitWub::text_url 1] [lindex $::WikitWub::text_url 0]][<a> href [lindex $::WikitWub::text_url 1] [<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]]]
-	    </td>
-	    </tr>
-	    </table>
 	}]]
     }
 
