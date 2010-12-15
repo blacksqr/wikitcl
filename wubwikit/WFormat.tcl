@@ -1616,6 +1616,7 @@ namespace eval ::WFormat {
         set tkn [::crc::CksumInit]
         ::crc::CksumUpdate $tkn $hdl2$hdl3$hdl4
         set cksum [::crc::CksumFinal $tkn]
+        unset tkn
         append toc "<div class='ptoc'>"
         for { set j 0 } { $j < 3 } { incr j } { 
           if { $img($i,$j) eq "+" } {

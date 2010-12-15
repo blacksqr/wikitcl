@@ -621,7 +621,7 @@ namespace eval WDB {
 		if {!$ts} {
 		    StartTransaction
 		}
-		if {[catch {[statement "insert_page"] execute} msg]} {
+		if {[catch {[statement "insert_page"] allrows} msg]} {
 		    rollback
 		    error $msg
 		} else {
@@ -997,7 +997,7 @@ namespace eval WDB {
 			 $lcs [llength $linesnew] [llength $linesold]]
 
 	# Store change information in the database
-	[statement "insert_change"] execute
+	[statement "insert_change"] allrows
 
 	set i 0
 	foreach tuple $changes {
@@ -1026,11 +1026,11 @@ namespace eval WDB {
 					       - [string length $old])}]
 		}
 	    }
-	    [statement "insert_diff"] execute
+	    [statement "insert_diff"] allrows
 	    incr i
 	}
 
-	[statement "update_change_delta"] execute
+	[statement "update_change_delta"] allrows
     }
 
     # addRefs - a newly created page $id contains $refs references to other pages
@@ -1039,7 +1039,7 @@ namespace eval WDB {
 	if {$id != 2 && $id != 4} {
 	    foreach x $refs {
 		if {$id != $x} {
-		    [statement "insert_ref"] execute
+		    [statement "insert_ref"] allrows
 		}
 	    }
 	}
@@ -1047,14 +1047,14 @@ namespace eval WDB {
     
     # delRefs - remove all references from page $id to anywhere
     proc delRefs {id} {
-	[statement "delete_refs_from_id"] execute
+	[statement "delete_refs_from_id"] allrows
     }
 
     # FixPageRefs - recreate the entire refs view
     proc FixPageRefs {} {
 
 	# delete all contents from the .refs view
-	[statement "delete_refs"] execute
+	[statement "delete_refs"] allrows
 
 	# visit each page, recreating its refs
 	set size [PageCount]
@@ -1117,7 +1117,7 @@ namespace eval WDB {
 		if {$newdate != ""} {
 		    Debug.WDB {set date $id $date}
 		    # change the date if requested
-		    [statement "update_page_date_for_id"] execute
+		    [statement "update_page_date_for_id"] allrows
 		}
 
 		set text [string trimright $text]
@@ -1135,7 +1135,7 @@ namespace eval WDB {
 		    # in the databse, make a change log entry for rollback.
 
 		    Debug.WDB {log change}
-		    [statement "update_page_who_for_id"] execute
+		    [statement "update_page_who_for_id"] allrows
 
 		    Debug.WDB {save content}
 		    set rsc [[statement "count_content_for_id"] execute]
@@ -1143,9 +1143,9 @@ namespace eval WDB {
 		    $rsc nextdict d
 		    $rsc close
 		    if {[dict get $d COUNT(*)]} {
-			[statement "update_content_for_id"] execute
+			[statement "update_content_for_id"] allrows
 		    } else {
-			[statement "insert_content"] execute
+			[statement "insert_content"] allrows
 		    }
 		    Debug.WDB {saved content}
 		    if {$page ne {} || [Versions $id]} {
@@ -1154,14 +1154,14 @@ namespace eval WDB {
 		    }
 
 		    if {$newType ne "" && $newType ne $type} {
-			[statement update_page_type_for_id] execute
+			[statement update_page_type_for_id] allrows
 		    }
 
 		    # Set change date, only if page was actually changed
 		    if {$newdate == ""} {
 			Debug.WDB {set date}
 			set date [clock seconds]
-			[statement "update_page_date_for_id"] execute
+			[statement "update_page_date_for_id"] allrows
 			set commit 1
 		    }
 		    
@@ -1175,20 +1175,20 @@ namespace eval WDB {
 		$rsc close
 		if {[dict get $d COUNT(*)]} {
 		    Debug.WDB {update binary content $type->$newType}
-		    [statement update_binary] execute
+		    [statement update_binary] allrows
 		} else {
 		    Debug.WDB {insert binary content $type->$newType}
-		    [statement insert_binary] execute
+		    [statement insert_binary] allrows
 		}
 		set version [VersionsBinary $id]
 		Debug.WDB {insert binary content version = $version, change size = [string length $change], }
 		if {$change ne {} || $version} {
-		    [statement insert_change_binary] execute
+		    [statement insert_change_binary] allrows
 		}
 		set date [clock seconds]
-		[statement update_page_date_for_id] execute
-		[statement update_page_who_for_id] execute
-		[statement update_page_type_for_id] execute
+		[statement update_page_date_for_id] allrows
+		[statement update_page_who_for_id] allrows
+		[statement update_page_type_for_id] allrows
 		Debug.WDB {saved binary content $newType}
 	    }
 	} r eo]} {
@@ -1218,12 +1218,12 @@ namespace eval WDB {
 		    file delete -force $file.pagecache
 		}
 		tdbc::sqlite3::connection create $db.pagecache $file.pagecache
-		[[pagecache_statement "create"] execute] close
+		[pagecache_statement "create"] allrows
 	    }
 	    insert {
 		lassign $args id content ct when title
 		Debug.WDB {Insert pagecache $id}
-		[[pagecache_statement "insert"] execute] close
+		[pagecache_statement "insert"] allrows
 	    }
 	    exists {
 		lassign $args id
@@ -1249,7 +1249,7 @@ namespace eval WDB {
 	    delete {
 		lassign $args id
 		Debug.WDB {Delete pagecache $id}
-		[[pagecache_statement "delete"] execute] close
+		[pagecache_statement "delete"] allrows
 	    }
 	}
     }
@@ -1262,8 +1262,8 @@ namespace eval WDB {
 	}
 	Debug.WDB {Opening sqlite3 tdbc at $db $file}
 	tdbc::sqlite3::connection create $db $file 
-	[statement "enable_foreign_keys"] execute
-	[statement "enable_journal_mode_WAL"] execute
+	[statement "enable_foreign_keys"] allrows
+	[statement "enable_journal_mode_WAL"] allrows
     }
 
     namespace export -clear *
