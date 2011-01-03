@@ -985,6 +985,9 @@ namespace eval ::WFormat {
         }
       }
     }
+    if {[string length $result] == 0} {
+      set result "\n\n### <code_block id=$blockid title='[armour $name]'> ############################################################\n"
+    }
     return $result
   }
 
