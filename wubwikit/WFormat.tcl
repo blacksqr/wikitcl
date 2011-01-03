@@ -1465,11 +1465,9 @@ namespace eval ::WFormat {
             } else {
               # Check if "Category $link" exists
               set id [eval $ip [list "Category $link"] 1 0]
-              puts "id with category: $id"
               if {$id == ""} {
                 # "Category $link" doesn't exist, check $link
                 set id [eval $ip [list $link] 1 0]
-                puts "id without category: $id"
                 if {$id == ""} {
                   # $link doesn't exists, create new "Category $link" page
                   set info [eval $ip [list "Category $link"]]
