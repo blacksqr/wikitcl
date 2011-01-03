@@ -47,6 +47,7 @@ set API(WikitWub) {
     css_prefix {Url prefix for CSS files}
     script_prefix {Url prefix for JS files}
     image_prefix {Url prefix for images}
+    need_recaptcha {Is a ReCAPTCHA required to create new pages or to revert pages?}
 }
 
 Debug define wikit
@@ -58,6 +59,7 @@ namespace eval WikitWub {
     variable inline_html 0
     variable include_pages 0
     variable hidereadonly 0
+    variable need_recaptcha 1
 #    variable text_url [list "" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/" "tclconf2010.png"]
     variable text_url [list "wiki.tcl.tk" "http://wiki.tcl.tk" "http://wiki.tcl.tk/" "plume.png"]
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
@@ -393,6 +395,26 @@ namespace eval WikitWub {
 		     after "<br>[<hidden> _charset_ {}]<input name='create' type='submit' value='Create new page'>" \
 		     pass {set r [::WikitWub::new_page_pass $r $args]}]
 		[<div> id result {}]
+		[If {$nick ne ""} {
+		    (you are: [<b> $nick])
+		}]
+	    }]]
+	}]]
+    }
+
+    template new_no_recaptcha {Create a new page} {
+	[<div> class edit [subst {
+	    [<div> class header [subst {
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class title "Create new page"]
+		[<div> class updated "Enter title, then press Create below"]
+	    }]]
+	    [<div> class edittitle [subst {
+		[<form> edit method post action [file join $::WikitWub::mount new/create] {
+		     [<hidden> _charset_ {}]
+		     [<text> T title "Page title" size 80]
+		     <input name='create' type='submit' value='Create new page'>
+		}]
 		[If {$nick ne ""} {
 		    (you are: [<b> $nick])
 		}]
@@ -790,11 +812,7 @@ namespace eval WikitWub {
 	    set menus(Search) [<a> href [file join $mount searchp] "Search"]
 	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
 	    set menus(Random) [<a> href [file join $mount random] "Random page"]
-	    if {[recaptcha_active]} {
-		set menus(New)    [<a> href [file join $mount new] "Create new page"]
-	    } else {
-		set menus(New) ""
-	    }
+	    set menus(New)    [<a> href [file join $mount new] "Create new page"]
 	}
 	set m {}
 	foreach arg $args {
@@ -1382,7 +1400,8 @@ namespace eval WikitWub {
     }
 
     proc /revert {r N V} {
-	if {![recaptcha_active]} {
+	variable need_recaptcha
+	if {$need_recaptcha && ![recaptcha_active]} {
 	    return [Http NotFound $r]	    
 	}
 	variable detect_robots
@@ -1413,7 +1432,11 @@ namespace eval WikitWub {
 	}
 
 	set r [jQ form $r .autoform target '#result']
-	return [sendPage $r revert]
+	if {$need_recaptcha} {
+	    return [sendPage $r revert]
+	} else {
+	    return [Http Redir $r [file join $mount edit?N=$N&V=$V]]
+	}
     }
 
     proc revert_pass {r params} {
@@ -1568,9 +1591,7 @@ namespace eval WikitWub {
 	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
 	if {$type eq "" || [string match "text/*" $type]} {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 Annotated 1 WikiText 1}
-	    if {[recaptcha_active]} {
-		lappend histheaders {Revert to} 1
-	    }
+	    lappend histheaders {Revert to} 1
 	    lappend histheaders A 1 B 1
 	} else {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1}
@@ -1597,9 +1618,7 @@ namespace eval WikitWub {
 		append C [<td> class Who [WhoUrl $who]]
 		append C [<td> class Annotated [<a> rel nofollow href "revision?N=$N&V=$vn&A=1" $vn]]
 		append C [<td> class WikiText [<a> rel nofollow href "revision?N=$N.txt&V=$vn" $vn]]
-		if {[recaptcha_active]} {
-		    append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
-		}
+		append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
 		if {$rowcnt == 0} {
 		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn checked="checked" ""]]
 		} else {
@@ -2212,7 +2231,8 @@ namespace eval WikitWub {
     }
 
     proc /new {r} {
-	if {![recaptcha_active]} {
+	variable need_recaptcha
+	if {$need_recaptcha && ![recaptcha_active]} {
 	    return [Http NotFound $r]	    
 	}
 	Debug.wikit {new}
@@ -2234,7 +2254,25 @@ namespace eval WikitWub {
 	}
 
 	set r [jQ form $r .autoform target '#result']
-	return [sendPage $r new]
+	if {$need_recaptcha} {
+	    return [sendPage $r new]
+	} else {
+	    return [sendPage $r new_no_recaptcha]
+	}
+    }
+
+    proc /new/create {r T} {
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+	variable mount
+	variable pageURL
+	if {$T eq ""} {
+	    return [Http NoCache [Http Ok $r "No title specified"]]
+	}
+	lassign [InfoProc $T] N
+	return [Http Redir $r [file join $mount edit?N=$N]]
     }
 
     proc new_page_pass {r params} {
