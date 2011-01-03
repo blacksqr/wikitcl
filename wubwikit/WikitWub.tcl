@@ -2537,12 +2537,17 @@ namespace eval WikitWub {
 
     # InfoProc {name} - lookup $name in db,
     # returns a list: /$id (with suffix of @ if the page is new), $name, modification $date
-    proc InfoProc {ref {query_only 0}} {
+    proc InfoProc {ref {query_only 0} {empty_ok 1}} {
 	variable pageURL
 	variable mount
 	set id [WDB LookupPage $ref $query_only]
 	if {$query_only && ![string is integer -strict $id]} {
 	    return $id
+	}
+	if {[string is integer -strict $id] && !$empty_ok} {
+	    if {[string length [WDB GetContent $id]] <= 1} {
+		return ""
+	    }
 	}
 	lassign [WDB GetPage $id name date type] name date type
 	if {$name eq ""} {
