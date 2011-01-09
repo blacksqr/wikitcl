@@ -584,6 +584,29 @@ namespace eval WDB {
 	return [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
     }
 
+    #----------------------------------------------------------------------------
+    #
+    # RunUserQuery --
+    #
+    #   run a user query
+    #
+    # Parameters: 
+    #   query - the query to run
+    #
+    # Results:
+    #	Returns a list of matching records
+    #
+    #----------------------------------------------------------------------------
+
+    proc RunUserQuery {query} {
+	variable db
+	set results {}
+	$db foreach -as dicts d $query {
+	    lappend results $d
+	}
+	return $results
+    }
+
     #----------------------------------------------------------------------------  
     #
     # LookupPage --

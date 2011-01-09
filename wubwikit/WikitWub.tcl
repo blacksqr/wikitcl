@@ -422,6 +422,33 @@ namespace eval WikitWub {
 	}]]
     }
 
+    template query {Query the database} {
+	[<div> class edit [subst {
+	    [<div> class header [subst {
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class title "Run a query"]
+		[<div> class updated "Enter a query, then press run below"]
+	    }]]
+	    [<div> class edittitle [subst {
+		[<form> edit method post action [file join $::WikitWub::mount query/run] {
+		     [<hidden> _charset_ {}]
+		     [<textarea> Q query "Query" rows 35 cols 72 compact 0 style width:100% ""]
+		     <input name='create' type='submit' value='Run the query'>
+		}]
+	    }]]
+	}]]
+    }
+
+    template query_result {Result of query} {
+	[<div> class edit [subst {
+	    [<div> class header [subst {
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class title "Query result"]
+	    }]]
+	    [<div> class queryresult $C]
+	}]]
+    }
+
     # page sent when reverting a page
     template revert {Revert a page} {
 	[<div> class edit [subst {
@@ -2199,6 +2226,36 @@ namespace eval WikitWub {
 	puts "/edit/save done."
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
+if 0 {
+    proc /query {r} {
+	variable detect_robots
+	variable pageURL
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+	return [sendPage $r query]
+    }
+
+    proc /query/run {r Q} {
+	variable wikitdbpath
+	return [Httpd Thread {
+	    package require sqlite3 3.6.19
+	    package require tdbc::sqlite3
+	    catch {tdbc::sqlite3::connection create thdb $dbfnm -isolation readonly}
+	    set dl {}
+	    thdb foreach -as dicts d $Q {
+		lappend dl [incr did] $d
+	    }
+	    return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r $Q $dl]]
+	} r $r Q $Q dbfnm $wikitdbpath]
+    }
+
+    proc sendQueryResult {r Q dl} {
+	set C "Result of $Q: [expr {[llength $dl]/2}] rows"
+	append C [Report html $dl sortable 1]
+	return [sendPage $r query_result]
+    }
+}
 
     proc /map {r imp args} {
 	puts "MAP: $imp $args"
@@ -2887,36 +2944,69 @@ namespace eval WikitWub {
 	    if {$long eq "1" && [string index $key end] ne "*"} {
 		append key "*"
 	    }
-# For now, disable content search, use the google search instead.
  	    if {[regexp {^(.*)\*+$} $key]} {
  		variable wikitdbpath
- 		set cfd [open |[list [info nameofexecutable] async_search.tcl $wikitdbpath [string trimleft $key <] $qdate 100] r+]
- 		chan configure $cfd -blocking 0
- 		chan event $cfd readable [list ::WikitWub::resume_suspended $cfd $r $key $qdate]
- 		puts "SUSPEND SEARCH $S @ [clock seconds]"
- 		return [Httpd Suspend $r 120000]	;# give async_search 2 minutes to complete
+		return [Httpd Thread {
+		    package require sqlite3 3.6.19
+		    package require tdbc::sqlite3
+		    package require Dict
+		    catch {tdbc::sqlite3::connection create db $dbfnm -isolation readonly}
+		    set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
+		    set fields name
+		    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content b WHERE a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
+		    set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
+		    if {$long} {
+			foreach k [split $key " "] {
+			    append stmttxt " AND (lower(a.name) GLOB lower(\"*$k*\") OR lower(b.content) GLOB lower(\"*$k*\"))"
+			    append stmtimg " AND lower(a.name) GLOB lower(\"*$k*\")"
+			}
+		    } else {
+			foreach k [split $key " "] {
+			    append stmttxt " AND lower(a.name) GLOB lower(\"*$k*\")"
+			    append stmtimg " AND lower(a.name) GLOB lower(\"*$k*\")"
+			}
+		    }
+		    if {$date > 0} {
+			append stmttxt " AND a.date >= $date"
+			append stmtimg " AND a.date >= $date"
+		    } else {
+			append stmttxt " AND a.date > 0"
+			append stmtimg " AND a.date > 0"
+		    }
+		    append stmttxt " ORDER BY a.date DESC"
+		    append stmtimg " ORDER BY a.date DESC"
+		    
+		    set results {}
+		    set n 0
+		    db foreach -as dicts d $stmttxt {
+			lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
+			incr n
+			if {$n >= $max} {
+			    break
+			}
+		    }
+		    
+		    set n 0
+		    db foreach -as dicts d $stmtimg {
+			lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
+			incr n
+			if {$n >= $max} {
+			    break
+			}
+		    }
+		    db close
+		    set eresult [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
+		    return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r $eresult]]
+		} r $r key $key dbfnm $wikitdbpath date $qdate max 100]
  	    }
 	    return [/searchp $r 0]
 	} else {
 	    return [/searchp $r 0]	    
 	}
     }
-
-    proc resume_suspended {fd r key date} {
-	puts "RESUME SEARCH @ [clock seconds]"
-	variable eresult
-	Debug.wikit {resume suspended: $r $key $date}
-	append eresult($fd) [read $fd]
-	Debug.wikit {resume suspended: $eresult($fd)}
-	if {[chan eof $fd]} {
-	    # the process has finished
-	    if {[catch {chan close $fd} res eo]} {
-		Debug.image {CONVERT ERROR: $res}
-		set r [Http ServerError $r $res $eo]
-	    }
-	    Httpd Resume [Http NoCache [Http Ok [/searchp $r 1 $eresult($fd)]]]
-	    unset eresult($fd)
-	}
+ 
+    proc sendSearchResults {r eresult} {
+	return [Http NoCache [Http Ok [/searchp $r 1 $eresult]]]
     }
 
     proc do {r} {
