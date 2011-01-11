@@ -2810,6 +2810,8 @@ if 0 {
 	variable protected
 	variable mount
 	variable pageURL
+	set elist {}
+	set wlist {}
 	set rlist {}
 	if {$external} {
 	    set eresult $external_result
@@ -2821,21 +2823,30 @@ if 0 {
 	    # these are admin pages, don't list them
 	    if {[dict exists $protected $id]} continue
 	    if {$type ne "" && ![string match "text/*" $type]} {
-		lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
+		set rl [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
 	    } else {
-		lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] {}]
+		set rl [list [timestamp $date] [<a> href [file join $pageURL $id] $name] {}]
+	    }
+	    if {[string equal -nocase $name $key]} {
+		lappend elist $rl
+	    } elseif {[string match -nocase "$key *" $name] || [string match -nocase "* $key *" $name] || [string match -nocase "* $key" $name]} {
+		lappend wlist $rl
+	    } else {
+		lappend rlist $rl
 	    }
 	    set rdate $date
 	    incr count
 	}
-	append result [list2table $rlist {Date Name Image} {}]
-	append result "<br>\n"
-
+	set rlist [list {*}$elist {*}$wlist {*}$rlist]
+	if {[llength $rlist]} {
+	    append result [list2table $rlist {Date Name Image} {}]
+	    append result "<br>\n"
+	}
 	if {$count == 0} {
 	    append result [<b> [<i> "No matches found"]]
 	    set rdate 0
 	} else {
-	    append result [<b> [<i> "Displayed $count matches"]]
+	    append result [<b> [<i> "Displayed $count matche(s)"]]
 	    set rdate 0
 	}
 
