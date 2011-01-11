@@ -2805,7 +2805,8 @@ if 0 {
 	    append result " and contents"
 	}
 	append result "):<br>\n"
-	set max 100
+	set max 10000 ;# Get 10000 search hist
+	set dmax 100 ;# Only display 100
 	set count 0
 	variable protected
 	variable mount
@@ -2839,7 +2840,7 @@ if 0 {
 	}
 	set rlist [list {*}$elist {*}$wlist {*}$rlist]
 	if {[llength $rlist]} {
-	    append result [list2table $rlist {Date Name Image} {}]
+	    append result [list2table [lrange $rlist 0 [expr {$dmax-1}]] {Date Name Image} {}]
 	    append result "<br>\n"
 	}
 	if {$count == 0} {
@@ -3008,7 +3009,7 @@ if 0 {
 		    db close
 		    set eresult [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
 		    return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r $eresult]]
-		} r $r key $key dbfnm $wikitdbpath date $qdate max 100]
+		} r $r key $key dbfnm $wikitdbpath date $qdate max 10000]
  	    }
 	    return [/searchp $r 0]
 	} else {
