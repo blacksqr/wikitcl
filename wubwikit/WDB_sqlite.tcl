@@ -539,15 +539,22 @@ namespace eval WDB {
 	set fields name
 	set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content b WHERE a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
 	set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
+	set n 0
 	if {$long} {
 	    foreach k [split $key " "] {
-		append stmttxt " AND (lower(a.name) GLOB lower(\"*$k*\") OR lower(b.content) GLOB lower(\"*$k*\"))"
-		append stmtimg " AND lower(a.name) GLOB lower(\"*$k*\")"
+		set keynm key$n
+		set $keynm "*$k*"
+		append stmttxt " AND (lower(a.name) GLOB lower(:$keynm) OR lower(b.content) GLOB lower(:$keynm))"
+		append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
+		incr n
 	    }
 	} else {
 	    foreach k [split $key " "] {
-		append stmttxt " AND lower(a.name) GLOB lower(\"*$k*\")"
-		append stmtimg " AND lower(a.name) GLOB lower(\"*$k*\")"
+		set keynm key$n
+		set $keynm "*$k*"
+		append stmttxt " AND lower(a.name) GLOB lower(:$keynm)"
+		append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
+		incr n
 	    }
 	}
 	if {$date > 0} {
@@ -562,22 +569,26 @@ namespace eval WDB {
 
 	set results {}
 	set n 0
-	$db foreach -as dicts d $stmttxt {
+	set stmt [$db prepare $stmttxt]
+	$stmt foreach -as dicts d {
 	    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
 	    incr n
 	    if {$n >= $max} {
 		break
 	    }
 	}
+	$stmt close
 
 	set n 0
-	$db foreach -as dicts d $stmtimg {
+	set stmt [$db prepare $stmtimg]
+	$stmt foreach -as dicts d {
 	    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
 	    incr n
 	    if {$n >= $max} {
 		break
 	    }
 	}
+	$stmt close
 
 	Debug.WDB {Search '$key' $long $date -> $results}
 
