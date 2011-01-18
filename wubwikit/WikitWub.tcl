@@ -3183,7 +3183,15 @@ if 0 {
 			append C \n [pageXML $N]
 			return [Http NoCache [Http Ok $r [translate $N $name $C $ext] text/xml]]
 		    }
+		    .noredir -
 		    default {
+			if {[string match "<<redirect>>*" $content] && $ext ne ".noredir"} {
+			    set rdpnm [string trim [string range $content 12 end]]
+			    lassign [InfoProc $rdpnm 1 0] rdN
+			    if {[string is integer -strict $rdN]} {
+				return [Http Redir $r [file join $pageURL $rdN]]
+			    }
+			}
 			Debug.wikit {do: $N is a normal page}
 			dict set r content-location "http://[Url host $r]/$N"
 			lassign [translate $N $name $content $ext] C U page_toc BR IH DTl TNRl
