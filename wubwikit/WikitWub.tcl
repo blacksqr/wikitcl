@@ -3189,7 +3189,7 @@ if 0 {
 			    set rdpnm [string trim [string range $content 12 end]]
 			    lassign [InfoProc $rdpnm 1 0] rdN
 			    if {[string is integer -strict $rdN]} {
-				return [Http Redir $r [file join $pageURL $rdN]]
+				return [Http Redir $r [file join $pageURL $rdN?redir=$N]]
 			    }
 			}
 			Debug.wikit {do: $N is a normal page}
@@ -3209,6 +3209,16 @@ if 0 {
 			    dict lappend r -postload [<script> "getBackRefs($brefpage,'$containerid');"]
 			}
 			set C [string map [list <<TOC>> $page_toc] $C]
+			set qd [Dict get? $r -Query]
+			if {[Query exists $qd redir]} {
+			    set rN [Query value $qd redir]
+			    if {[string is integer -strict $rN] && $rN >= 0 && $rN < [WDB PageCount]} {
+				lassign [WDB GetPage $rN name] rname
+				if {[string length $rname]} {
+				    set C [<p> class redirected "(Redirected from [<a> href [file join $pageURL $rN.noredir] $rname])"]$C
+				}
+			    }
+			}
 		    }
 		}
 		Debug.wikit {do has translated $N}
