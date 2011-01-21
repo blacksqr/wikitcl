@@ -329,7 +329,7 @@ namespace eval ::WFormat {
           if { $otag eq "BLAME_START" } {
             if {$paragraph ne {}} {
               set paragraph [join $paragraph \n]
-              lappend irep FI {}
+              lappend irep FI $fixed_lang
               if {$mode_code} {
                 lappend irep {} $paragraph
               } else {
@@ -342,7 +342,7 @@ namespace eval ::WFormat {
           } elseif { $otag eq "BLAME_END" } { 
             if {$paragraph ne {}} {
               set paragraph [join $paragraph \n]
-              lappend irep FI {}
+              lappend irep FI $fixed_lang
               if {$mode_code} {
                 lappend irep {} $paragraph
               } else {
@@ -548,7 +548,7 @@ namespace eval ::WFormat {
 
     if {$paragraph != {}} {
       if {$mode_fixed} {
-        lappend irep FI {}
+        lappend irep FI $fixed_lang
         set paragraph [join $paragraph \n]
         if {$mode_code} {
           lappend irep {} $paragraph
