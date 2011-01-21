@@ -3163,6 +3163,7 @@ if 0 {
 	    set content [WDB GetContent $N]
 
 	    variable protected
+	    set redirected ""
 	    if {$N == [dict get? $protected ADMIN:Welcome]} {
 		# page 0 is HTML and is the Welcome page
 		# it needs to be redirected to the functional page
@@ -3188,7 +3189,7 @@ if 0 {
 			if {[string match "<<redirect>>*" $content] && $ext ne ".noredir"} {
 			    set rdpnm [string trim [string range $content 12 end]]
 			    lassign [InfoProc $rdpnm 1 0] rdN
-			    if {[string is integer -strict $rdN]} {
+			    if {[string is integer -strict $rdN] && $rdN != $N} {
 				return [Http Redir $r [file join $pageURL $rdN?redir=$N]]
 			    }
 			}
@@ -3215,7 +3216,7 @@ if 0 {
 			    if {[string is integer -strict $rN] && $rN >= 0 && $rN < [WDB PageCount]} {
 				lassign [WDB GetPage $rN name] rname
 				if {[string length $rname]} {
-				    set C [<p> class redirected "(Redirected from [<a> href [file join $pageURL $rN.noredir] $rname])"]$C
+				    append redirected " " [<span> class redirected "(Redirected from [<a> href [file join $pageURL $rN.noredir] $rname])"]
 				}
 			    }
 			}
@@ -3264,6 +3265,7 @@ if 0 {
 		variable delta
 		append subtitle " " [<a> class delta href [file join $mount diff]?N=$N#diff0 $delta]
 	    }
+	    append subtitle $redirected
 
 	    # sendPage vars
 	    set menu [menus Home Recent Help WhoAmI New Random {*}$menu]
