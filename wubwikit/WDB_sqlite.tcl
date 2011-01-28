@@ -156,6 +156,7 @@ namespace eval WDB {
 		"exists" { set sql {SELECT COUNT(*) FROM pagecache WHERE id = :id} }
 		"fetch"  { set sql {SELECT * FROM pagecache WHERE id = :id} }
 		"delete" { set sql {DELETE FROM pagecache WHERE id = :id} }
+		"clear"  { set sql {DELETE FROM pagecache} }
 		default  { error "Unknown statement '$name'" }
 	    }
 	    set pagecache_statements($name) [$db.pagecache prepare $sql]
@@ -1284,6 +1285,10 @@ namespace eval WDB {
 		lassign $args id
 		Debug.WDB {Delete pagecache $id}
 		[pagecache_statement "delete"] allrows
+	    }
+	    clear {
+		Debug.WDB {Delete clear}
+		[pagecache_statement "clear"] allrows
 	    }
 	}
     }

@@ -63,6 +63,7 @@ namespace eval WikitWub {
 #    variable text_url [list "" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/" "tclconf2010.png"]
     variable text_url [list "wiki.tcl.tk" "http://wiki.tcl.tk" "http://wiki.tcl.tk/" "plume.png"]
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
+    variable allow_sql_queries 0
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -1988,6 +1989,7 @@ namespace eval WikitWub {
 	variable mount
 	variable pageURL
 	variable recent_cache
+	variable pagecaching
 
 	puts "/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload"
 	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload}
@@ -2179,11 +2181,12 @@ namespace eval WikitWub {
 	} err eo]} {
 	    puts "ERROR WHEN SAVING: $err"
 	    set readonly $err
-	    invalidate $r [file join $pageURL $N]
-	    invalidate $r [file join $mount recent]
+	    Cache clear
+	    if {$pagecaching} {
+		WDB pagecache clear
+	    }
 	}
 
-	variable pagecaching
 	if {$pagecaching} {
 	    Debug.wikit {/edit/save clearing pagecache for $N and 4}
 	    if {[WDB pagecache exists $N]} {
@@ -2226,10 +2229,14 @@ namespace eval WikitWub {
 	puts "/edit/save done."
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
-if 0 {
+
     proc /query {r} {
 	variable detect_robots
 	variable pageURL
+	variable allow_sql_queries
+	if {!$allow_sql_queries} {
+	    return [Http Forbidden $r]
+	}
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
@@ -2238,24 +2245,65 @@ if 0 {
 
     proc /query/run {r Q} {
 	variable wikitdbpath
+	variable allow_sql_queries
+	if {!$allow_sql_queries} {
+	    return [Http Forbidden $r]
+	}
 	return [Httpd Thread {
-	    package require sqlite3 3.6.19
-	    package require tdbc::sqlite3
-	    catch {tdbc::sqlite3::connection create thdb $dbfnm -isolation readonly}
-	    set dl {}
-	    thdb foreach -as dicts d $Q {
-		lappend dl [incr did] $d
-	    }
-	    return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r $Q $dl]]
+	    interp create thip
+	    set irt [catch {
+		interp limit thip time -seconds [expr {[clock seconds]+10}]
+		interp eval thip [list set Q $Q]
+		interp eval thip [list set dbfnm $dbfnm]
+		interp eval thip [list set host [dict get $r host]]
+		interp alias thip armour {} armour
+		interp eval thip {
+		    set dl {}
+		    set msg {}
+		    set rt 1
+		    package require sqlite3 3.6.19
+		    package require tdbc::sqlite3
+		    catch {tdbc::sqlite3::connection create thdb $dbfnm -readonly 1} msg
+		    puts "connection: $msg"
+		    set rt [catch {
+			thdb foreach -as dicts d $Q {
+			    set rd [dict create]
+			    dict for {k v} $d {
+				if {$k eq "id"} {
+				    dict set rd id "<a href='http://$host/[dict get $d id]'>[dict get $d id]</a>"
+				} else {
+				    dict set rd $k [armour $v]
+				}
+			    }
+			    lappend dl [incr did] $rd
+			}
+		    } msg]
+		    thdb close
+		}
+		set msg [interp eval thip "set msg"]
+		set dl [interp eval thip "set dl"]
+		set rt [interp eval thip "set rt"]
+	    } imsg]
+	    interp delete thip
+	    if {$irt} {
+		return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r 0 $Q $imsg]]
+	    } 
+	    if {$rt} {
+		return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r 0 $Q $msg]]
+	    } 
+	    return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r 1 $Q $dl]]
 	} r $r Q $Q dbfnm $wikitdbpath]
     }
 
-    proc sendQueryResult {r Q dl} {
-	set C "Result of $Q: [expr {[llength $dl]/2}] rows"
-	append C [Report html $dl sortable 1]
+    proc sendQueryResult {r ok Q dl} {
+	if {$ok} {
+	    set C "Result of<br><br><tt>$Q</tt><br><br>[expr {[llength $dl]/2}] row(s):<br><br>"
+	    append C [Report html $dl sortable 1]
+	} else {
+	    set C "Query<br><br><tt>$Q</tt><br><br>failed:<br><br><tt>$dl</tt>"
+	}
 	return [sendPage $r query_result]
     }
-}
 
     proc /map {r imp args} {
 	puts "MAP: $imp $args"
@@ -2406,9 +2454,9 @@ if 0 {
 		$V > [WDB Versions $N]} {
 		return [Http NotFound $r]
 	    }
-	    set C [armour [get_page_with_version $N $V]]
+	    set C [::WFormat::quote [get_page_with_version $N $V] 1]
 	} else {
-	    set C [armour [WDB GetContent $N]]
+	    set C [::WFormat::quote [WDB GetContent $N] 1]
 	}
 
 	if {$type ne "" && ![string match text/* $type]} {
@@ -3236,11 +3284,15 @@ if 0 {
 		variable perms
 		if {[dict size $perms] > 0 || ![dict exists $protected $N]} {
 		    lappend menu {*}[menus HR]
-		    if {!$::roflag && $readonly eq {}} {
-			lappend menu [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
-			lappend footer [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]
-			lappend menu [<a> href [file join $mount edit]?N=$N Edit]
-			lappend footer [<a> href [file join $mount edit]?N=$N Edit]
+		    if {!$::roflag} {
+			set img ""
+			if {$readonly ne ""} {
+			    set img [<img> align center src cross.png]
+			}
+			lappend menu [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]$img
+			lappend footer [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]$img
+			lappend menu [<a> href [file join $mount edit]?N=$N "Edit"]$img
+			lappend footer [<a> href [file join $mount edit]?N=$N "Edit"]$img
 		    }
 		    lappend menu [<a> href [file join $mount history]?N=$N "History"]
 		    lappend menu [<a> href [file join $mount summary]?N=$N "Edit summary"]

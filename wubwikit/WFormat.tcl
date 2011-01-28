@@ -1053,6 +1053,7 @@ namespace eval ::WFormat {
     set in_discussion 0
     set in_discussion_header 0
     set discussion_cnt 0
+    set in_FI 0
 
     variable html_frag
 
@@ -1069,12 +1070,18 @@ namespace eval ::WFormat {
         set uol {}
       }
 
+      if {$mode eq "FI"} {
+        set in_FI 1
+      } elseif {$mode eq "FE"} {
+        set in_FI 0
+      }
+
       switch -exact -- $mode {
         {}    {
 	  if { $in_header } {
             append tocheader [quote $text]
 	  }
-          append result [quote $text]
+          append result [quote $text $in_FI]
         }
         b - i - f {
 #	  if { $in_header } {
@@ -1649,12 +1656,15 @@ namespace eval ::WFormat {
     list $result {} $toc $brefs $irefs
   }
 
-  proc quote {q} {
+  proc quote {q {code 0}} {
     regsub -all {&} $q {\&amp;}  q
+    regsub -all ' $q {\&#39;} q
     regsub -all \" $q {\&quot;} q
     regsub -all {<} $q {\&lt;}   q
     regsub -all {>} $q {\&gt;}   q
-    regsub -all "&amp;(#\\d+;)" $q {\&\1}   q
+    if {!$code} {
+      regsub -all "&amp;(#\\d+;)" $q {\&\1}   q
+    }
     return $q
   }
 
