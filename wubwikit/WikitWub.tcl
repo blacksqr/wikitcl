@@ -63,7 +63,7 @@ namespace eval WikitWub {
 #    variable text_url [list "" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/" "tclconf2010.png"]
     variable text_url [list "wiki.tcl.tk" "http://wiki.tcl.tk" "http://wiki.tcl.tk/" "plume.png"]
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
-    variable allow_sql_queries 0
+    variable allow_sql_queries 1
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -3010,7 +3010,7 @@ namespace eval WikitWub {
 		    package require sqlite3 3.6.19
 		    package require tdbc::sqlite3
 		    package require Dict
-		    catch {tdbc::sqlite3::connection create db $dbfnm -isolation readonly}
+		    catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1}
 		    set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
 		    set fields name
 		    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content b WHERE a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
