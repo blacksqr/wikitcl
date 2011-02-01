@@ -1111,7 +1111,7 @@ namespace eval ::WFormat {
           }
 
           set id ""
-          set info [eval $ip [list $link] [expr {$creating_preview||$creating_summary}]]
+          set info [eval $ip [list $link] [expr {$creating_preview||$creating_summary||$in_FI}]]
           foreach {id name date type idlink plink} $info break
 
           if {$id == ""} {
@@ -1156,7 +1156,7 @@ namespace eval ::WFormat {
             # Insert a plain text
             append result [quote $text]
           } else {
-            if {$creating_summary} {
+            if {$creating_summary || $in_FI} {
               append result \[ [quote $text] \]
             } else {
               # use ID -- editor link on the brackets.
@@ -1897,11 +1897,12 @@ namespace eval ::WFormat {
 
   proc StreamToRefs {s ip} {
     array set pages {}
-    
+    set in_FI 0
     foreach {mode text} $s {
       if {[string equal $mode g]} {
         lassign [split_url_link_text $text] text
-        set info [eval $ip [list $text]]
+        set id ""
+        set info [eval $ip [list $text] $in_FI]
         foreach {id name date} $info break
         if {$id == ""} {continue}
         regexp {[0-9]+} $id id
@@ -1940,6 +1941,10 @@ namespace eval ::WFormat {
           regexp {[0-9]+} $id id
           set pages($id) ""          
         }
+      } elseif {$mode eq "FI"} {
+        set in_FI 1
+      } elseif {$mode eq "FE"} {
+        set in_FI 0
       }
     }
 
