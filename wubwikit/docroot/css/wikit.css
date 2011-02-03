@@ -50,6 +50,10 @@ a.logo {
   font-size: 150%;
 }
 
+a.partedit {
+    font-size: 50%;
+}
+
 div.toolbar {
     padding: 3px 0px 0px 0px;
 }
