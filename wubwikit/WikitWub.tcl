@@ -63,6 +63,7 @@ namespace eval WikitWub {
 #    variable text_url [list "" "http://wiki.tcl.tk/24514" "http://wiki.tcl.tk/" "tclconf2010.png"]
     variable text_url [list "wiki.tcl.tk" "http://wiki.tcl.tk" "http://wiki.tcl.tk/" "plume.png"]
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
+    variable comment_template "<Enter your comment here and a header with your wiki nickname and timestamp will be inserted for you>"
     variable allow_sql_queries 1
 
     variable perms {}	;# dict of operation -> names, names->passwords
@@ -2464,8 +2465,9 @@ namespace eval WikitWub {
 	regexp {^(.+)[,@]} $who - who_nick
 	variable as_comment 0
 	if {[string is integer -strict $A] && $A} {
+	    variable comment_template
 	    set as_comment 1
-	    set C [armour "<enter your comment here and a header with your wiki nickname and timestamp will be inserted for you>"]
+	    set C $comment_template
 	} elseif {$V ne ""} {
 	    if {![string is integer -strict $V] ||
 		$V < 0 ||
