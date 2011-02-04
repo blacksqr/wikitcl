@@ -51,7 +51,8 @@ a.logo {
 }
 
 a.partedit {
-    font-size: 50%;
+  font-size: 50%;
+  font-weight: normal;
 }
 
 div.toolbar {

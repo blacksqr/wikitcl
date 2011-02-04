@@ -5,7 +5,7 @@ package provide WFormat 1.1
 
 namespace eval ::WFormat {
   namespace export TextToStream StreamToTcl StreamToHTML StreamToRefs \
-    StreamToUrls Expand_HTML FormatWikiToc ShowDiffs
+    StreamToUrls FormatWikiToc ShowDiffs GetSection
 
   # In this file:
   #
@@ -1009,12 +1009,6 @@ namespace eval ::WFormat {
     return [list /$id $name $date]
   }
 
-  # expand a page string to HTML
-  proc Expand_HTML {str {db wdb}} {
-    StreamToHTML [TextToStream $str] $::env(SCRIPT_NAME) \
-      ::WFormat::InfoProc
-  }
-
   # =========================================================================
 
   # Output specific conversion. Takes a token stream and converts this
@@ -1030,7 +1024,7 @@ namespace eval ::WFormat {
     return [list $text $text]
   }
 
-  proc StreamToHTML {s {cgi ""} {ip ""} {creating_preview 0} {creating_summary 0} {creating_diffs 0}} {
+  proc StreamToHTML {N mount s {cgi ""} {ip ""} {creating_preview 0} {creating_summary 0} {creating_diffs 0}} {
 
     # here so we aren't dependent on cksum unless rendering to HTML
     package require cksum
@@ -1054,6 +1048,9 @@ namespace eval ::WFormat {
     set in_discussion_header 0
     set discussion_cnt 0
     set in_FI 0
+    set HD2_cnt -1
+
+    set edit_url [file join $mount edit]
 
     variable html_frag
 
@@ -1223,6 +1220,9 @@ namespace eval ::WFormat {
           append result [quote $text]
         }
         HD2 - HD3 - HD4 {
+          if {$mode eq "HD2"} {
+            incr HD2_cnt
+          }
           append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
           lappend tocpos [string index $mode 2] [string length $result]
           set state $mode
@@ -1668,6 +1668,8 @@ namespace eval ::WFormat {
     return $q
   }
 
+                                                            
+
   # Define inter-section tagging, logical vertical space used between each
   # logical section of text.
   #		| Current              (. <=> 1)
@@ -1701,7 +1703,7 @@ namespace eval ::WFormat {
   vs FE   T                </pre><p></p>
   vs FI   T                      <p></p>
   vs L    T              </table><p></p>
-  vs HD2  T                 </h2><p></p>
+  vs HD2  T "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><p></p>"
   vs HD3  T                 </h3><p></p>
   vs HD4  T                 </h4><p></p>
   vs BLS  T                    <p></p>\n
@@ -2071,6 +2073,46 @@ namespace eval ::WFormat {
 
   # =========================================================================
   # =========================================================================
+
+
+  proc GetSection {C S} {
+    set rC ""
+    set in_code 0
+    set rS -1
+    foreach line [split $C \n] {
+      set lt [lindex [linetype $line] 0]
+      if {$lt in {FIXED CODE}} {
+        set in_code [expr {!$in_code}]
+      } elseif {!$in_code && $lt eq "HD2"} {
+        incr rS
+      }
+      if {$S == $rS} {
+        lappend rC $line
+      }
+    }
+    return [join $rC \n]
+  }
+
+  proc PutSection {C eC S} {
+    set rC ""
+    set in_code 0
+    set rS -1
+    foreach line [split $C \n] {
+      set lt [lindex [linetype $line] 0]
+      if {$lt in {FIXED CODE}} {
+        set in_code [expr {!$in_code}]
+      } elseif {!$in_code && $lt eq "HD2"} {
+        incr rS
+        if {$S == $rS} {
+          lappend rC {*}[split $eC \n]
+        }
+      }
+      if {$S != $rS} {
+        lappend rC $line
+      }
+    }
+    return [join $rC \n]
+  }
 
   # Output specific conversion. Extracts all wiki internal page references
   # from the token stream and returns them as a list of page id's.

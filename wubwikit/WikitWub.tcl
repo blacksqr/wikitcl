@@ -346,6 +346,8 @@ namespace eval WikitWub {
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
 		     [<hidden> N $N]
+		     [<hidden> S $S]
+		     [<hidden> V $V]
 		     [<hidden> A $as_comment]
 		     <input name='save' type='submit' value='Save your changes'>
 		     <input name='cancel' type='submit' value='Cancel'>
@@ -1006,6 +1008,7 @@ namespace eval WikitWub {
 
 
     proc translate {N name C ext {preview 0} {summary 0} {diff 0}} {
+	variable mount
 	switch -exact -- $ext {
 	    .txt {
 		return $C
@@ -1020,7 +1023,7 @@ namespace eval WikitWub {
 		return $C
 	    }
 	    default {
-		return [WFormat StreamToHTML [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview $summary $diff]
+		return [WFormat StreamToHTML $N $mount [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview $summary $diff]
 	    }
 	}
     }
@@ -1396,7 +1399,7 @@ namespace eval WikitWub {
 		    if { $W } {
 			set C [WFormat ShowDiffs $C]
 		    } else {
-			lassign [WFormat StreamToHTML [WFormat TextToStream $C] $pageURL ::WikitWub::InfoProc 0 0 1] C U T BR
+			lassign [WFormat StreamToHTML $N $mount [WFormat TextToStream $C] $pageURL ::WikitWub::InfoProc 0 0 1] C U T BR
 		    }
 		    set tC [<span> class newwikiline "Text added in version $V is highlighted like this"]
 		    append tC , [<span> class oldwikiline "text deleted from version $D is highlighted like this"]
@@ -1984,14 +1987,14 @@ namespace eval WikitWub {
 	}
     }
 
-    proc /edit/save {r N C O A save cancel preview upload} {
+    proc /edit/save {r N C O A S V save cancel preview upload} {
 	perms $r write
 	variable mount
 	variable pageURL
 	variable recent_cache
 	variable pagecaching
 
-	puts "/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload"
+	puts "/edit/save N:$N A:$A O:$O S:$S preview:$preview save:$save cancel:$cancel upload:$upload"
 	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload}
 	Debug.wikit {Query: [dict get $r -Query] / [dict get $r -entity]}
 
@@ -2142,6 +2145,21 @@ namespace eval WikitWub {
 		Debug.wikit {badutf $N}
 		puts "/edit/save bad utf"
 		return [sendPage $r badutf]
+	    }
+
+	    # If editing section, add rest of page around it
+	    if {[string is integer -strict $S] && $S >= 0} {
+		if {$V ne ""} {
+		    if {![string is integer -strict $V] ||
+			$V < 0 ||
+			$V > [WDB Versions $N]} {
+			return [Http NotFound $r]
+		    }
+		    set fC [get_page_with_version $N $V]
+		} else {
+		    set fC [WDB GetContent $N]
+		}
+		set C [WFormat PutSection $fC $C $S]
 	    }
 
 	    # save the page into the db.
@@ -2397,8 +2415,8 @@ namespace eval WikitWub {
     }
 
     # called to generate an edit page
-    proc /edit {r N A V args} {
-	Debug.wikit {edit N:$N A:$A ($args)}
+    proc /edit {r N A V S args} {
+	Debug.wikit {edit N:$N A:$A S:$S ($args)}
 
 	variable mount
 	variable pageURL
@@ -2454,10 +2472,15 @@ namespace eval WikitWub {
 		$V > [WDB Versions $N]} {
 		return [Http NotFound $r]
 	    }
-	    set C [::WFormat::quote [get_page_with_version $N $V] 1]
+	    set C [get_page_with_version $N $V]
 	} else {
-	    set C [::WFormat::quote [WDB GetContent $N] 1]
+	    set C [WDB GetContent $N]
 	}
+
+	if {[string is integer -strict $S] && $S >= 0} {
+	    set C [WFormat GetSection $C $S]
+	}
+	set C [::WFormat::quote $C 1]
 
 	if {$type ne "" && ![string match text/* $type]} {
 	    return [sendPage $r edit_binary]
