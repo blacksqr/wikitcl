@@ -1721,7 +1721,7 @@ namespace eval ::WFormat {
   vs FE   Q                                             \n
   vs FI   Q                      <pre\ class='\$sh_class'>
   vs L    Q              </table><pre\ class='\$sh_class'>
-  vs HD2  Q                 </h2><pre\ class='\$sh_class'>
+  vs HD2  Q "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><pre\ class='\$sh_class'>"
   vs HD3  Q                 </h3><pre\ class='\$sh_class'>
   vs HD4  Q                 </h4><pre\ class='\$sh_class'>
   vs BLS  Q                    \n<pre\ class='\$sh_class'>
@@ -1739,7 +1739,7 @@ namespace eval ::WFormat {
   vs FE   U                </pre><ul\ class='ul3'><li> 
   vs FI   U                      <ul\ class='ul3'><li> 
   vs L    U              </table><ul\ class='ul3'><li> 
-  vs HD2  U                 </h2><ul\ class='ul3'><li> 
+  vs HD2  U "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><ul\ class='ul3'><li>"
   vs HD3  U                 </h3><ul\ class='ul3'><li> 
   vs HD4  U                 </h4><ul\ class='ul3'><li> 
   vs BLS  U                    \n<ul\ class='ul3'><li> 
@@ -1757,7 +1757,7 @@ namespace eval ::WFormat {
   vs FE   O                </pre><ol><li>
   vs FI   O                      <ol><li>
   vs L    O              </table><ol><li>
-  vs HD2  O                 </h2><ol><li>
+  vs HD2  O "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><ol><li>"
   vs HD3  O                 </h3><ol><li>
   vs HD4  O                 </h4><ol><li>
   vs BLS  O                    \n<ol><li>
@@ -1775,7 +1775,7 @@ namespace eval ::WFormat {
   vs FE   I                </pre><dl><dt>
   vs FI   I                      <dl><dt>
   vs L    I              </table><dl><dt>
-  vs HD2  I                 </h2><dl><dt>
+  vs HD2  I "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><dl><dt>"
   vs HD3  I                 </h3><dl><dt>
   vs HD4  I                 </h4><dl><dt>
   vs BLS  I                    \n<dl><dt>
@@ -1793,7 +1793,7 @@ namespace eval ::WFormat {
   vs FE   _                </pre>
   vs FI   _                    {}
   vs L    _              </table>
-  vs HD2  _                 </h2>
+  vs HD2  _ "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2>"
   vs HD3  _                 </h3>
   vs HD4  _                 </h4>
   vs BLS  _                    \n
@@ -1811,7 +1811,7 @@ namespace eval ::WFormat {
   vs FE   H                           "</pre><hr>" 
   vs FI   H                                 "<hr>" 
   vs L    H                         "</table><hr>" 
-  vs HD2  H                            "</h2><hr>" 
+  vs HD2  H "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><hr>" 
   vs HD3  H                            "</h3><hr>" 
   vs HD4  H                            "</h4><hr>" 
   vs BLS  H                                 \n<hr> 
@@ -1829,7 +1829,7 @@ namespace eval ::WFormat {
   vs FE   D                </pre><dl><dd> 
   vs FI   D                      <dl><dd> 
   vs L    D              </table><dl><dd> 
-  vs HD2  D                 </h2><dl><dd> 
+  vs HD2  D "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><dl><dd>"
   vs HD3  D                 </h3><dl><dd> 
   vs HD4  D                 </h4><dl><dd> 
   vs BLS  D                    \n<dl><dd> 
@@ -1847,7 +1847,7 @@ namespace eval ::WFormat {
   vs FE   HD2                </pre><h2
   vs FI   HD2                      <h2
   vs L    HD2              </table><h2
-  vs HD2  HD2                 </h2><h2
+  vs HD2  HD2 "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><h2"
   vs HD3  HD2                 </h3><h2
   vs HD4  HD2                 </h4><h2
   vs BLS  HD2                    \n<h2
@@ -1865,7 +1865,7 @@ namespace eval ::WFormat {
   vs FE   HD3                </pre><h3 
   vs FI   HD3                      <h3 
   vs L    HD3              </table><h3 
-  vs HD2  HD3                 </h2><h3 
+  vs HD2  HD3 "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><h3"
   vs HD3  HD3                 </h3><h3 
   vs HD4  HD3                 </h4><h3 
   vs BLS  HD3                    \n<h3 
@@ -1883,7 +1883,7 @@ namespace eval ::WFormat {
   vs FE   HD4                </pre><h4
   vs FI   HD4                      <h4
   vs L    HD4              </table><h4
-  vs HD2  HD4                 </h2><h4
+  vs HD2  HD4 "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><h4"
   vs HD3  HD4                 </h3><h4
   vs HD4  HD4                 </h4><h4
   vs BLS  HD4                    \n<h4
@@ -1901,7 +1901,7 @@ namespace eval ::WFormat {
   vs FE   BLS                </pre>\n
   vs FI   BLS                </pre>\n
   vs L    BLS         </tr></table>\n
-  vs HD2  BLS                 </h2>\n
+  vs HD2  BLS "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2>\n"
   vs HD3  BLS                 </h3>\n
   vs HD4  BLS                 </h4>\n
   vs BLS  BLS                      \n
@@ -1919,7 +1919,7 @@ namespace eval ::WFormat {
   vs FE   BLE                </pre>\n
   vs FI   BLE                </pre>\n
   vs L    BLE              </table>\n
-  vs HD2  BLE                 </h2>\n
+  vs HD2  BLE "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2>\n"
   vs HD3  BLE                 </h3>\n
   vs HD4  BLE                 </h4>\n
   vs BLS  BLE                      \n
@@ -1937,7 +1937,7 @@ namespace eval ::WFormat {
   vs FE   L "</pre><table summary='' class='wikit_options'><tr>"
   vs FI   L       "<table summary='' class='wikit_options'><tr>"
   vs L    L                                             "<tr>"
-  vs HD2  L  "</h2><table summary='' class='wikit_options'><tr>"
+  vs HD2  L "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_options'><tr>"
   vs HD3  L  "</h3><table summary='' class='wikit_options'><tr>"
   vs HD4  L  "</h4><table summary='' class='wikit_options'><tr>"
   vs BLS  L     "\n<table summary='' class='wikit_options'><tr>"
@@ -1955,7 +1955,7 @@ namespace eval ::WFormat {
   vs FE   TR "</pre><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
   vs FI   TR       "<table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
   vs L    TR                                           "<tbody><tr class='\$oddoreven'>"
-  vs HD2  TR  "</h2><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs HD2  TR "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
   vs HD3  TR  "</h3><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
   vs HD4  TR  "</h4><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
   vs BLS  TR     "\n<table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
@@ -1973,7 +1973,7 @@ namespace eval ::WFormat {
   vs FE   TRH "</pre><table summary='' class='wikit_table'><thead><tr>"
   vs FI   TRH       "<table summary='' class='wikit_table'><thead><tr>"
   vs L    TRH                                           "<thead><tr>"
-  vs HD2  TRH  "</h2><table summary='' class='wikit_table'><thead><tr>"
+  vs HD2  TRH "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_table'><thead><tr>"
   vs HD3  TRH  "</h3><table summary='' class='wikit_table'><thead><tr>"
   vs HD4  TRH  "</h4><table summary='' class='wikit_table'><thead><tr>"
   vs BLS  TRH     "\n<table summary='' class='wikit_table'><thead><tr>"
@@ -1991,7 +1991,7 @@ namespace eval ::WFormat {
   vs FE   FI                </pre><pre\ class='\$sh_class'>
   vs FI   FI                      <pre\ class='\$sh_class'>
   vs L    FI              </table><pre\ class='\$sh_class'>
-  vs HD2  FI                 </h2><pre\ class='\$sh_class'>
+  vs HD2  FI "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><pre\ class='\$sh_class'>"
   vs HD3  FI                 </h3><pre\ class='\$sh_class'>
   vs HD4  FI                 </h4><pre\ class='\$sh_class'>
   vs BLS  FI                    \n<pre\ class='\$sh_class'>
@@ -2009,7 +2009,7 @@ namespace eval ::WFormat {
   vs FE  FE                </pre> 
   vs FI  FE                    {} 
   vs L   FE              </table> 
-  vs HD2 FE                 </h2> 
+  vs HD2 FE "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2>"
   vs HD3 FE                 </h3> 
   vs HD4 FE                 </h4> 
   vs BLS FE                    \n 
