@@ -3567,8 +3567,8 @@ namespace eval WikitWub {
 # env handling - copy and remove the C-linked env
 # we use ::env to communicate with the old wiki code,
 # but the original carries serious performance penalties.
-array set _env [array get ::env]; unset ::env
-array set ::env [array get _env]; unset _env
+#array set _env [array get ::env]; unset ::env
+#array set ::env [array get _env]; unset _env
 
 # initialize pest preprocessor
 proc pest {req} {return 0}	;# default [pest] catcher
