@@ -3571,8 +3571,8 @@ namespace eval WikitWub {
 #array set ::env [array get _env]; unset _env
 
 # initialize pest preprocessor
-proc pest {req} {return 0}	;# default [pest] catcher
-catch {source [file join [file dirname [info script]] pest.tcl]}
+#proc pest {req} {return 0}	;# default [pest] catcher
+#catch {source [file join [file dirname [info script]] pest.tcl]}
 
 Debug.log {RESTART: [clock format [clock second]]}
 
