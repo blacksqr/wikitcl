@@ -958,6 +958,25 @@ function clearPreview()
     return false;
 }
 
+var aryClassElements = new Array();
+
+function getElementsByClassName( strClassName, obj ) {
+    if ( obj.className == strClassName ) {
+        aryClassElements[aryClassElements.length] = obj;
+    }
+    for ( var i = 0; i < obj.childNodes.length; i++ )
+        getElementsByClassName( strClassName, obj.childNodes[i] );
+}
+
+function hide_discussions()
+{
+    aryClassElements.length = 0;
+    getElementsByClassName('discussion', document.body);
+    for (var i = 0; i < aryClassElements.length; i++) {
+        aryClassElements[i].style.display = 'none';
+    }
+}
+
 /*
  * toc.js
  */

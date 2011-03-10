@@ -609,11 +609,11 @@ namespace eval WikitWub {
 		}
 		catch (e){}
 
-		//try {
-		    //    checkTOC();
-		    //} catch (err) {
-			//    /* nothing */
-			//}
+		try {
+		    hide_discussions()
+		} catch (err) {
+		    /* nothing */
+		}
 	    };
 
 	    /* for Mozilla */
