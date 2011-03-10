@@ -65,6 +65,7 @@ namespace eval WikitWub {
     variable empty_template "This is an empty page.\n\nEnter page contents here, upload content using the button above, or click cancel to leave it empty.\n\n<<categories>>Enter Category Here\n"
     variable comment_template "<Enter your comment here and a header with your wiki nickname and timestamp will be inserted for you>"
     variable allow_sql_queries 1
+    variable days_in_history 7
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -397,7 +398,7 @@ namespace eval WikitWub {
 		[[lindex [info class instances ::ReCAPTCHA] 0] form class autoform \
 		     before <br>[<text> T title "Page title" size 80]<br><br> \
 		     after "<br>[<hidden> _charset_ {}]<input name='create' type='submit' value='Create new page'>" \
-		     pass {set r [::WikitWub::new_page_pass $r $args]}]
+		     pass ::WikitWub::new_page_pass]
 		[<div> id result {}]
 		[If {$nick ne ""} {
 		    (you are: [<b> $nick])
@@ -464,7 +465,7 @@ namespace eval WikitWub {
 		[[lindex [info class instances ::ReCAPTCHA] 0] form class autoform \
 		     before <br> \
 		     after "<br>[<hidden> _charset_ {}][<hidden> N [armour $N]][<hidden> V [armour $V]]<input name='create' type='submit' value='Revert page'>" \
-		     pass {set r [::WikitWub::revert_pass $r $args]}]
+		     pass ::WikitWub::revert_pass]
 		[<div> id result {}]
 		[If {$nick ne ""} {
 		    (you are: [<b> $nick])
@@ -2780,6 +2781,7 @@ namespace eval WikitWub {
 	variable pageURL
 	variable delta
 	variable image_prefix
+	variable days_in_history
 
 	if {[info exists recent_cache]} {
 	    Debug.wikit {/recent from its cache}
@@ -2790,7 +2792,7 @@ namespace eval WikitWub {
 	    set results {}
 	    set result {}
 	    set lastDay 0
-	    set threshold [expr {[clock seconds] - 7 * 86400}]
+	    set threshold [expr {[clock seconds] - $days_in_history * 86400}]
 	    set deletesAdded 0
 	    set activityHeaderAdded 0
 
