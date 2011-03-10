@@ -949,7 +949,7 @@ namespace eval ::WFormat {
     # What to do with the table elements?
   }
 
-  proc StreamToTcl {name s {ip ""}} {
+  proc StreamToTcl {name V s {ip ""}} {
     set result ""  ; # Tcl result
     set iscode 0
     set piscode 0
@@ -958,14 +958,22 @@ namespace eval ::WFormat {
       switch -exact -- $mode {
         Q  { 
           if { !$piscode } { 
-            append result "\n\n### <code_block id=$blockid title='[armour $name]'> ############################################################\n"
+            append result "\n\n### <code_block id=$blockid title='[armour $name]'"
+            if {$V >= 0} {
+              append result " version='$V'"
+            }
+            append result "> ############################################################\n"
             incr blockid
           }
           append result \n
           set iscode 2 
         }
         FI { 
-          append result "\n\n### <code_block id=$blockid title='$name'> ############################################################\n\n"
+          append result "\n\n### <code_block id=$blockid title='$name'"
+          if {$V >= 0} {
+            append result " version='$V'"
+          }
+          append result "> ############################################################\n\n"
           incr blockid
           set iscode 1 
         }
@@ -986,7 +994,11 @@ namespace eval ::WFormat {
       }
     }
     if {[string length $result] == 0} {
-      set result "\n\n### <code_block id=$blockid title='[armour $name]'> ############################################################\n"
+      set result "\n\n### <code_block id=$blockid title='[armour $name]'"
+      if {$V >= 0} {
+        append result " version='$V'"
+      }
+      append result "> ############################################################\n"
     }
     return $result
   }

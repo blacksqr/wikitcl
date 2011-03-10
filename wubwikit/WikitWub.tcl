@@ -1009,7 +1009,7 @@ namespace eval WikitWub {
     }
 
 
-    proc translate {N name C ext {preview 0} {summary 0} {diff 0}} {
+    proc translate {N V name C ext {preview 0} {summary 0} {diff 0}} {
 	variable mount
 	switch -exact -- $ext {
 	    .txt {
@@ -1019,7 +1019,7 @@ namespace eval WikitWub {
 		return [WFormat TextToStream $C]
 	    }
 	    .code {
-		return [WFormat StreamToTcl $name [WFormat TextToStream $C 0 0 0]]
+		return [WFormat StreamToTcl $name $V [WFormat TextToStream $C 0 0 0]]
 	    }
 	    .xml {
 		return $C
@@ -1146,7 +1146,7 @@ namespace eval WikitWub {
 		set changes [WDB ChangeSetSize $N $version]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
-		lassign [translate $N $name $C .html 0 1] C U T BR
+		lassign [translate $N $V $name $C .html 0 1] C U T BR
 		append R $C
 		set pcdate $cdate
 		set pcwho $cwho
@@ -1388,7 +1388,7 @@ namespace eval WikitWub {
 		}
 		.code {
 		    set C [WFormat TextToStream $C 0 0 0]
-		    set C [WFormat StreamToTcl $name $C ::WikitWub::InfoProc]
+		    set C [WFormat StreamToTcl $name $C $V ::WikitWub::InfoProc]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		.str {
@@ -1534,7 +1534,7 @@ namespace eval WikitWub {
 		.txt -
 		.code -
 		.str {
-		    return [Http NoCache [Http Ok $r [translate $N $name $C $ext] text/plain]]
+		    return [Http NoCache [Http Ok $r [translate $N $V $name $C $ext] text/plain]]
 		}
 		default {
 		    if {$A} {
@@ -1544,7 +1544,7 @@ namespace eval WikitWub {
 			set Title "Version $V of [Ref $N]"
 			set name "Version $V of $name"
 		    }
-		    lassign [translate $N $name $C $ext] C U T BR IH
+		    lassign [translate $N $V $name $C $ext] C U T BR IH
 		    variable include_pages
 		    if {$include_pages} {
 			lassign [IncludePages $r $C $IH] r C
@@ -1929,7 +1929,7 @@ namespace eval WikitWub {
 	}
 
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
-	lassign [translate $N preview $O .html 1] C U T BR
+	lassign [translate $N -1 preview $O .html 1] C U T BR
 	set C [replace_toc $C]
 	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
     }
@@ -1956,7 +1956,7 @@ namespace eval WikitWub {
 	    set C [<img> src [file join $pageURL $mount image?N=$N]]
 	} else {
 	    set O [WDB GetContent $N]
-	    lassign [translate $N preview $O .html 1] C U T BR
+	    lassign [translate $N -1 preview $O .html 1] C U T BR
 	    set C [replace_toc $C]
 	}
 	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
@@ -2699,7 +2699,7 @@ namespace eval WikitWub {
     proc pageXML {N} {
 	lassign [WDB GetPage $N name date who] name date who
 	set page [WDB GetContent $N]
-	lassign [translate $N $name $page .html] parsed - toc backrefs
+	lassign [translate $N -1 $name $page .html] parsed - toc backrefs
 	return [<page> [subst { 
 	    [<name> [xmlarmour $name]]
 	    [<content> [xmlarmour $page]]
@@ -3252,12 +3252,12 @@ namespace eval WikitWub {
 			if {$content eq ""} {
 			    set content " "
 			}
-			return [Http NoCache [Http Ok $r [translate $N $name $content $ext] text/plain]]
+			return [Http NoCache [Http Ok $r [translate $N -1 $name $content $ext] text/plain]]
 		    }
 		    .xml {
 			set C "<?xml version='1.0'?>"
 			append C \n [pageXML $N]
-			return [Http NoCache [Http Ok $r [translate $N $name $C $ext] text/xml]]
+			return [Http NoCache [Http Ok $r [translate $N -1 $name $C $ext] text/xml]]
 		    }
 		    .noredir -
 		    default {
@@ -3270,7 +3270,7 @@ namespace eval WikitWub {
 			}
 			Debug.wikit {do: $N is a normal page}
 			dict set r content-location "http://[Url host $r]/$N"
-			lassign [translate $N $name $content $ext] C U page_toc BR IH DTl TNRl
+			lassign [translate $N -1 $name $content $ext] C U page_toc BR IH DTl TNRl
 			Debug.wikit {do translate complete}
 			variable include_pages
 			if {$include_pages} {
