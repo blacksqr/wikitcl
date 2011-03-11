@@ -1009,7 +1009,7 @@ namespace eval WikitWub {
     }
 
 
-    proc translate {N V name C ext {preview 0} {summary 0} {diff 0}} {
+    proc translate {N V name C ext {preview 0} {summary 0} {diff 0} {revision 0}} {
 	variable mount
 	switch -exact -- $ext {
 	    .txt {
@@ -1025,7 +1025,7 @@ namespace eval WikitWub {
 		return $C
 	    }
 	    default {
-		return [WFormat StreamToHTML $N $mount [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview $summary $diff]
+		return [WFormat StreamToHTML $N $mount [WFormat TextToStream $C] / ::WikitWub::InfoProc $preview $summary $diff $revision]
 	    }
 	}
     }
@@ -1534,7 +1534,7 @@ namespace eval WikitWub {
 		.txt -
 		.code -
 		.str {
-		    return [Http NoCache [Http Ok $r [translate $N $V $name $C $ext] text/plain]]
+		    return [Http NoCache [Http Ok $r [translate $N $V $name $C $ext 0 0 0 1] text/plain]]
 		}
 		default {
 		    if {$A} {
@@ -1544,7 +1544,7 @@ namespace eval WikitWub {
 			set Title "Version $V of [Ref $N]"
 			set name "Version $V of $name"
 		    }
-		    lassign [translate $N $V $name $C $ext] C U T BR IH
+		    lassign [translate $N $V $name $C $ext 0 0 0 1] C U T BR IH
 		    variable include_pages
 		    if {$include_pages} {
 			lassign [IncludePages $r $C $IH] r C

@@ -1036,9 +1036,9 @@ namespace eval ::WFormat {
     return [list $text $text]
   }
 
-  proc StreamToHTML {N mount s {cgi ""} {ip ""} {creating_preview 0} {creating_summary 0} {creating_diffs 0}} {
+  proc StreamToHTML {N mount s {cgi ""} {ip ""} {creating_preview 0} {creating_summary 0} {creating_diffs 0} {creating_revision 0} } {
 
-    if {$creating_diffs || $creating_summary || $creating_preview} {
+    if {$creating_diffs || $creating_summary || $creating_preview || $creating_revision} {
       vs_no_edit
     } else {
       vs_edit
