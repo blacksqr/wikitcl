@@ -1418,7 +1418,11 @@ namespace eval WikitWub {
 
 	if {![string length $subtitle]} {
 	    set subtitle [expr {$W?"Word":"Line"}]
-	    append subtitle " difference between version $V and $D, switch to "
+	    append subtitle " difference between version "
+	    append subtitle [<a> href revision?N=$N&V=$V $V]
+	    append subtitle " ([who_date_subtitle $N $V]) and "
+	    append subtitle [<a> href revision?N=$N&V=$D $D]
+	    append subtitle " ([who_date_subtitle $N $D]), switch to "
 	    append subtitle [<a> href "diff?N=$N&V=$V&D=$D&W=[expr {!$W}]#diff0" "[expr $W?"line":"word"] differences"]
 	    append subtitle "."
 	}
@@ -1481,6 +1485,30 @@ namespace eval WikitWub {
 
 	variable mount
 	return [Http Redir $r [file join $mount edit?N=[dict get $params N]&V=[dict get $params V]]]
+    }
+
+    proc who_date_subtitle {N V {pfx "Updated"}} {
+	set nver [WDB Versions $N]
+	if {$V > $nver} {
+	    return "Invalid version: $V"
+	}
+	if {$V >= $nver} {
+	    lassign [WDB GetPage $N who date] who date
+	} else {
+	    lassign [WDB GetChange $N $V who date] who date
+	}
+	set subtitle ""
+	if {$date != 0} {
+	    set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
+	    set subtitle "$pfx $update"
+	}
+	if {$who ne "" &&
+	    [regexp {^(.+)[,@]} $who - who_nick]
+	    && $who_nick ne ""
+	} {
+	    append subtitle " by [<a> href /[WDB LookupPage $who_nick] $who_nick]"
+	}
+	return $subtitle
     }
 
     proc /revision {r N {V -1} {A 0}} {
@@ -1563,6 +1591,8 @@ namespace eval WikitWub {
 		}
 	    }
 	}
+
+	set subtitle [who_date_subtitle $N $V]
 
 	set footer [menus Home Recent Help New Random Search]
 	return [sendPage $r spage]
