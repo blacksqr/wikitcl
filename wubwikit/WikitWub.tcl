@@ -1416,6 +1416,22 @@ namespace eval WikitWub {
 	set menu [menus Home Recent Help WhoAmI New Random HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"]]
 	set footer [menus Home Recent Help New Search]
 
+	if {$V > $D} {
+	    if {$V < $nver} {
+		lappend menu [<a> href "diff?N=$N&V=[expr {$V+1}]&D=[expr {$V}]" "Next version"]
+	    }
+	    if { $V > 1 } {
+		lappend menu [<a> href "diff?N=$N&V=[expr {$D}]&D=[expr {$D-1}]" "Previous version"]
+	    }
+	} elseif {$D > $V} {
+	    if {$D < $nver} {
+		lappend menu [<a> href "diff?N=$N&V=[expr {$D+1}]&D=[expr {$D}]" "Next version"]
+	    }
+	    if { $D > 1 } {
+		lappend menu [<a> href "diff?N=$N&V=[expr {$V}]&D=[expr {$V-1}]" "Previous version"]
+	    }
+	}
+
 	if {![string length $subtitle]} {
 	    set subtitle [expr {$W?"Word":"Line"}]
 	    append subtitle " difference between version "
