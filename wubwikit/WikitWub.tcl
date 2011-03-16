@@ -1505,8 +1505,8 @@ namespace eval WikitWub {
 
     proc who_date_subtitle {N V {pfx "Updated"}} {
 	set nver [WDB Versions $N]
-	if {$V > $nver} {
-	    return "Invalid version: $V"
+	if {$V < 0 || $V > $nver} {
+	    return "Invalid version"
 	}
 	if {$V >= $nver} {
 	    lassign [WDB GetPage $N who date] who date
@@ -1514,7 +1514,7 @@ namespace eval WikitWub {
 	    lassign [WDB GetChange $N $V who date] who date
 	}
 	set subtitle ""
-	if {$date != 0} {
+	if {[string is integer -strict $date] && $date != 0} {
 	    set update [clock format $date -gmt 1 -format {%Y-%m-%d %T}]
 	    set subtitle "$pfx $update"
 	}
