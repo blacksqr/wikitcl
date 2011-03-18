@@ -3289,7 +3289,7 @@ namespace eval WikitWub {
 		# page 0 is HTML and is the Welcome page
 		# it needs to be redirected to the functional page
 		# as it may reference maps
-		return [Http Redir $r [file join $mount welcome]]
+		return [/welcome $r]
 	    } else {
 		switch -- $ext {
 		    .txt -
