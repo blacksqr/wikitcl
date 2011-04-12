@@ -1103,7 +1103,7 @@ namespace eval ::WFormat {
 #	  if { $in_header } {
 #            append tocheader [quote $text]
 #	  }
-          append result $html_frag($mode$text)
+          append result [subst $html_frag($mode$text)]
         }
         g - G {
           lassign [split_url_link_text $text] link text
@@ -1234,7 +1234,7 @@ namespace eval ::WFormat {
           }
         }
         V {
-          append result $html_frag($state$mode)
+          append result [subst $html_frag($state$mode)]
           set state $mode
           append result [quote $text]
         }
@@ -1242,7 +1242,7 @@ namespace eval ::WFormat {
           if {$mode eq "HD2"} {
             incr HD2_cnt
           }
-          append result "$html_frag($state$mode) id='pagetocXXXXXXXX'>" 
+          append result "[subst $html_frag($state$mode)] id='pagetocXXXXXXXX'>" 
           lappend tocpos [string index $mode 2] [string length $result]
           set state $mode
 	  set in_header 1
@@ -1253,7 +1253,7 @@ namespace eval ::WFormat {
 	  set in_header 0
         }
         BLS {
-          append result $html_frag($state$mode)
+          append result [subst $html_frag($state$mode)]
           foreach {bltype page version who when} [split $text ";"] break
           switch -exact -- $bltype {
             a {
@@ -1280,7 +1280,7 @@ namespace eval ::WFormat {
           set state $mode 
         }
         BLE {
-          append result $html_frag($state$mode)
+          append result [subst $html_frag($state$mode)]
           switch -exact -- $bltype {
             a {
               append result "\n</div>\n"
@@ -1295,7 +1295,7 @@ namespace eval ::WFormat {
         }
         1O - 2O - 3O - 4O - 5O - 1U - 2U - 3U - 4U - 5U {
           if {[info exists html_frag($state$mode)]} {
-            append result $html_frag($state$mode)
+            append result [subst $html_frag($state$mode)]
           }
           set tag [expr {[string match "?O" $mode]?"<ol>":"<ul>"}]
           set n [string index $mode 0]
@@ -1392,7 +1392,7 @@ namespace eval ::WFormat {
         }
         CT {
           set mode T
-          append result $html_frag($state$mode)
+          append result [subst $html_frag($state$mode)]
           if { $centered } {
             append result "</div><p></p>"
             set centered 0
@@ -1422,7 +1422,7 @@ namespace eval ::WFormat {
         DISCUSSIONHEADER {
           set mode T
           if {$state ne "_"} {
-            append result $html_frag($state$mode)
+            append result [subst $html_frag($state$mode)]
           }
           if {!$creating_diffs} {
             if {$in_discussion} {
@@ -1437,7 +1437,7 @@ namespace eval ::WFormat {
         DISCUSSION {
           set mode T
           if {$state ne "_"} {
-            append result $html_frag($state$mode)
+            append result [subst $html_frag($state$mode)]
           }
           if {!$creating_diffs} {
             if {$in_discussion} {
@@ -1459,7 +1459,7 @@ namespace eval ::WFormat {
         }
         CATEGORY {
           set mode T
-          append result $html_frag($state$mode)
+          append result [subst $html_frag($state$mode)]
           if {$in_discussion} {
             append result "</div>"
             set in_discussion 0
