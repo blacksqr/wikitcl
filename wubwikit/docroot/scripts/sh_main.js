@@ -9,6 +9,10 @@ if (! this.sh_languages) {
 }
 var sh_requests = {};
 
+function sh_trim(stringToTrim) {
+    return stringToTrim.replace(/^\s+|\s+$/g,"");
+}
+
 function sh_isEmailAddress(url) {
   if (/^mailto:/.test(url)) {
     return false;
@@ -121,7 +125,7 @@ function sh_highlightString(inputString, language, language_name) {
         }
         else if (style === 'sh_keyword' && language_name == 'tcl') {
           clone = a.cloneNode(false);
-	  clone.href = 'http://wiki.tcl.tk/'+s;
+	  clone.href = 'http://wiki.tcl.tk/'+sh_trim(s);
         }
         else {
           clone = span.cloneNode(false);
