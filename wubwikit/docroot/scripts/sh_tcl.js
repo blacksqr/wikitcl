@@ -14,7 +14,7 @@ sh_languages['tcl'] = [
       1
     ],
     [
-      /[^\\]+\;[ \t]*#/g,
+      /\;[ \t]*#/g,
       'sh_comment',
       1
     ],
