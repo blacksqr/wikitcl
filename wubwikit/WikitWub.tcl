@@ -2356,7 +2356,6 @@ namespace eval WikitWub {
 			    while {[$rs nextdict d]} {
 				set rd [dict create]
 				dict for {k v} $d {
-				    puts "FTSD=$d"
 				    if {$k eq "id"} {
 					dict set rd id "<a href='http://$host/[dict get $d id]'>[dict get $d id]</a>"
 				    } else {
