@@ -2339,17 +2339,38 @@ namespace eval WikitWub {
 		    catch {tdbc::sqlite3::connection create thdb $dbfnm -readonly 1} msg
 		    puts "FTSMSG1=$msg"
 		    set rt [catch {
-			thdb foreach -as dicts d $Q {
-			    set rd [dict create]
-			    dict for {k v} $d {
-				if {$k eq "id"} {
-				    dict set rd id "<a href='http://$host/[dict get $d id]'>[dict get $d id]</a>"
-				} else {
-				    dict set rd $k [armour $v]
+# 			thdb foreach -as dicts d $Q {
+# 			    set rd [dict create]
+# 			    dict for {k v} $d {
+# 				if {$k eq "id"} {
+# 				    dict set rd id "<a href='http://$host/[dict get $d id]'>[dict get $d id]</a>"
+# 				} else {
+# 				    dict set rd $k [armour $v]
+# 				}
+# 			    }
+# 			    lappend dl [incr did] $rd
+# 			}
+			set qs [thdb prepare $Q]
+			set rs [$qs execute]
+			while {1} {
+			    while {[$rs nextdict d]} {
+				set rd [dict create]
+				dict for {k v} $d {
+				    puts "FTSD=$d"
+				    if {$k eq "id"} {
+					dict set rd id "<a href='http://$host/[dict get $d id]'>[dict get $d id]</a>"
+				    } else {
+					dict set rd $k [armour $v]
+				    }
 				}
+				lappend dl [incr did] $rd
+ 			    }
+			    if {![$rs nextresults]} {
+				break
 			    }
-			    lappend dl [incr did] $rd
 			}
+			$rs close
+			$qs close
 		    } msg]
 		    puts "FTSMSG2=$msg"
 		    thdb close
