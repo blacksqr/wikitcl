@@ -3173,13 +3173,32 @@ namespace eval WikitWub {
 		    set n 0
 		    set stmt [db prepare $stmttxt]
 		    if {[catch {
-			$stmt foreach -as dicts d {
-			    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
-			    incr n
+			set qs [thdb prepare $stmttxt]
+			set rs [$qs execute]
+			while {1} {
+			    while {[$rs nextdict d]} {
+				lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
+				incr n
+				if {$n >= $max} {
+				    break
+				}
+ 			    }
 			    if {$n >= $max} {
 				break
 			    }
-			} 
+			    if {![$rs nextresults]} {
+				break
+			    }
+			}
+			$rs close
+			$qs close
+# 			$stmt foreach -as dicts d {
+# 			    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
+# 			    incr n
+# 			    if {$n >= $max} {
+# 				break
+# 			    }
+# 			} 
 		    } msg]} {
 			if {$msg ne "Function sequence error: result set is exhausted."} {
 			    error $msg
