@@ -749,7 +749,7 @@ function App(query) {
 App.prototype.OnSearchComplete = function() {
     var eos = 0;
     if (this.siteSearch.results && this.siteSearch.results.length > 0) {
-	document.getElementById("content").innerHTML += "<ul>";
+	var content = "<ul>"
 	for (var i = 0; i < this.siteSearch.results.length; i++) {
             var result = this.siteSearch.results[i];
 	    try {
@@ -759,14 +759,15 @@ App.prototype.OnSearchComplete = function() {
 		    page = result.url.substr(idx);
 		if (page != "/4") {
 		    var h = "<li class='result'><a href='" + result.url + "'>" + result.title + "</a><p class='result'>" + result.content + "</p></li>";
-		    document.getElementById("content").innerHTML += h;
+		    content += h;
 		    this.resultCount++;
 		}
 	    }
 	    catch(err) {
 	    }
 	}	
-	document.getElementById("content").innerHTML += "</ul>";
+	content += "</ul>";
+	document.getElementById("content").innerHTML += content;
 	var cursor = this.siteSearch.cursor;
 	if (cursor && cursor.currentPageIndex < cursor.pages.length - 1) {
 	    this.siteSearch.gotoPage(cursor.currentPageIndex + 1);
