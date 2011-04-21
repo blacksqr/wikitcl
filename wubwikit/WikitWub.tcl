@@ -2337,7 +2337,7 @@ namespace eval WikitWub {
 		    puts [package require sqlite3 3.7.5]
 		    puts [package require tdbc::sqlite3]
 		    catch {tdbc::sqlite3::connection create thdb $dbfnm -readonly 1} msg
-		    puts "FTSMSG=$msg"
+		    puts "FTSMSG1=$msg"
 		    set rt [catch {
 			thdb foreach -as dicts d $Q {
 			    set rd [dict create]
@@ -2351,6 +2351,7 @@ namespace eval WikitWub {
 			    lappend dl [incr did] $rd
 			}
 		    } msg]
+		    puts "FTSMSG2=$msg"
 		    thdb close
 		}
 		set msg [interp eval thip "set msg"]
