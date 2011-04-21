@@ -2334,9 +2334,10 @@ namespace eval WikitWub {
 		    set dl {}
 		    set msg {}
 		    set rt 1
-		    package require sqlite3 3.7.5
-		    package require tdbc::sqlite3
+		    puts [package require sqlite3 3.7.5]
+		    puts [package require tdbc::sqlite3]
 		    catch {tdbc::sqlite3::connection create thdb $dbfnm -readonly 1} msg
+		    puts "FTSMSG=$msg"
 		    set rt [catch {
 			thdb foreach -as dicts d $Q {
 			    set rd [dict create]
