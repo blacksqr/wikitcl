@@ -3171,9 +3171,8 @@ namespace eval WikitWub {
 
 		    set results {}
 		    set n 0
-		    set stmt [db prepare $stmttxt]
 		    if {[catch {
-			set qs [thdb prepare $stmttxt]
+			set qs [db prepare $stmttxt]
 			set rs [$qs execute]
 			while {1} {
 			    while {[$rs nextdict d]} {
@@ -3204,7 +3203,6 @@ namespace eval WikitWub {
 			    error $msg
 			}
 		    }
-		    $stmt close
 		    
 		    set n 0
 		    set stmt [db prepare $stmtimg]
