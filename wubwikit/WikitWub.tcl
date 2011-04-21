@@ -5,6 +5,7 @@ if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
     source [file join [file dirname [info script]] local_setup.tcl]
 }
 
+package require sqlite3 3.7.5
 package require fileutil
 package require struct::queue
 package require HTTP
@@ -48,6 +49,7 @@ set API(WikitWub) {
     script_prefix {Url prefix for JS files}
     image_prefix {Url prefix for images}
     need_recaptcha {Is a ReCAPTCHA required to create new pages or to revert pages?}
+    full_text_search {Use full text search for content queries}
 }
 
 Debug define wikit
@@ -66,6 +68,7 @@ namespace eval WikitWub {
     variable comment_template "<Enter your comment here and a header with your wiki nickname and timestamp will be inserted for you>"
     variable allow_sql_queries 1
     variable days_in_history 7
+    variable full_text_search 0
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -437,10 +440,11 @@ namespace eval WikitWub {
 	    [<div> class edittitle [subst {
 		[<form> edit method post action [file join $::WikitWub::mount query/run] {
 		     [<hidden> _charset_ {}]
-		     [<textarea> Q query "Query" rows 35 cols 72 compact 0 style width:100% ""]
+		     [<textarea> Q query "Query" rows 8 cols 72 compact 0 style width:100% $Q]
 		     <input name='create' type='submit' value='Run the query'>
 		}]
 	    }]]
+	    [<div> class queryresult $C]
 	}]]
     }
 
@@ -2306,6 +2310,8 @@ namespace eval WikitWub {
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
+	set C ""
+	set Q ""
 	return [sendPage $r query]
     }
 
@@ -2317,6 +2323,7 @@ namespace eval WikitWub {
 	}
 	return [Httpd Thread {
 	    interp create thip
+	    set ms [clock milliseconds]
 	    set irt [catch {
 		interp limit thip time -seconds [expr {[clock seconds]+10}]
 		interp eval thip [list set Q $Q]
@@ -2327,10 +2334,9 @@ namespace eval WikitWub {
 		    set dl {}
 		    set msg {}
 		    set rt 1
-		    package require sqlite3 3.6.19
+		    package require sqlite3 3.7.5
 		    package require tdbc::sqlite3
 		    catch {tdbc::sqlite3::connection create thdb $dbfnm -readonly 1} msg
-		    puts "connection: $msg"
 		    set rt [catch {
 			thdb foreach -as dicts d $Q {
 			    set rd [dict create]
@@ -2351,24 +2357,27 @@ namespace eval WikitWub {
 		set rt [interp eval thip "set rt"]
 	    } imsg]
 	    interp delete thip
+	    set ms [expr {[clock milliseconds]-$ms}]
 	    if {$irt} {
-		return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r 0 $Q $imsg]]
+		return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r 0 $Q $imsg $ms]]
 	    } 
 	    if {$rt} {
-		return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r 0 $Q $msg]]
+		return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r 0 $Q $msg $ms]]
 	    } 
-	    return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r 1 $Q $dl]]
+	    return [thread::send [dict get $r -thread] [list WikitWub::sendQueryResult $r 1 $Q $dl $ms]]
 	} r $r Q $Q dbfnm $wikitdbpath]
     }
 
-    proc sendQueryResult {r ok Q dl} {
+    proc sendQueryResult {r ok Q dl ms} {
+	set C <br><br>
+	append C [<div> class title "Result of previous query:"]
 	if {$ok} {
-	    set C "Result of<br><br><tt>$Q</tt><br><br>[expr {[llength $dl]/2}] row(s):<br><br>"
+	    append C "<br>Query<br><br><tt>$Q</tt><br><br>returned [expr {[llength $dl]/2}] row(s) in ${ms}ms:<br><br>"
 	    append C [Report html $dl sortable 1]
 	} else {
-	    set C "Query<br><br><tt>$Q</tt><br><br>failed:<br><br><tt>$dl</tt>"
+	    append C "<br>Query<br><br><tt>$Q</tt><br><br>failed:<br><br><tt>$dl</tt>"
 	}
-	return [sendPage $r query_result]
+	return [sendPage $r query]
     }
 
     proc /map {r imp args} {
@@ -3048,6 +3057,7 @@ namespace eval WikitWub {
 
     proc /search {r {S ""} {long 0} args} {
 	variable detect_robots
+	variable full_text_search
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
@@ -3077,33 +3087,51 @@ namespace eval WikitWub {
 	    if {$long eq "1" && [string index $key end] ne "*"} {
 		append key "*"
 	    }
- 	    if {[regexp {^(.*)\*+$} $key]} {
+ 	    if {$full_text_search || [regexp {^(.*)\*+$} $key]} {
  		variable wikitdbpath
 		return [Httpd Thread {
 		    package require sqlite3 3.6.19
 		    package require tdbc::sqlite3
 		    package require Dict
-		    catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1}
+		    catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
+		    puts $msg
 		    set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
 		    set fields name
-		    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content b WHERE a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
-		    set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
-		    if {$long} {
+		    puts "fts? $fts"
+		    if {$fts} {
+			if {$long} {
+			    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH '$key' and length(b.content) > 1"
+			} else {
+			    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name            MATCH '$key' and length(b.content) > 1"
+			}
+			set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
 			set n 0
 			foreach k [split $key " "] {
 			    set keynm "key$n"
 			    set $keynm "*$k*"
-			    append stmttxt " AND (lower(a.name) GLOB lower(:$keynm) OR lower(b.content) GLOB lower(:$keynm))"
 			    append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
 			    incr n
 			}
 		    } else {
-			foreach k [split $key " "] {
-			    set keynm "key$n"
-			    set $keynm "*$k*"
-			    append stmttxt " AND lower(a.name) GLOB lower(:$keynm)"
-			    append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
-			    incr n
+			set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content b WHERE a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
+			set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
+			if {$long} {
+			    set n 0
+			    foreach k [split $key " "] {
+				set keynm "key$n"
+				set $keynm "*$k*"
+				append stmttxt " AND (lower(a.name) GLOB lower(:$keynm) OR lower(b.content) GLOB lower(:$keynm))"
+				append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
+				incr n
+			    }
+			} else {
+			    foreach k [split $key " "] {
+				set keynm "key$n"
+				set $keynm "*$k*"
+				append stmttxt " AND lower(a.name) GLOB lower(:$keynm)"
+				append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
+				incr n
+			    }
 			}
 		    }
 		    if {$date > 0} {
@@ -3115,15 +3143,23 @@ namespace eval WikitWub {
 		    }
 		    append stmttxt " ORDER BY a.date DESC"
 		    append stmtimg " ORDER BY a.date DESC"
-		    
+			
+		    puts $stmttxt
+
 		    set results {}
 		    set n 0
 		    set stmt [db prepare $stmttxt]
-		    $stmt foreach -as dicts d {
-			lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
-			incr n
-			if {$n >= $max} {
-			    break
+		    if {[catch {
+			$stmt foreach -as dicts d {
+			    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
+			    incr n
+			    if {$n >= $max} {
+				break
+			    }
+			} 
+		    } msg]} {
+			if {$msg ne "Function sequence error: result set is exhausted."} {
+			    error $msg
 			}
 		    }
 		    $stmt close
@@ -3142,7 +3178,7 @@ namespace eval WikitWub {
 		    db close
 		    set eresult [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
 		    return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r $eresult]]
-		} r $r key $key dbfnm $wikitdbpath date $qdate max 10000]
+		} r $r key $key dbfnm $wikitdbpath date $qdate max 10000 fts $full_text_search]
  	    }
 	    return [/searchp $r 0]
 	} else {

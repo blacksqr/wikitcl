@@ -1,5 +1,5 @@
 package require OO
-package require sqlite3 3.6.19
+package require sqlite3 3.7.5
 package require tdbc::sqlite3
 package provide WDB 1.0
 package provide WDB_sqlite 1.0
@@ -22,6 +22,8 @@ if {0} {
        content TEXT NOT NULL,
        PRIMARY KEY (id),
        FOREIGN KEY (id) REFERENCES pages(id));
+
+    CREATE VIRTUAL TABLE pages_content_fts USING fts4(id,name,content);
 
     CREATE TABLE pages_binary (
        id INT NOT NULL,
@@ -107,6 +109,7 @@ namespace eval WDB {
 		"insert_change"                         { set sql {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, :change)} }
 		"insert_change_binary"                  { set sql {INSERT INTO changes_binary (id, cid, date, who, type, content) VALUES (:id, :version, :date, :who, :type, :change)} }
 		"insert_content"                        { set sql {INSERT INTO pages_content (id, content) VALUES (:id, :text)} }
+		"insert_content_fts"                    { set sql {INSERT INTO pages_content_fts (id, name, content) VALUES (:id, :name, :text)} }
 		"insert_diff"                           { set sql {INSERT INTO diffs (id, cid, did, fromline, toline, old) VALUES (:id, :version, :i, :from, :to, :old)} }
 		"insert_page"                           { set sql {INSERT INTO pages (id, name, date, who, type) VALUES (:pid, :name, :date, :who, :type)} }
 		"insert_ref"                            { set sql {INSERT INTO refs (fromid, toid) VALUES (:id, :x)} }
@@ -130,6 +133,7 @@ namespace eval WDB {
 		"refs_to_pid"                           { set sql {SELECT fromid FROM refs WHERE toid = :pid ORDER BY fromid ASC} }
 		"update_change_delta"                   { set sql {UPDATE changes SET delta = :change WHERE id = :id AND cid = :version} }
 		"update_content_for_id"                 { set sql {UPDATE pages_content SET content = :text WHERE id = :id} }
+		"update_content_fts_for_id"             { set sql {UPDATE pages_content_fts SET content = :text WHERE id = :id} }
 		"update_page_date_for_id"               { set sql {UPDATE pages SET date = :newdate WHERE id = :id} }
 		"update_page_who_for_id"                { set sql {UPDATE pages SET who = :newWho WHERE id = :id} }
 		"update_page_type_for_id"               { set sql {UPDATE pages SET type = :newType WHERE id = :id} }
@@ -1179,8 +1183,14 @@ namespace eval WDB {
 		    $rsc close
 		    if {[dict get $d COUNT(*)]} {
 			[statement "update_content_for_id"] allrows
+			if {$::WikitWub::full_text_search} {
+			    [statement "update_content_fts_for_id"] execute
+			}
 		    } else {
 			[statement "insert_content"] allrows
+			if {$::WikitWub::full_text_search} {
+			    [statement "insert_content_fts"] execute
+			}
 		    }
 		    Debug.WDB {saved content}
 		    if {$page ne {} || [Versions $id]} {
