@@ -2334,7 +2334,7 @@ namespace eval WikitWub {
 		    set dl {}
 		    set msg {}
 		    set rt 1
-		    puts [package require sqlite3 3.7.5]
+		    puts [package require sqlite3 3.6.9]
 		    puts [package require tdbc::sqlite3]
 		    catch {tdbc::sqlite3::connection create thdb $dbfnm -readonly 1} msg
 		    puts "FTSMSG1=$msg"
@@ -2951,7 +2951,7 @@ namespace eval WikitWub {
 
 	# tclLog "SearchResults key <$key> long <$searchLong>"
 	set rdate $date
-	set result "Searched for \"[<b> $key]\" (in page titles"
+	set result "Searched for \"[<b> [armour $key]]\" (in page titles"
 
 	if {$long} {
 	    append result " and contents"
@@ -3112,7 +3112,11 @@ namespace eval WikitWub {
  	    if {$full_text_search || [regexp {^(.*)\*+$} $key]} {
  		variable wikitdbpath
 		return [Httpd Thread {
-		    package require sqlite3 3.6.19
+		    if {$fts} {
+			package require sqlite3 3.7.5
+		    } else {
+			package require sqlite3 3.6.19
+		    }
 		    package require tdbc::sqlite3
 		    package require Dict
 		    catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
@@ -3122,9 +3126,9 @@ namespace eval WikitWub {
 		    puts "fts? $fts"
 		    if {$fts} {
 			if {$long} {
-			    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH '$key' and length(b.content) > 1"
+			    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
 			} else {
-			    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name            MATCH '$key' and length(b.content) > 1"
+			    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name            MATCH :key and length(b.content) > 1"
 			}
 			set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
 			set n 0
