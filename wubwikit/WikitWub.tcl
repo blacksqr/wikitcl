@@ -1,6 +1,8 @@
 ### Source local setup script (not under version control)
 set ::docroot [file join [pwd] docroot]
 puts "SYSTEM ENCODING AT STARTUP = [encoding system]"
+puts "FORCE UTF8 AT STARTUP"
+encoding system utf-8
 puts "docroot = $docroot"
 if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
     source [file join [file dirname [info script]] local_setup.tcl]
