@@ -1,5 +1,6 @@
 ### Source local setup script (not under version control)
 set ::docroot [file join [pwd] docroot]
+puts "SYSTEM ENCODING AT STARTUP = [encoding system]"
 puts "docroot = $docroot"
 if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
     source [file join [file dirname [info script]] local_setup.tcl]
@@ -3748,5 +3749,7 @@ proc mamo { } {
 #after 10000 spelunk
 
 #after 10000 mamo
+
+puts "SYSTEM ENCODING BEFORE CREATING SITE = [encoding system]"
 
 Site start home [file normalize [file dirname [info script]]] config $cfg local $local
