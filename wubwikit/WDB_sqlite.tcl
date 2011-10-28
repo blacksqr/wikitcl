@@ -24,6 +24,7 @@ if {0} {
        FOREIGN KEY (id) REFERENCES pages(id));
 
     CREATE VIRTUAL TABLE pages_content_fts USING fts4(id,name,content);
+    # Insert data into FTS table: insert into pages_content_fts (id, name, content) select a.id, a.name, b.content from pages a, pages_content b where a.id = b.id;
 
     CREATE TABLE pages_binary (
        id INT NOT NULL,
