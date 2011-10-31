@@ -165,7 +165,7 @@ namespace eval WikitWub {
 	if {$titles($tname) ne ""} {
 	    dict set r -title [uplevel 1 subst [list $titles($tname)]]
 	}
-	dict set r -content [uplevel 1 subst [list $templates($tname)]][<div> class generated [generated $r]]
+	dict set r -content [uplevel 1 subst [list $templates($tname)]]
 	dict set r content-type x-text/wiki
         dict set r -page-type $tname
 
@@ -2860,14 +2860,6 @@ namespace eval WikitWub {
     }
 
     variable trailers {@ _/edit ! _/ref - _/diff + _/history}
-
-    proc generated { r } {
-	set genmsg "Generated in [expr {int([clock microseconds] - [dict get $r -received])/1000}]ms"
-	if {[dict exist $r -caching]} {
-	    append genmsg " " [dict get $r -caching]
-	}
-	return $genmsg
-    }
 
     # Special page: Recent Changes.
     variable delta [subst \u0394]
