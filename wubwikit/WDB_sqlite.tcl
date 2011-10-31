@@ -522,84 +522,6 @@ namespace eval WDB {
 
     #----------------------------------------------------------------------------
     #
-    # Search --
-    #
-    #	search for text in page titles and/or content
-    #
-    # Parameters:
-    #	key - a list of words
-    #	long - search in content as well as name
-    #	date - if non-0, search more recent pages than date
-    #	max - maximum number of records
-    #
-    # Results:
-    #	Returns a list of matching records
-    #
-    #----------------------------------------------------------------------------
-    proc Search {key long date max} {
-	variable db
-
-	set fields name
-	set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content b WHERE a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
-	set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
-	set n 0
-	if {$long} {
-	    foreach k [split $key " "] {
-		set keynm key$n
-		set $keynm "*$k*"
-		append stmttxt " AND (lower(a.name) GLOB lower(:$keynm) OR lower(b.content) GLOB lower(:$keynm))"
-		append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
-		incr n
-	    }
-	} else {
-	    foreach k [split $key " "] {
-		set keynm key$n
-		set $keynm "*$k*"
-		append stmttxt " AND lower(a.name) GLOB lower(:$keynm)"
-		append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
-		incr n
-	    }
-	}
-	if {$date > 0} {
-	    append stmttxt " AND a.date >= $date"
-	    append stmtimg " AND a.date >= $date"
-	} else {
-	    append stmttxt " AND a.date > 0"
-	    append stmtimg " AND a.date > 0"
-	}
-	append stmttxt " ORDER BY a.date DESC"
-	append stmtimg " ORDER BY a.date DESC"
-
-	set results {}
-	set n 0
-	set stmt [$db prepare $stmttxt]
-	$stmt foreach -as dicts d {
-	    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
-	    incr n
-	    if {$n >= $max} {
-		break
-	    }
-	}
-	$stmt close
-
-	set n 0
-	set stmt [$db prepare $stmtimg]
-	$stmt foreach -as dicts d {
-	    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
-	    incr n
-	    if {$n >= $max} {
-		break
-	    }
-	}
-	$stmt close
-
-	Debug.WDB {Search '$key' $long $date -> $results}
-
-	return [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
-    }
-
-    #----------------------------------------------------------------------------
-    #
     # RunUserQuery --
     #
     #   run a user query
@@ -1181,14 +1103,10 @@ namespace eval WDB {
 		    $rsc close
 		    if {[dict get $d COUNT(*)]} {
 			[statement "update_content_for_id"] allrows
-			if {$::WikitWub::full_text_search} {
-			    [statement "update_content_fts_for_id"] execute
-			}
+			[statement "update_content_fts_for_id"] execute
 		    } else {
 			[statement "insert_content"] allrows
-			if {$::WikitWub::full_text_search} {
-			    [statement "insert_content_fts"] execute
-			}
+			[statement "insert_content_fts"] execute
 		    }
 		    Debug.WDB {saved content}
 		    if {$page ne {} || [Versions $id]} {

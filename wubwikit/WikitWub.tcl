@@ -52,7 +52,6 @@ set API(WikitWub) {
     script_prefix {Url prefix for JS files}
     image_prefix {Url prefix for images}
     need_recaptcha {Is a ReCAPTCHA required to create new pages or to revert pages?}
-    full_text_search {Use full text search for content queries}
 }
 
 Debug define wikit
@@ -71,8 +70,8 @@ namespace eval WikitWub {
     variable comment_template "<Enter your comment here and a header with your wiki nickname and timestamp will be inserted for you>"
     variable allow_sql_queries 1
     variable days_in_history 7
-    variable full_text_search 0
     variable changes_on_welcome_page 5
+    variable max_search_results 1000
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -203,12 +202,6 @@ namespace eval WikitWub {
 	    [<form> gsearchform method get action [file join $::WikitWub::mount gsearch] {
 		<input id='googletxt' onfocus='clearGoogle();' onblur='setGoogle();' name='S' type='text' value='[tclarmour [expr {[info exists query]?$query:"Search in pages"}]]' tabindex='1'>
 		[<hidden> _charset_ ""]
-	    }]
-	} else {
-	    [<form> psearchform action [file join $::WikitWub::mount search] {
-		[<text> S id googletxt onfocus {clearGoogle();} onblur {setGoogle();} "Search in pages"]
-		[<hidden> _charset_ ""]
-		[<hidden> long 1]
 	    }]
 	}]
     }
@@ -2964,22 +2957,9 @@ namespace eval WikitWub {
 	return [sendPage $r spage]
     }
 
-    proc search {key date {external 0} {external_result {}}} {
-	variable full_text_search
+    proc search {key date {external_result {}}} {
 	Debug.wikit {search: '$key'}
-	set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
-
-	# tclLog "SearchResults key <$key> long <$searchLong>"
 	set rdate $date
-	if {!$full_text_search} {
-	    set result "Searched for \"[<b> [armour $key]]\" (in page titles"
-	    if {$long} {
-		append result " and contents"
-	    }
-	    append result "):<br>\n"
-	}
-	set max 10000 ;# Get 10000 search hist
-	set dmax 100 ;# Only display 100
 	set count 0
 	variable protected
 	variable mount
@@ -2987,55 +2967,22 @@ namespace eval WikitWub {
 	set elist {}
 	set wlist {}
 	set rlist {}
-	if {$external} {
-	    set eresult $external_result
-	} else {
-	    set eresult [WDB Search $key $long $date $max]
+	foreach record $external_result {
+	    dict with record {}
+	    # these are admin pages, don't list them
+	    if {[dict exists $protected $id]} continue
+	    set what  [lindex {name content image} $what]
+	    if {$type ne "" && ![string match "text/*" $type]} {
+		lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] $what [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
+	    } else {
+		lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] $what {}]
+	    }
+	    set rdate $date
+	    incr count
 	}
-	if {$full_text_search} {
-	    set rlist {}
-	    foreach record $eresult {
-		dict with record {}
-		# these are admin pages, don't list them
-		if {[dict exists $protected $id]} continue
-		set what  [lindex {name content image} $what]
-		if {$type ne "" && ![string match "text/*" $type]} {
-		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] $what [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
-		} else {
-		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] $what {}]
-		}
-		set rdate $date
-		incr count
-	    }
-	    if {[llength $rlist]} {
-		append result [list2table $rlist {Date Name {Matched in} Image} {}]
-		append result "<br>\n"
-	    }
-	} else {
-	    foreach record $eresult {
-		dict with record {}
-		# these are admin pages, don't list them
-		if {[dict exists $protected $id]} continue
-		if {$type ne "" && ![string match "text/*" $type]} {
-		    set rl [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
-		} else {
-		    set rl [list [timestamp $date] [<a> href [file join $pageURL $id] $name] {}]
-		}
-		if {[string equal -nocase $name $key]} {
-		    lappend elist $rl
-		} elseif {[string match -nocase "$key *" $name] || [string match -nocase "* $key *" $name] || [string match -nocase "* $key" $name]} {
-		    lappend wlist $rl
-		} else {
-		    lappend rlist $rl
-		}
-		set rdate $date
-		incr count
-	    }
-	    set rlist [list {*}$elist {*}$wlist {*}$rlist]
-	    if {[llength $rlist]} {
-		append result [list2table [lrange $rlist 0 [expr {$dmax-1}]] {Date Name Image} {}]
-		append result "<br>\n"
-	    }
+	if {[llength $rlist]} {
+	    append result [list2table $rlist {Date Name {Matched in} Image} {}]
+	    append result "<br>\n"
 	}
 	if {$count == 0} {
 	    append result [<b> [<i> "No matches found"]]
@@ -3045,14 +2992,13 @@ namespace eval WikitWub {
 	    set rdate 0
 	}
 
-	return [list $result $rdate $long]
+	return [list $result $rdate]
     }
 
-    proc /searchp {r {external 0} {external_result {}}} {
+    proc /searchp {r {external_result {}}} {
 	variable mount
 	variable pageURL
 	variable text_url
-	variable full_text_search
 	# search page
 	Debug.wikit {do: search page}
 	set qd [Dict get? $r -Query]
@@ -3061,7 +3007,6 @@ namespace eval WikitWub {
 	} {
 	    # search page with search term supplied
 	    set search [armour $term]
-	    
 	    # determine search date
 	    if {[Query exists $qd F]} {
 		set qdate [Query value $qd F]
@@ -3071,59 +3016,26 @@ namespace eval WikitWub {
 	    } else {
 		set qdate 0
 	    }
-	    
-# For now, no long searches.
-#	    set long 0
-#	    set term [string trim $term *]
-
-	    lassign [search $term $qdate $external $external_result] C nqdate long
+	    lassign [search $term $qdate $external_result] C nqdate
 	    set r [sortable $r]
-	    if {[dict exists $qd long]} {
-		set long 1
-	    }
-#	    lassign [translate -1 "Search" $C .html] C U T BR
 	    set T {}
 	    set U {}
 	    set BR {}
-	    if {!$full_text_search} {
-		if { $nqdate } {
-		    append C [<p> [<a> href "search?S=[armour $term]&F=$nqdate&_charset_=utf-8" "More search results..."]]
-		}
-		if { $long } {
-		    append C <p> 
-		    append C [<a> href "search?S=[armour [string trimright $term *]]&_charset_=utf-8" "Repeat search in titles only"]
-		    append C ", or remove trailing asterisks from the search string to search the titles only.</p>"
-		} else {
-		    append C <p> 
-		    append C [<a> href "search?S=[armour $term*]&_charset_=utf-8" "Repeat search in titles and contents"]
-		    append C ", or append an asterisk to the search string to search the page contents as well as titles.</p>"
-		}
-		set q [string trimright $term *]
-		append q "%20site:" [lindex $text_url 2]
-		variable gsearch
-		if {$gsearch} {
-		    append C [<p> [<a>  target _blank href "http://www.google.com/search?q=[armour $q]" "Click here to see all matches on Google Web Search"]]
-		}
-	    }
 	} else {
 	    # send a search page
 	    set search ""
 	    set C ""
 	}
-	
 	variable searchForm; set C "[subst $searchForm]$C"
-	
 	set name "Search"
 	set Title "Search"
 	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New]
-
 	return [sendPage $r spage]
     }
 
-    proc /search {r {S ""} {long 0} args} {
+    proc /search {r {S ""} args} {
 	variable detect_robots
-	variable full_text_search
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
 	}
@@ -3139,9 +3051,7 @@ namespace eval WikitWub {
 	dict set r -suffix $S
 
 	set qd [Dict get? $r -Query]
-	if {[Query exists $qd S]
-	    && [set key [Query value $qd S]] ne ""
-	} {
+	if {[Query exists $qd S] && [set key [Query value $qd S]] ne ""} {
 	    if {[Query exists $qd F]} {
 		set qdate [Query value $qd F]
 		if {![string is integer -strict $qdate]} {
@@ -3150,203 +3060,116 @@ namespace eval WikitWub {
 	    } else {
 		set qdate 0
 	    }
-	    if {$long eq "1" && [string index $key end] ne "*"} {
-		append key "*"
-	    }
- 	    if {$full_text_search} {
- 		variable wikitdbpath
-		return [Httpd Thread {
-		    package require sqlite3 3.7.5
-		    package require tdbc::sqlite3
-		    package require Dict
-		    catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
-		    set stmtnm "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name MATCH :key and length(b.content) > 1"
-		    set stmtct "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
-		    set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
-		    set n 0
-		    foreach k [split $key " "] {
-			set keynm "key$n"
-			set $keynm "*$k*"
-			append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
-			incr n
-		    }
-		    if {$date > 0} {
-			append stmtnm " AND a.date >= $date"
-			append stmtct " AND a.date >= $date"
-			append stmtimg " AND a.date >= $date"
-		    } else {
-			append stmtnm " AND a.date > 0"
-			append stmtct " AND a.date > 0"
-			append stmtimg " AND a.date > 0"
-		    }
-		    append stmtnm " ORDER BY a.date DESC"
-		    append stmtct " ORDER BY a.date DESC"
-		    append stmtimg " ORDER BY a.date DESC"
+	    variable wikitdbpath
+	    variable max_search_results
+	    return [Httpd Thread {
+		package require sqlite3 3.7.5
+		package require tdbc::sqlite3
+		package require Dict
+		catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
+		set stmtnm "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name MATCH :key and length(b.content) > 1"
+		set stmtct "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
+		set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
+		set n 0
+		foreach k [split $key " "] {
+		    set keynm "key$n"
+		    set $keynm "*$k*"
+		    append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
+		    incr n
+		}
+		if {$date > 0} {
+		    append stmtnm " AND a.date >= $date"
+		    append stmtct " AND a.date >= $date"
+		    append stmtimg " AND a.date >= $date"
+		} else {
+		    append stmtnm " AND a.date > 0"
+		    append stmtct " AND a.date > 0"
+		    append stmtimg " AND a.date > 0"
+		}
+		append stmtnm " ORDER BY a.date DESC"
+		append stmtct " ORDER BY a.date DESC"
+		append stmtimg " ORDER BY a.date DESC"
 
-		    set results {}
-		    set n 0
-		    if {[catch {
-			set qs [db prepare $stmtnm]
-			set rs [$qs execute]
-			while {1} {
-			    while {[$rs nextdict d]} {
-				if {[info exists found([dict get $d id])]} continue
-				set found([dict get $d id]) 1
-				lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 0]
-				incr n
-				if {$n >= $max} {
-				    break
-				}
- 			    }
+		set results {}
+		set n 0
+		if {[catch {
+		    set qs [db prepare $stmtnm]
+		    set rs [$qs execute]
+		    while {1} {
+			while {[$rs nextdict d]} {
+			    if {[info exists found([dict get $d id])]} continue
+			    set found([dict get $d id]) 1
+			    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 0]
+			    incr n
 			    if {$n >= $max} {
 				break
 			    }
-			    if {![$rs nextresults]} {
-				break
-			    }
 			}
-			$rs close
-			$qs close
-		    } msg]} {
-			if {$msg ne "Function sequence error: result set is exhausted."} {
-			    error $msg
-			}
-		    }
-		    set n 0
-		    if {[catch {
-			set qs [db prepare $stmtct]
-			set rs [$qs execute]
-			while {1} {
-			    while {[$rs nextdict d]} {
-				if {[info exists found([dict get $d id])]} continue
-				set found([dict get $d id]) 1
-				lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 1]
-				incr n
-				if {$n >= $max} {
-				    break
-				}
- 			    }
-			    if {$n >= $max} {
-				break
-			    }
-			    if {![$rs nextresults]} {
-				break
-			    }
-			}
-			$rs close
-			$qs close
-		    } msg]} {
-			if {$msg ne "Function sequence error: result set is exhausted."} {
-			    error $msg
-			}
-		    }
-		    set n 0
-		    set stmt [db prepare $stmtimg]
-		    $stmt foreach -as dicts d {
-			if {[info exists found([dict get $d id])]} continue
-			set found([dict get $d id]) 1
-			lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 2]
-			incr n
 			if {$n >= $max} {
 			    break
 			}
-		    }
-		    $stmt close
-		    db close
-		    set eresult [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
-		    return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r $eresult]]
-		} r $r key $key dbfnm $wikitdbpath date $qdate max 1000 fts $full_text_search]
-	    } elseif {[regexp {^(.*)\*+$} $key]} {
- 		variable wikitdbpath
-		return [Httpd Thread {
-		    package require sqlite3 3.6.19
-		    package require tdbc::sqlite3
-		    package require Dict
-		    catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
-		    set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
-		    set fields name
-		    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content b WHERE a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
-		    set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
-		    if {$long} {
-			set n 0
-			foreach k [split $key " "] {
-			    set keynm "key$n"
-			    set $keynm "*$k*"
-			    append stmttxt " AND (lower(a.name) GLOB lower(:$keynm) OR lower(b.content) GLOB lower(:$keynm))"
-			    append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
-			    incr n
-			}
-		    } else {
-			foreach k [split $key " "] {
-			    set keynm "key$n"
-			    set $keynm "*$k*"
-			    append stmttxt " AND lower(a.name) GLOB lower(:$keynm)"
-			    append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
-			    incr n
-			}
-		    }
-		    if {$date > 0} {
-			append stmttxt " AND a.date >= $date"
-			append stmtimg " AND a.date >= $date"
-		    } else {
-			append stmttxt " AND a.date > 0"
-			append stmtimg " AND a.date > 0"
-		    }
-		    append stmttxt " ORDER BY a.date DESC"
-		    append stmtimg " ORDER BY a.date DESC"
-
-		    set results {}
-		    set n 0
-		    if {[catch {
-			set qs [db prepare $stmttxt]
-			set rs [$qs execute]
-			while {1} {
-			    while {[$rs nextdict d]} {
-				lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
-				incr n
-				if {$n >= $max} {
-				    break
-				}
- 			    }
-			    if {$n >= $max} {
-				break
-			    }
-			    if {![$rs nextresults]} {
-				break
-			    }
-			}
-			$rs close
-			$qs close
-		    } msg]} {
-			if {$msg ne "Function sequence error: result set is exhausted."} {
-			    error $msg
-			}
-		    }
-		    
-		    set n 0
-		    set stmt [db prepare $stmtimg]
-		    $stmt foreach -as dicts d {
-			lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type]]
-			incr n
-			if {$n >= $max} {
+			if {![$rs nextresults]} {
 			    break
 			}
 		    }
-		    $stmt close
-
-		    db close
-		    set eresult [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
-		    return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r $eresult]]
-		} r $r key $key dbfnm $wikitdbpath date $qdate max 10000 fts $full_text_search]
- 	    }
-	    return [/searchp $r 0]
+		    $rs close
+		    $qs close
+		} msg]} {
+		    if {$msg ne "Function sequence error: result set is exhausted."} {
+			error $msg
+		    }
+		}
+		set n 0
+		if {[catch {
+		    set qs [db prepare $stmtct]
+		    set rs [$qs execute]
+		    while {1} {
+			while {[$rs nextdict d]} {
+			    if {[info exists found([dict get $d id])]} continue
+			    set found([dict get $d id]) 1
+			    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 1]
+			    incr n
+			    if {$n >= $max} {
+				break
+			    }
+			}
+			if {$n >= $max} {
+			    break
+			}
+			if {![$rs nextresults]} {
+			    break
+			}
+		    }
+		    $rs close
+		    $qs close
+		} msg]} {
+		    if {$msg ne "Function sequence error: result set is exhausted."} {
+			error $msg
+		    }
+		}
+		set n 0
+		set stmt [db prepare $stmtimg]
+		$stmt foreach -as dicts d {
+		    if {[info exists found([dict get $d id])]} continue
+		    set found([dict get $d id]) 1
+		    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 2]
+		    incr n
+		    if {$n >= $max} {
+			break
+		    }
+		}
+		$stmt close
+		db close
+		set eresult [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
+		return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r $eresult]]
+	    } r $r key $key dbfnm $wikitdbpath date $qdate max $max_search_results]
 	} else {
-	    return [/searchp $r 0]	    
+	    return [/searchp $r]
 	}
     }
  
     proc sendSearchResults {r eresult} {
-	return [Http NoCache [Http Ok [/searchp $r 1 $eresult]]]
+	return [Http NoCache [Http Ok [/searchp $r $eresult]]]
     }
 
     proc do {r} {
