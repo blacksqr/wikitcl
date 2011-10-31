@@ -2608,14 +2608,6 @@ namespace eval WikitWub {
 	    return [Http Redir $r "http://[dict get $r host]/0"]
 	}
 
-	if {[info exists wiki_title] && $wiki_title ne ""} {
-	    set Title $wiki_title
-	    set name $wiki_title
-	} else {
-	    set Title "Welcome to the Tclers Wiki!"
-	    set name "Welcome to the Tclers Wiki!"
-	}
-
 	set motd [getMOTD]
 	
 	set rc [<h4> "Recent changes to this wiki"]
@@ -2664,6 +2656,13 @@ namespace eval WikitWub {
 	}
 	set footer [menus Recent Help Search]
 	Debug.wikit {/welcome: $N}
+	if {[info exists wiki_title] && $wiki_title ne ""} {
+	    set Title $wiki_title
+	    set name $wiki_title
+	} else {
+	    set Title "Welcome to the Tclers Wiki!"
+	    set name "Welcome to the Tclers Wiki!"
+	}
 	return [sendPage $r spage]
     }
 
