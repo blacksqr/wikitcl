@@ -72,7 +72,7 @@ namespace eval WikitWub {
     variable allow_sql_queries 1
     variable days_in_history 7
     variable full_text_search 0
-    variable changes_on_welcome_page 5
+    variable changes_on_welcome_page 10
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -2622,6 +2622,7 @@ namespace eval WikitWub {
 	set results {}
 	set result {}
 	set count 0
+	set pdate ""
 	foreach record $records {
 	    dict with record {}
 	    # these are fake pages, don't list them
@@ -2630,14 +2631,23 @@ namespace eval WikitWub {
 	    if {[string length $type] && ![string match "text/*" $type]} {
 		set rtype [<span> class day " [lindex [split $type /] 0]"]
 	    }
-	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype" [<b> [clock format $date -gmt 1 -format {%b %d, %Y}]]]
+	    set cdate [clock format $date -gmt 1 -format {%b %d, %Y}]
+	    set rl {}
+	    if {$cdate ne $pdate} {
+		lappend rl [<b> $cdate]
+		set pdate $cdate
+	    } else {
+		lappend rl ""
+	    }
+	    lappend rl "[<a> href [file join $pageURL $id] [armour $name]]$rtype"
+	    lappend result $rl
 	    incr count
 	    if {$count >= $changes_on_welcome_page} {
 		break
 	    }
 	}
 	if { [llength $result] } {
-	    append rc [list2plaintable $result {rc1 rc2} wrctable]
+	    append rc [list2plaintable $result {wrc1 wrc2} wrctable]
 	}
 
 	set N [dict get? $protected ADMIN:Welcome]

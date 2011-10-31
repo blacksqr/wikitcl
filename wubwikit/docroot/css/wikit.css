@@ -399,6 +399,13 @@ table.wikit_options {
     margin: 10px;
 }
 
+td.wrc1 {
+	font-size: 90%;
+	color: #666;
+}
+td.wrc2 {
+}
+
 td.rc1 {
 	width: 30em;
 }
