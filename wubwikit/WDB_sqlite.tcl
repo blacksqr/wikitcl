@@ -181,7 +181,6 @@ namespace eval WDB {
 	variable db
 	variable transaction_started 0
 	set now [clock microseconds]
-	puts "END TRANSACTION commit @ [clock seconds]"
 	$db commit
 	Debug.WDB {commit: [expr {([clock microseconds] - $now) / 1000000.0}]sec}
     }
@@ -189,7 +188,6 @@ namespace eval WDB {
     proc rollback {} {
 	variable db
 	variable transaction_started 0
-	puts "END TRANSACTION rollback @ [clock seconds]"
 	$db rollback
     }
 
@@ -197,7 +195,6 @@ namespace eval WDB {
 	variable db
 	variable transaction_started
 	if {!$transaction_started} {
-	    puts "BEGIN TRANSACTION @ [clock seconds]"
 	    $db begintransaction
 	    set transaction_started 1
 	}
@@ -1311,7 +1308,7 @@ namespace eval WDB {
 	    set $n $v
 	}
 	Debug.WDB {Opening sqlite3 tdbc at $db $file}
-	tdbc::sqlite3::connection create $db $file 
+	tdbc::sqlite3::connection create $db $file
 	[statement "enable_foreign_keys"] allrows
 	[statement "enable_journal_mode_WAL"] allrows
     }

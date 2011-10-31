@@ -72,6 +72,7 @@ namespace eval WikitWub {
     variable allow_sql_queries 1
     variable days_in_history 7
     variable full_text_search 0
+    variable changes_on_welcome_page 5
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -2049,37 +2050,31 @@ namespace eval WikitWub {
 	variable recent_cache
 	variable pagecaching
 
-	puts "/edit/save N:$N A:$A O:$O S:$S preview:$preview save:$save cancel:$cancel upload:$upload"
 	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload}
 	Debug.wikit {Query: [dict get $r -Query] / [dict get $r -entity]}
 
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
-	    puts "/edit/save robot detected"
 	    return [robot $r]
 	}
 
 	if { [string tolower $cancel] eq "cancel" } {
-	    puts "/edit/save cancel"
 	    set url http://[Url host $r][file join $pageURL $N]
 	    return [redir $r $url [<a> href $url "Canceled page edit"]]
 	}
 
 	variable readonly
 	if {$readonly ne ""} {
-	    puts "/edit/save readonly"
 	    Debug.wikit {/edit/save failed wiki is readonly}
 	    return [sendPage $r ro]
 	}
 
 	if {![string is integer -strict $N]} {
-	    puts "/edit/save N not integer: $N"
 	    Debug.wikit {/edit/save failed can only save to page by number}
 	    return [Http NotFound $r]
 	}
 
 	if {$N < 0 || $N >= [WDB PageCount]} {
-	    puts "/edit/save N out of range: $N"
 	    Debug.wikit {/edit/save failed page out of range}
 	    return [Http NotFound $r]
 	}
@@ -2087,7 +2082,6 @@ namespace eval WikitWub {
 	lassign [WDB GetPage $N name date who type ] name date who otype
 	set page [WDB GetContent $N]
 	if {$name eq ""} {
-	    puts "/edit/save not a valid page"
 	    Debug.wikit {/edit/save failed $N is not a valid page}
 	    return [Http NotFound $er [subst {
 		[<h2> "$N is not a valid page."]
@@ -2112,7 +2106,6 @@ namespace eval WikitWub {
 	    } elseif {![string match image/* $type]
 		&& [string match text/* $type]
 	    } {
-		puts "/edit/save bad type $type"
 		Debug.wikit {Bad Type: $type}
 		return [sendPage $r badtype]
 	    }
@@ -2121,23 +2114,18 @@ namespace eval WikitWub {
 	    set type text/x-wikit
 	}
 
-	puts "/edit/save type = $type"
-
 	# type must be text/* or image/*
 	if {![string match text/* $type] && ![string match image/* $type]} {
-	    puts "/edit/save badtype $type (must be image or test)"
 	    return [sendPage $r badtype]
 	}
 	
 	# text must stay text
 	if {$otype ne "" && [string match text/* $otype] && ![string match text/* $type]} {
-	    puts "/edit/save badnewtype: $type / $otype"
 	    return [sendPage $r badnewtype]	    
 	}
 
 	# Image must stay image
 	if {$otype ne "" && ![string match text/* $otype] && [string match text/* $type]} {
-	    puts "/edit/save badnewtype $type / $otype"
 	    return [sendPage $r badnewtype]	    
 	}
 
@@ -2147,16 +2135,13 @@ namespace eval WikitWub {
 	    set C " "
 	}
 	if {$N eq "" || $C eq ""} {
-	    puts "/edit/save empty page or empty page number"
 	    Debug.wikit {Empty page or page number}
 	    return [sendPage $r emptyclear]
 	}
 
 	variable protected
-	puts "/edit/save protected? $protected"
 	if {[dict exists $protected $N]} {
 	    perms $r admin
-	    puts "/edit/save protected ok"
 	    Debug.wikit {/edit/save protected page OK}
 	}
 
@@ -2169,7 +2154,6 @@ namespace eval WikitWub {
 		#set url http://[dict get $r host]/$N
 		#return [redir $r $url [<a> href $url "Edited Page"]]
 	    } else {
-		puts "/edit/save edit conflict"
 		Debug.wikit {conflict $N}
 		set X [list $date $who]
 		return [sendPage $r conflict {NoCache Conflict}]
@@ -2198,7 +2182,6 @@ namespace eval WikitWub {
 		    set E ""
 		}
 		Debug.wikit {badutf $N}
-		puts "/edit/save bad utf"
 		return [sendPage $r badutf]
 	    }
 
@@ -2243,7 +2226,6 @@ namespace eval WikitWub {
 
 	if {$C eq [WDB GetContent $N]} {
 	    Debug.wikit {/edit/save failed: No change, not saving  $N}
-	    puts "/edit/save no change"
 	    return [redir $r $url [<a> href $url "Unchanged Page"]]
 	}
 
@@ -2252,7 +2234,6 @@ namespace eval WikitWub {
 	    set who $nick@[dict get $r -ipaddr]
 	    WDB SavePage $N $C $who $name $type $when
 	} err eo]} {
-	    puts "ERROR WHEN SAVING: $err"
 	    set readonly $err
 	    Cache clear
 	    if {$pagecaching} {
@@ -2281,6 +2262,8 @@ namespace eval WikitWub {
 	invalidate $r [file join $mount recent]
 	invalidate $r [file join $mount ref]/$N
 	invalidate $r /rss.xml; WikitRss clear
+	invalidate $r /welcome
+	invalidate $r /
 	invalidate $r [file join $mount summary]/$N
 	unset -nocomplain recent_cache
 
@@ -2299,7 +2282,6 @@ namespace eval WikitWub {
 	Debug.wikit {/edit/save complete $N}
 	# instead of redirecting, return the generated page with a Content-Location tag
 	#return [do $r $N]
-	puts "/edit/save done."
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
@@ -2337,10 +2319,9 @@ namespace eval WikitWub {
 		    set dl {}
 		    set msg {}
 		    set rt 1
-		    puts [package require sqlite3 3.6.9]
-		    puts [package require tdbc::sqlite3]
+		    package require sqlite3 3.6.9
+		    package require tdbc::sqlite3
 		    catch {tdbc::sqlite3::connection create thdb $dbfnm -readonly 1} msg
-		    puts "FTSMSG1=$msg"
 		    set rt [catch {
 # 			thdb foreach -as dicts d $Q {
 # 			    set rd [dict create]
@@ -2374,7 +2355,6 @@ namespace eval WikitWub {
 			$rs close
 			$qs close
 		    } msg]
-		    puts "FTSMSG2=$msg"
 		    thdb close
 		}
 		set msg [interp eval thip "set msg"]
@@ -2406,13 +2386,11 @@ namespace eval WikitWub {
     }
 
     proc /map {r imp args} {
-	puts "MAP: $imp $args"
 	perms $r read
 	variable protected
 	variable IMTOC
 	variable pageURL
 	parray IMTOC
-	puts "imp=$imp"
 	if {[info exists IMTOC($imp)]} {
 	    return [Http Redir $r "http://[dict get $r host]/[string trim $::WikitWub::IMTOC($imp) /]"]
 	} else {
@@ -2638,9 +2616,46 @@ namespace eval WikitWub {
 	    set name "Welcome to the Tclers Wiki!"
 	}
 
+	set motd [getMOTD]
+	
+	set rc [<h4> "Recent changes to this wiki"]
+
+	variable rprotected
+	variable days_in_history
+	variable image_prefix
+	variable delta
+	variable changes_on_welcome_page
+	set threshold [expr {[clock seconds] - $days_in_history * 86400}]
+	set records [WDB RecentChanges $threshold]
+	set results {}
+	set result {}
+	set count 0
+	foreach record $records {
+	    dict with record {}
+	    # these are fake pages, don't list them
+	    if {[dict exists $rprotected $id]} continue
+	    set actimg "<img class='activity' src='[file join $image_prefix activity.png]' alt='*' />"
+	    set rtype ""
+	    if {[string length $type] && ![string match "text/*" $type]} {
+		set rtype [<span> class day " [lindex [split $type /] 0]"]
+	    }
+	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
+	    incr count
+	    if {$count >= $changes_on_welcome_page} {
+		break
+	    }
+	}
+	if { [llength $result] } {
+	    append rc [list2plaintable $result {rc1 rc2 rc3} rctable]
+	}
+
 	set N [dict get? $protected ADMIN:Welcome]
-	set C [string trim [WDB GetContent $N]]
+
+	append C [string trim [WDB GetContent $N]]
 	append C \n [string map [list %P% $N] {<!-- From Page %P% -->}] \n
+
+	set C [regsub {%MOTD%} $C $motd]
+	set C [regsub {%RC%} $C $rc]
 
 	if {$C eq ""} {
 	    set menu [menus Recent Help WhoAmI Random]
@@ -3144,7 +3159,6 @@ namespace eval WikitWub {
 		    package require tdbc::sqlite3
 		    package require Dict
 		    catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
-		    puts $msg
 		    set stmtnm "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name MATCH :key and length(b.content) > 1"
 		    set stmtct "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
 		    set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
@@ -3168,7 +3182,6 @@ namespace eval WikitWub {
 		    append stmtct " ORDER BY a.date DESC"
 		    append stmtimg " ORDER BY a.date DESC"
 
-		    puts $stmtnm
 		    set results {}
 		    set n 0
 		    if {[catch {
@@ -3198,7 +3211,6 @@ namespace eval WikitWub {
 			    error $msg
 			}
 		    }
-		    puts $stmtct
 		    set n 0
 		    if {[catch {
 			set qs [db prepare $stmtct]
@@ -3227,7 +3239,6 @@ namespace eval WikitWub {
 			    error $msg
 			}
 		    }
-		    puts $stmtimg
 		    set n 0
 		    set stmt [db prepare $stmtimg]
 		    $stmt foreach -as dicts d {
@@ -3240,10 +3251,8 @@ namespace eval WikitWub {
 			}
 		    }
 		    $stmt close
-		    puts "done"
 		    db close
 		    set eresult [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
-		    puts "eresult [llength $eresult]"
 		    return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r $eresult]]
 		} r $r key $key dbfnm $wikitdbpath date $qdate max 1000 fts $full_text_search]
 	    } elseif {[regexp {^(.*)\*+$} $key]} {
@@ -3253,7 +3262,6 @@ namespace eval WikitWub {
 		    package require tdbc::sqlite3
 		    package require Dict
 		    catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
-		    puts $msg
 		    set long [regexp {^(.*)\*+$} $key x key]	;# trim trailing *
 		    set fields name
 		    set stmttxt "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content b WHERE a.id = b.id AND length(a.name) > 0 AND length(b.content) > 1"
@@ -3285,9 +3293,6 @@ namespace eval WikitWub {
 		    }
 		    append stmttxt " ORDER BY a.date DESC"
 		    append stmtimg " ORDER BY a.date DESC"
-
-		    puts $stmttxt
-		    puts $stmtimg
 
 		    set results {}
 		    set n 0
