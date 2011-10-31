@@ -72,7 +72,7 @@ namespace eval WikitWub {
     variable allow_sql_queries 1
     variable days_in_history 7
     variable full_text_search 0
-    variable changes_on_welcome_page 10
+    variable changes_on_welcome_page 5
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -2646,6 +2646,7 @@ namespace eval WikitWub {
 		break
 	    }
 	}
+	lappend result [list "" [<a> href [file join $mount recent] "More recent changes..."]]
 	if { [llength $result] } {
 	    append rc [list2plaintable $result {wrc1 wrc2} wrctable]
 	}
