@@ -2639,14 +2639,14 @@ namespace eval WikitWub {
 	    if {[string length $type] && ![string match "text/*" $type]} {
 		set rtype [<span> class day " [lindex [split $type /] 0]"]
 	    }
-	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype [<a> class delta rel nofollow href [file join $mount diff]?N=$id#diff0 $delta]" [WhoUrl $who] [<div> class activity [<a> class activity rel nofollow href [file join $mount summary]?N=$id [string repeat $actimg [edit_activity $id]]]]]
+	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype" [<b> [clock format $date -gmt 1 -format {%b %d, %Y}]]]
 	    incr count
 	    if {$count >= $changes_on_welcome_page} {
 		break
 	    }
 	}
 	if { [llength $result] } {
-	    append rc [list2plaintable $result {rc1 rc2 rc3} rctable]
+	    append rc [list2plaintable $result {rc1 rc2} rctable]
 	}
 
 	set N [dict get? $protected ADMIN:Welcome]
