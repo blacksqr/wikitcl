@@ -2630,23 +2630,23 @@ namespace eval WikitWub {
 	set results {}
 	set result {}
 	set count 0
-	append rc "<ul>\n"
 	foreach record $records {
 	    dict with record {}
 	    # these are fake pages, don't list them
 	    if {[dict exists $rprotected $id]} continue
-	    set actimg "<img class='activity' src='[file join $image_prefix activity.png]' alt='*' />"
 	    set rtype ""
 	    if {[string length $type] && ![string match "text/*" $type]} {
 		set rtype [<span> class day " [lindex [split $type /] 0]"]
 	    }
-	    append rc "<li>[<a> href [file join $pageURL $id] [armour $name]]$rtype \\&nbsp;\\&nbsp;\\&nbsp;\\&nbsp; [clock format $date -gmt 1 -format {%b %d, %Y}]</li>\n"
+	    lappend result [list "[<a> href [file join $pageURL $id] [armour $name]]$rtype" [<b> [clock format $date -gmt 1 -format {%b %d, %Y}]]]
 	    incr count
 	    if {$count >= $changes_on_welcome_page} {
 		break
 	    }
 	}
-	append rc "</ul>\n"
+	if { [llength $result] } {
+	    append rc [list2plaintable $result {rc1 rc2} wrctable]
+	}
 
 	set N [dict get? $protected ADMIN:Welcome]
 

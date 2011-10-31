@@ -381,6 +381,20 @@ table.rctable tbody td {
 	vertical-align: top;
 }
 
+table.wrctable {
+	margin-left: 1.5em;
+	border: 0;
+	font-size: 100%;
+	/* width: 100%; */
+}
+table.wrctable tr.odd {
+	background-color: white;
+}
+table.wrctable tbody td {
+	border: 0;
+	vertical-align: top;
+}
+
 table.wikit_options {
     margin: 10px;
 }
