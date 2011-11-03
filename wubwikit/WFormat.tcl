@@ -776,7 +776,6 @@ namespace eval ::WFormat {
                                                  # Now handle wiki page (back) references
                                                  regsub -all $bpre $text "\0\1G\2\\2\0" text
                                                  regsub -all $pre $text "\0\1g\2\\1\0" text
-                                                 ## puts stderr B>>$text<<*
 
                                                  # Hilites are transformed into on and off directives.
                                                  # This is a bit more complicated ... Hilites can be written
@@ -848,7 +847,11 @@ namespace eval ::WFormat {
           } else {
             # References.
             #2003-06-20: remove whitespace clutter in page titles
-            regsub -all {\s+} [string trim $detail] { } detail
+            if {$cmd in {"g" "G"}} {
+              regsub -all {\s+} $detail { } detail
+            } else {
+              regsub -all {\s+} [string trim $detail] { } detail
+            }
             lappend irep $cmd $detail
             incr len [string length $detail]
           }
