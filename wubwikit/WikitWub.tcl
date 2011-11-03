@@ -1419,17 +1419,17 @@ namespace eval WikitWub {
 
 	if {$V > $D} {
 	    if {$V < $nver} {
-		lappend menu [<a> href "diff?N=$N&V=[expr {$V+1}]&D=[expr {$V}]" "Next version"]
+		lappend menu [<a> href "diff?N=$N&V=[expr {$V+1}]&D=[expr {$V}]&W=$W" "Next version"]
 	    }
 	    if { $V > 1 } {
-		lappend menu [<a> href "diff?N=$N&V=[expr {$D}]&D=[expr {$D-1}]" "Previous version"]
+		lappend menu [<a> href "diff?N=$N&V=[expr {$D}]&D=[expr {$D-1}]&W=$W" "Previous version"]
 	    }
 	} elseif {$D > $V} {
 	    if {$D < $nver} {
-		lappend menu [<a> href "diff?N=$N&V=[expr {$D+1}]&D=[expr {$D}]" "Next version"]
+		lappend menu [<a> href "diff?N=$N&V=[expr {$D+1}]&D=[expr {$D}]&W=$W" "Next version"]
 	    }
 	    if { $D > 1 } {
-		lappend menu [<a> href "diff?N=$N&V=[expr {$V}]&D=[expr {$V-1}]" "Previous version"]
+		lappend menu [<a> href "diff?N=$N&V=[expr {$V}]&D=[expr {$V-1}]&W=$W" "Previous version"]
 	    }
 	}
 
