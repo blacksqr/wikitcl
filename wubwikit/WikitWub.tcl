@@ -800,7 +800,11 @@ namespace eval WikitWub {
 	foreach record [WDB Changes $N $edate] {
 	    dict with record {
 		set changes [WDB ChangeSetSize $N $version]
-		set activity [expr {$activity + $changes * $delta / double([clock seconds] - $pcdate)}]
+		set dt [expr {[clock seconds] - $pcdate}]
+		if {$dt == 0} {
+		    set dt 1
+		}
+		set activity [expr {$activity + $changes * $delta / double($dt)}]
 		set pcdate $date
 		set first 0
 	    }
@@ -2275,6 +2279,10 @@ namespace eval WikitWub {
 	Debug.wikit {/edit/save complete $N}
 	# instead of redirecting, return the generated page with a Content-Location tag
 	#return [do $r $N]
+
+	puts "save redir to $url"
+	puts "r=$r"
+
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
