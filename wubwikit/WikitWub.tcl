@@ -2957,27 +2957,23 @@ namespace eval WikitWub {
 	return [sendPage $r spage]
     }
 
-    proc search {key date {external_result {}}} {
+    proc search {key {external_result {}}} {
 	Debug.wikit {search: '$key'}
-	set rdate $date
 	set count 0
 	variable protected
 	variable mount
 	variable pageURL
-	set elist {}
-	set wlist {}
 	set rlist {}
 	foreach record $external_result {
 	    dict with record {}
 	    # these are admin pages, don't list them
 	    if {[dict exists $protected $id]} continue
-	    set what  [lindex {name content image} $what]
+	    set what [lindex {name content image} $what]
 	    if {$type ne "" && ![string match "text/*" $type]} {
 		lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] $what [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
 	    } else {
 		lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] $what {}]
 	    }
-	    set rdate $date
 	    incr count
 	}
 	if {[llength $rlist]} {
@@ -2986,13 +2982,11 @@ namespace eval WikitWub {
 	}
 	if {$count == 0} {
 	    append result [<b> [<i> "No matches found"]]
-	    set rdate 0
 	} else {
 	    append result [<b> [<i> "Displayed $count match(es)"]]
-	    set rdate 0
 	}
 
-	return [list $result $rdate]
+	return $result
     }
 
     proc /searchp {r {external_result {}}} {
@@ -3007,16 +3001,7 @@ namespace eval WikitWub {
 	} {
 	    # search page with search term supplied
 	    set search [armour $term]
-	    # determine search date
-	    if {[Query exists $qd F]} {
-		set qdate [Query value $qd F]
-		if {![string is integer -strict $qdate]} {
-		    set qdate 0
-		}
-	    } else {
-		set qdate 0
-	    }
-	    lassign [search $term $qdate $external_result] C nqdate
+	    set C [search $term $external_result]
 	    set r [sortable $r]
 	    set T {}
 	    set U {}
@@ -3052,14 +3037,6 @@ namespace eval WikitWub {
 
 	set qd [Dict get? $r -Query]
 	if {[Query exists $qd S] && [set key [Query value $qd S]] ne ""} {
-	    if {[Query exists $qd F]} {
-		set qdate [Query value $qd F]
-		if {![string is integer -strict $qdate]} {
-		    set qdate 0
-		}
-	    } else {
-		set qdate 0
-	    }
 	    variable wikitdbpath
 	    variable max_search_results
 	    return [Httpd Thread {
@@ -3077,18 +3054,9 @@ namespace eval WikitWub {
 		    append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
 		    incr n
 		}
-		if {$date > 0} {
-		    append stmtnm " AND a.date >= $date"
-		    append stmtct " AND a.date >= $date"
-		    append stmtimg " AND a.date >= $date"
-		} else {
-		    append stmtnm " AND a.date > 0"
-		    append stmtct " AND a.date > 0"
-		    append stmtimg " AND a.date > 0"
-		}
-		append stmtnm " ORDER BY a.date DESC"
-		append stmtct " ORDER BY a.date DESC"
-		append stmtimg " ORDER BY a.date DESC"
+		append stmtnm " AND a.date > 0 ORDER BY a.date DESC"
+		append stmtct " AND a.date > 0 ORDER BY a.date DESC"
+		append stmtimg " AND a.date > 0 ORDER BY a.date DESC"
 
 		set results {}
 		set n 0
@@ -3162,7 +3130,7 @@ namespace eval WikitWub {
 		db close
 		set eresult [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
 		return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r $eresult]]
-	    } r $r key $key dbfnm $wikitdbpath date $qdate max $max_search_results]
+	    } r $r key $key dbfnm $wikitdbpath max $max_search_results]
 	} else {
 	    return [/searchp $r]
 	}
