@@ -2644,7 +2644,7 @@ namespace eval WikitWub {
 		break
 	    }
 	}
-	lappend result [list "" [<a> href [file join $mount recent] "More recent changes..."]]
+	lappend result [list "" [<a> href [file join $mount recent] "View all recent changes..."]]
 	if { [llength $result] } {
 	    append rc [list2plaintable $result {wrc1 wrc2} wrctable]
 	}
