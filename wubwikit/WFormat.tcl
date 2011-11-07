@@ -2287,8 +2287,8 @@ namespace eval ::WFormat {
     upvar $insdelcntnm insdelcnt
     set result ""
     while {
-           [regsub -all {~~~~([^`]+?)~~~~} $l "\0\1o+\0\\1\0\1o-\0" l] ||
-           [regsub -all {\^\^\^\^([^`]+?)\^\^\^\^} $l "\0\1n+\0\\1\0\1n-\0" l]
+           [regsub -all {~~~~([^~]+?)~~~~} $l "\0\1o+\0\\1\0\1o-\0" l] ||
+           [regsub -all {\^\^\^\^([^\^]+?)\^\^\^\^} $l "\0\1n+\0\\1\0\1n-\0" l]
          } {}
     
     set len 0
