@@ -2127,7 +2127,7 @@ namespace eval WikitWub {
 	}
 
 	# if there is new page content, save it now
-	set url [file join http://[Url host $r] [string trimleft $pageURL "/"] $N]
+	set url http://[Url host $r][file join $pageURL $N]
 	if {$type eq "text/x-wikit" && $C eq ""} {
 	    set C " "
 	}
@@ -2451,7 +2451,6 @@ namespace eval WikitWub {
 	    return [robot $r]
 	}
 	variable mount
-	variable pageURL
 	if {$T eq ""} {
 	    return [Http NoCache [Http Ok $r "No title specified"]]
 	}
@@ -2467,7 +2466,6 @@ namespace eval WikitWub {
 	}
 
 	variable mount
-	variable pageURL
 	if {[dict get $params T] eq ""} {
 	    return [Http NoCache [Http Ok $r "No title specified"]]
 	}
@@ -2480,7 +2478,6 @@ namespace eval WikitWub {
 	Debug.wikit {edit N:$N A:$A S:$S ($args)}
 
 	variable mount
-	variable pageURL
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
