@@ -2127,7 +2127,7 @@ namespace eval WikitWub {
 	}
 
 	# if there is new page content, save it now
-	set url [file join http://[Url host $r] $pageURL $N]
+	set url [file join http://[Url host $r] [string trimleft $pageURL "/"] $N]
 	if {$type eq "text/x-wikit" && $C eq ""} {
 	    set C " "
 	}
