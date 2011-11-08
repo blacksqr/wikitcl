@@ -2654,8 +2654,8 @@ namespace eval WikitWub {
 	append C [string trim [WDB GetContent $N]]
 	append C \n [string map [list %P% $N] {<!-- From Page %P% -->}] \n
 
-	set C [regsub {%MOTD%} $C $motd]
-	set C [regsub {%RC%} $C $rc]
+	set C [regsub {%MOTD%} $C [string map {& \\&} $motd]]
+	set C [regsub {%RC%} $C [string map {& \\&} $rc]]
 
 	if {$C eq ""} {
 	    set menu [menus Recent Help WhoAmI Random]
