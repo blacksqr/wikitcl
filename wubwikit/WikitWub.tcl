@@ -2280,9 +2280,6 @@ namespace eval WikitWub {
 	# instead of redirecting, return the generated page with a Content-Location tag
 	#return [do $r $N]
 
-	puts "save redir to $url"
-	puts "r=$r"
-
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
@@ -2975,8 +2972,12 @@ namespace eval WikitWub {
 		dict with record {}
 		# these are admin pages, don't list them
 		if {[dict exists $protected $id]} continue
-		if {$type ne "" && ![string match "text/*" $type]} {
-		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
+		if {$where eq "image"} {
+		    if {$type ne "" && ![string match "text/*" $type]} {
+			lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
+		    }
+		} elseif {$where eq "content"} {
+		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] $snippet]
 		} else {
 		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name]]
 		}
@@ -2987,6 +2988,8 @@ namespace eval WikitWub {
 		append result [<h2> id matches_$where "Matching $where:"]
 		if {$where eq "image"} {
 		    append result [list2table $rlist {Date Name Image} {}]
+		} elseif {$where eq "content"} {
+		    append result [list2table $rlist {Date Name Snippet} {}]
 		} else {
 		    append result [list2table $rlist {Date Name} {}]
 		}
@@ -3065,7 +3068,7 @@ namespace eval WikitWub {
 		package require Dict
 		catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
 		set stmtnm "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name MATCH :key and length(b.content) > 1"
-		set stmtct "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
+		set stmtct "SELECT a.id, a.name, a.date, a.type, snippet(pages_content_fts) as snip FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
 		set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
 		set n 0
 		foreach k [split $key " "] {
@@ -3116,7 +3119,7 @@ namespace eval WikitWub {
 			while {[$rs nextdict d]} {
 			    if {[info exists found([dict get $d id])]} continue
 			    set found([dict get $d id]) 1
-			    lappend cresults [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 1]
+			    lappend cresults [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 1 snippet [dict get? $d snip]]
 			    incr n
 			    if {$n >= $max} {
 				break
