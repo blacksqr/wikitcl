@@ -194,7 +194,7 @@ namespace eval WikitWub {
     variable gsearch 1
     # return a search form
     template searchF {} {
-	[<form> searchform action [file join $::WikitWub::mount search] {
+	[<form> searchform method get action [file join $::WikitWub::mount search] {
 	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search"]
 	    [<hidden> _charset_ ""]
 	}]
