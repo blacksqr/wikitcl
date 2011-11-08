@@ -2962,39 +2962,54 @@ namespace eval WikitWub {
 	return [sendPage $r spage]
     }
 
-    proc search {key {external_result {}}} {
+    proc search {key {external_results {}}} {
 	Debug.wikit {search: '$key'}
 	set count 0
 	variable protected
 	variable mount
 	variable pageURL
-	set rlist {}
-	foreach record $external_result {
-	    dict with record {}
-	    # these are admin pages, don't list them
-	    if {[dict exists $protected $id]} continue
-	    set what [lindex {name content image} $what]
-	    if {$type ne "" && ![string match "text/*" $type]} {
-		lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] $what [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
-	    } else {
-		lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] $what {}]
+	set result ""
+	foreach results $external_results where {name content image} {
+	    set rlist {}
+	    foreach record $results {
+		dict with record {}
+		# these are admin pages, don't list them
+		if {[dict exists $protected $id]} continue
+		if {$type ne "" && ![string match "text/*" $type]} {
+		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
+		} else {
+		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name]]
+		}
+		incr count
+		incr pcount($where)
 	    }
-	    incr count
+	    if {[llength $rlist]} {
+		append result [<h2> id matches_$where "Matching $where:"]
+		if {$where eq "image"} {
+		    append result [list2table $rlist {Date Name Image} {}]
+		} else {
+		    append result [list2table $rlist {Date Name} {}]
+		}
+		append result "<br>\n"
+	    }
 	}
-	if {[llength $rlist]} {
-	    append result [list2table $rlist {Date Name {Matched in} Image} {}]
-	    append result "<br>\n"
-	}
-	if {$count == 0} {
-	    append result [<b> [<i> "No matches found"]]
+	set cresult "<br>"
+	if {$count} {
+	    append cresult [<b> "Displayed $count match(es):"]
+	    append cresult "<ul>"
+	    foreach where {name content image} {
+		if {[info exists pcount($where)]} {
+		    append cresult [<a> href \#matches_$where [<li> "$pcount($where) matching $where"]]
+		}
+	    }
+	    append cresult "</ul>"
 	} else {
-	    append result [<b> [<i> "Displayed $count match(es)"]]
+	    append result [<b> "No matches found"]
 	}
-
-	return $result
+	return $cresult$result
     }
 
-    proc /searchp {r {external_result {}}} {
+    proc /searchp {r {external_results {}}} {
 	variable mount
 	variable pageURL
 	variable text_url
@@ -3006,7 +3021,7 @@ namespace eval WikitWub {
 	} {
 	    # search page with search term supplied
 	    set search [armour $term]
-	    set C [search $term $external_result]
+	    set C [search $term $external_results]
 	    set r [sortable $r]
 	    set T {}
 	    set U {}
@@ -3063,7 +3078,7 @@ namespace eval WikitWub {
 		append stmtct " AND a.date > 0 ORDER BY a.date DESC"
 		append stmtimg " AND a.date > 0 ORDER BY a.date DESC"
 
-		set results {}
+		set nresults {}
 		set n 0
 		if {[catch {
 		    set qs [db prepare $stmtnm]
@@ -3072,7 +3087,7 @@ namespace eval WikitWub {
 			while {[$rs nextdict d]} {
 			    if {[info exists found([dict get $d id])]} continue
 			    set found([dict get $d id]) 1
-			    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 0]
+			    lappend nresults [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 0]
 			    incr n
 			    if {$n >= $max} {
 				break
@@ -3092,6 +3107,7 @@ namespace eval WikitWub {
 			error $msg
 		    }
 		}
+		set cresults {}
 		set n 0
 		if {[catch {
 		    set qs [db prepare $stmtct]
@@ -3100,7 +3116,7 @@ namespace eval WikitWub {
 			while {[$rs nextdict d]} {
 			    if {[info exists found([dict get $d id])]} continue
 			    set found([dict get $d id]) 1
-			    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 1]
+			    lappend cresults [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 1]
 			    incr n
 			    if {$n >= $max} {
 				break
@@ -3120,12 +3136,13 @@ namespace eval WikitWub {
 			error $msg
 		    }
 		}
+		set iresults {}
 		set n 0
 		set stmt [db prepare $stmtimg]
 		$stmt foreach -as dicts d {
 		    if {[info exists found([dict get $d id])]} continue
 		    set found([dict get $d id]) 1
-		    lappend results [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 2]
+		    lappend iresults [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 2]
 		    incr n
 		    if {$n >= $max} {
 			break
@@ -3133,8 +3150,7 @@ namespace eval WikitWub {
 		}
 		$stmt close
 		db close
-		set eresult [lrange [lsort -integer -decreasing -index 5 $results] 0 [expr {$max-1}]]
-		return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r $eresult]]
+		return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r [list $nresults $cresults $iresults]]]
 	    } r $r key $key dbfnm $wikitdbpath max $max_search_results]
 	} else {
 	    return [/searchp $r]
