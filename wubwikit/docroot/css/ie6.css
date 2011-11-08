@@ -43,6 +43,10 @@ input#searchtxt {
   font-size: 90%;
 }
 
+input#gsearchtxt {
+  font-size: 90%;
+}
+
 hr {
    margin: 0 0 0 0;
 }

@@ -25,6 +25,6 @@ div#content {
   padding: 0 5px 0 5px;
 }
 
-div#menu_area, div#wiki_menu, div#page_toc, div#wiki_toc, form#searchform, form#gsearchform span#toggle {
+div#menu_area, div#wiki_menu, div#page_toc, div#wiki_toc, form#searchform, form#gsearchform, span#toggle {
   display: none;
 }

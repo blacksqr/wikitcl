@@ -576,6 +576,12 @@ namespace eval WikitWub {
 
     # header sent with each page
     #<meta name='robots' content='index,nofollow' />
+	# <!--\[if lte IE 6\]>
+	# [<style> media all "@import '[file join $css_prefix ie6.css]';"]
+	# <!\[endif\]-->
+	# <!--\[if gte IE 7\]>
+	# [<style> media all "@import '[file join $css_prefix ie7.css]';"]
+	# <!\[endif\]-->
     variable head {
 	[<link> rel stylesheet href [file join $css_prefix wikit_screen.css] media screen type text/css title "With TOC"]
 	[<link> rel "alternate stylesheet" href [file join $css_prefix wikit_screen_notoc.css] media screen type text/css title "Without TOC"]
@@ -590,12 +596,6 @@ namespace eval WikitWub {
 	<link type="text/css" rel="stylesheet" href="[file join $css_prefix sh_style.css]">
 
 	[<link> rel alternate type application/rss+xml title RSS href /rss.xml]
-	<!--\[if lte IE 6\]>
-	[<style> media all "@import '[file join $css_prefix ie6.css]';"]
-	<!\[endif\]-->
-	<!--\[if gte IE 7\]>
-	[<style> media all "@import '[file join $css_prefix ie7.css]';"]
-	<!\[endif\]-->
 	[<script> [string map [list %JP% $script_prefix] {
 	    function init() {
 		// quit if this function has already been called

@@ -8,6 +8,9 @@ div#menu_area ul {
 input#searchtxt {
   font-size: 9pt;
 }
+input#gsearchtxt {
+  font-size: 9pt;
+}
 hr {
    margin-top: 0;
    margin-bottom: 0;
