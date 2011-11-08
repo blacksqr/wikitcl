@@ -2959,6 +2959,12 @@ namespace eval WikitWub {
 	return [sendPage $r spage]
     }
 
+    proc armour_and_render_snippet {s} {
+	set s [armour $s]
+	set s [string map {^^^^ <b> ~~~~ </b>} $s]
+	return $s
+    }
+
     proc search {key {external_results {}}} {
 	Debug.wikit {search: '$key'}
 	set count 0
@@ -2977,7 +2983,7 @@ namespace eval WikitWub {
 			lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
 		    }
 		} elseif {$where eq "content"} {
-		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] $snippet]
+		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [armour_and_render_snippet $snippet]]
 		} else {
 		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name]]
 		}
@@ -3068,7 +3074,7 @@ namespace eval WikitWub {
 		package require Dict
 		catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
 		set stmtnm "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name MATCH :key and length(b.content) > 1"
-		set stmtct "SELECT a.id, a.name, a.date, a.type, snippet(pages_content_fts) as snip FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
+		set stmtct "SELECT a.id, a.name, a.date, a.type, snippet(pages_content_fts, \"^^^^\", \"~~~~\", \"^^^^...~~~~\") as snip FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
 		set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
 		set n 0
 		foreach k [split $key " "] {
