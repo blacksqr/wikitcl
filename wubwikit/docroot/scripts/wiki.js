@@ -697,7 +697,7 @@ addEvent(window, 'load', standardistaTableSortingInit)
 function clearSearch() {
 	var txt = document.getElementById('searchtxt');
 	txt.style.color = 'black';
-	if (txt.value == 'Search in titles') {
+	if (txt.value == 'Search') {
 	    txt.value = '';
 	}
 }
@@ -706,14 +706,14 @@ function setSearch() {
 	var txt = document.getElementById('searchtxt');
 	txt.style.color = 'gray';
 	if (txt.value == '') {
-		txt.value = 'Search in titles';
+		txt.value = 'Search';
 	}
 }
 
 function clearGoogle() {
 	var txt = document.getElementById('googletxt');
 	txt.style.color = 'black';
-	if (txt.value == 'Search in pages') {
+	if (txt.value == 'Google search') {
 	    txt.value = '';
 	}
 }
@@ -722,7 +722,7 @@ function setGoogle() {
 	var txt = document.getElementById('googletxt');
 	txt.style.color = 'gray';
 	if (txt.value == '') {
-		txt.value = 'Search in pages';
+		txt.value = 'Google search';
 	}
 }
 

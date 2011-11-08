@@ -195,12 +195,12 @@ namespace eval WikitWub {
     # return a search form
     template searchF {} {
 	[<form> searchform action [file join $::WikitWub::mount search] {
-	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search in titles"]
+	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search"]
 	    [<hidden> _charset_ ""]
 	}]
 	[If {$::WikitWub::gsearch} {
 	    [<form> gsearchform method get action [file join $::WikitWub::mount gsearch] {
-		<input id='googletxt' onfocus='clearGoogle();' onblur='setGoogle();' name='S' type='text' value='[tclarmour [expr {[info exists query]?$query:"Search in pages"}]]' tabindex='1'>
+		<input id='googletxt' onfocus='clearGoogle();' onblur='setGoogle();' name='S' type='text' value='[tclarmour [expr {[info exists query]?$query:"Google search"}]]' tabindex='1'>
 		[<hidden> _charset_ ""]
 	    }]
 	}]
