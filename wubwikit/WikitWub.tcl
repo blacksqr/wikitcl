@@ -191,18 +191,12 @@ namespace eval WikitWub {
 	Enter page contents here or click cancel to leave it empty.
 	<<categories>>Enter Category Here
     }
-    variable gsearch 1
+
     # return a search form
     template searchF {} {
 	[<form> searchform method get action [file join $::WikitWub::mount search] {
 	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search"]
 	    [<hidden> _charset_ ""]
-	}]
-	[If {$::WikitWub::gsearch} {
-	    [<form> gsearchform method get action [file join $::WikitWub::mount gsearch] {
-		<input id='googletxt' onfocus='clearGoogle();' onblur='setGoogle();' name='S' type='text' value='[tclarmour [expr {[info exists query]?$query:"Google search"}]]' tabindex='1'>
-		[<hidden> _charset_ ""]
-	    }]
 	}]
     }
 
@@ -600,15 +594,9 @@ namespace eval WikitWub {
 	    function init() {
 		// quit if this function has already been called
 		if (arguments.callee.done) return;
-		
+
 		// flag this function so we don't do the same thing twice
 		arguments.callee.done = true;
-		
-		try {
-		    document.getElementById("googletxt").value;
-		    googleQuery();
-		}
-		catch (e){}
 
 		try {
 		    hide_discussions()
@@ -1912,25 +1900,6 @@ namespace eval WikitWub {
 	return -1	;# the search page
     }
 
-    proc /gsearch {r {S ""}} {
-	perms $r read
-
-	set subtitle "powered by <img class='branding' src='http://www.google.com/uds/css/small-logo.png'>"
-	set C [<script> src "http://www.google.com/jsapi?key=$::google_jsapi_key"]
-	append C \n
-	append C [<script> {google.load('search', '1');}]
-	append C \n
-
-	# sendPage vars
-	variable query $S
-	set name "Search"
-	set Title "Search"
-	set menu [menus Home Recent Help WhoAmI New Random]
-	set footer [menus Home Recent Help New]
-
-	return [sendPage $r spage]
-    }
-
     proc who {r} {
 	variable cookie
 	set cl [Cookies Match $r -name $cookie]
@@ -2972,7 +2941,7 @@ namespace eval WikitWub {
 	variable mount
 	variable pageURL
 	set result ""
-	foreach results $external_results where {name content image} {
+	foreach results $external_results where {"page name" content image} {
 	    set rlist {}
 	    foreach record $results {
 		dict with record {}
@@ -2993,11 +2962,11 @@ namespace eval WikitWub {
 	    if {[llength $rlist]} {
 		append result [<h2> id matches_$where "Matching $where:"]
 		if {$where eq "image"} {
-		    append result [list2table $rlist {Date Name Image} {}]
+		    append result [list2table $rlist {Date "Page name" Image} {}]
 		} elseif {$where eq "content"} {
-		    append result [list2table $rlist {Date Name Snippet} {}]
+		    append result [list2table $rlist {Date "Page name" Snippet} {}]
 		} else {
-		    append result [list2table $rlist {Date Name} {}]
+		    append result [list2table $rlist {Date "Page name"} {}]
 		}
 		append result "<br>\n"
 	    }
@@ -3045,6 +3014,7 @@ namespace eval WikitWub {
 	set Title "Search"
 	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New]
+	set subtitle "Powered by <a href='http://www.sqlite.org'>SQLite</a> FTS"
 	return [sendPage $r spage]
     }
 
