@@ -2975,13 +2975,14 @@ namespace eval WikitWub {
 	if {$count} {
 	    append cresult [<b> "Displayed $count match(es):"]
 	    append cresult "<ul>"
-	    foreach where {name content image} {
+	    foreach where {"page name" content image} {
 		if {[info exists pcount($where)]} {
 		    append cresult [<a> href \#matches_$where [<li> "$pcount($where) matching $where"]]
 		}
 	    }
 	    append cresult "</ul>"
 	} else {
+	    append result <br>
 	    append result [<b> "No matches found"]
 	}
 	return $cresult$result

@@ -910,7 +910,6 @@ function checkTOC()
     try {
         document.getElementById('helptext').style.display = 'none';
     } catch (e) {}
-    catch (e){}
 }
 
 function editHelp()
