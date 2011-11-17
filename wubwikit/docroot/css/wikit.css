@@ -140,6 +140,11 @@ input#searchstring {
   width: 45em;
 }
 
+fieldset#sfield {
+    width: 50em;
+    text-align: center;
+}
+
 /*
  * Markup for version history
  */
