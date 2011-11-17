@@ -448,6 +448,10 @@ li.srtitle {
     font-size: 120%;
 }
 
+h3.srheader {
+    margin-top: 1.5em;
+}
+
 span.srtitle {
     list-style: none;
     font-size: 120%;
