@@ -2991,7 +2991,7 @@ namespace eval WikitWub {
 			# these are admin pages, don't list them
 			if {[dict exists $protected $id]} continue
 			if {$type ne "" && ![string match "text/*" $type]} {
-			    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
+			    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] height 100]]]
 			    incr count
 			    incr pcount($where)
 			}
