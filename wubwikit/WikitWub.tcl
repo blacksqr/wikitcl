@@ -2665,6 +2665,11 @@ namespace eval WikitWub {
 	return [clock format $t -gmt 1 -format {%Y-%m-%d %T}]
     }
 
+    proc formatdate {{t ""}} {
+	if {$t == ""} { set t [clock seconds] }
+	return [clock format $t -gmt 1 -format {%d %b %Y}]
+    }
+
     # called to generate a page with references
     proc /ref {r N A} {
 	variable detect_robots
@@ -2941,41 +2946,66 @@ namespace eval WikitWub {
 	variable mount
 	variable pageURL
 	set result ""
-	foreach results $external_results where {"page name" content image} {
-	    set rlist {}
-	    foreach record $results {
-		dict with record {}
-		# these are admin pages, don't list them
-		if {[dict exists $protected $id]} continue
-		if {$where eq "image"} {
-		    if {$type ne "" && ![string match "text/*" $type]} {
-			lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
+	foreach results $external_results where {pages content image} {
+	    switch -exact -- $where {
+		pages {
+		    set rlist {}
+		    foreach record $results {
+			dict with record {}
+			# these are admin pages, don't list them
+			if {[dict exists $protected $id]} continue
+			lappend rlist [<li> class srtitle [<a> href [file join $pageURL $id] $name]]
+			incr count
+			incr pcount($where)
 		    }
-		} elseif {$where eq "content"} {
-		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [armour_and_render_snippet $snippet]]
-		} else {
-		    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name]]
+		    if {[llength $rlist]} {
+			append result [<h2> id matches_$where "[string totitle $where]"]
+			append result [<ul> class srlist [join $rlist]]
+		    }
 		}
-		incr count
-		incr pcount($where)
-	    }
-	    if {[llength $rlist]} {
-		append result [<h2> id matches_$where "Matching $where:"]
-		if {$where eq "image"} {
-		    append result [list2table $rlist {Date "Page name" Image} {}]
-		} elseif {$where eq "content"} {
-		    append result [list2table $rlist {Date "Page name" Snippet} {}]
-		} else {
-		    append result [list2table $rlist {Date "Page name"} {}]
+		content {
+		    set rlist {}
+		    foreach record $results {
+			dict with record {}
+			# these are admin pages, don't list them
+			if {[dict exists $protected $id]} continue
+			set il {}
+			lappend il [<span> class srtitle [<a> href [file join $pageURL $id] $name]]
+			lappend il [<div> class srsnippet "[<span> class srdate [string trim [formatdate $date]]]<span class='srdate'> &mdash; </span>[<span> class srsnippet [armour_and_render_snippet $snippet]]"]
+			lappend rlist [<li> class srgroup [join $il]]
+			incr count
+			incr pcount($where)
+		    }
+		    if {[llength $rlist]} {
+			append result [<h2> id matches_$where "[string totitle $where]"]
+			append result [<ul> class srlist [join $rlist]]
+		    }
 		}
-		append result "<br>\n"
+		image {
+		    set rlist {}
+		    foreach record $results {
+			dict with record {}
+			# these are admin pages, don't list them
+			if {[dict exists $protected $id]} continue
+			if {$type ne "" && ![string match "text/*" $type]} {
+			    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] width 100 height 100]]]
+			    incr count
+			    incr pcount($where)
+			}
+		    }
+		    if {[llength $rlist]} {
+			append result [<h2> id matches_$where "[string totitle $where]"]
+			append result [list2table $rlist {Date "Page name" Image} {}]
+			append result "<br>\n"
+		    }
+		}
 	    }
 	}
 	set cresult "<br>"
 	if {$count} {
 	    append cresult [<b> "Displayed $count match(es):"]
 	    append cresult "<ul>"
-	    foreach where {"page name" content image} {
+	    foreach where {pages content image} {
 		if {[info exists pcount($where)]} {
 		    append cresult [<a> href \#matches_$where [<li> "$pcount($where) matching $where"]]
 		}
@@ -2983,9 +3013,10 @@ namespace eval WikitWub {
 	    append cresult "</ul>"
 	} else {
 	    append result <br>
-	    append result [<b> "No matches found"]
+	    append result [<b> "No matches found, try putting a * at the end."]
 	}
-	return $cresult$result
+	return $result
+#	return $cresult$result
     }
 
     proc /searchp {r {external_results {}}} {
@@ -3045,7 +3076,7 @@ namespace eval WikitWub {
 		package require Dict
 		catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
 		set stmtnm "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name MATCH :key and length(b.content) > 1"
-		set stmtct "SELECT a.id, a.name, a.date, a.type, snippet(pages_content_fts, \"^^^^\", \"~~~~\", \"^^^^...~~~~\") as snip FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
+		set stmtct "SELECT a.id, a.name, a.date, a.type, snippet(pages_content_fts, \"^^^^\", \"~~~~\", \"\", -1, -32) as snip FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
 		set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
 		set n 0
 		foreach k [split $key " "] {
@@ -3065,8 +3096,6 @@ namespace eval WikitWub {
 		    set rs [$qs execute]
 		    while {1} {
 			while {[$rs nextdict d]} {
-			    if {[info exists found([dict get $d id])]} continue
-			    set found([dict get $d id]) 1
 			    lappend nresults [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 0]
 			    incr n
 			    if {$n >= $max} {
@@ -3094,8 +3123,6 @@ namespace eval WikitWub {
 		    set rs [$qs execute]
 		    while {1} {
 			while {[$rs nextdict d]} {
-			    if {[info exists found([dict get $d id])]} continue
-			    set found([dict get $d id]) 1
 			    lappend cresults [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 1 snippet [dict get? $d snip]]
 			    incr n
 			    if {$n >= $max} {
@@ -3120,8 +3147,6 @@ namespace eval WikitWub {
 		set n 0
 		set stmt [db prepare $stmtimg]
 		$stmt foreach -as dicts d {
-		    if {[info exists found([dict get $d id])]} continue
-		    set found([dict get $d id]) 1
 		    lappend iresults [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 2]
 		    incr n
 		    if {$n >= $max} {

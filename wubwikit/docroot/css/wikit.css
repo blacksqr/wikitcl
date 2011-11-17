@@ -428,6 +428,41 @@ p.result {
 	margin: 0 1.5em 0 2em;
 	margin-top: 0.5em;
 }
+
+ul.srlist {
+    margin-left: 1em;
+    padding-left: 0;
+}
+
+li.srgroup {
+    margin-top: 1em;
+    margin-left: 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+li.srtitle {
+    margin-left: 0;
+    padding-left: 0;
+    list-style: none;
+    font-size: 120%;
+}
+
+span.srtitle {
+    list-style: none;
+    font-size: 120%;
+}
+
+span.srdate {
+    color: gray;
+    font-size: 90%;
+}
+
+div.srsnippet {
+    font-size: 90%;
+    width: 50em;
+}
+
 img.branding {
     border: 0;
     /* margin-bottom: -4pt; */
