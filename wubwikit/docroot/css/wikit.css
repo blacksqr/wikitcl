@@ -466,6 +466,7 @@ span.srdate {
 }
 
 div.srsnippet {
+    margin-left: 2em;
     width: 50em;
 }
 
