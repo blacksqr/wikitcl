@@ -2959,7 +2959,7 @@ namespace eval WikitWub {
 			incr pcount($where)
 		    }
 		    if {[llength $rlist]} {
-			append result [<h2> id matches_$where "[string totitle $where]"]
+			append result [<h3> id matches_$where "[string totitle $where]"]
 			append result [<ul> class srlist [join $rlist]]
 		    }
 		}
@@ -2977,7 +2977,10 @@ namespace eval WikitWub {
 			incr pcount($where)
 		    }
 		    if {[llength $rlist]} {
-			append result [<h2> id matches_$where "[string totitle $where]"]
+			if {$count} {
+			    append result <br>
+			}
+			append result [<h3> id matches_$where "[string totitle $where]"]
 			append result [<ul> class srlist [join $rlist]]
 		    }
 		}
@@ -2994,7 +2997,10 @@ namespace eval WikitWub {
 			}
 		    }
 		    if {[llength $rlist]} {
-			append result [<h2> id matches_$where "[string totitle $where]"]
+			if {$count} {
+			    append result <br>
+			}
+			append result [<h3> id matches_$where "[string totitle $where]"]
 			append result [list2table $rlist {Date "Page name" Image} {}]
 			append result "<br>\n"
 		    }
