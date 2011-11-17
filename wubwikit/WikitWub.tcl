@@ -541,7 +541,7 @@ namespace eval WikitWub {
     variable searchForm [string map {%S $search %M $mount} [<form> search method get action [file join %M search] {
 	[<fieldset> sfield title "Construct a new search" {
 	    [<legend> "Enter a Search Phrase"]
-	    [<input> name submit type submit value "Search" {}]
+	    [<input> name submit type submit id searchsubmit value "Search" {}]
 	    [<text> S id searchstring title "Append an asterisk (*) to search on prefixes" [armour %S]]
 	    [<checkbox> SC title "search page contents" value 1; set _disabled ""]
 	    [<hidden> _charset_]

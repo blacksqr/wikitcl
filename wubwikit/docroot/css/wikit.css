@@ -137,12 +137,15 @@ input#searchtxt {
 }
 
 input#searchstring {
-  width: 45em;
+  width: 87%;
+}
+
+input#searchsubmit {
+  width: 10%;
 }
 
 fieldset#sfield {
     width: 50em;
-    text-align: center;
 }
 
 /*
