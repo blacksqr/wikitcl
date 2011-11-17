@@ -131,17 +131,13 @@ form#searchform {
   padding: 0; margin: 0;
 }
 
-form#gsearchform {
-  padding: 0; margin: 0;
-}
-
 input#searchtxt {
   width: 120px;
   color: gray;
 }
 
-input#gsearchtxt {
-  width: 120px;
+input#searchstring {
+  width: 80em;
 }
 
 /*
