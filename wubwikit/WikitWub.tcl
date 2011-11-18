@@ -8,7 +8,7 @@ if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
     source [file join [file dirname [info script]] local_setup.tcl]
 }
 
-package require sqlite3 3.7.5
+package require sqlite3
 package require fileutil
 package require struct::queue
 package require HTTP
@@ -2938,13 +2938,18 @@ namespace eval WikitWub {
 	return $s
     }
 
-    proc search {key {external_results {}}} {
+    proc search {key {external_results {}} {malformedmatch 0}} {
 	Debug.wikit {search: '$key'}
 	set count 0
 	variable protected
 	variable mount
 	variable pageURL
 	set result ""
+	if {$malformedmatch} {
+	    append result <br>
+	    append result [<b> "Malformed MATCH expression. Correct the expression and try searching again."]
+	    append result <br>
+	}
 	foreach results $external_results where {pages content image} {
 	    switch -exact -- $where {
 		pages {
@@ -2970,7 +2975,7 @@ namespace eval WikitWub {
 			if {[dict exists $protected $id]} continue
 			set il {}
 			lappend il [<span> class srtitle [<a> href [file join $pageURL $id] $name]]
-			lappend il [<div> class srsnippet "[<span> class srdate [string trim [formatdate $date]]]<span class='srdate'> &mdash; </span>[<span> class srsnippet [armour_and_render_snippet $snippet]]"]
+			lappend il [<div> class srsnippet "[<span> class srdate [string trim [formatdate $date]]]<span class='srdate'> &mdash; </span>[<span> class srsnippet [armour_and_render_snippet [string trim $snippet \ .]]]"]
 			lappend rlist [<li> class srgroup [join $il]]
 			incr count
 			incr pcount($where)
@@ -3000,25 +3005,14 @@ namespace eval WikitWub {
 		}
 	    }
 	}
-	set cresult "<br>"
-	if {$count} {
-	    append cresult [<b> "Displayed $count match(es):"]
-	    append cresult "<ul>"
-	    foreach where {pages content image} {
-		if {[info exists pcount($where)]} {
-		    append cresult [<a> href \#matches_$where [<li> "$pcount($where) matching $where"]]
-		}
-	    }
-	    append cresult "</ul>"
-	} else {
+	if {$count == 0} {
 	    append result <br>
 	    append result [<b> "No matches found, try putting a * at the end."]
 	}
 	return $result
-#	return $cresult$result
     }
 
-    proc /searchp {r {external_results {}}} {
+    proc /searchp {r {external_results {}} {malformedmatch 0}} {
 	variable mount
 	variable pageURL
 	variable text_url
@@ -3030,7 +3024,7 @@ namespace eval WikitWub {
 	} {
 	    # search page with search term supplied
 	    set search [armour $term]
-	    set C [search $term $external_results]
+	    set C [search $term $external_results $malformedmatch]
 	    set r [sortable $r]
 	    set T {}
 	    set U {}
@@ -3075,9 +3069,10 @@ namespace eval WikitWub {
 		package require Dict
 		catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
 		set stmtnm "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name MATCH :key and length(b.content) > 1"
-		set stmtct "SELECT a.id, a.name, a.date, a.type, snippet(pages_content_fts, \"^^^^\", \"~~~~\", \"\", -1, -32) as snip FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
+		set stmtct "SELECT a.id, a.name, a.date, a.type, snippet(pages_content_fts, \"^^^^\", \"~~~~\", \" ... \", -1, -32) as snip FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
 		set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
 		set n 0
+		set malformedmatch 0
 		foreach k [split $key " "] {
 		    set keynm "key$n"
 		    set $keynm "*$k*"
@@ -3111,7 +3106,9 @@ namespace eval WikitWub {
 		    $rs close
 		    $qs close
 		} msg]} {
-		    if {$msg ne "Function sequence error: result set is exhausted."} {
+		    if {[string match "malformed MATCH expression*" $msg]} {
+			set malformedmatch 1
+		    } elseif {$msg ne "Function sequence error: result set is exhausted."} {
 			error $msg
 		    }
 		}
@@ -3138,7 +3135,9 @@ namespace eval WikitWub {
 		    $rs close
 		    $qs close
 		} msg]} {
-		    if {$msg ne "Function sequence error: result set is exhausted."} {
+		    if {[string match "malformed MATCH expression*" $msg]} {
+			set malformedmatch 1
+		    } elseif {$msg ne "Function sequence error: result set is exhausted."} {
 			error $msg
 		    }
 		}
@@ -3154,15 +3153,15 @@ namespace eval WikitWub {
 		}
 		$stmt close
 		db close
-		return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r [list $nresults $cresults $iresults]]]
+		return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r [list $nresults $cresults $iresults] $malformedmatch]]
 	    } r $r key $key dbfnm $wikitdbpath max $max_search_results]
 	} else {
 	    return [/searchp $r]
 	}
     }
  
-    proc sendSearchResults {r eresult} {
-	return [Http NoCache [Http Ok [/searchp $r $eresult]]]
+    proc sendSearchResults {r eresult malformedmatch} {
+	return [Http NoCache [Http Ok [/searchp $r $eresult $malformedmatch]]]
     }
 
     proc do {r} {

@@ -1,10 +1,17 @@
 package require OO
-package require sqlite3 3.7.5
+package require sqlite3
 package require tdbc::sqlite3
 package provide WDB 1.0
 package provide WDB_sqlite 1.0
 
 if {0} {
+
+    # Compile sqlite with the following defines:
+    #
+    # -DSQLITE_ENABLE_FTS4
+    # -DSQLITE_ENABLE_FTS3_PARENTHESIS
+
+
     PRAGMA foreign_keys = ON;
     PRAGMA journal_mode = WAL;
 
