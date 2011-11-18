@@ -520,7 +520,6 @@ namespace eval WikitWub {
 	    [<fieldset> sfield title "Construct a new search" {
 		[<legend> "Enter a Search Phrase"]
 		[<text> S title "Append an asterisk (*) to search page contents" [tclarmour %S]]
-		[<checkbox> SC title "search page contents" value 1; set _disabled ""]
 		[<hidden> _charset_]
 	    }]
 	}]
@@ -543,7 +542,7 @@ namespace eval WikitWub {
 	    [<legend> "Enter a Search Phrase&nbsp;"]
 	    [<input> name submit type submit id searchsubmit value "Search" {}]
 	    [<text> S id searchstring title "Append an asterisk (*) to search on prefixes" [armour %S]]
-	    [<checkbox> SC title "search page contents" value 1; set _disabled ""]
+	    [<a> href /2 Help]
 	    [<hidden> _charset_]
 	}]
     }]]
