@@ -3357,7 +3357,7 @@ namespace eval WikitWub {
 			if {[Query exists $qd redir]} {
 			    set rN [Query value $qd redir]
 			    if {[string is integer -strict $rN] && $rN >= 0 && $rN < [WDB PageCount]} {
-				lassign [WDB GetPage $rN name] rname
+				set rname [WDB GetPage $rN name]
 				if {[string length $rname]} {
 				    append redirected " " [<span> class redirected "(Redirected from [<a> href [file join $pageURL $rN.noredir] $rname])"]
 				}
