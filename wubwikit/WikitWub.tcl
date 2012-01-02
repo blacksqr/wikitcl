@@ -1357,11 +1357,19 @@ namespace eval WikitWub {
 	    }
 	}
 	while { $p1 < [llength $t1] } {
-	    append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+	    if {$W} {
+		append C [shiftNewline [lindex $t1 $p1] "^^^^"]
+	    } else {
+		append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
+	    }
 	    incr p1
 	}
 	while { $p2 < [llength $t2] } {
-	    append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
+	    if {$W} {
+		append C [shiftNewline [lindex $t2 $p2] "~~~~"]
+	    } else {
+		append C ">>>>>>o;$N;$V;;\n[lindex $t2 $p2]\n<<<<<<\n"
+	    }
 	    incr p2
 	}
 
