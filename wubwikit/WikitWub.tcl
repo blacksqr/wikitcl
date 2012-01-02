@@ -2167,20 +2167,25 @@ namespace eval WikitWub {
 
 	    # save the page into the db.
 	    if {[string is integer -strict $A] && $A} {
+		# Check if an actual command was make and if the default comment string was removed
+		variable comment_template
+		set C [string trim [string map [list $comment_template ""] $C]]
 		# Look for category at end of page using following styles:
 		# ----\n[Category ...]
 		# ----\n!!!!!!\n%|Category...|%\n!!!!!!
 		set Cl [split [string trimright [WDB GetContent $N] \n] \n]
-		if {[string trim [lindex $Cl end]] eq "!!!!!!" && 
-		    [string trim [lindex $Cl end-2]] eq "!!!!!!" && 
-		    [string match "----*" [string trim [lindex $Cl end-3]]] && 
-		    [string match "%|*Category*|%" [string trim [lindex $Cl end-1]]]} {
-		    set Cl [linsert $Cl end-4 ---- "'''\[$nick\] - [clock format [clock seconds] -gmt 1 -format {%Y-%m-%d %T}]'''" {} $C {}]
-		} elseif {[string match "<<categories>>*" [lindex $Cl end]]} {
-		    set Cl [linsert $Cl end-1 ---- "'''\[$nick\] - [clock format [clock seconds] -gmt 1 -format {%Y-%m-%d %T}]'''" {} $C {}]
-		} else {
-		    set nn "\[$nick\]"
-		    lappend Cl ---- "'''$nn - [clock format [clock seconds] -gmt 1 -format {%Y-%m-%d %T}]'''" {} $C
+		if {[string length $C]} {
+		    if {[string trim [lindex $Cl end]] eq "!!!!!!" && 
+			[string trim [lindex $Cl end-2]] eq "!!!!!!" && 
+			[string match "----*" [string trim [lindex $Cl end-3]]] && 
+			[string match "%|*Category*|%" [string trim [lindex $Cl end-1]]]} {
+			set Cl [linsert $Cl end-4 ---- "'''\[$nick\] - [clock format [clock seconds] -gmt 1 -format {%Y-%m-%d %T}]'''" {} $C {}]
+		    } elseif {[string match "<<categories>>*" [lindex $Cl end]]} {
+			set Cl [linsert $Cl end-1 ---- "'''\[$nick\] - [clock format [clock seconds] -gmt 1 -format {%Y-%m-%d %T}]'''" {} $C {}]
+		    } else {
+			set nn "\[$nick\]"
+			lappend Cl ---- "'''$nn - [clock format [clock seconds] -gmt 1 -format {%Y-%m-%d %T}]'''" {} $C
+		    }
 		}
 		set C [join $Cl \n]
 	    }
