@@ -869,6 +869,7 @@ namespace eval WikitWub {
 	    return [robot $r]
 	}
 	set results ""
+	set result {}
 
 	set lastDay 0
 	foreach record [WDB Cleared] {
@@ -877,12 +878,13 @@ namespace eval WikitWub {
 	    set day [expr {$date/86400}]
 
 	    if { $day != $lastDay } {
-		if {$lastDay} {
-		    lappend results </ul>
-		}
 		set lastDay $day
-		lappend results [<p> [<b> [clock format $date -gmt 1 -format {%Y-%m-%d}]]]
-		lappend results <ul>
+		if { [llength $result] } {
+		    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
+		    set result {}
+		}
+		lappend results [<p> ""]
+		lappend result [list "[<b> "[clock format $date -gmt 1 -format {%Y-%m-%d}]"] [<span> class day [clock format $date -gmt 1 -format %A]]" "" ""]
 	    }
 
 	    if { [string length $name] } {
@@ -890,22 +892,17 @@ namespace eval WikitWub {
 	    } else {
 		set link [<a> href /$id $id]
 	    }
-
-	    append link [<span> class dots ". . ."]
-	    append link [<span> class nick [WhoUrl $who]]
-	    append link [<span> class dots ". . ."]
-	    append link [<span> class nick [clock format $date -gmt 1 -format %T]]
-	    append link [<span> class dots ". . ."]
 	    append link [<a> class delta href history?N=$id history]
-	    lappend results [<li> $link]
+	    lappend result [list $link [WhoUrl $who] [clock format $date -gmt 1 -format %T]]
 	}
-	if {$lastDay} {
-	    lappend results </ul>
+	if { [llength $result] } {
+	    lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
+	    set result {}
 	}
 
 	# sendPage vars
-	set Title "Cleared pages"
-	set name "Cleared pages"
+	set Title "Cleared Pages"
+	set name "Cleared Pages"
 	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New Search]
 	set C [join $results "\n"]
@@ -2886,7 +2883,7 @@ namespace eval WikitWub {
 			set result {}
 
 			if { !$deletesAdded } {
-			    lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages ([number_cleared_today] today)"]]
+			    lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared Pages ([number_cleared_today] today)"]]
 			    set deletesAdded 1
 			}
 		    }
@@ -2916,7 +2913,7 @@ namespace eval WikitWub {
 	    if { [llength $result] } {
 		lappend results [list2plaintable $result {rc1 rc2 rc3} rctable]
 		if { !$deletesAdded } {
-		    lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared pages ([number_cleared_today] today)"]]
+		    lappend results [<p> [<a> class cleared href [file join $mount cleared] "Cleared Pages ([number_cleared_today] today)"]]
 		}
 	    }
 
