@@ -71,7 +71,7 @@ namespace eval WikitWub {
     variable allow_sql_queries 1
     variable days_in_history 7
     variable changes_on_welcome_page 5
-    variable max_search_results 1000
+    variable max_search_results 10000
 
     variable perms {}	;# dict of operation -> names, names->passwords
     # perms dict is of the form:
@@ -2953,14 +2953,18 @@ namespace eval WikitWub {
 	foreach results $external_results where {pages content image} {
 	    switch -exact -- $where {
 		pages {
-		    set rlist {}
+		    unset -nocomplain ra
 		    foreach record $results {
 			dict with record {}
 			# these are admin pages, don't list them
 			if {[dict exists $protected $id]} continue
-			lappend rlist [<li> class srtitle [<a> href [file join $pageURL $id] $name]]
+			set ra($name) [<li> class srtitle [<a> href [file join $pageURL $id] $name]]
 			incr count
 			incr pcount($where)
+		    }
+		    set rlist {}
+		    foreach k [lsort -dictionary [array names ra]] {
+			lappend rlist $ra($k)
 		    }
 		    if {[llength $rlist]} {
 			append result [<h3> class srheader id matches_$where "[string totitle $where]"]
@@ -2968,7 +2972,7 @@ namespace eval WikitWub {
 		    }
 		}
 		content {
-		    set rlist {}
+		    unset -nocomplain ra
 		    foreach record $results {
 			dict with record {}
 			# these are admin pages, don't list them
@@ -2976,9 +2980,13 @@ namespace eval WikitWub {
 			set il {}
 			lappend il [<span> class srtitle [<a> href [file join $pageURL $id] $name]]
 			lappend il [<div> class srsnippet "[<span> class srdate [string trim [formatdate $date]]]<span class='srdate'> &mdash; </span>[<span> class srsnippet [armour_and_render_snippet [string trim $snippet \ .]]]"]
-			lappend rlist [<li> class srgroup [join $il]]
+			set ra($name) [<li> class srgroup [join $il]]
 			incr count
 			incr pcount($where)
+		    }
+		    set rlist {}
+		    foreach k [lsort -dictionary [array names ra]] {
+			lappend rlist $ra($k)
 		    }
 		    if {[llength $rlist]} {
 			append result [<h3> class srheader id matches_$where "[string totitle $where]"]
@@ -2986,16 +2994,20 @@ namespace eval WikitWub {
 		    }
 		}
 		image {
-		    set rlist {}
+		    unset -nocomplain ra
 		    foreach record $results {
 			dict with record {}
 			# these are admin pages, don't list them
 			if {[dict exists $protected $id]} continue
 			if {$type ne "" && ![string match "text/*" $type]} {
-			    lappend rlist [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] height 100]]]
+			    set ra($name) [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] height 100]]]
 			    incr count
 			    incr pcount($where)
 			}
+		    }
+		    set rlist {}
+		    foreach k [lsort -dictionary [array names ra]] {
+			lappend rlist $ra($k)
 		    }
 		    if {[llength $rlist]} {
 			append result [<h3> class srheader id matches_$where "[string totitle $where]"]
@@ -3079,9 +3091,9 @@ namespace eval WikitWub {
 		    append stmtimg " AND lower(a.name) GLOB lower(:$keynm)"
 		    incr n
 		}
-		append stmtnm " AND a.date > 0 ORDER BY a.date DESC"
-		append stmtct " AND a.date > 0 ORDER BY a.date DESC"
-		append stmtimg " AND a.date > 0 ORDER BY a.date DESC"
+		append stmtnm " AND a.date > 0 ORDER BY a.name"
+		append stmtct " AND a.date > 0 ORDER BY a.name"
+		append stmtimg " AND a.date > 0 ORDER BY a.name"
 
 		set nresults {}
 		set n 0
