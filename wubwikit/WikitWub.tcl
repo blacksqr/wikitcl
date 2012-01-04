@@ -1338,6 +1338,20 @@ namespace eval WikitWub {
 			}
 		    }
 		} else {
+		    while { $p1 < $i1 && $p2 < $i2 } {
+			set txt1 [lindex $t1 $p1]
+			set mtxt1 [string map {\  {} \t {} \n {}} $txt1]
+			set txt2 [lindex $t2 $p2]
+			set mtxt2 [string map {\  {} \t {} \n {}} $txt2]
+			if {$mtxt1 eq $mtxt2} {
+			    append C ">>>>>>w;$N;$D;;\n$txt2\n<<<<<<\n"
+			} else {
+			    append C ">>>>>>n;$N;$V;;\n$txt1\n<<<<<<\n"
+			    append C ">>>>>>o;$N;$D;;\n$txt2\n<<<<<<\n"
+			}
+			incr p1
+			incr p2
+		    }
 		    while { $p1 < $i1 } {
 			append C ">>>>>>n;$N;$V;;\n[lindex $t1 $p1]\n<<<<<<\n"
 			incr p1
@@ -1355,6 +1369,20 @@ namespace eval WikitWub {
 		incr p1
 		incr p2
 	    }
+	}
+	while {!$W && $p1 < [llength $t1] && $p2 < [llength $t2]} {
+	    set txt1 [lindex $t1 $p1]
+	    set mtxt1 [string map {\  {} \t {} \n {}} $txt1]
+	    set txt2 [lindex $t2 $p2]
+	    set mtxt2 [string map {\  {} \t {} \n {}} $txt2]
+	    if {$mtxt1 eq $mtxt2} {
+		append C ">>>>>>w;$N;$D;;\n$txt2\n<<<<<<\n"
+	    } else {
+		append C ">>>>>>n;$N;$V;;\n$txt1\n<<<<<<\n"
+		append C ">>>>>>o;$N;$D;;\n$txt2\n<<<<<<\n"
+	    }
+	    incr p1
+	    incr p2
 	}
 	while { $p1 < [llength $t1] } {
 	    if {$W} {
