@@ -2041,6 +2041,8 @@ namespace eval WikitWub {
 	}
     }
 
+    proc intercede {r} {}
+
     proc /edit/save {r N C O A S V save cancel preview upload} {
 	perms $r write
 	variable mount
@@ -2050,6 +2052,8 @@ namespace eval WikitWub {
 
 	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload}
 	Debug.wikit {Query: [dict get $r -Query] / [dict get $r -entity]}
+
+	intercede $r
 
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
