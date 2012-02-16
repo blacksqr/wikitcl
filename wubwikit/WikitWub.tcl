@@ -8,6 +8,10 @@ if {[file exists [file join [file dirname [info script]] local_setup.tcl]]} {
     source [file join [file dirname [info script]] local_setup.tcl]
 }
 
+if {![llength [info commands ::intercede_save]]} {
+    proc ::intercede_save {r} {}	;# we have a null intercede_save
+}
+
 package require sqlite3
 package require fileutil
 package require struct::queue
@@ -2041,8 +2045,6 @@ namespace eval WikitWub {
 	}
     }
 
-    proc intercede {r} {}
-
     proc /edit/save {r N C O A S V save cancel preview upload} {
 	perms $r write
 	variable mount
@@ -2053,7 +2055,7 @@ namespace eval WikitWub {
 	Debug.wikit {/edit/save N:$N A:$A O:$O preview:$preview save:$save cancel:$cancel upload:$upload}
 	Debug.wikit {Query: [dict get $r -Query] / [dict get $r -entity]}
 
-	intercede $r
+	::intercede_save $r	;# intercede on saving a page - checks and such
 
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
