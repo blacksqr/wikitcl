@@ -76,26 +76,40 @@ namespace eval WikitRss {
     #
     ###############################################################
 
-    proc new {name baseurl} {
+    proc new {name baseurl {_stale 0}} {
 	# The Wikit implementation has the Wiki name as the name of page 0.
 	variable wikiName $name
 	variable baseUrl $baseurl
 	variable Name [WDB GetPage 0 name]
 	variable cache ""
+	if {$_stale == 0} {
+	    variable stale [expr {60 * 60}]	;# an hour between refreshes
+	} else {
+	    variable stale
+	}
     }
 
     # clear the cached RSS
+    # it actually just records the time of last change
     proc clear {} {
-	variable cache ""
+	#variable cache ""
+	variable changed [clock seconds]
     }
     
     proc rss {} {
 
 	Debug.rss {rss request [clock seconds]}
+	variable changed
+	if {![info exists changed]} {
+	    set changed [clock seconds]
+	}
 
-	variable cache
+	# only regenerate the cached rss if it's stale
+	variable cache; variable stale
 	if {$cache ne ""} {
-	    return $cache
+	    if {[clock seconds] - $changed < $stale} {
+		return $cache	;# return the cache if it's not stale
+	    }
 	}
 
 	# Generate the XML file
