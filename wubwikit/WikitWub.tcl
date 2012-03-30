@@ -1139,8 +1139,11 @@ namespace eval WikitWub {
 		set changes [WDB ChangeSetSize $N $version]
 		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
 		set C [summary_diff $N $V [expr {$V-1}]]
-		lassign [translate $N $V $name $C .html 0 1] C U T BR
-		append R $C
+		if {[catch {lassign [translate $N $V $name $C .html 0 1] C U T BR} msg]} {
+		    append R "<br>Failed to render difference for version $V<br>"
+		} else {
+		    append R $C
+		}
 		set pcdate $cdate
 		set pcwho $cwho
 		incr V -1
@@ -1430,7 +1433,9 @@ namespace eval WikitWub {
 		    if { $W } {
 			set C [WFormat ShowDiffs $C]
 		    } else {
-			lassign [WFormat StreamToHTML $N $mount [WFormat TextToStream $C] $pageURL ::WikitWub::InfoProc 0 0 1] C U T BR
+			if {[catch {lassign [WFormat StreamToHTML $N $mount [WFormat TextToStream $C] $pageURL ::WikitWub::InfoProc 0 0 1] C U T BR} msg]} {
+			    set C "Could not render difference between version $V and version $D"
+			}
 		    }
 		    set tC [<span> class newwikiline "Text added in version $V is highlighted like this"]
 		    append tC , [<span> class oldwikiline "text deleted from version $D is highlighted like this"]
