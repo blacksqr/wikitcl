@@ -1645,6 +1645,9 @@ namespace eval WikitWub {
 	set subtitle [who_date_subtitle $N $V]
 
 	set footer [menus Home Recent Help New Random Search]
+
+	set C [replace_toc $C]
+
 	return [sendPage $r spage]
     }
 
