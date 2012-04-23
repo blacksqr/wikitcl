@@ -2145,9 +2145,9 @@ namespace eval WikitWub {
 
 	# if there is new page content, save it now
 	set url http://[Url host $r][file join $pageURL $N]
-	if {$type eq "text/x-wikit" && $C eq ""} {
-	    set C " "
-	}
+	# if {$type eq "text/x-wikit" && $C eq ""} {
+	#     set C " "
+	# }
 	if {$N eq "" || $C eq ""} {
 	    Debug.wikit {Empty page or page number}
 	    return [sendPage $r emptyclear]
