@@ -1153,7 +1153,7 @@ namespace eval WikitWub {
 	append R </ul> \n
 
 	# sendPage vars
-	set menu [menus Home Recent Help WhoAmI New Random HR [<a> href [file join $mount history?N=$N] History] [<a> href [file join $mount summary?N=$N] "Edit summary"] [<a> href [file join $mount diff?N=$N] "Last change"] [<a> href [file join $mount diff?N=$N&T=1&D=1] "Changes last day"] [<a> href [file join $mount diff?N=$N&T=1&D=7] "Changes last week"] Search]
+	set menu [menus Home Recent Help WhoAmI New Random HR [<a> href [file join $mount history?N=$N] History] [<a> href [file join $mount summary?N=$N] "Edit summary"] [<a> href [file join $mount diff?N=$N#diff0] "Last change"] [<a> href [file join $mount diff?N=$N&T=1&D=1#diff0] "Changes last day"] [<a> href [file join $mount diff?N=$N&T=1&D=7#diff0] "Changes last week"] Search]
 	set footer [menus Home Recent Help New Search]
 
 	set C $R
@@ -1447,7 +1447,7 @@ namespace eval WikitWub {
 	    }
 	}
 
-	set menu [menus Home Recent Help WhoAmI New Random HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N "Last change"] [<a> href diff?N=$N&T=1&D=1 "Changes last day"] [<a> href diff?N=$N&T=1&D=7 "Changes last week"]]
+	set menu [menus Home Recent Help WhoAmI New Random HR [<a> href history?N=$N History] [<a> href summary?N=$N "Edit summary"] [<a> href diff?N=$N#diff0 "Last change"] [<a> href diff?N=$N&T=1&D=1#diff0 "Changes last day"] [<a> href diff?N=$N&T=1&D=7#diff0 "Changes last week"]]
 	set footer [menus Home Recent Help New Search]
 
 	if {$V > $D} {
