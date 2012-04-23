@@ -2752,14 +2752,18 @@ namespace eval WikitWub {
 	set refList ""
 	foreach from [WDB ReferencesTo $N] {
 	    lassign [WDB GetPage $from name date who] name date who
-	    lappend refList [list [timestamp $date] $name $who $from]
+	    lappend refList [list [timestamp $date] $name $who $from reference]
+	}
+	foreach from [WDB RedirectsTo [WDB GetPage $N name]] {
+	    lassign [WDB GetPage $from name date who] name date who
+	    lappend refList [list [timestamp $date] $name $who $from redirect]
 	}
 
 	set refList [lsort -dictionary -index 1 $refList]
 	set tableList {}
 	foreach ref $refList {
-	    lassign $ref date name who from
-	    lappend tableList [list $date [Ref $from {}] $who]
+	    lassign $ref date name who from what
+	    lappend tableList [list $date [Ref $from {}] $who $what]
 	}
 
 	if { $A } { 
@@ -2770,7 +2774,7 @@ namespace eval WikitWub {
 	    }
 	    append C "</ul>\n"
 	} else {
-	    set C [list2table $tableList {Date Name Who} {}]
+	    set C [list2table $tableList {Date Name Who What} {}]
 	    # include javascripts and CSS for sortable table.
 	    set r [sortable $r]
 	} 

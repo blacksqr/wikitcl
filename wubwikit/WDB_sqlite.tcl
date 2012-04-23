@@ -152,6 +152,9 @@ namespace eval WDB {
 		                                                   FROM pages a, pages_content b 
                                                                    WHERE a.id = b.id AND a.date > 0 AND length(b.content) <= 1 
                                                                    ORDER BY a.date DESC LIMIT 100} }
+		"redirects_to"                          { set sql {SELECT id
+		                                                   FROM pages_content
+		                                                   WHERE lower(content) = lower(:redir)} }
 		default { error "Unknown statement '$name'" }
 	    }
 	    set statements($name) [$db prepare $sql]
@@ -228,7 +231,16 @@ namespace eval WDB {
 	}
 	return $result
     }
-    
+
+    proc RedirectsTo {name} {
+	set result {}
+	set redir "<<redirect>>$name"
+	[statement "redirects_to"] foreach -as lists d {
+	    lappend result {*}$d
+	}
+	return $result
+    }
+
     #----------------------------------------------------------------------------
     #
     # PageGlobName --
