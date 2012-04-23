@@ -672,7 +672,7 @@ namespace eval WikitWub {
 		}
 		set title [dict get? $rsp -title]
 		if {$title ne ""} {
-		    append content [<title> $title] \n
+		    append content [<title> [armour $title]] \n
 		}
 
 		# add in some wikit-wide headers
@@ -1180,7 +1180,7 @@ namespace eval WikitWub {
 	# If T is non zero, D contains a number of days and /diff must
 	Debug.wikit {/diff N:$N V:$V D:$D W:$W T:$T}
 	variable mount; variable pageURL
-	
+
 	if {[who $r] eq ""} {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
@@ -2680,8 +2680,8 @@ namespace eval WikitWub {
 	set footer [menus Recent Help Search]
 	Debug.wikit {/welcome: $N}
 	if {[info exists wiki_title] && $wiki_title ne ""} {
-	    set Title $wiki_title
-	    set name $wiki_title
+	    set Title [armour $wiki_title]
+	    set name [armour $wiki_title]
 	} else {
 	    set Title "Welcome to the Tclers Wiki!"
 	    set name "Welcome to the Tclers Wiki!"
@@ -3007,7 +3007,7 @@ namespace eval WikitWub {
 			dict with record {}
 			# these are admin pages, don't list them
 			if {[dict exists $protected $id]} continue
-			set ra($name) [<li> class srtitle [<a> href [file join $pageURL $id] $name]]
+			set ra($name) [<li> class srtitle [<a> href [file join $pageURL $id] [armour $name]]]
 			incr count
 			incr pcount($where)
 		    }
@@ -3027,7 +3027,7 @@ namespace eval WikitWub {
 			# these are admin pages, don't list them
 			if {[dict exists $protected $id]} continue
 			set il {}
-			lappend il [<span> class srtitle [<a> href [file join $pageURL $id] $name]]
+			lappend il [<span> class srtitle [<a> href [file join $pageURL $id] [armour $name]]]
 			lappend il [<div> class srsnippet "[<span> class srdate [string trim [formatdate $date]]]<span class='srdate'> &mdash; </span>[<span> class srsnippet [armour_and_render_snippet [string trim $snippet \ .]]]"]
 			set ra($name) [<li> class srgroup [join $il]]
 			incr count
@@ -3049,7 +3049,7 @@ namespace eval WikitWub {
 			# these are admin pages, don't list them
 			if {[dict exists $protected $id]} continue
 			if {$type ne "" && ![string match "text/*" $type]} {
-			    set ra($name) [list [timestamp $date] [<a> href [file join $pageURL $id] $name] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] height 100]]]
+			    set ra($name) [list [timestamp $date] [<a> href [file join $pageURL $id] [armour $name]] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] height 100]]]
 			    incr count
 			    incr pcount($where)
 			}
@@ -3326,7 +3326,7 @@ namespace eval WikitWub {
 	    # set up backrefs
 	    set backRef [file join $mount ref]?N=$N
 	    #set Refs "[<a> href $backRef Reference] - "
-	    set Title [<a> href $backRef title "click to see reference to this page" $name]
+	    set Title [<a> href $backRef title "click to see reference to this page" [armour $name]]
 	    # create menu and footer
 	    set menu {}
 	    set footer {}
@@ -3419,7 +3419,7 @@ namespace eval WikitWub {
 		# set up backrefs
 		set backRef [file join $mount ref]?N=$N
 		#set Refs "[<a> href $backRef Reference] - "
-		set Title [<a> href $backRef title "click to see reference to this page" $name]
+		set Title [<a> href $backRef title "click to see reference to this page" [armour $name]]
 
 		# add extra menu and footer elements
 		set menu {}
