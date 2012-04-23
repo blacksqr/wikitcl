@@ -302,8 +302,9 @@ namespace eval WikitWub {
 
     template upload {} {
 	[<form> uploadform enctype multipart/form-data method post action [file join $::WikitWub::mount edit/save] {
-	    [<label> for C [<submit> upload value 1 Upload]][<file> C title {Upload Content} ""]
-	    <br>Uploaded content will replace current content, so make sure include all text, including comments, in the uploaded content you wish to keep on the page.
+	    [<b> "Upload from file: "]
+	    [<label> for C [<submit> upload value 1 "Upload"]][<file> C title {Upload Content} ""]
+	    <br>Don not use the upload button if you edited the page in the text area above. Uploaded content will replace current content, so make sure include all text, including comments, in the uploaded content you wish to keep on the page.
 	    [<hidden> N $N]
 	    [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 	    [<hidden> A 0]
@@ -333,7 +334,6 @@ namespace eval WikitWub {
 		    [<div> class updated "Make your changes, then press Save below"]
 		}]
 	    }]]
-	    [subst [template upload]]
 	    [<div> class editcontents [subst {
 		[set disabled [expr {$nick eq ""}]
 		 <form> edit method post action [file join $::WikitWub::mount edit/save] {
@@ -342,7 +342,7 @@ namespace eval WikitWub {
 		     [<div> class previewarea id previewarea ""]
 		     [<div> class previewarea_post id previewarea_post ""]
 		     [<div> class toolbar [subst [template edit_toolbar_wikit]]]
-		     [<textarea> C id editarea rows 35 cols 72 compact 0 style width:100% [expr {($C eq "")?$::WikitWub::empty_template:[tclarmour $C]}]]
+		     [<textarea> C id editarea rows 32 cols 72 compact 0 style width:100% [expr {($C eq "")?$::WikitWub::empty_template:[tclarmour $C]}]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 		     [<hidden> _charset_ {}]
 		     [<hidden> N $N]
@@ -354,6 +354,8 @@ namespace eval WikitWub {
 		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
 		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
 		 }]
+		[<hr>]
+		[subst [template upload]]
 		[<hr>]
 		[If {$date != 0} {
 		    [<i> "Last saved on [<b> [clock format $date -gmt 1 -format {%Y-%m-%d %T}]]"]
