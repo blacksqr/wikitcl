@@ -157,7 +157,7 @@ namespace eval WikitWub {
     variable titles
 
     proc toolbar_edit_button {action img alt} {
-	return [format {<button type='button' class='editbutton' onClick='%1$s("editarea");' onmouseout='popUp(event,"tip_%1$s")' onmouseover='popUp(event,"tip_%1$s")'><img src='/%3$s'></button><span id='tip_%1$s' class='tip'>%2$s</span>} $action $alt $img]
+	return [format {<button type='button' class='editbutton' onClick='%1$s("editarea");' onmouseout='popUp(event,"tip_%1$s")' onmouseover='popUp(event,"tip_%1$s")'><img alt='' src='/%3$s'></button><span id='tip_%1$s' class='tip'>%2$s</span>} $action $alt $img]
     }
 
     # page - format up a page using templates
@@ -222,7 +222,7 @@ namespace eval WikitWub {
 
     template header {} {
 	[<div> class header [subst {
-	    [<div> class logo [<a> class logo href [lindex $::WikitWub::text_url 1] [lindex $::WikitWub::text_url 0]][<a> href [lindex $::WikitWub::text_url 1] [<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]]]
+	    [<div> class logo [<a> class logo href [lindex $::WikitWub::text_url 1] [lindex $::WikitWub::text_url 0]][<a> href [lindex $::WikitWub::text_url 1] [<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]]]
 	    [<div> id title class title [tclarmour $Title]]
 	    [<div> id updated class updated [expr {[info exists subtitle]&&[string length $subtitle]?$subtitle:"&nbsp;"}]]
 	}]]
@@ -276,9 +276,9 @@ namespace eval WikitWub {
     }
 
     template edit_toolbar_wikit {} {
-	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
-	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
-	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
+	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img alt='' src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
+	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img alt='' src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
+	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img alt='' src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
 	&nbsp; &nbsp; &nbsp;
 	[toolbar_edit_button bold            text_bold.png           "Bold"]
 	[toolbar_edit_button italic          text_italic.png         "Italic"]
@@ -296,7 +296,7 @@ namespace eval WikitWub {
 	[toolbar_edit_button code            script_code.png         "Script"]
 	[toolbar_edit_button table           table.png               "Table"]
 	&nbsp; &nbsp; &nbsp;
-	<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
+	<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img alt='' src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
     }
 
 
@@ -315,7 +315,7 @@ namespace eval WikitWub {
     template edit {Editing [armour $name]} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[If {$as_comment} {
 		    [<div> class title "Comment on [tclarmour [Ref $N]]"]
 		}]
@@ -374,7 +374,7 @@ namespace eval WikitWub {
     template edit_binary {Editing [armour $name]} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Edit [tclarmour [Ref $N]]"]
 		[<div> class updated "Select a file, then press Upload"]
 	    }]]
@@ -390,7 +390,7 @@ namespace eval WikitWub {
     template new {Create a new page} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Create new page"]
 		[<div> class updated "Enter title, then press Create below"]
 	    }]]
@@ -410,7 +410,7 @@ namespace eval WikitWub {
     template new_no_recaptcha {Create a new page} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Create new page"]
 		[<div> class updated "Enter title, then press Create below"]
 	    }]]
@@ -430,7 +430,7 @@ namespace eval WikitWub {
     template query {Query the database} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Run a query"]
 		[<div> class updated "Enter a query, then press run below"]
 	    }]]
@@ -448,7 +448,7 @@ namespace eval WikitWub {
     template query_result {Result of query} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Query result"]
 	    }]]
 	    [<div> class queryresult $C]
@@ -459,7 +459,7 @@ namespace eval WikitWub {
     template revert {Revert a page} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Revert page [tclarmour [Ref $N]] to version $V"]
 	    }]]
 	    [<div> class edittitle [subst {
@@ -631,6 +631,7 @@ namespace eval WikitWub {
 	    window.onload = init;
 	}]]
 	<meta name="verify-v1" content="89v39Uh9xwxtWiYmK2JcYDszlGjUVT1Tq0QX+7H8AD0=">
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
     }
     variable shead $head
 
@@ -1704,8 +1705,8 @@ namespace eval WikitWub {
 
 	lassign [WDB GetPage $N name type] name type
 
-	append C "<button type='button'' onclick='versionCompare($N, 0);'>Line compare version A and B</button>"
-	append C "<button type='button'' onclick='versionCompare($N, 1);'>Word compare version A and B</button>"
+	append C "<button type='button' onclick='versionCompare($N, 0);'>Line compare version A and B</button>"
+	append C "<button type='button' onclick='versionCompare($N, 1);'>Word compare version A and B</button>"
 	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
 	if {$type eq "" || [string match "text/*" $type]} {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 Annotated 1 WikiText 1}
@@ -1738,14 +1739,14 @@ namespace eval WikitWub {
 		append C [<td> class WikiText [<a> rel nofollow href "revision?N=$N.txt&V=$vn" $vn]]
 		append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
 		if {$rowcnt == 0} {
-		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn checked="checked" ""]]
+		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn checked checked $vn]]
 		} else {
-		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn ""]]
+		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn $vn]]
 		}
 		if {$rowcnt == 1} {
-		    append C [<td> [<input> id historyB$rowcnt type radio name verB value $vn checked="checked" ""]]
+		    append C [<td> [<input> id historyB$rowcnt type radio name verB value $vn checked checked $vn]]
 		} else {
-		    append C [<td> [<input> id historyB$rowcnt type radio name verB value $vn ""]]
+		    append C [<td> [<input> id historyB$rowcnt type radio name verB value $vn $vn]]
 		}
 		append C </tr> \n
 		incr rowcnt
@@ -1766,7 +1767,7 @@ namespace eval WikitWub {
 		append C [<td> class Rev $vn]
 		append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
 		append C [<td> class Who [WhoUrl $who]]
-		append C [<td> class Image [<img> src [file join $pageURL $mount image?N=$N&V=$vn]]]
+		append C [<td> class Image [<img> alt {} src [file join $pageURL $mount image?N=$N&V=$vn]]]
 		append C </tr> \n
 		incr rowcnt
 	    }
@@ -2019,7 +2020,7 @@ namespace eval WikitWub {
 	    set U {}
 	    set T {}
 	    set BR {}
-	    set C [<img> src [file join $pageURL $mount image?N=$N]]
+	    set C [<img> alt {} src [file join $pageURL $mount image?N=$N]]
 	} else {
 	    set O [WDB GetContent $N]
 	    lassign [translate $N -1 preview $O .html 1] C U T BR
@@ -3054,7 +3055,7 @@ namespace eval WikitWub {
 			# these are admin pages, don't list them
 			if {[dict exists $protected $id]} continue
 			if {$type ne "" && ![string match "text/*" $type]} {
-			    set ra($name) [list [timestamp $date] [<a> href [file join $pageURL $id] [armour $name]] [<a> href [file join $pageURL $id] [<img> class imglink src [file join $mount image?N=$id] height 100]]]
+			    set ra($name) [list [timestamp $date] [<a> href [file join $pageURL $id] [armour $name]] [<a> href [file join $pageURL $id] [<img> alt {} class imglink src [file join $mount image?N=$id] height 100]]]
 			    incr count
 			    incr pcount($where)
 			}
@@ -3327,7 +3328,7 @@ namespace eval WikitWub {
 	# binary pages are returned as-is, no decoration
 	if {$type ne "" && ![string match text/* $type]} {
 	    # Page is <img>, not the image itself
-	    set C [<img> src [file join $pageURL $mount image?N=$N]]
+	    set C [<img> alt {} src [file join $pageURL $mount image?N=$N]]
 	    # set up backrefs
 	    set backRef [file join $mount ref]?N=$N
 	    #set Refs "[<a> href $backRef Reference] - "
@@ -3436,7 +3437,7 @@ namespace eval WikitWub {
 		    if {!$::roflag} {
 			set img ""
 			if {$readonly ne ""} {
-			    set img [<img> align center src cross.png]
+			    set img [<img> alt {} align center src cross.png]
 			}
 			lappend menu [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]$img
 			lappend footer [<a> href [file join $mount edit]?N=$N&A=1 "Add comments"]$img
