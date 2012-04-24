@@ -1039,6 +1039,24 @@ namespace eval ::WFormat {
     return [list $text $text]
   }
 
+  proc unwind_uol {uolnm mode resultnm {any 0}} {
+    upvar $uolnm uol
+    upvar $resultnm result
+#    puts "unwind_uol $uol / $mode / $result"
+    if {[llength $uol] && ($any || $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY DISCUSSION DISCUSSIONHEADER INLINEHTML BACKREFS})} {
+      # Unwind uol
+#      append result </li>
+      foreach uo [lreverse $uol] {
+        switch -glob -- $uo {
+          *U { append result </li></ul> }
+          *O { append result </li></ol> }
+        }
+      }
+      set uol {}
+    }
+#    puts "unwind_uol $uol / $mode / $result"
+  }
+
   proc StreamToHTML {N mount s {cgi ""} {ip ""} {creating_preview 0} {creating_summary 0} {creating_diffs 0} {creating_revision 0} } {
 
     if {$creating_diffs || $creating_summary || $creating_preview || $creating_revision} {
@@ -1077,17 +1095,8 @@ namespace eval ::WFormat {
     variable html_frag
 
     foreach {mode text} $s {
-      if {[llength $uol] && $mode in {HD2 HD3 HD4 HDE BLS BLE TR CTR CT TD TDE TRH TDH TDEH T Q I D H FI FE L F _ CATEGORY DISCUSSION DISCUSSIONHEADER INLINEHTML BACKREFS}} {
-        # Unwind uol
-        append result </li>
-        foreach uo [lreverse $uol] {
-          switch -glob -- $uo {
-            *U { append result </ul> }
-            *O { append result </ol> }
-          }
-        }
-        set uol {}
-      }
+
+      unwind_uol uol $mode result
 
       if {$mode eq "FI"} {
         set in_FI 1
@@ -1336,7 +1345,7 @@ namespace eval ::WFormat {
               append result "<li>"
             }
           } else {
-            append result "[string repeat $tag $n]<li>"
+            append result [string repeat $tag<li> $n]
             lappend uol {*}[lrepeat $n $mode]
           }
           set state $mode
@@ -1468,10 +1477,10 @@ namespace eval ::WFormat {
             set in_discussion 0
           }
           append result "<hr>"
-          append result "<div class='centered'><p></p><table summary='' class='wikit_table'><thead><tr>"
+          append result "<div class='centered'><p></p><table summary='' class='wikit_categories'><tr>"
           set text [string map [list "%|%" \1] $text]
           foreach cat [split $text |] {
-            append result "<th>"
+            append result "<td>"
             set cat  [string map [list \1 "%|%"] $cat]
             lassign [split_url_link_text $cat] link linktext
             set link [string trim $link]
@@ -1485,7 +1494,7 @@ namespace eval ::WFormat {
               }
               append result $html_frag(tc) \
                 [quote $linktext] $html_frag(_a)
-              append result "</th>"
+              append result "</td>"
               continue
             }
             if {[string match "Category *" $link]} {
@@ -1521,7 +1530,7 @@ namespace eval ::WFormat {
             if {$id == ""} {
               # not found, don't turn into an URL
               append result "\[[quote $linktext]\]"
-              append result "</th>"
+              append result "</td>"
               continue
             }
             #regsub {^/} $id {} id
@@ -1538,7 +1547,7 @@ namespace eval ::WFormat {
               }
               append result $html_frag(tc) \
                 [quote $linktext] $html_frag(_a)
-              append result "</th>"
+              append result "</td>"
               continue
             }
             # missing, 
@@ -1560,13 +1569,16 @@ namespace eval ::WFormat {
               }
               append result $html_frag(tc) \] $html_frag(_a) \
             }
-            append result "</th>"
+            append result "</td>"
           }
-          append result "</tr></thead></table></div><p></p>"
+          append result "</tr></table></div><p></p>"
           set state $mode
         }
       }
     }
+
+    unwind_uol uol $mode result 1
+
     # Close off the last section.
     if { [info exists html_frag(${state}_)] } {
       append result $html_frag(${state}_)
@@ -1652,15 +1664,15 @@ namespace eval ::WFormat {
         append toc "<div class='ptoc'>"
         for { set j 0 } { $j < 3 } { incr j } { 
           if { $img($i,$j) eq "+" } {
-            append toc "<img class='ptoc' src='join.gif'>"
+            append toc "<img alt='' class='ptoc' src='join.gif'>"
             break
           } elseif { $img($i,$j) eq "-" } {
-            append toc "<img class='ptoc' src='joinbottom.gif'>"
+            append toc "<img alt='' class='ptoc' src='joinbottom.gif'>"
             break
           } elseif { $img($i,$j) eq "|" } {
-            append toc "<img class='ptoc' src='line.gif'>"
+            append toc "<img alt='' class='ptoc' src='line.gif'>"
           } elseif { $img($i,$j) eq " " } {
-            append toc "<img class='ptoc' src='empty.gif'>"            
+            append toc "<img alt='' class='ptoc' src='empty.gif'>"            
           }
         }
         set ltxt [string map {\  &nbsp;} [armour_quote $thdr]]
@@ -1714,24 +1726,24 @@ namespace eval ::WFormat {
   }
 
   proc vs_edit {} {
-    vs HD2  T   "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><p></p>"
-    vs HD2  Q   "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><pre\ class='\$sh_class'>"
-    vs HD2  U   "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><ul\ class='ul3'><li>"
-    vs HD2  O   "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><ol><li>"
-    vs HD2  I   "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><dl><dt>"
-    vs HD2  _   "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2>"
-    vs HD2  H   "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><hr>" 
-    vs HD2  D   "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><dl><dd>"
-    vs HD2  HD2 "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><h2"
-    vs HD2  HD3 "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><h3"
-    vs HD2  HD4 "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><h4"
-    vs HD2  BLS "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2>\n"
-    vs HD2  BLE "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2>\n"
-    vs HD2  L   "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_options'><tr>"
-    vs HD2  TR  "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-    vs HD2  TRH "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_table'><thead><tr>"
-    vs HD2  FI  "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2><pre\ class='\$sh_class'>"
-    vs HD2  FE  "&nbsp;<a href='\$edit_url?N=\$N&S=\$HD2_cnt' class='partedit'>edit</a></h2>"
+    vs HD2  T   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><p></p>"
+    vs HD2  Q   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><pre\ class='\$sh_class'>"
+    vs HD2  U   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><ul\ class='ul3'><li>"
+    vs HD2  O   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><ol><li>"
+    vs HD2  I   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><dl><dt>"
+    vs HD2  _   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2>"
+    vs HD2  H   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><hr>" 
+    vs HD2  D   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><dl><dd>"
+    vs HD2  HD2 "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><h2"
+    vs HD2  HD3 "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><h3"
+    vs HD2  HD4 "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><h4"
+    vs HD2  BLS "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2>\n"
+    vs HD2  BLE "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2>\n"
+    vs HD2  L   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_options'><tr>"
+    vs HD2  TR  "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
+    vs HD2  TRH "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_table'><thead><tr>"
+    vs HD2  FI  "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><pre\ class='\$sh_class'>"
+    vs HD2  FE  "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2>"
   }                                                            
 
   vs_edit
@@ -2103,9 +2115,9 @@ namespace eval ::WFormat {
   }
 
   array set html_frag {
-    a_ {<a href="}         b0 </b> f0 </tt>
+    a_ {<a href="}         b0 </b> f0 </span>
     A_ {<a class='backreflink' href="}
-	_a {</a>}              b1 <b>  f1 <tt>
+	_a {</a>}              b1 <b>  f1 "<span class='tt'>"
         i_ {<img alt="" src="} i0 </i>
     tc {">}                i1 <i>
         e_ {<a rel="nofollow" href="}

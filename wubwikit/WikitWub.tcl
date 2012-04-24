@@ -200,7 +200,7 @@ namespace eval WikitWub {
     template searchF {} {
 	[<form> searchform method get action [file join $::WikitWub::mount search] {
 	    [<text> S id searchtxt onfocus {clearSearch();} onblur {setSearch();} "Search"]
-	    [<hidden> _charset_ ""]
+	    [<hidden> _charset_]
 	}]
     }
 
@@ -222,7 +222,7 @@ namespace eval WikitWub {
 
     template header {} {
 	[<div> class header [subst {
-	    [<div> class logo [<a> class logo href [lindex $::WikitWub::text_url 1] [lindex $::WikitWub::text_url 0]][<a> href [lindex $::WikitWub::text_url 1] [<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]]]
+	    [<div> class logo [<a> class logo href [lindex $::WikitWub::text_url 1] [lindex $::WikitWub::text_url 0]][<a> href [lindex $::WikitWub::text_url 1] [<img> alt {} src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]]]
 	    [<div> id title class title [tclarmour $Title]]
 	    [<div> id updated class updated [expr {[info exists subtitle]&&[string length $subtitle]?$subtitle:"&nbsp;"}]]
 	}]]
@@ -244,9 +244,9 @@ namespace eval WikitWub {
     }
 
     # page sent when constructing a reference page
-    template refs {References to $N} {
+    template refs {References and redirects to $N} {
 	[<div> class container [subst {
-	    [<div> class header [<h1> "References to [Ref $N]"]]
+	    [<div> class header [<h1> "References and redirects to [Ref $N]"]]
 	    [<div> class wrapper [<div> class content $C]]
 	    [<hr> noshade]
 	    [<div> class footer [<p> id footer [variable bullet; join $footer $bullet]][subst [template searchF]]]
@@ -259,25 +259,25 @@ namespace eval WikitWub {
 	    [<b> "Editing quick-reference:"] <button type='button' id='hidehelpbutton' onclick='hideEditHelp();'>Hide Help</button>
 	    [<br>]
 	    <ul>
-	    <li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><tt>%|%string%|%</tt></b> to the end of the link.</li>
+	    <li>[<b> LINK] to [<b> "\[[<a> href ../6 target _blank {Wiki formatting rules}]\]"] - or to [<b> [<a> href http://here.com/ target _blank "http://here.com/"]] - use [<b> "\[http://here.com/\]"] to show as [<b> "\[[<a> href http://here.com/ target _blank 1]\]"]. The string used to display the link can be specified by adding <b><span class='tt'>%|%string%|%</span></b> to the end of the link.</li>
 	    <li>[<b> BULLETS] are lines with 3 spaces, an asterisk, a space - the item must be one (wrapped) line</li>
 	    <li>[<b> "NUMBERED LISTS"] are lines with 3 spaces, a one, a dot, a space - the item must be one (wrapped) line</li>
 	    <li>[<b> PARAGRAPHS] are split with empty lines</li>
-	    <li>[<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <tt>======</tt></li>
-	    <li>[<b> "FIXED WIDTH FORMATTED"] text is enclosed in lines containing <tt>===</tt></li>
-	    <li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<tt>tele-type</tt>[<b> {`}].</li>
+	    <li>[<b> "UNFORMATTED TEXT"] starts with white space or is enclosed in lines containing <span class='tt'>======</span></li>
+	    <li>[<b> "FIXED WIDTH FORMATTED"] text is enclosed in lines containing <span class='tt'>===</span></li>
+	    <li>[<b> HIGHLIGHTS] are indicated by groups of single quotes - use two for [<b> {''}] [<i> italics] [<b> {''}], three for [<b> '''bold''']. Back-quotes can be used for [<b> {`}]<span class='tt'>tele-type</span>[<b> {`}].</li>
 	    <li>[<b> SECTIONS] can be separated with a horizontal line - insert a line containing just 4 dashes</li>
 	    <li>[<b> HEADERS] can be specified with lines containing <b>**Header level 1**</b>, <b>***Header level 2***</b> or <b>****Header level 3****</b></li>
-	    <li>[<b> TABLE] rows can be specified as <b><tt>|data|data|data|</tt></b>, a <b>header</b> row as <b><tt>%|data|data|data|%</tt></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><tt>&amp;|data|data|data|&amp;</tt></b></li>
-	    <li>[<b> CENTER] an area by enclosing it in lines containing <b><tt>!!!!!!</tt></b></li>
-	    <li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><tt>&lt;&lt;backrefs&gt;&gt;</tt></b>, back references to any page can be included with a line containing <b><tt>&lt;&lt;backrefs:Wiki formatting rules&gt;&gt;</tt></b>, a <b>link to back-references</b> to any page can be included as <b><tt>\[backrefs:Wiki formatting rules\]</tt></b></li>
+	    <li>[<b> TABLE] rows can be specified as <b><span class='tt'>|data|data|data|</span></b>, a <b>header</b> row as <b><span class='tt'>%|data|data|data|%</span></b> and background of even and odd rows is <b>colored differently</b> when rows are specified as <b><span class='tt'>&amp;|data|data|data|&amp;</span></b></li>
+	    <li>[<b> CENTER] an area by enclosing it in lines containing <b><span class='tt'>!!!!!!</span></b></li>
+	    <li>[<b> "BACK REFERENCES"] to the page being edited can be included with a line containing <b><span class='tt'>&lt;&lt;backrefs&gt;&gt;</span></b>, back references to any page can be included with a line containing <b><span class='tt'>&lt;&lt;backrefs:Wiki formatting rules&gt;&gt;</span></b>, a <b>link to back-references</b> to any page can be included as <b><span class='tt'>\[backrefs:Wiki formatting rules\]</span></b></li>
 	    </ul>
 	}]]
     }
 
     template edit_toolbar_wikit {} {
 	<button type='submit' class='editbutton' id='savebutton' name='save' value='Save your changes' onmouseout='popUp(event,"tip_save")' onmouseover='popUp(event,"tip_save")'><img alt='' src='/page_save.png'></button><span id='tip_save' class='tip'>Save</span>
-	<button type='button' class='editbutton' id='previewbutton' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img alt='' src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
+	<button type='button' class='editbutton' id='previewbuttoni' onclick='previewPage($N);' onmouseout='popUp(event,"tip_preview")' onmouseover='popUp(event,"tip_preview")'><img alt='' src='/page_white_magnify.png'></button><span id='tip_preview' class='tip'>Preview</span>
 	<button type='submit' class='editbutton' id='cancelbutton' name='cancel' value='Cancel' onmouseout='popUp(event,"tip_cancel")' onmouseover='popUp(event,"tip_cancel")'><img alt='' src='/cancel.png'></button><span id='tip_cancel' class='tip'>Cancel</span>
 	&nbsp; &nbsp; &nbsp;
 	[toolbar_edit_button bold            text_bold.png           "Bold"]
@@ -296,15 +296,15 @@ namespace eval WikitWub {
 	[toolbar_edit_button code            script_code.png         "Script"]
 	[toolbar_edit_button table           table.png               "Table"]
 	&nbsp; &nbsp; &nbsp;
-	<button type='button' class='editbutton' id='helpbutton' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img alt='' src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
+	<button type='button' class='editbutton' id='helpbuttoni' onclick='editHelp();' onmouseout='popUp(event,"tip_help")' onmouseover='popUp(event,"tip_help")'><img alt='' src='/help.png'></button><span id='tip_help' class='tip'>Help</span>
     }
 
 
     template upload {} {
 	[<form> uploadform enctype multipart/form-data method post action [file join $::WikitWub::mount edit/save] {
 	    [<b> "Upload from file: "]
-	    [<label> for C [<submit> upload value 1 "Upload"]][<file> C title {Upload Content} ""]
-	    <br>Don not use the upload button if you edited the page in the text area above. Uploaded content will replace current content, so make sure include all text, including comments, in the uploaded content you wish to keep on the page.
+	    [<label> [<submit> upload value 1 "Upload"]][<file> C title {Upload Content} ""]
+	    <br>Do not use the upload button if you edited the page in the text area above. Uploaded content will replace current content, so make sure include all text, including comments, in the uploaded content you wish to keep on the page.
 	    [<hidden> N $N]
 	    [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
 	    [<hidden> A 0]
@@ -315,7 +315,7 @@ namespace eval WikitWub {
     template edit {Editing [armour $name]} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[If {$as_comment} {
 		    [<div> class title "Comment on [tclarmour [Ref $N]]"]
 		}]
@@ -344,15 +344,15 @@ namespace eval WikitWub {
 		     [<div> class toolbar [subst [template edit_toolbar_wikit]]]
 		     [<textarea> C id editarea rows 32 cols 72 compact 0 style width:100% [expr {($C eq "")?$::WikitWub::empty_template:[tclarmour $C]}]]
 		     [<hidden> O [list [tclarmour $date] [tclarmour $who]]]
-		     [<hidden> _charset_ {}]
+		     [<hidden> _charset_]
 		     [<hidden> N $N]
 		     [<hidden> S $S]
 		     [<hidden> V $V]
 		     [<hidden> A $as_comment]
 		     <input name='save' type='submit' value='Save your changes'>
 		     <input name='cancel' type='submit' value='Cancel'>
-		     <button type='button' id='previewbutton' onclick='previewPage($N);'>Preview</button>
-		     <button type='button' id='helpbutton' onclick='editHelp();'>Help</button>
+		     <button type='button' id='previewbuttonb' onclick='previewPage($N);'>Preview</button>
+		     <button type='button' id='helpbuttonb' onclick='editHelp();'>Help</button>
 		 }]
 		[<hr>]
 		[subst [template upload]]
@@ -374,7 +374,7 @@ namespace eval WikitWub {
     template edit_binary {Editing [armour $name]} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Edit [tclarmour [Ref $N]]"]
 		[<div> class updated "Select a file, then press Upload"]
 	    }]]
@@ -390,14 +390,14 @@ namespace eval WikitWub {
     template new {Create a new page} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Create new page"]
 		[<div> class updated "Enter title, then press Create below"]
 	    }]]
 	    [<div> class edittitle [subst {
 		[[lindex [info class instances ::ReCAPTCHA] 0] form class autoform \
 		     before <br>[<text> T title "Page title" size 80]<br><br> \
-		     after "<br>[<hidden> _charset_ {}]<input name='create' type='submit' value='Create new page'>" \
+		     after "<br>[<hidden> _charset_]<input name='create' type='submit' value='Create new page'>" \
 		     pass ::WikitWub::new_page_pass]
 		[<div> id result {}]
 		[If {$nick ne ""} {
@@ -410,13 +410,13 @@ namespace eval WikitWub {
     template new_no_recaptcha {Create a new page} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Create new page"]
 		[<div> class updated "Enter title, then press Create below"]
 	    }]]
 	    [<div> class edittitle [subst {
 		[<form> edit method post action [file join $::WikitWub::mount new/create] {
-		     [<hidden> _charset_ {}]
+		     [<hidden> _charset_]
 		     [<text> T title "Page title" size 80]
 		     <input name='create' type='submit' value='Create new page'>
 		}]
@@ -430,13 +430,13 @@ namespace eval WikitWub {
     template query {Query the database} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Run a query"]
 		[<div> class updated "Enter a query, then press run below"]
 	    }]]
 	    [<div> class edittitle [subst {
 		[<form> edit method post action [file join $::WikitWub::mount query/run] {
-		     [<hidden> _charset_ {}]
+		     [<hidden> _charset_]
 		     [<textarea> Q query "Query" rows 8 cols 72 compact 0 style width:100% $Q]
 		     <input name='create' type='submit' value='Run the query'>
 		}]
@@ -448,7 +448,7 @@ namespace eval WikitWub {
     template query_result {Result of query} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Query result"]
 	    }]]
 	    [<div> class queryresult $C]
@@ -459,13 +459,13 @@ namespace eval WikitWub {
     template revert {Revert a page} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
-		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} border 0 src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
+		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
 		[<div> class title "Revert page [tclarmour [Ref $N]] to version $V"]
 	    }]]
 	    [<div> class edittitle [subst {
 		[[lindex [info class instances ::ReCAPTCHA] 0] form class autoform \
 		     before <br> \
-		     after "<br>[<hidden> _charset_ {}][<hidden> N [armour $N]][<hidden> V [armour $V]]<input name='create' type='submit' value='Revert page'>" \
+		     after "<br>[<hidden> _charset_][<hidden> N [armour $N]][<hidden> V [armour $V]]<input name='create' type='submit' value='Revert page'>" \
 		     pass ::WikitWub::revert_pass]
 		[<div> id result {}]
 		[If {$nick ne ""} {
@@ -570,7 +570,7 @@ namespace eval WikitWub {
     variable maxAge "next month"	;# maximum age of login cookie
     variable cookie "wikit_e"		;# name of login cookie
 
-    variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">}
+    variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W4.013C//DTD HTML //EN" "http://www.w3.org/TR/html4/loose.dtd">}
     variable language "en"	;# language for HTML
 
     # header sent with each page
@@ -1739,14 +1739,14 @@ namespace eval WikitWub {
 		append C [<td> class WikiText [<a> rel nofollow href "revision?N=$N.txt&V=$vn" $vn]]
 		append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
 		if {$rowcnt == 0} {
-		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn checked checked $vn]]
+		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn checked checked]]
 		} else {
-		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn $vn]]
+		    append C [<td> [<input> id historyA$rowcnt type radio name verA value $vn]]
 		}
 		if {$rowcnt == 1} {
-		    append C [<td> [<input> id historyB$rowcnt type radio name verB value $vn checked checked $vn]]
+		    append C [<td> [<input> id historyB$rowcnt type radio name verB value $vn checked checked]]
 		} else {
-		    append C [<td> [<input> id historyB$rowcnt type radio name verB value $vn $vn]]
+		    append C [<td> [<input> id historyB$rowcnt type radio name verB value $vn]]
 		}
 		append C </tr> \n
 		incr rowcnt
@@ -2398,10 +2398,10 @@ namespace eval WikitWub {
 	set C <br><br>
 	append C [<div> class title "Result of previous query:"]
 	if {$ok} {
-	    append C "<br>Query<br><br><tt>$Q</tt><br><br>returned [expr {[llength $dl]/2}] row(s) in ${ms}ms:<br><br>"
+	    append C "<br>Query<br><br><span class='tt'>$Q</span><br><br>returned [expr {[llength $dl]/2}] row(s) in ${ms}ms:<br><br>"
 	    append C [Report html $dl sortable 1]
 	} else {
-	    append C "<br>Query<br><br><tt>$Q</tt><br><br>failed:<br><br><tt>$dl</tt>"
+	    append C "<br>Query<br><br><span class='tt'>$Q</span><br><br>failed:<br><br><span class='tt'>$dl</span>"
 	}
 	return [sendPage $r query]
     }
@@ -2783,8 +2783,8 @@ namespace eval WikitWub {
 	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New Search]
 
-	set name "References to $N"
-	set Title "References to [Ref $N]"
+	set name "References and redirects to $N"
+	set Title "References and redirects to [Ref $N]"
 
 	if {$A} {
 	    return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
@@ -3752,5 +3752,7 @@ proc mamo { } {
 #after 10000 mamo
 
 puts "SYSTEM ENCODING BEFORE CREATING SITE = [encoding system]"
+
+puts [info body <input>]
 
 Site start home [file normalize [file dirname [info script]]] config $cfg local $local

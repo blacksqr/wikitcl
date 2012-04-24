@@ -178,6 +178,13 @@ thead th {
 	background-color: #DDD;
 }
 
+table.wikit_categories td {
+    padding: 2px 5px 2px 5px;
+    text-align: left;
+    border: 1px solid gray;
+    background-color: #DDD;
+}
+
 tbody td {
 	padding: 2px 5px 2px 5px;
 	border-left: 1px solid #DDD;
@@ -230,6 +237,10 @@ span.versioninfo {
 
 span.versionwho {
 	text-align: right;
+}
+
+span.tt {
+   font-family: monospace;
 }
 
 div.oldwikiline {
