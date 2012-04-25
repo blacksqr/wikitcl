@@ -480,7 +480,7 @@ namespace eval WikitWub {
 	[<p> "Please choose a nickname that your edit will be identified by."]
 	[if {0} {[<p> "You can optionally enter a password that will reserve that nickname for you."]}]
 	[<form> login method post action [file join $mount edit/login] {
-	    [<fieldset> login title Login {
+	    [<fieldset> loginfs title Login {
 		[<text> nickname title "Nickname"]
 		[<input> name save type submit value "Login" {}]
 	    }]
@@ -570,7 +570,7 @@ namespace eval WikitWub {
     variable maxAge "next month"	;# maximum age of login cookie
     variable cookie "wikit_e"		;# name of login cookie
 
-    variable htmlhead {<!DOCTYPE HTML PUBLIC "-//W4.013C//DTD HTML //EN" "http://www.w3.org/TR/html4/loose.dtd">}
+    variable htmlhead {<!DOCTYPE HTML>}
     variable language "en"	;# language for HTML
 
     # header sent with each page
@@ -582,6 +582,7 @@ namespace eval WikitWub {
 	# [<style> media all "@import '[file join $css_prefix ie7.css]';"]
 	# <!\[endif\]-->
     variable head {
+	<meta charset="UTF-8">
 	[<link> rel stylesheet href [file join $css_prefix wikit_screen.css] media screen type text/css title "With TOC"]
 	[<link> rel "alternate stylesheet" href [file join $css_prefix wikit_screen_notoc.css] media screen type text/css title "Without TOC"]
 	[<link> rel stylesheet href [file join $css_prefix wikit_print.css] media print type text/css]
@@ -631,7 +632,6 @@ namespace eval WikitWub {
 	    window.onload = init;
 	}]]
 	<meta name="verify-v1" content="89v39Uh9xwxtWiYmK2JcYDszlGjUVT1Tq0QX+7H8AD0=">
-	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
     }
     variable shead $head
 
@@ -769,7 +769,7 @@ namespace eval WikitWub {
 
     proc list2plaintable {l columnclasses {tag ""}} {
 	set row 0
-	return [<table> class $tag summary {} [subst {
+	return [<table> class $tag [subst {
 	    [<tbody> [Foreach vl $l {
 		[<tr> class [If {[incr row] % 2} even else odd] \
 		     [Foreach v $vl c $columnclasses {
@@ -1140,16 +1140,19 @@ namespace eval WikitWub {
 	    foreach record [WDB Changes $N $edate] {
 		dict update record date cdate who cwho delta cdelta version version {}
 		set changes [WDB ChangeSetSize $N $version]
-		append R [<li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes"] \n
+		append R <li> "[WhoUrl $pcwho], [clock format $pcdate], #chars: $cdelta, #lines: $changes<br>" \n
+		set ::WFormat::diffid -$V
 		set C [summary_diff $N $V [expr {$V-1}]]
 		if {[catch {lassign [translate $N $V $name $C .html 0 1] C U T BR} msg]} {
 		    append R "<br>Failed to render difference for version $V<br>"
 		} else {
 		    append R $C
 		}
+		set ::WFormat::diffid ""
 		set pcdate $cdate
 		set pcwho $cwho
 		incr V -1
+		append R </li> \n
 		if {$V < 1} break
 	    }
 	}
@@ -1707,7 +1710,7 @@ namespace eval WikitWub {
 
 	append C "<button type='button' onclick='versionCompare($N, 0);'>Line compare version A and B</button>"
 	append C "<button type='button' onclick='versionCompare($N, 1);'>Word compare version A and B</button>"
-	append C "<table summary='' class='history'><thead class='history'>\n<tr>"
+	append C "<table class='history'><thead class='history'>\n<tr>"
 	if {$type eq "" || [string match "text/*" $type]} {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 Annotated 1 WikiText 1}
 	    lappend histheaders {Revert to} 1
@@ -2698,7 +2701,7 @@ namespace eval WikitWub {
     # list2table - convert list into sortable HTML table
     proc list2table {l header {footer {}}} {
 	set row 0
-	return [<table> class sortable summary {} [subst {
+	return [<table> class sortable [subst {
 	    [<thead> [<tr> [Foreach t $header {
 		[<th> class $t  [string totitle $t]]
 	    }]]]

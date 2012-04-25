@@ -7,6 +7,8 @@ namespace eval ::WFormat {
   namespace export TextToStream StreamToTcl StreamToHTML StreamToRefs \
     StreamToUrls FormatWikiToc ShowDiffs GetSection
 
+  variable diffid ""
+
   # In this file:
   #
   # proc TextToStream {text} -> stream
@@ -1059,6 +1061,8 @@ namespace eval ::WFormat {
 
   proc StreamToHTML {N mount s {cgi ""} {ip ""} {creating_preview 0} {creating_summary 0} {creating_diffs 0} {creating_revision 0} } {
 
+    variable diffid
+
     if {$creating_diffs || $creating_summary || $creating_preview || $creating_revision} {
       vs_no_edit
     } else {
@@ -1277,15 +1281,15 @@ namespace eval ::WFormat {
               append result "  </span>\n"
             }
             n {
-              append result "<div class='newwikiline' id='diff$insdelcnt'>"
+              append result "<div class='newwikiline' id='diff$insdelcnt$diffid'>"
               incr insdelcnt
             }
             o {
-              append result "<div class='oldwikiline' id='diff$insdelcnt'>"
+              append result "<div class='oldwikiline' id='diff$insdelcnt$diffid'>"
               incr insdelcnt
             }
             w {
-              append result "<div class='whitespacediff' id='diff$insdelcnt'>"
+              append result "<div class='whitespacediff' id='diff$insdelcnt$diffid'>"
               incr insdelcnt
             }
           }
@@ -1477,7 +1481,7 @@ namespace eval ::WFormat {
             set in_discussion 0
           }
           append result "<hr>"
-          append result "<div class='centered'><p></p><table summary='' class='wikit_categories'><tr>"
+          append result "<div class='centered'><p></p><table class='wikit_categories'><tr>"
           set text [string map [list "%|%" \1] $text]
           foreach cat [split $text |] {
             append result "<td>"
@@ -1739,9 +1743,9 @@ namespace eval ::WFormat {
     vs HD2  HD4 "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><h4"
     vs HD2  BLS "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2>\n"
     vs HD2  BLE "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2>\n"
-    vs HD2  L   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_options'><tr>"
-    vs HD2  TR  "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-    vs HD2  TRH "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><table summary='' class='wikit_table'><thead><tr>"
+    vs HD2  L   "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><table class='wikit_options'><tr>"
+    vs HD2  TR  "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+    vs HD2  TRH "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><table class='wikit_table'><thead><tr>"
     vs HD2  FI  "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2><pre\ class='\$sh_class'>"
     vs HD2  FE  "&nbsp;<a href='\$edit_url?N=\$N&amp;S=\$HD2_cnt' class='partedit'>edit</a></h2>"
   }                                                            
@@ -1762,9 +1766,9 @@ namespace eval ::WFormat {
     vs HD2  HD4 "</h2><h4"
     vs HD2  BLS "</h2>\n"
     vs HD2  BLE "</h2>\n"
-    vs HD2  L   "</h2><table summary='' class='wikit_options'><tr>"
-    vs HD2  TR  "</h2><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-    vs HD2  TRH "</h2><table summary='' class='wikit_table'><thead><tr>"
+    vs HD2  L   "</h2><table class='wikit_options'><tr>"
+    vs HD2  TR  "</h2><table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+    vs HD2  TRH "</h2><table class='wikit_table'><thead><tr>"
     vs HD2  FI  "</h2><pre\ class='\$sh_class'>"
     vs HD2  FE  "</h2>"
   }                                                            
@@ -1990,56 +1994,56 @@ namespace eval ::WFormat {
   vs BLS  BLE                      \n
   vs BLE  BLE                      \n
 
-  vs T    L       "<table summary='' class='wikit_options'><tr>"
-  vs Q    L "</pre><table summary='' class='wikit_options'><tr>"
-  vs U    L  "</ul><table summary='' class='wikit_options'><tr>"
-  vs O    L  "</ol><table summary='' class='wikit_options'><tr>"
-  vs I    L  "</dl><table summary='' class='wikit_options'><tr>"
-  vs D    L  "</dd></dl><table summary='' class='wikit_options'><tr>"
-  vs H    L       "<table summary='' class='wikit_options'><tr>"
+  vs T    L       "<table class='wikit_options'><tr>"
+  vs Q    L "</pre><table class='wikit_options'><tr>"
+  vs U    L  "</ul><table class='wikit_options'><tr>"
+  vs O    L  "</ol><table class='wikit_options'><tr>"
+  vs I    L  "</dl><table class='wikit_options'><tr>"
+  vs D    L  "</dd></dl><table class='wikit_options'><tr>"
+  vs H    L       "<table class='wikit_options'><tr>"
   vs TDE  L                                        "</tr><tr>"
   vs TDEH L                                        "</tr><tr>"
-  vs FE   L "</pre><table summary='' class='wikit_options'><tr>"
-  vs FI   L       "<table summary='' class='wikit_options'><tr>"
+  vs FE   L "</pre><table class='wikit_options'><tr>"
+  vs FI   L       "<table class='wikit_options'><tr>"
   vs L    L                                             "<tr>"
-  vs HD3  L  "</h3><table summary='' class='wikit_options'><tr>"
-  vs HD4  L  "</h4><table summary='' class='wikit_options'><tr>"
-  vs BLS  L     "\n<table summary='' class='wikit_options'><tr>"
-  vs BLE  L     "\n<table summary='' class='wikit_options'><tr>"
+  vs HD3  L  "</h3><table class='wikit_options'><tr>"
+  vs HD4  L  "</h4><table class='wikit_options'><tr>"
+  vs BLS  L     "\n<table class='wikit_options'><tr>"
+  vs BLE  L     "\n<table class='wikit_options'><tr>"
 
-  vs T    TR       "<table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-  vs Q    TR "</pre><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-  vs U    TR  "</ul><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-  vs O    TR  "</ol><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-  vs I    TR  "</dl><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-  vs D    TR  "</dd></dl><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-  vs H    TR       "<table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs T    TR       "<table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs Q    TR "</pre><table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs U    TR  "</ul><table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs O    TR  "</ol><table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs I    TR  "</dl><table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs D    TR  "</dd></dl><table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs H    TR       "<table class='wikit_table'><tbody><tr class='\$oddoreven'>"
   vs TDE  TR                                             "</tr><tr class='\$oddoreven'>"
   vs TDEH TR                              "</tr></thead><tbody><tr class='\$oddoreven'>"
-  vs FE   TR "</pre><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-  vs FI   TR       "<table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs FE   TR "</pre><table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs FI   TR       "<table class='wikit_table'><tbody><tr class='\$oddoreven'>"
   vs L    TR                                           "<tbody><tr class='\$oddoreven'>"
-  vs HD3  TR  "</h3><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-  vs HD4  TR  "</h4><table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-  vs BLS  TR     "\n<table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
-  vs BLE  TR     "\n<table summary='' class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs HD3  TR  "</h3><table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs HD4  TR  "</h4><table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs BLS  TR     "\n<table class='wikit_table'><tbody><tr class='\$oddoreven'>"
+  vs BLE  TR     "\n<table class='wikit_table'><tbody><tr class='\$oddoreven'>"
   
-  vs T    TRH       "<table summary='' class='wikit_table'><thead><tr>"
-  vs Q    TRH "</pre><table summary='' class='wikit_table'><thead><tr>"
-  vs U    TRH  "</ul><table summary='' class='wikit_table'><thead><tr>"
-  vs O    TRH  "</ol><table summary='' class='wikit_table'><thead><tr>"
-  vs I    TRH  "</dl><table summary='' class='wikit_table'><thead><tr>"
-  vs D    TRH  "</dd></dl><table summary='' class='wikit_table'><thead><tr>"
-  vs H    TRH       "<table summary='' class='wikit_table'><thead><tr>"
+  vs T    TRH       "<table class='wikit_table'><thead><tr>"
+  vs Q    TRH "</pre><table class='wikit_table'><thead><tr>"
+  vs U    TRH  "</ul><table class='wikit_table'><thead><tr>"
+  vs O    TRH  "</ol><table class='wikit_table'><thead><tr>"
+  vs I    TRH  "</dl><table class='wikit_table'><thead><tr>"
+  vs D    TRH  "</dd></dl><table class='wikit_table'><thead><tr>"
+  vs H    TRH       "<table class='wikit_table'><thead><tr>"
   vs TDE  TRH                              "</tr></tbody><thead><tr>"
   vs TDEH TRH                              "</tr></tbody><thead><tr>"
-  vs FE   TRH "</pre><table summary='' class='wikit_table'><thead><tr>"
-  vs FI   TRH       "<table summary='' class='wikit_table'><thead><tr>"
+  vs FE   TRH "</pre><table class='wikit_table'><thead><tr>"
+  vs FI   TRH       "<table class='wikit_table'><thead><tr>"
   vs L    TRH                                           "<thead><tr>"
-  vs HD3  TRH  "</h3><table summary='' class='wikit_table'><thead><tr>"
-  vs HD4  TRH  "</h4><table summary='' class='wikit_table'><thead><tr>"
-  vs BLS  TRH     "\n<table summary='' class='wikit_table'><thead><tr>"
-  vs BLE  TRH     "\n<table summary='' class='wikit_table'><thead><tr>"
+  vs HD3  TRH  "</h3><table class='wikit_table'><thead><tr>"
+  vs HD4  TRH  "</h4><table class='wikit_table'><thead><tr>"
+  vs BLS  TRH     "\n<table class='wikit_table'><thead><tr>"
+  vs BLE  TRH     "\n<table class='wikit_table'><thead><tr>"
 
   vs T    FI                      <pre\ class='\$sh_class'>
   vs Q    FI                </pre><pre\ class='\$sh_class'>
