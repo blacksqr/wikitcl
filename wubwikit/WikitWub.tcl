@@ -303,7 +303,7 @@ namespace eval WikitWub {
     template upload {} {
 	[<form> uploadform enctype multipart/form-data method post action [file join $::WikitWub::mount edit/save] {
 	    [<b> "Upload from file: "]
-	    [<label> [<submit> upload value 1 "Upload"]][<file> C title {Upload Content} ""]
+	    [<label> [<submit> upload value 1 "Upload"]][<file> C title {Upload Content} "1"]
 	    <br>Do not use the upload button if you edited the page in the text area above. Uploaded content will replace current content, so make sure include all text, including comments, in the uploaded content you wish to keep on the page.
 	    [<hidden> N $N]
 	    [<hidden> O [list [tclarmour $date] [tclarmour $who]]]

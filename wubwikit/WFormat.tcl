@@ -1581,7 +1581,7 @@ namespace eval ::WFormat {
       }
     }
 
-    unwind_uol uol $mode result 1
+    unwind_uol uol "" result 1
 
     # Close off the last section.
     if { [info exists html_frag(${state}_)] } {
