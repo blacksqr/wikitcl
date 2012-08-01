@@ -1739,7 +1739,7 @@ namespace eval WikitWub {
 	if {$type eq "" || [string match "text/*" $type]} {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 Annotated 1 WikiText 1 {Revert to} 1 A 1 B 1}
 	} else {
-	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1 {Revert to} 1}
+	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1}
 	}
 	foreach {column span} $histheaders {
 	    append C [<th> class [lindex $column 0] colspan $span $column]
@@ -1788,7 +1788,6 @@ namespace eval WikitWub {
 		append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
 		append C [<td> class Who [WhoUrl $who]]
 		append C [<td> class Image [<img> alt {} src [file join $pageURL $mount image?N=$N&V=$vn] height 100]]
-		append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
 		append C </tr> \n
 		incr rowcnt
 	    }
