@@ -2996,7 +2996,7 @@ namespace eval WikitWub {
 
     proc armour_and_render_snippet {s} {
 	set s [armour $s]
-	set s [string map {^^^^ <b> ~~~~ </b>} $s]
+	set s [string map {^^^^^^^^^^^^ <b> ~~~~~~~~~~~~ </b>} $s]
 	return $s
     }
 
@@ -3143,7 +3143,7 @@ namespace eval WikitWub {
 		package require Dict
 		catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
 		set stmtnm "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name MATCH :key and length(b.content) > 1"
-		set stmtct "SELECT a.id, a.name, a.date, a.type, snippet(pages_content_fts, \"^^^^\", \"~~~~\", \" ... \", -1, -32) as snip FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
+		set stmtct "SELECT a.id, a.name, a.date, a.type, snippet(pages_content_fts, \"^^^^^^^^^^^^\", \"~~~~~~~~~~~~\", \" ... \", -1, -32) as snip FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
 		set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
 		set n 0
 		set malformedmatch 0
