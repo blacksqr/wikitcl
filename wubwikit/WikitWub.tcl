@@ -2099,6 +2099,9 @@ namespace eval WikitWub {
 
 	lassign [WDB GetPage $N name date who type ] name date who otype
 	set page [WDB GetContent $N]
+	if {[string length $page] && $otype eq ""} {
+	    set otype "text/x-wikit"
+	}
 	if {$name eq ""} {
 	    Debug.wikit {/edit/save failed $N is not a valid page}
 	    return [Http NotFound $er [subst {
@@ -2139,12 +2142,12 @@ namespace eval WikitWub {
 	
 	# text must stay text
 	if {$otype ne "" && [string match text/* $otype] && ![string match text/* $type]} {
-	    return [sendPage $r badnewtype]	    
+	    return [sendPage $r badnewtype]
 	}
 
 	# Image must stay image
 	if {$otype ne "" && ![string match text/* $otype] && [string match text/* $type]} {
-	    return [sendPage $r badnewtype]	    
+	    return [sendPage $r badnewtype]
 	}
 
 	# if there is new page content, save it now
