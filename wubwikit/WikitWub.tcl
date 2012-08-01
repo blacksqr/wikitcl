@@ -2316,11 +2316,11 @@ namespace eval WikitWub {
 	# this makes sure that cache entries point to a filled-in page
 	# from now on, instead of a "[...]" link to a first-time edit page
 	variable include_pages
-	if {$date == 0 || $include_pages} {
+#	if {$date == 0 || $include_pages} {
 	    foreach from [WDB ReferencesTo $N] {
 		invalidate $r [file join $pageURL $from]
 	    }
-	}
+#	}
 
 	Debug.wikit {/edit/save complete $N}
 	# instead of redirecting, return the generated page with a Content-Location tag
@@ -2843,8 +2843,15 @@ namespace eval WikitWub {
 		set idlink [file join $mount image?N=$id]
 		set plink $id
 	    } else {
-		set idlink $id
-		set plink $id
+		set page [WDB GetContent $id]
+		if {[string length $page] == 0 || $page eq " "} {
+		    set idlink [file join $mount edit?N=$id] ;# enter edit mode for empty pages
+		    set plink $id
+		    set date 0
+		} else {
+		    set idlink $id
+		    set plink $id
+		}
 	    }
 	}
 	return [list $id $name $date $type [file join $pageURL $idlink] [file join $pageURL $plink]]
