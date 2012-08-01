@@ -1582,6 +1582,7 @@ namespace eval WikitWub {
 	Debug.wikit {/revision N=$N V=$V A=$A}
 
 	variable mount
+	variable pageURL
 	if {[who $r] eq ""} {
 	    # this is a call to /login with no args,
 	    # in order to generate the /login page
@@ -1604,15 +1605,14 @@ namespace eval WikitWub {
 	    return [Http NotFound $r]
 	}
 
-	set nver [WDB Versions $N]
-	if {$V > $nver} {
-	    return [Http NotFound $r]
-	}
-
 	set menu [menus Home Recent Help WhoAmI New Random HR [<a> href history?N=$N History]]
 
-	set name [WDB GetPage $N name]
-	if {$V >= 0} {
+	lassign [WDB GetPage $N name type] name type
+	if {$type eq "" || [string match "text/*" $type]} {
+	    set nver [WDB Versions $N]
+	    if {$V > $nver || $V < 0} {
+		return [Http NotFound $r]
+	    }
 	    set C [get_page_with_version $N $V $A]
 	    switch -- $ext {
 		.txt -
@@ -1645,6 +1645,29 @@ namespace eval WikitWub {
 			lappend menu [<a> href "revision?N=$N&V=$V&A=1" "Annotated"]
 		    }
 		}
+	    }
+	} else {
+	    set nver [WDB VersionsBinary $N]
+	    set versions [WDB ListPageVersionsBinary $N]
+	    set found 0
+	    foreach row $versions {
+		lassign $row vn date who
+		if {$vn == $V} {
+		    set found 1
+		    break
+		}
+	    }
+	    if {!$found} {
+		return [Http NotFound $r]
+	    }
+	    set Title "Version $V of [Ref $N]"
+	    set name "Version $V of $name"
+	    set C [<img> alt {} src [file join $pageURL $mount image?N=$N&V=$V]]
+	    if { $V > 0 } {
+		lappend menu [<a> href "revision?N=$N&V=[expr {$V-1}]&A=$A" "Previous version"]
+	    }
+	    if { $V < $nver } {
+		lappend menu [<a> href "revision?N=$N&V=[expr {$V+1}]&A=$A" "Next version"]
 	    }
 	}
 
@@ -1714,11 +1737,9 @@ namespace eval WikitWub {
 	}
 	append C "<table class='history'><thead class='history'>\n<tr>"
 	if {$type eq "" || [string match "text/*" $type]} {
-	    set histheaders {Rev 1 Date 1 {Modified by} 1 Annotated 1 WikiText 1}
-	    lappend histheaders {Revert to} 1
-	    lappend histheaders A 1 B 1
+	    set histheaders {Rev 1 Date 1 {Modified by} 1 Annotated 1 WikiText 1 {Revert to} 1 A 1 B 1}
 	} else {
-	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1}
+	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1 {Revert to} 1}
 	}
 	foreach {column span} $histheaders {
 	    append C [<th> class [lindex $column 0] colspan $span $column]
@@ -1729,9 +1750,6 @@ namespace eval WikitWub {
 	    set versions [WDB ListPageVersions $N $L $S]
 	    foreach row $versions {
 		lassign $row vn date who
-		set prev [expr {$vn-1}]
-		set next [expr {$vn+1}]
-		set curr $nver
 		if { $rowcnt % 2 } {
 		    append C "<tr class='odd'>"
 		} else {
@@ -1761,18 +1779,16 @@ namespace eval WikitWub {
 	    set versions [WDB ListPageVersionsBinary $N $L $S]
 	    foreach row $versions {
 		lassign $row vn date who
-		set prev [expr {$vn-1}]
-		set next [expr {$vn+1}]
-		set curr $nver
 		if { $rowcnt % 2 } {
 		    append C "<tr class='odd'>"
 		} else {
 		    append C "<tr class='even'>"
 		}
-		append C [<td> class Rev $vn]
+		append C [<td> class Rev [<a> href "revision?N=$N&V=$vn" rel nofollow $vn]]
 		append C [<td> class Date [clock format $date -format "%Y-%m-%d %T" -gmt 1]]
 		append C [<td> class Who [WhoUrl $who]]
-		append C [<td> class Image [<img> alt {} src [file join $pageURL $mount image?N=$N&V=$vn]]]
+		append C [<td> class Image [<img> alt {} src [file join $pageURL $mount image?N=$N&V=$vn] height 100]]
+		append C [<td> class Revert [<a> rel nofollow href "revert?N=$N&V=$vn" $vn]]
 		append C </tr> \n
 		incr rowcnt
 	    }
