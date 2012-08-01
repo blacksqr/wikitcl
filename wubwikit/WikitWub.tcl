@@ -1708,8 +1708,10 @@ namespace eval WikitWub {
 
 	lassign [WDB GetPage $N name type] name type
 
-	append C "<button type='button' onclick='versionCompare($N, 0);'>Line compare version A and B</button>"
-	append C "<button type='button' onclick='versionCompare($N, 1);'>Word compare version A and B</button>"
+	if {$type eq "" || [string match "text/*" $type]} {
+	    append C "<button type='button' onclick='versionCompare($N, 0);'>Line compare version A and B</button>"
+	    append C "<button type='button' onclick='versionCompare($N, 1);'>Word compare version A and B</button>"
+	}
 	append C "<table class='history'><thead class='history'>\n<tr>"
 	if {$type eq "" || [string match "text/*" $type]} {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 Annotated 1 WikiText 1}
