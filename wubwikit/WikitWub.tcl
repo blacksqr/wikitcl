@@ -1739,7 +1739,7 @@ namespace eval WikitWub {
 	if {$type eq "" || [string match "text/*" $type]} {
 	    set histheaders {Rev 1 Date 1 {Modified by} 1 Annotated 1 WikiText 1 {Revert to} 1 A 1 B 1}
 	} else {
-	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1}
+	    set histheaders {Rev 1 Date 1 {Modified by} 1 Image 1 {Revert to} 1}
 	}
 	foreach {column span} $histheaders {
 	    append C [<th> class [lindex $column 0] colspan $span $column]
