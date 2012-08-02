@@ -500,15 +500,19 @@ namespace eval WDB {
     proc RecentChanges {date} {
 	set result {}
 	[statement "pages_gt_date_with_content"] foreach -as dicts d {
-	    lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who] type [dict get? $d type]]
-	    if {[llength  $result] >= 100} {
-		break
+	    if {[dict get? $d type] eq "" || [dict get? $d type] eq "text/x-wikit"} {
+		lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who] type [dict get? $d type]]
+		if {[llength  $result] >= 100} {
+		    break
+		}
 	    }
 	}
 	[statement "binary_gt_date_with_content"] foreach -as dicts d {
-	    lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who] type [dict get? $d type]]
-	    if {[llength  $result] >= 200} {
-		break
+	    if {[dict get? $d type] ne "" && [dict get? $d type] ne "text/x-wikit"} {
+		lappend result [list id [dict get? $d id] name [dict get? $d name] date [dict get? $d date] who [dict get? $d who] type [dict get? $d type]]
+		if {[llength  $result] >= 200} {
+		    break
+		}
 	    }
 	}
 	return [lrange [lsort -integer -decreasing -index 5 $result] 0 100]
