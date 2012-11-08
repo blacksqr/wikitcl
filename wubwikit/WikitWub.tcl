@@ -3108,7 +3108,7 @@ namespace eval WikitWub {
 	}
 	if {$count == 0} {
 	    append result <br>
-	    append result [<b> "No matches found, try putting a * at the end."]
+	    append result [<b> "No matches found, try putting an asterisk (*) at the end to search on prefixes."]
 	}
 	return $result
     }
