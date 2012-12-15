@@ -312,7 +312,7 @@ namespace eval WikitWub {
     }
 
     # page sent when editing a page
-    template edit {Editing [armour $name]} {
+    template edit {Editing $name} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
 		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
@@ -371,7 +371,7 @@ namespace eval WikitWub {
     }
 
     # page sent when editing a page
-    template edit_binary {Editing [armour $name]} {
+    template edit_binary {Editing $name} {
 	[<div> class edit [subst {
 	    [<div> class header [subst {
 		[<div> class logo [<a> href [lindex $::WikitWub::text_url 1] class logo "[lindex $::WikitWub::text_url 0][<img> alt {} src [lindex $::WikitWub::text_url 2][lindex $::WikitWub::text_url 3]]"]]
