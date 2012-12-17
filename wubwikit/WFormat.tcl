@@ -1224,7 +1224,7 @@ namespace eval ::WFormat {
             append result "\" target=\"_blank"
           }
           append result $html_frag(tc) \
-            [quote $text] $html_frag(_a)
+            [quote $text] "<img src='/ext.png'>" $html_frag(_a)
         }
         x {
           lassign [split_url_link_text $text] link text
@@ -1239,13 +1239,13 @@ namespace eval ::WFormat {
               if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
-              append result $html_frag(tc) [quote $text] $html_frag(_a)
+              append result $html_frag(tc) [quote $text] "<img src='/ext.png'>" $html_frag(_a)
             } else {
               append result \[ $html_frag(e_) [quote $link] 
               if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
-              append result $html_frag(tc) [incr count] $html_frag(_a) \]
+              append result $html_frag(tc) [incr count] "<img src='/ext.png'>" $html_frag(_a) \]
             }
           }
         }
