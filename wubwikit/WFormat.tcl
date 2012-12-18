@@ -1218,8 +1218,7 @@ namespace eval ::WFormat {
 	  if { $in_header } {
 	    append tocheader [quote $text]
 	  }
-          append result \
-            $html_frag(e_) [quote $link] 
+          append result $html_frag(e_) [quote $link]
           if {$creating_preview} {
             append result "\" target=\"_blank"
           }
@@ -1235,17 +1234,17 @@ namespace eval ::WFormat {
             append result $html_frag(i_) $link $html_frag(tc)
           } else {
             if {$text ne $link} {
-              append result $html_frag(e_) [quote $link] 
+              append result $html_frag(e_) [quote $link]
               if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
               append result $html_frag(tc) [quote $text] "<img src='/ext.png'>" $html_frag(_a)
             } else {
-              append result \[ $html_frag(e_) [quote $link] 
+              append result \[ $html_frag(e_) [quote $link]
               if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
-              append result $html_frag(tc) [incr count] "<img src='/ext.png'>" $html_frag(_a) \]
+              append result $html_frag(tc) [incr count] $html_frag(_a) \]
             }
           }
         }
