@@ -80,6 +80,7 @@ if {0} {
 namespace eval WDB {
     variable readonly 0
     variable transaction_started 0
+    variable broken_link_db_available 0
 
     proc statement {name} {
 	variable statements
@@ -160,6 +161,19 @@ namespace eval WDB {
 	    set statements($name) [$db prepare $sql]
 	}
 	return $statements($name)
+    }
+    proc lstatement {name} {
+	variable lstatements
+	variable ldb
+	if {![info exists lstatements($name)]} {
+	    switch -exact -- $name {
+		"link" { set sql {SELECT url, status_code FROM link WHERE url = :url} }
+		"broken_links" { set sql {SELECT a.url, a.status_code, b.page FROM link a, link_usage b WHERE a.url = b.url AND (a.status_code < 0 OR a.status_code >= 400)} }
+		default { error "Unknown statement '$name'" }
+	    }
+	    set lstatements($name) [$ldb prepare $sql]
+	}
+	return $lstatements($name)
     }
     proc pagecache_statement {name} {
 	variable pagecache_statements
@@ -564,6 +578,45 @@ namespace eval WDB {
 	    lappend results $d
 	}
 	return $results
+    }
+
+    # LinkBelievedBroken --
+    #
+    #  check if a link is believed to be broken
+    #
+    # Parameters:
+    #  url - the link
+    #
+    # Results:
+    #  boolean, true is link is broken, false otherwise
+
+    proc LinkBelievedBroken {url} {
+	variable broken_link_db_available
+	if {$broken_link_db_available} {
+	    set rs [[lstatement "link"] execute]
+	    set rs_next [$rs nextdict d]
+	    $rs close
+	    if {$rs_next} {
+		set stat [dict get $d status_code]
+		set rt [expr {$stat < -1 || $stat >= 400}]
+	    } else {
+		set rt 0
+	    }
+	} else {
+	    set rt 0
+	}
+	return $rt
+    }
+
+    proc BrokenLinks {} {
+	variable broken_link_db_available
+	set rl {}
+	if {$broken_link_db_available} {
+	    [lstatement "broken_links"] foreach -as dicts d {
+		lappend rl $d
+	    }
+	}
+	return $rl
     }
 
     #----------------------------------------------------------------------------  
@@ -1252,6 +1305,34 @@ namespace eval WDB {
 	tdbc::sqlite3::connection create $db $file
 	[statement "enable_foreign_keys"] allrows
 	[statement "enable_journal_mode_WAL"] allrows
+    }
+
+    proc LinkDatabase {args} {
+	variable ldb wldb
+	variable broken_link_db_available
+	dict for {n v} $args {
+	    set $n $v
+	}
+	tdbc::sqlite3::connection create $ldb $file
+	[statement "enable_foreign_keys"] allrows
+	[statement "enable_journal_mode_WAL"] allrows
+	set broken_link_db_available 1
+    }
+
+    proc CloseLinkDatabase {} {
+	variable ldb
+	variable broken_link_db_available
+	variable lstatements
+	if {$broken_link_db_available} {
+	    set broken_link_db_available 0
+	    if {[info exists lstatements]} {
+		foreach {k v} [array get lstatements] {
+		    $v close
+		}
+		unset lstatements
+	    }
+	    $ldb close
+	}
     }
 
     namespace export -clear *

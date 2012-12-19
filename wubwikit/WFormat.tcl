@@ -1222,8 +1222,13 @@ namespace eval ::WFormat {
           if {$creating_preview} {
             append result "\" target=\"_blank"
           }
-          append result $html_frag(tc) \
-            [quote $text] "<img src='/ext.png'>" $html_frag(_a)
+          append result $html_frag(tc) [quote $text]
+          if {[WDB LinkBelievedBroken $link]} {
+            append result "<img src='/extbrk.png'>"
+          } else {
+            append result "<img src='/ext.png'>"
+          }
+          append result $html_frag(_a)
         }
         x {
           lassign [split_url_link_text $text] link text
@@ -1238,13 +1243,23 @@ namespace eval ::WFormat {
               if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
-              append result $html_frag(tc) [quote $text] "<img src='/ext.png'>" $html_frag(_a)
+              append result $html_frag(tc) [quote $text]
+              if {[WDB LinkBelievedBroken $link]} {
+                append result "<img src='/extbrk.png'>"
+              } else {
+                append result "<img src='/ext.png'>"
+              }
+              append result $html_frag(_a)
             } else {
               append result \[ $html_frag(e_) [quote $link]
               if {$creating_preview} {
                 append result "\" target=\"_blank"
               }
-              append result $html_frag(tc) [incr count] $html_frag(_a) \]
+              append result $html_frag(tc) [incr count]
+              if {[WDB LinkBelievedBroken $link]} {
+                append result "<img src='/extbrk.png'>"
+              }
+              append result $html_frag(_a) \]
             }
           }
         }

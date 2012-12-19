@@ -743,6 +743,31 @@ namespace eval WikitWub {
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
     }
 
+    proc /brokenlinks {r} {
+	set i 0
+	set ld [dict create]
+	dict set ld [incr i] {status_code -1 description "Not tested yet"}
+	dict set ld [incr i] {status_code -2 description "http::geturl error"}
+	dict set ld [incr i] {status_code -3 description "http::geturl returned http::status 'timeout'"}
+	dict set ld [incr i] {status_code -4 description "http::geturl returned http::status 'error'"}
+	dict set ld [incr i] {status_code -5 description "http::geturl returned http::status 'eof'"}
+	dict set ld [incr i] {status_code -6 description "http::geturl returned http::status 'timeout' (timeout was set to 5 seconds)"}
+	dict set ld [incr i] {status_code -7 description "http::geturl returned http::status 'ok' but http::ncode was not numeric"}
+	dict set ld [incr i] {status_code "> 0" description "http:ncode when http::geturl returned http::status 'ok'"}
+	set C [Html dict2table $ld {status_code description}]
+	set td [dict create]
+	set d {}
+	set i 0
+	foreach d [WDB BrokenLinks] {
+	    dict set d url [<a> rel nofollow target _blank href [dict get $d url] [dict get $d url]]
+	    set name [WDB GetPage [dict get $d page] name]
+	    dict set d page [<a> href /[dict get $d page] $name]
+	    dict set td [incr i] $d
+	}
+	append C [Html dict2table $td {url status_code page}]
+	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
+    }
+
     # generate site map
     proc /sitemap {r args} {
 	variable docroot
@@ -754,7 +779,7 @@ namespace eval WikitWub {
 	    set map {}
 	    append map [Sitemap location $p "" mtime [file mtime $docroot/html/welcome.html] changefreq weekly] \n
 	    append map [Sitemap location $p 4 mtime [clock seconds] changefreq always priority 1.0] \n
-	    
+
 	    foreach record [WDB AllPages] {
 		set id [dict get $record id]
 		append map [Sitemap location $p $id mtime [dict get $record date]] \n
@@ -3638,7 +3663,7 @@ namespace eval WikitWub {
 	    set dfile [file join [pwd] $file]
 	    file copy [file join $drdir [K [file link $dfile] [file delete $dfile]]] $dfile
 	}
-	
+
 	# initialize wikit DB
 	variable wikitdbpath
 	if {![info exists wikitdbpath] || $wikitdbpath eq ""} {
@@ -3647,9 +3672,15 @@ namespace eval WikitWub {
 	    } else {
 		set wikitdbpath [file join $wikitroot $wikidb]
 	    }
-	}	
+	}
 
 	WDB WikiDatabase file $wikitdbpath shared 1
+
+	# initialize broken links database
+	variable broken_link_db
+	if {[info exists broken_link_db] && [string length $broken_link_db]} {
+	    WDB LinkDatabase file $broken_link_db
+	}
 	
 	package require utf8
 	variable utf8re [::utf8::makeUtf8Regexp]
