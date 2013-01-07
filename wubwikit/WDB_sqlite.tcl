@@ -81,6 +81,7 @@ namespace eval WDB {
     variable readonly 0
     variable transaction_started 0
     variable broken_link_db_available 0
+    variable broken_link_cache
 
     proc statement {name} {
 	variable statements
@@ -167,7 +168,7 @@ namespace eval WDB {
 	variable ldb
 	if {![info exists lstatements($name)]} {
 	    switch -exact -- $name {
-		"link" { set sql {SELECT url, status_code FROM link WHERE url = :url} }
+		"links" { set sql {SELECT url, status_code FROM link} }
 		"broken_links" { set sql {SELECT a.url, a.status_code, b.page FROM link a, link_usage b WHERE a.url = b.url AND (a.status_code < 0 OR a.status_code >= 400)} }
 		default { error "Unknown statement '$name'" }
 	    }
@@ -592,16 +593,9 @@ namespace eval WDB {
 
     proc LinkBelievedBroken {url} {
 	variable broken_link_db_available
+	variable broken_link_cache
 	if {$broken_link_db_available} {
-	    set rs [[lstatement "link"] execute]
-	    set rs_next [$rs nextdict d]
-	    $rs close
-	    if {$rs_next} {
-		set stat [dict get $d status_code]
-		set rt [expr {$stat < -1 || $stat >= 400}]
-	    } else {
-		set rt 0
-	    }
+	    set rt [info exists broken_link_cache($url)]
 	} else {
 	    set rt 0
 	}
@@ -1310,21 +1304,31 @@ namespace eval WDB {
     proc LinkDatabase {args} {
 	variable ldb wldb
 	variable broken_link_db_available
+	variable broken_link_cache
 	dict for {n v} $args {
 	    set $n $v
 	}
 	tdbc::sqlite3::connection create $ldb $file
 	[statement "enable_foreign_keys"] allrows
 	[statement "enable_journal_mode_WAL"] allrows
+	unset -nocomplain broken_link_cache
+	[lstatement "links"] foreach -as dicts d {
+	    set stat [dict get $d status_code]
+	    if {$stat < -1 || $stat >= 400} {
+		set broken_link_cache([dict get $d url]) 1
+	    }
+	}
 	set broken_link_db_available 1
     }
 
     proc CloseLinkDatabase {} {
 	variable ldb
 	variable broken_link_db_available
+	variable broken_link_cache
 	variable lstatements
 	if {$broken_link_db_available} {
 	    set broken_link_db_available 0
+	    unset -nocomplain broken_link_cache
 	    if {[info exists lstatements]} {
 		foreach {k v} [array get lstatements] {
 		    $v close
