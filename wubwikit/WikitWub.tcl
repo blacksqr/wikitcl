@@ -3702,6 +3702,8 @@ namespace eval WikitWub {
 	    dict set protected $v $n
 	}
 
+	WDB PrimePagenameCache
+
 	Debug on WDB
 	variable rprotected_pages
 	variable rprotected

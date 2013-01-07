@@ -157,6 +157,7 @@ namespace eval WDB {
 		"redirects_to"                          { set sql {SELECT id
 		                                                   FROM pages_content
 		                                                   WHERE lower(content) = lower(:redir)} }
+		"names"                                 { set sql {SELECT id, name FROM pages} }
 		default { error "Unknown statement '$name'" }
 	    }
 	    set statements($name) [$db prepare $sql]
@@ -1336,6 +1337,13 @@ namespace eval WDB {
 		unset lstatements
 	    }
 	    $ldb close
+	}
+    }
+
+    proc PrimePagenameCache {} {
+	variable namecache
+	[statement "names"] foreach -as dicts d {
+	    set namecache([string tolower [dict get $d name]]) [dict get $d id]
 	}
     }
 
