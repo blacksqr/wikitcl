@@ -1302,6 +1302,20 @@ namespace eval WDB {
 	[statement "enable_journal_mode_WAL"] allrows
     }
 
+    proc CloseWikiDatabase {} {
+	variable db
+	variable statements
+	puts "Closing Wiki database"
+	if {[info exists statements]} {
+	    foreach {k v} [array get statements] {
+		$v close
+	    }
+	    unset statements
+	    }
+	$db close
+	unset db
+    }
+
     proc LinkDatabase {args} {
 	variable ldb wldb
 	variable broken_link_db_available
@@ -1327,6 +1341,7 @@ namespace eval WDB {
 	variable broken_link_db_available
 	variable broken_link_cache
 	variable lstatements
+	puts "Closing Link database"
 	if {$broken_link_db_available} {
 	    set broken_link_db_available 0
 	    unset -nocomplain broken_link_cache

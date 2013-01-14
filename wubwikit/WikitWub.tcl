@@ -3775,6 +3775,12 @@ namespace eval WikitWub {
 	return [Direct create $name {*}$args namespace ::WikitWub ctype "x-text/wiki"]
     }
 
+    proc close {} {
+	WDB CloseWikiDatabase
+	WDB CloseLinkDatabase
+	exit
+    }
+
     namespace export -clear *
     namespace ensemble create -subcommands {}
 }
