@@ -868,6 +868,8 @@ namespace eval WikitWub {
 	    set menus(Search) [<a> href [file join $mount searchp] "Search"]
 	    set menus(WhoAmI) [<a> href [file join $mount whoami] "WhoAmI"]/[<a> href [file join $mount logout] "Logout"]
 	    set menus(Random) [<a> href [file join $mount random] "Random page"]
+	    set menus(PrevP)  [<a> href [file join $mount previouspage] "Previous page"]
+	    set menus(NextP)  [<a> href [file join $mount nextpage] "Next page"]
 	    set menus(New)    [<a> href [file join $mount new] "Create new page"]
 	}
 	set m {}
@@ -2026,6 +2028,26 @@ namespace eval WikitWub {
 	    }
 	}
 	return [Http Redir $r "http://[dict get $r host]/$N"]
+    }
+
+    proc next_or_prev {r incr} {
+	set N ""
+	if {[dict exists $r referer]} {
+	    set ud [Url parse [dict get $r referer]]
+	    set n [lindex [file split [dict get $ud -path]] 1]
+	    if {[string is integer -strict $n]} {
+		incr n $incr
+		set N $n
+	    }
+	}
+    }
+
+    proc /nextpage {r} {
+	return [Http Redir $r "http://[dict get $r host]/[next_or_prev $r 1]"]
+    }
+
+    proc /previouspage {r} {
+	return [Http Redir $r "http://[dict get $r host]/[next_or_prev $r -1]"]
     }
 
     proc /preview { r N O } {
@@ -3401,7 +3423,7 @@ namespace eval WikitWub {
 		lappend menu {*}[menus HR]
 		lappend menu [<a> href $backRef References]
 	    }
-	    set menu [menus Home Recent Help WhoAmI New Random {*}$menu]
+	    set menu [menus Home Recent Help WhoAmI New Random PrevP NextP {*}$menu]
 	    set footer [menus Home Recent Help New Search WhoAmI {*}$footer]
 	    lappend menu [<a> href [file join $mount edit]?N=$N Edit]
 	    lappend footer [<a> href [file join $mount edit]?N=$N Edit]
@@ -3529,7 +3551,7 @@ namespace eval WikitWub {
 	    append subtitle $redirected
 
 	    # sendPage vars
-	    set menu [menus Home Recent Help WhoAmI New Random {*}$menu]
+	    set menu [menus Home Recent Help WhoAmI New Random PrevP NextP {*}$menu]
 	    set footer [menus Home Recent Help New Search {*}$footer]
 
 	    variable hidereadonly
@@ -3575,6 +3597,7 @@ namespace eval WikitWub {
     variable image_prefix "/_images"
 
     proc init {args} {
+
 	Debug.wikit {init: $args}
 	variable {*}$args
 
@@ -3681,7 +3704,7 @@ namespace eval WikitWub {
 	if {[info exists broken_link_db] && [string length $broken_link_db]} {
 	    WDB LinkDatabase file $broken_link_db
 	}
-	
+
 	package require utf8
 	variable utf8re [::utf8::makeUtf8Regexp]
 	variable utf8clean
