@@ -765,6 +765,7 @@ namespace eval ::WFormat {
 
                                                  set rmaps {}
                                                  set rn 0
+                                                 set tn 0
                                                  while 1 {
                                                    set rl [regexp -inline -indices -- $prelre $text]
                                                    if {[llength $rl] == 0} break
@@ -788,6 +789,8 @@ namespace eval ::WFormat {
                                                      append rtext [string range $text [expr {$l1+1}] end]
                                                      set text $rtext
                                                    }
+                                                   incr tn
+                                                   if {$tn > 10} break
                                                  }
 #                                                 regsub -all $prelre $text "\0\1x\2\\1\3\\2\0" text
                                                  ## puts stderr X>>$text<<*
