@@ -729,7 +729,7 @@ namespace eval ::WFormat {
     set bpre  {\[(brefs:|backrefs:)([^\]]*)]}  ; #  page back-references ; # compat
     #set lre  {\m(https?|ftp|news|mailto|file):(\S+[^\]\)\s\.,!\?;:'>"])} ; # "
     #set lre  {\m(https?|ftp|news|mailto|file):([^\s:]+[^\]\)\s\.,!\?;:'>"])} ; # "
-    set prelre {\[\m(https?|ftp|news|mailto|file|irc):([^\s:\]][^\]]*?)]} ; # "
+    set prelre {\[\m(https?|ftp|news|mailto|file|irc):([^\s\]][^\]]*?)]} ; # "
     set lre  {\m(https?|ftp|news|mailto|file|irc):([^\s:]\S*[^\]\)\s\.,!\?;:'>"])} ; # "
     set lre2 {\m(https?|ftp|news|mailto|file|irc):([^\s:][^\s%]*[^\]\)\s\.,!\?;:'>"]%\|%[^%]+%\|%)} ; # "
     set ire {<<include:(.*?)>>}
@@ -762,12 +762,42 @@ namespace eval ::WFormat {
                                                  ## puts stderr A>>$text<<*
 
                                                  # Isolate external links.
-                                                 regsub -all $prelre $text "\0\1x\2\\1\3\\2\0" text
+
+                                                 set rmaps {}
+                                                 set rn 0
+                                                 while 1 {
+                                                   set rl [regexp -inline -indices -- $prelre $text]
+                                                   if {[llength $rl] == 0} break
+                                                   foreach {l h u} $rl {
+                                                     lassign $l l0 l1
+                                                     set rtext ""
+                                                     if {$l0 > 0} {
+                                                       append rtext [string range $text 0 [expr {$l0 -1}]]
+                                                     }
+                                                     append rtext \0\1x\2
+                                                     lassign $h h0 h1
+                                                     lappend rmaps $rn [string range $text $h0 $h1]
+                                                     append rtext \4$rn\4
+                                                     incr rn
+                                                     append rtext \3
+                                                     lassign $u u0 u1
+                                                     lappend rmaps $rn [string range $text $u0 $u1]
+                                                     append rtext \4$rn\4
+                                                     incr rn
+                                                     append rtext \0
+                                                     append rtext [string range $text [expr {$l1+1}] end]
+                                                     set text $rtext
+                                                   }
+                                                 }
+#                                                 regsub -all $prelre $text "\0\1x\2\\1\3\\2\0" text
                                                  ## puts stderr X>>$text<<*
                                                  regsub -all $lre2 $text "\0\1u\2\\1\3\\2\0" text
                                                  regsub -all $lre  $text "\0\1u\2\\1\3\\2\0" text
                                                  regsub -all $ire $text "\0\1INCLUDE\2\\1\\2\0" text
                                                  set text [string map {\3 :} $text]
+                                                 foreach {rn rt} $rmaps {
+                                                   set text [string map [list \4$rn\4 $rt] $text]
+                                                 }
                                                  ## puts stderr C>>$text<<*
 
                                                  # External links in brackets are simpler cause we know where the
