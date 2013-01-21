@@ -1,4 +1,3 @@
-package require OO
 package require sqlite3
 package require tdbc::sqlite3
 package provide WDB 1.0

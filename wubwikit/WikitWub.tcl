@@ -1453,7 +1453,7 @@ namespace eval WikitWub {
 		}
 		.code {
 		    set C [WFormat TextToStream $C 0 0 0]
-		    set C [WFormat StreamToTcl $name $C $V ::WikitWub::InfoProc]
+		    set C [WFormat StreamToTcl $name $C $V ::WikitWub::InfoProcNeverCreate]
 		    return [Http NoCache [Http Ok $r $C text/plain]]
 		}
 		.str {
@@ -1466,7 +1466,7 @@ namespace eval WikitWub {
 		    if { $W } {
 			set C [WFormat ShowDiffs $C]
 		    } else {
-			if {[catch {lassign [WFormat StreamToHTML $N $mount [WFormat TextToStream $C] $pageURL ::WikitWub::InfoProc 0 0 1] C U T BR} msg]} {
+			if {[catch {lassign [WFormat StreamToHTML $N $mount [WFormat TextToStream $C] $pageURL ::WikitWub::InfoProcNeverCreate 0 0 1] C U T BR} msg]} {
 			    set C "Could not render difference between version $V and version $D"
 			}
 		    }
@@ -2902,6 +2902,10 @@ namespace eval WikitWub {
 	    }
 	}
 	return [list $id $name $date $type [file join $pageURL $idlink] [file join $pageURL $plink]]
+    }
+
+    proc InfoProcNeverCreate {ref {query_only 0} {empty_ok 1}} {
+	return [InfoProc $ref 1 $empty_ok]
     }
 
     proc pageXML {N} {

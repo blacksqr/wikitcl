@@ -2137,7 +2137,7 @@ namespace eval ::WFormat {
     A_ {<a class='backreflink' href="}
 	_a {</a>}              b1 <b>  f1 "<span class='tt'>"
         i_ {<img onerror="this.src='/plume404.png'" alt="" src="} i0 </i>
-    tc {">}                i1 <i>
+        tc {">}                i1 <i>
         e_ {<a rel="nofollow" href="}
   } ; # "
 
