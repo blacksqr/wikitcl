@@ -1,5 +1,5 @@
 #! /usr/bin/env tclkit
-
+Debug define rss 0
 package require Html
 package provide WikitRss 1.0
 
@@ -170,7 +170,7 @@ namespace eval WikitRss {
 		}
 	    }
 	    
-	    Debug.rss {detail $name $date $who $id} 7
+	    #Debug.rss {detail $name $date $who $id} 7
 
 	    if {$delta > 0} {
 		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$id " ($delta characters)\n$changes"] \n
