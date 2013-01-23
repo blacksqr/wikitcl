@@ -744,7 +744,6 @@ namespace eval WikitWub {
     }
 
     proc /brokenlinks {r} {
-	dbgs "Brokenlinks start"
 	set i 0
 	set ld [dict create]
 	dict set ld [incr i] {status_code -1 description "Not tested yet"}
@@ -766,13 +765,11 @@ namespace eval WikitWub {
 	    dict set td [incr i] $d
 	}
 	append C [Html dict2table $td {url status_code page}]
-	dbgs "Brokenlinks end"
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
     }
 
     # generate site map
     proc /sitemap {r args} {
-	dbgs "/sitemap start"
 	variable docroot
 	variable pageURL
 	variable sitemap
@@ -792,7 +789,6 @@ namespace eval WikitWub {
 	} else {
 	    set map $sitemap
 	}
-	dbgs "/sitemap end"
 	return [Http NoCache [Http Ok $r [Sitemap sitemap $map] text/xml]]
     }
 
@@ -901,7 +897,6 @@ namespace eval WikitWub {
     }
 
     proc /cleared { r } {
-	dbgs "/cleared start"
 	perms $r read
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
@@ -946,7 +941,6 @@ namespace eval WikitWub {
 	set footer [menus Home Recent Help New Search]
 	set C [join $results "\n"]
 
-	dbgs "/cleared end"
 	return [sendPage $r spage]
     }
 
@@ -1124,7 +1118,6 @@ namespace eval WikitWub {
     }
 
     proc /summary {r N {D 10}} {
-	dbgs "/summary start"
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -1205,12 +1198,10 @@ namespace eval WikitWub {
 	set name "Edit summary for $name"
 	set subtitle "Edit summary"
 
-	dbgs "/summary end"
 	return [sendPage $r spage]
     }
 
     proc /diff {r N {V -1} {D -1} {W 0} {T 0}} {
-	dbgs "/diff start"
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -1525,7 +1516,6 @@ namespace eval WikitWub {
 
 	set C [replace_toc $C]
 
-	dbgs "/diff end"
 	return [sendPage $r spage]
     }
 
@@ -1534,7 +1524,6 @@ namespace eval WikitWub {
     }
 
     proc /revert {r N V} {
-	dbgs "/revert start"
 	variable need_recaptcha
 	if {$need_recaptcha && ![recaptcha_active]} {
 	    return [Http NotFound $r]	    
@@ -1567,7 +1556,6 @@ namespace eval WikitWub {
 	}
 
 	set r [jQ form $r .autoform target '#result']
-	dbgs "/revert end"
 	if {$need_recaptcha} {
 	    return [sendPage $r revert]
 	} else {
@@ -1611,7 +1599,6 @@ namespace eval WikitWub {
     }
 
     proc /revision {r N {V -1} {A 0}} {
-	dbgs "/revision start"
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -1721,13 +1708,11 @@ namespace eval WikitWub {
 
 	set C [replace_toc $C]
 
-	dbgs "/revision end"
 	return [sendPage $r spage]
     }
 
     # /history - revision history
     proc /history {r N {S 0} {L 25}} {
-	dbgs "/history start"
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -1846,7 +1831,6 @@ namespace eval WikitWub {
 	set footer [menus Home Recent Help New Random Search]
 	set menu [menus Home Recent Help WhoAmI New HR {*}$menu]
 
-	dbgs "/history end"
 	return [sendPage $r spage]
     }
 
@@ -1875,14 +1859,11 @@ namespace eval WikitWub {
     }
 
     proc /who {r} {
-	dbgs "/who start"
 	set C [Html dict2table [dict get $r -session] {who edit}]
-	dbgs "/who end"
 	return [Http NoCache [Http Ok [sortable $r] $C x-text/wiki]]
     }
 
     proc /whoami {r} {
-	dbgs "/whoami start"
 	variable pageURL
 	set nick [who $r]
 	if {[string length $nick]} {
@@ -1896,32 +1877,26 @@ namespace eval WikitWub {
 	set Title "Who Am I?"
 	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New Search]
-	dbgs "/whoami end"
 	return [sendPage $r spage]
     }
 
     proc /logout {r} {
-	dbgs "/logout start"
 	variable mount
 	variable cookie
 	variable pageURL
 	set r [Cookies Clear $r path $mount -name $cookie]
 	if {[dict exists $r referer]} {
 	    if {[regexp {^.*/(\d+)$} [dict get $r referer] -> N] || [regexp {N=(\d+)} [dict get $r referer] -> N]} {
-		dbgs "/logout end"
 		return [Http Redir $r [file join $pageURL $N]]
 	    } else {
-		dbgs "/logout end"
 		return [Http Redir $r [dict get $r referer]]	
 	    }
 	} else {
-	    dbgs "/logout end"
 	    return [/whoami $r]
 	}
     }
 
     proc /edit/login {r {nickname ""} {R ""}} {
-	dbgs "/edit/login start"
 	perms $r write
 	variable mount
 	set path [split [dict get $r -path] /]
@@ -1962,7 +1937,6 @@ namespace eval WikitWub {
 	    }
 	}
 
-	dbgs "/edit/login end"
 	return [redir $r $R [<a> href $R "Created Account"]]
     }
 
@@ -2036,7 +2010,6 @@ namespace eval WikitWub {
     }
 
     proc /random {r} {
-	dbgs "/random start"
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -2058,7 +2031,6 @@ namespace eval WikitWub {
 		break
 	    }
 	}
-	dbgs "/random random"
 	return [Http Redir $r "http://[dict get $r host]/$N"]
     }
 
@@ -2075,17 +2047,14 @@ namespace eval WikitWub {
     }
 
     proc /nextpage {r} {
-	dbgs "/nextpage"
 	return [Http Redir $r "http://[dict get $r host]/[next_or_prev $r 1]"]
     }
 
     proc /previouspage {r} {
-	dbgs "/previouspage"
 	return [Http Redir $r "http://[dict get $r host]/[next_or_prev $r -1]"]
     }
 
     proc /preview { r N O } {
-	dbgs "/preview start"
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -2100,12 +2069,10 @@ namespace eval WikitWub {
 	set O [string map {\t "        "} [encoding convertfrom utf-8 $O]]
 	lassign [translate $N -1 preview $O .html 1 1] C U T BR
 	set C [replace_toc $C]
-	dbgs "/preview end"
 	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
     }
 
     proc /included { r N } {
-	dbgs "/included start"
 	variable detect_robots
 	variable pageURL
 	variable mount
@@ -2130,12 +2097,10 @@ namespace eval WikitWub {
 	    lassign [translate $N -1 preview $O .html 1 1] C U T BR
 	    set C [replace_toc $C]
 	}
-	dbgs "/included end"
 	return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
     }
 
     proc /image { r N {V -1} } {
-	dbgs "/image start"
 	variable detect_robots
 	variable pageURL
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
@@ -2152,21 +2117,17 @@ namespace eval WikitWub {
 	if {$type ne "" && ![string match text/* $type]} {
 	    if {[string is integer -strict $V] && $V >= 0} {
 		lassign [WDB GetBinary $N $V] C type
-	dbgs "/image end"
 		return [Http Ok $r $C $type]
 	    } else {
 		lassign [WDB GetBinary $N -1] C type
-	dbgs "/image end"
 		return [Http Ok $r $C $type]
 	    }
 	} else {
-	dbgs "/image end"
 	    return [Http NotFound $r]
 	}
     }
 
     proc /edit/save {r N C O A S V save cancel preview upload} {
-	dbgs "/edit/save start"
 	perms $r write
 	variable mount
 	variable pageURL
@@ -2416,12 +2377,10 @@ namespace eval WikitWub {
 	# instead of redirecting, return the generated page with a Content-Location tag
 	#return [do $r $N]
 
-	dbgs "/edit/save end"
 	return [redir $r $url [<a> href $url "Edited Page"]]
     }
 
     proc /query {r} {
-	dbgs "/query start"
 	variable detect_robots
 	variable pageURL
 	variable allow_sql_queries
@@ -2433,12 +2392,10 @@ namespace eval WikitWub {
 	}
 	set C ""
 	set Q ""
-	dbgs "/query end"
 	return [sendPage $r query]
     }
 
     proc /query/run {r Q} {
-	dbgs "/query/run start"
 	variable wikitdbpath
 	variable allow_sql_queries
 	if {!$allow_sql_queries} {
@@ -2512,7 +2469,6 @@ namespace eval WikitWub {
     }
 
     proc sendQueryResult {r ok Q dl ms} {
-	dbgs "/query/run send start"
 	set C <br><br>
 	append C [<div> class title "Result of previous query:"]
 	if {$ok} {
@@ -2521,27 +2477,22 @@ namespace eval WikitWub {
 	} else {
 	    append C "<br>Query<br><br><span class='tt'>$Q</span><br><br>failed:<br><br><span class='tt'>$dl</span>"
 	}
-	dbgs "/query/run send end"
 	return [sendPage $r query]
     }
 
     proc /map {r imp args} {
-	dbgs "/map start"
 	perms $r read
 	variable protected
 	variable IMTOC
 	variable pageURL
 	parray IMTOC
 	if {[info exists IMTOC($imp)]} {
-	dbgs "/map end"
 	    return [Http Redir $r "http://[dict get $r host]/[string trim $::WikitWub::IMTOC($imp) /]"]
 	} else {
 	    set TOCp [dict get? $protected ADMIN:TOC]
 	    if {$TOCp ne ""} {
-	dbgs "/map end"
 		return [Http Redir $r [file join $pageURL $TOCp]]
 	    } else {
-	dbgs "/map end"
 		return [Http NotFound $r [<p> "ADMIN:TOC does not exist."]]
 	    }
 
@@ -2558,7 +2509,6 @@ namespace eval WikitWub {
     }
 
     proc /new {r} {
-	dbgs "/new start"
 	variable need_recaptcha
 	if {$need_recaptcha && ![recaptcha_active]} {
 	    return [Http NotFound $r]	    
@@ -2583,16 +2533,13 @@ namespace eval WikitWub {
 
 	set r [jQ form $r .autoform target '#result']
 	if {$need_recaptcha} {
-	dbgs "/new end"
 	    return [sendPage $r new]
 	} else {
-	dbgs "/new end"
 	    return [sendPage $r new_no_recaptcha]
 	}
     }
 
     proc /new/create {r T} {
-	dbgs "/new/create start"
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -2602,7 +2549,6 @@ namespace eval WikitWub {
 	    return [Http NoCache [Http Ok $r "No title specified"]]
 	}
 	lassign [InfoProc $T] N
-	dbgs "/new/create end"
 	return [Http Redir $r [file join $mount edit?N=$N]]
     }
 
@@ -2623,7 +2569,6 @@ namespace eval WikitWub {
 
     # called to generate an edit page
     proc /edit {r N A V S args} {
-	dbgs "/edit start"
 	Debug.wikit {edit N:$N A:$A S:$S ($args)}
 
 	variable mount
@@ -2691,10 +2636,8 @@ namespace eval WikitWub {
 	set C [::WFormat::quote $C 1]
 
 	if {$type ne "" && ![string match text/* $type]} {
-	dbgs "/edit end"
 	    return [sendPage $r edit_binary]
 	} else {
-	dbgs "/edit end"
 	    return [sendPage $r edit]
 	}
     }
@@ -2736,17 +2679,14 @@ namespace eval WikitWub {
     }
 
     proc /reloadCSS {r} {
-	dbgs "/reloadCSS start"
 	perms $r admin
 	invalidate $r wikit.css
 	invalidate $r ie6.css
 	set R [dict get $r -url]
-	dbgs "/reloadCSS end"
 	return [Http Ok $r [<a> href $R "Loaded CSS"] text/html]
     }
 
     proc /welcome {r} {
-	dbgs "/welcome start"
 	perms $r read
 
 	variable TOC
@@ -2826,7 +2766,6 @@ namespace eval WikitWub {
 	    set Title "Welcome to the Tclers Wiki!"
 	    set name "Welcome to the Tclers Wiki!"
 	}
-	dbgs "/welcome end"
 	return [sendPage $r spage]
     }
 
@@ -2861,7 +2800,6 @@ namespace eval WikitWub {
 
     # called to generate a page with references
     proc /ref {r N A} {
-	dbgs "/ref start"
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -2923,10 +2861,8 @@ namespace eval WikitWub {
 	set Title "References and redirects to [Ref $N]"
 
 	if {$A} {
-	    dbgs "/ref end"
 	    return [Http NoCache [Http Ok $r [tclarmour $C] text/plain]]
 	} else {
-	    dbgs "/ref end"
 	    return [sendPage $r spage]
 	}
     }
@@ -3041,7 +2977,6 @@ namespace eval WikitWub {
     variable delta [subst \u0394]
     variable delta [subst \u25B2]
     proc /recent {r} {
-	dbgs "/recent start"
 	# try cached version
 	lassign [fromCache $r recent] cached result
 	if {$cached} {
@@ -3138,7 +3073,6 @@ namespace eval WikitWub {
 	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New Search]
 
-	dbgs "/recent end"
 	return [sendPage $r spage]
     }
 
@@ -3235,7 +3169,6 @@ namespace eval WikitWub {
     }
 
     proc /searchp {r {external_results {}} {malformedmatch 0}} {
-	dbgs "/searchp start"
 	variable mount
 	variable pageURL
 	variable text_url
@@ -3263,12 +3196,10 @@ namespace eval WikitWub {
 	set menu [menus Home Recent Help WhoAmI New Random]
 	set footer [menus Home Recent Help New]
 	set subtitle "Powered by <a href='http://www.sqlite.org'>SQLite</a> FTS"
-	dbgs "/searchp start"
 	return [sendPage $r spage]
     }
 
     proc /search {r {S ""} args} {
-	dbgs "/search start"
 	variable detect_robots
 	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
 	    return [robot $r]
@@ -3386,12 +3317,10 @@ namespace eval WikitWub {
     }
  
     proc sendSearchResults {r eresult malformedmatch} {
-	dbgs "/search end"
 	return [Http NoCache [Http Ok [/searchp $r $eresult $malformedmatch]]]
     }
 
     proc do {r} {
-	dbgs "do start"
 	Debug.wikit {DO}
 	perms $r read
 
@@ -3514,7 +3443,6 @@ namespace eval WikitWub {
 		set ro ""
 	    }
 	    set result [sendPage [Http CacheableContent $r $date] page DCache]
-	dbgs "do end"
 	    return $result
 	} else {
 	    # fetch page contents
@@ -3649,7 +3577,6 @@ namespace eval WikitWub {
 		}
 		WDB pagecache insert $N [dict get $result -content] [dict get $result content-type] [clock milliseconds] [dict get? $result -title]
 	    }
-	dbgs "do end"
 	    return $result
 	}
     }
@@ -3926,12 +3853,5 @@ proc mamo { } {
 puts "SYSTEM ENCODING BEFORE CREATING SITE = [encoding system]"
 
 puts [info body <input>]
-
-set dbgs [open [string map {\  _} /tmp/slow2-[clock format [clock seconds]].txt] w]
-proc dbgs {msg} {
-#    puts "[clock format [clock seconds]] : $msg"
-    puts $::dbgs "[clock format [clock seconds]] : $msg"
-    flush $::dbgs
-}
 
 Site start home [file normalize [file dirname [info script]]] config $cfg local $local

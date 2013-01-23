@@ -157,9 +157,9 @@ namespace eval WikitRss {
 		    incr delta [expr {int(abs($cdelta))}]
 		    set C [WikitWub::summary_diff $id $V [expr {$V-1}] 1]
 		    if {[regexp {^[[:print:]\r\n]*$} $C]} {
-			append changes $C\n
+		    	append changes $C\n
 		    } else {
-			append changes "Could not render difference for version $V\n"
+		    	append changes "Could not render difference for version $V\n"
 		    }
 		    lappend whol $who
 		    incr V -1
