@@ -2416,19 +2416,8 @@ namespace eval WikitWub {
 		    set rt 1
 		    package require sqlite3 3.6.9
 		    package require tdbc::sqlite3
-		    catch {tdbc::sqlite3::connection create thdb $dbfnm -readonly 1} msg
+		    tdbc::sqlite3::connection create thdb $dbfnm -readonly 1
 		    set rt [catch {
-# 			thdb foreach -as dicts d $Q {
-# 			    set rd [dict create]
-# 			    dict for {k v} $d {
-# 				if {$k eq "id"} {
-# 				    dict set rd id "<a href='http://$host/[dict get $d id]'>[dict get $d id]</a>"
-# 				} else {
-# 				    dict set rd $k [armour $v]
-# 				}
-# 			    }
-# 			    lappend dl [incr did] $rd
-# 			}
 			set qs [thdb prepare $Q]
 			set rs [$qs execute]
 			while {1} {
@@ -3220,10 +3209,9 @@ namespace eval WikitWub {
 	    variable wikitdbpath
 	    variable max_search_results
 	    return [Httpd Thread {
-		package require sqlite3 3.7.5
 		package require tdbc::sqlite3
 		package require Dict
-		catch {tdbc::sqlite3::connection create db $dbfnm -readonly 1} msg
+		tdbc::sqlite3::connection create db $dbfnm -readonly 1
 		set stmtnm "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND b.name MATCH :key and length(b.content) > 1"
 		set stmtct "SELECT a.id, a.name, a.date, a.type, snippet(pages_content_fts, \"^^^^^^^^^^^^\", \"~~~~~~~~~~~~\", \" ... \", -1, -32) as snip FROM pages a, pages_content_fts b WHERE a.id = b.id AND length(a.name) > 0 AND pages_content_fts MATCH :key and length(b.content) > 1"
 		set stmtimg "SELECT a.id, a.name, a.date, a.type FROM pages a, pages_binary b WHERE a.id = b.id"
