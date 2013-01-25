@@ -8,6 +8,7 @@ namespace eval ::WFormat {
     StreamToUrls FormatWikiToc ShowDiffs GetSection
 
   variable diffid ""
+  variable global_edit_url ""
 
   # In this file:
   #
@@ -1095,6 +1096,7 @@ namespace eval ::WFormat {
   proc StreamToHTML {N mount s {cgi ""} {ip ""} {creating_preview 0} {creating_summary 0} {creating_diffs 0} {creating_revision 0} } {
 
     variable diffid
+    variable global_edit_url
 
     if {$creating_diffs || $creating_summary || $creating_preview || $creating_revision} {
       vs_no_edit
@@ -1127,7 +1129,11 @@ namespace eval ::WFormat {
     set in_FI 0
     set HD2_cnt -1
 
-    set edit_url [file join $mount edit]
+    if {[string length $global_edit_url]} {
+      set edit_url $global_edit_url
+    } else {
+      set edit_url [file join $mount edit]
+    }
 
     variable html_frag
 
