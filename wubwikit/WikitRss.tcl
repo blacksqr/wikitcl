@@ -133,8 +133,6 @@ namespace eval WikitRss {
 	
 	Debug.rss {filling details} 7
 	
-	puts "New RSS"
-
 	set i 0
 	set D 3
 	set edate [expr {[clock seconds]-$D*86400}]
