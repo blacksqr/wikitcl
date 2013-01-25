@@ -93,6 +93,7 @@ namespace eval WikitRss {
     # it actually just records the time of last change
     proc clear {} {
 	#variable cache ""
+	Debug.rss {rss clear [info level -1]}
 	variable changed [clock seconds]
     }
     
@@ -108,6 +109,7 @@ namespace eval WikitRss {
 	variable cache; variable stale
 	if {$cache ne ""} {
 	    if {[clock seconds] - $changed < $stale} {
+		Debug.rss {rss return cached [clock seconds]}
 		return $cache	;# return the cache if it's not stale
 	    }
 	}
