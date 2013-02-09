@@ -1906,7 +1906,7 @@ namespace eval WikitWub {
 	dict set r -Query [Query add [Query parse $r] N $N]
 
 	# cleanse nickname
-	regsub -all {[^A-Za-z0-0_]} $nickname {} nickname
+	regsub -all {[^A-Za-z0-9_]} $nickname {} nickname
 
 	if {$nickname eq ""} {
 	    # this is a call to /login with no args,
