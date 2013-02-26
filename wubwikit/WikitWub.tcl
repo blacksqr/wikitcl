@@ -3282,20 +3282,26 @@ namespace eval WikitWub {
 		    if {[string match "malformed MATCH expression*" $msg]} {
 			set malformedmatch 1
 		    } elseif {$msg ne "Function sequence error: result set is exhausted."} {
+			db close
 			error $msg
 		    }
 		}
 		set iresults {}
 		set n 0
-		set stmt [db prepare $stmtimg]
-		$stmt foreach -as dicts d {
-		    lappend iresults [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 2]
-		    incr n
-		    if {$n >= $max} {
-			break
+		if {[catch {
+		    set stmt [db prepare $stmtimg]
+		    $stmt foreach -as dicts d {
+			lappend iresults [list id [dict get $d id] name [dict get $d name] date [dict get $d date] type [dict get? $d type] what 2]
+			incr n
+			if {$n >= $max} {
+			    break
+			}
 		    }
+		    $stmt close
+		} msg]} {
+		    db close
+		    error $msg
 		}
-		$stmt close
 		db close
 		return [thread::send [dict get $r -thread] [list WikitWub::sendSearchResults $r [list $nresults $cresults $iresults] $malformedmatch]]
 	    } r $r key $key dbfnm $wikitdbpath max $max_search_results]
