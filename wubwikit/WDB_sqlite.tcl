@@ -113,6 +113,7 @@ namespace eval WDB {
 		"delete_refs"                           { set sql {DELETE FROM refs} }
 		"delete_refs_from_id"                   { set sql {DELETE FROM refs WHERE fromid = :id} }
 		"delete_refs_to_id"                     { set sql {DELETE FROM refs WHERE toid = :id} }
+		"diffs_for_pid"                         { set sql {SELECT * FROM diffs WHERE id = :pid} }
 		"diffs_for_pid_v"                       { set sql {SELECT fromline, toline, old FROM diffs WHERE id = :pid AND cid = :v ORDER BY did DESC} }
 		"insert_binary"                         { set sql {INSERT INTO pages_binary (id, content) VALUES (:id, :text)} }
 		"insert_change"                         { set sql {INSERT INTO changes (id, cid, date, who, delta) VALUES (:id, :version, :date, :who, :change)} }
@@ -1104,14 +1105,56 @@ namespace eval WDB {
 	}
     }
 
+    # RenamePage
+    proc RenamePage {N M newName newdate newWho newType oldName oldDate oldWho oldType} {
+	StartTransaction
+	if {[catch {
+	    # Copy content of $N to $M, keep nick, type and date from old page
+	    set oldText [WDB GetContent $N]
+	    WDB SavePage $M $oldText $oldWho $oldName $oldType $oldDate 0 0
+	    # Copy history of $N to $M
+	    set id $M
+	    [statement "delete_changes"] allrows
+	    [statement "delete_diffs"] allrows
+	    set pid $N
+	    [statement "changes_for_pid_asc"] foreach -as dicts d {
+		set id $M
+		set version [dict get $d cid]
+		set date [dict get $d date]
+		set who [dict get $d who]
+		set change [dict get $d delta]
+		[statement "insert_change"] allrows
+	    }
+	    set pid $N
+	    [statement "diffs_for_pid"] foreach -as dicts d {
+		set id $M
+		set version [dict get $d cid]
+		set i [dict get $d did]
+		set from [dict get $d fromline]
+		set to [dict get $d toline]
+		set old [dict get $d old]
+		[statement "insert_diff"] allrows
+	    }
+	    # Replace page $N with redirect to $M
+	    WDB SavePage $N "<<redirect>>$newName" $newWho $newName $newType [clock seconds] 0 0
+	} r eo]} {
+	    rollback
+	    Debug.error {RenamePage: '$r' ($eo)}
+	    error $r
+	}
+	commit
+    }
+
     # SavePage - store page $id ($who, $text, $newdate)
-    proc SavePage {id text newWho newName newType {newdate ""} {commit 1}} {
+    proc SavePage {id text newWho newName newType {newdate ""} {commit 1} {use_transaction 1}} {
 	variable db
 	Debug.WDB {start}
 
 	set changed 0
 
-	StartTransaction
+	if {$use_transaction} {
+	    StartTransaction
+	}
 
 	if {[catch {
 	    Debug.WDB {pagevarsDB}
@@ -1223,17 +1266,21 @@ namespace eval WDB {
 		Debug.WDB {saved binary content $newType}
 	    }
 	} r eo]} {
-	    rollback
-	    Debug.error {SavePageDb: '$r' ($eo)}
-	    error $r
+	    if {$use_transaction} {
+		rollback
+		Debug.error {SavePageDb: '$r' ($eo)}
+		error $r
+	    }
 	}
 
-	if {$commit} {
-	    Debug.WDB {commit}
-	    commit
-	} else {
-	    Debug.WDB {rollback}
-	    rollback
+	if {$use_transaction} {
+	    if {$commit} {
+		Debug.WDB {commit}
+		commit
+	    } else {
+		Debug.WDB {rollback}
+		rollback
+	    }
 	}
 
 	Debug.WDB {done.}

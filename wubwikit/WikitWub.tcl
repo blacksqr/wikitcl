@@ -386,6 +386,10 @@ namespace eval WikitWub {
 	[<p> "Page $N is of type $type which cannot be edited."]
     }
 
+    template message {Uneditable} {
+	[<p> $C]
+    }
+
     # page sent when creating a new page
     template new {Create a new page} {
 	[<div> class edit [subst {
@@ -405,6 +409,20 @@ namespace eval WikitWub {
 		}]
 	    }]]
 	}]]
+    }
+
+    # page sent when renaming a new page
+    template rename {Rename a page} {
+	[<p> "Enter new page name for page $N."]
+	[<p> "Current name is: [armour $name]"]
+	[<form> login method post action [file join $mount rename] {
+	    [<fieldset> renameframe title Rename {
+		[<text> T title "New page name:"]
+		[<input> name save type submit value "Rename" {}]
+	    }]
+	    [<hidden> N $N]
+	    [<hidden> _charset_]
+	}]
     }
 
     template new_no_recaptcha {Create a new page} {
@@ -1894,6 +1912,82 @@ namespace eval WikitWub {
 	} else {
 	    return [/whoami $r]
 	}
+    }
+
+    proc /rename {r N T} {
+
+	puts "RENAME"
+	puts r=$r
+	puts N=$N
+	puts T=$T
+
+	variable mount
+	variable detect_robots
+	if {$detect_robots && [dict get? $r -ua_class] eq "robot"} {
+	    return [robot $r]
+	}
+	variable readonly
+	if {$readonly ne ""} {
+	    return [sendPage $r ro]
+	}
+	if {![string is integer -strict $N] || $N < 0 || $N >= [WDB PageCount]} {
+	    return [Http NotFound $r]
+	}
+	perms $r admin
+	lassign [WDB GetPage $N name date who type] name date who type
+	if {$type ne "" && ![string match text/* $type]} {
+	    # Not supported for non text pages yet
+	    return [Http NotFound $r]
+	}
+	set nick [who $r]
+	if {$nick eq ""} {
+	    set R ""	;# make it return here
+	    return [sendPage $r login]
+	}
+	if {[string length $T] == 0} {
+	    # Ask for new title
+	    return [sendPage $r rename]
+	}
+	# Create new page as copy of $N
+	lassign [InfoProc $T 1] M
+	if {[string is integer -strict $M]} {
+	    # Page already exists
+	    set C "Page with name &quot;$T&quot; already exists ($M)"
+	    return [sendPage $r message]
+	}
+	lassign [InfoProc $T] M
+	if {![string is integer -strict $M]} {
+	    # Page already exists
+	    set C "Page with name &quot;$T&quot; could not be created."
+	    return [sendPage $r message]
+	}
+	WDB RenamePage $N $M $T [clock seconds] $nick@[dict get $r -ipaddr] $type $name $date $who $type
+
+	# Clear cache for $N and $M
+	variable pageURL
+	invalidate $r [file join / $pageURL $N]
+	invalidate $r [file join $mount recent]
+	invalidate $r [file join $mount ref]/$N
+	invalidate $r [file join $mount summary]/$M
+	invalidate $r [file join / $pageURL $M]
+	invalidate $r [file join $mount recent]
+	invalidate $r [file join $mount ref]/$M
+	invalidate $r [file join $mount summary]/$M
+	invalidate $r /rss.xml; WikitRss clear
+	invalidate $r /welcome
+	invalidate $r /
+	variable include_pages
+	foreach from [WDB ReferencesTo $N] {
+	    invalidate $r [file join $pageURL $from]
+	}
+	foreach from [WDB ReferencesTo $M] {
+	    invalidate $r [file join $pageURL $from]
+	}
+	variable recent_cache
+	unset -nocomplain recent_cache
+
+	set url http://[Url host $r][file join $pageURL $M]
+	return [redir $r $url [<a> href $url "Renamed page"]]
     }
 
     proc /edit/login {r {nickname ""} {R ""}} {
