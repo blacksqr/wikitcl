@@ -59,13 +59,14 @@ namespace eval WikitRss {
     # news item name in.  It's pretty easy to change.
     # See the lines I've commented out for alternate formats.
 
-    proc item {Title Time Author Url {Description ""}} {
+    proc item {Title Time Author Url Guid {Description ""}} {
 	set time [clock format $Time -format "%a, %d %b %Y %T GMT" -gmt 1]
 	return "<item>
 		<title>[xmlarmour $Title]</title>
-		<link>$Url</link>
-		<pubDate>$time</pubDate>
-		<description>Modified by [xmlarmour $Author][xmlarmour $Description] </description>
+		<guid>[xmlarmour $Guid]</guid>
+		<link>[xmlarmour $Url]</link>
+		<pubDate>[xmlarmour $time]</pubDate>
+		<description>Modified by [xmlarmour $Author][xmlarmour $Description]</description>
 		</item>"
     }
 
@@ -152,6 +153,7 @@ namespace eval WikitRss {
 	    set delta 0
 	    set whol {}
 	    set V [WDB Versions $id]
+	    set Vtot $V
 	    if {$V > 0} {
 		foreach record [WDB Changes $id $edate] {
 		    dict update record date cdate who cwho delta cdelta version version {}
@@ -175,7 +177,7 @@ namespace eval WikitRss {
 	    #Debug.rss {detail $name $date $who $id} 7
 
 	    if {$delta > 0} {
-		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$id " ($delta characters)\n$changes"] \n
+		append contents [item $name $date [join [lsort -unique $whol] ", "] $baseUrl$id ${baseUrl}_/revision?N=$id&V=$Vtot " ($delta characters)\n$changes"] \n
 		if {[incr i] > $MaxItems} break	;# limit RSS size
 	    }
 	}
